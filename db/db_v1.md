@@ -1,3 +1,5 @@
+
+```mermaid
 classDiagram
 direction LR
 
@@ -151,3 +153,4 @@ Employee "1" --> "0..*" Report : creates
 EmployeeReport "1" --> "1" Report : is a
 ProjectReport "1" --> "1" Report : is a
 TeamReport "1" --> "1" Report : is a
+```
