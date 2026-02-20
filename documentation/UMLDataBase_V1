@@ -12,6 +12,8 @@ class Team {
 class Employee {
   +UUID employee_id PK
   +varchar full_name
+  +varchar names
+  +varhcar lastnames
   +varchar timezone
   +datetime created_at
 }
