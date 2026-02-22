@@ -2,11 +2,12 @@ classDiagram
 direction LR
 
 class Team {
-  +UUID team_id PK
-  +UUID employee_responsible_id FK
-  +varchar name
-  +varchar description
-  +datetime created_at
+    +UUID team_id PK
+    +UUID employee_responsible_id FK
+    +varchar name
+    +varchar description
+    +datetime created_at
+    +varchat image
 }
 
 class Employee {
@@ -15,7 +16,6 @@ class Employee {
   +varchar names
   +varhcar lastnames
   +varchar timezone
-  +datetime created_at
 }
 
 class TeamEmployee {
@@ -97,7 +97,7 @@ class Achievement {
 
 class Report {
     +UUID report_id PK
-    +UUID generated_by_employee_id FK
+    +UUID employee_responsible_id FK
     +UUID employee_id FK [nullable] FK
     +UUID team_id FK [nullable] FK
     +UUID project_id FK [nullable] FK
@@ -124,6 +124,8 @@ class Account{
     +bool status
     +bool first_login
     +datetime last_login
+    +varchat image
+    +datetime created_at
 }
 
 class Status{
@@ -152,6 +154,7 @@ class RolePriviledge{
 class Priviledge{
     +UUID priviledge_id PK
     +varchar name
+    +varchar description
 }
 
 class Highlight{
