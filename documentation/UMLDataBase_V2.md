@@ -1,3 +1,4 @@
+```mermaid
 classDiagram
 direction LR
 
@@ -219,3 +220,4 @@ Status "" --> "" Goal: enum status of
 
 Prompt "1" --> "1" Report: is used in a
 ReportClass "" --> "" Prompt: enum type of
+```
