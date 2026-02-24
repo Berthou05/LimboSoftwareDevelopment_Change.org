@@ -24,7 +24,12 @@ class TeamEmployee {
     +UUID team_id FK
     +datetime joined_at
     +datetime left_at
-    +varchar role
+    +EmployeeRole role
+}
+
+class EmployeeRole{
+    EMPLOYEE
+    LEAD
 }
 
 class Project {
@@ -66,6 +71,14 @@ class Goal {
     +datetime created_at
 }
 
+class Status{
+  PLANNED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
 class Activity {
     +UUID activity_id PK
     +UUID project_id FK
@@ -98,10 +111,9 @@ class Achievement {
 
 class Report {
     +UUID report_id PK
-    +UUID employee_responsible_id FK
-    +UUID employee_id FK [nullable] FK
-    +UUID team_id FK [nullable] FK
-    +UUID project_id FK [nullable] FK
+    +UUID generated_by_employee_id FK
+    +varchar content_id
+    +ReportType content_type 
     +UUID prompt_id FK
     +date period_start
     +date period_end
@@ -122,19 +134,16 @@ class Account{
     +varchar email
     +varchar password_hash
     +varchar slack_username
-    +bool status
+    +AccountStatus status
     +bool first_login
     +datetime last_login
     +varchat image
     +datetime created_at
 }
 
-class Status{
-  PLANNED
-  IN_PROGRESS
-  ON_HOLD
-  COMPLETED
-  CANCELLED
+class AccountStatus{
+    ACTIVE
+    DISABLED
 }
 
 class AccountRole{
@@ -174,11 +183,12 @@ class Prompt{
     +ReportType type
 }
 
-class ReportClass{
+class ReportType{
     EMPLOYEE
     TEAM
     REPORT
 }
+
 
 Account "1" --> "1..*" AccountRole: is assigned a
 Role "1" --> "1..*" AccountRole: assigns
@@ -206,6 +216,7 @@ Employee "1" --> "0..*" Project: creates
 Employee "1" --> "0..*" Goal: creates
 Employee "1" --> "0..*" Activity: performs
 Employee "1" --> "0..*" Highlight: creates
+EmployeeRole "" --> "" TeamEmployee: enum role of
 
 Team "1*" --> "0..*" TeamEmployee : is composed of
 Team "1..*" --> "0..*" ProjectTeam : works in
@@ -213,11 +224,13 @@ Team "1..*" --> "0..*" ProjectTeam : works in
 Report "1" --> "1" Employee: is about
 Report "1" --> "1" Project: is about
 Report "1" --> "1" Team: is about
+ReportType "" --> "" Report: enum status of
 
 Account "1" --> "1" Employee: has an
 Status "" --> "" Project: enum status of
 Status "" --> "" Goal: enum status of
+AccountStatus "" --> "" Account: enum status of
 
 Prompt "1" --> "1" Report: is used in a
-ReportClass "" --> "" Prompt: enum type of
+ReportType "" --> "" Prompt: enum type of
 ```
