@@ -1,5 +1,5 @@
 const express = require("express");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 const {
   renderHome,
   renderEmployees,
@@ -40,6 +40,8 @@ router.post("/projects/:id/toggle-membership", handleProjectMembership);
 
 router.get("/reports", renderReports);
 router.post("/reports/generate", handleGenerateReport);
+
+router.use("/admin", requireAdmin);
 
 router.get("/admin/accounts", renderAccountsAdmin);
 router.post("/admin/accounts/:id/role", handleAccountRole);

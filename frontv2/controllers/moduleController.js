@@ -18,22 +18,32 @@ const {
   updateOwnAccount,
 } = require("../data/mockData");
 
-const navItems = [
+const baseNavItems = [
   { href: "/home", label: "Home" },
   { href: "/employees", label: "Employee" },
   { href: "/teams", label: "Team" },
   { href: "/projects", label: "Project" },
   { href: "/reports", label: "Report" },
+];
+
+const adminNavItems = [
   { href: "/admin/accounts", label: "Accounts Administration" },
   { href: "/admin/roles", label: "Roles Administration" },
-  { href: "/account", label: "Account" },
 ];
+
+function isAdminUser(user) {
+  return String(user?.roleName || "").toLowerCase() === "admin";
+}
+
+function getNavItemsForUser(user) {
+  return isAdminUser(user) ? [...baseNavItems, ...adminNavItems] : baseNavItems;
+}
 
 function renderModule(res, view, data) {
   return res.render(view, {
     title: `Unitas | ${data.pageTitle}`,
     isAuthPage: false,
-    navItems,
+    navItems: getNavItemsForUser(res.locals.currentUser),
     todayLabel: new Date().toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
@@ -106,6 +116,23 @@ function renderEmployeeDetail(req, res) {
 
   const detailed = getEmployees().find((candidate) => candidate.id === employee.id);
   const isOwnProfile = req.session.user.employeeId === employee.id;
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const quarterStart = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+  const quarterEnd = new Date(now.getFullYear(), quarter * 3, 0);
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const quickReport = {
+    contentType: "EMPLOYEE",
+    subjectId: detailed.id,
+    periodStart: quarterStart.toISOString().slice(0, 10),
+    periodEnd: quarterEnd.toISOString().slice(0, 10),
+    quarterLabel: `Q${quarter}`,
+  };
 
   return renderModule(res, "pages/employeeDetail", {
     activeRoute: "/employees",
@@ -116,6 +143,8 @@ function renderEmployeeDetail(req, res) {
     reportSubjects: findSubjectOptions(),
     defaultReportType: "EMPLOYEE",
     defaultSubjectId: detailed.id,
+    currentDateLabel,
+    quickReport,
   });
 }
 
@@ -140,6 +169,23 @@ function renderTeamDetail(req, res) {
   }
 
   const isMember = team.members.some((member) => member.employeeId === req.session.user.employeeId);
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const quarterStart = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+  const quarterEnd = new Date(now.getFullYear(), quarter * 3, 0);
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const quickReport = {
+    contentType: "TEAM",
+    subjectId: team.id,
+    periodStart: quarterStart.toISOString().slice(0, 10),
+    periodEnd: quarterEnd.toISOString().slice(0, 10),
+    quarterLabel: `Q${quarter}`,
+  };
 
   return renderModule(res, "pages/teamDetail", {
     activeRoute: "/teams",
@@ -150,6 +196,8 @@ function renderTeamDetail(req, res) {
     reportSubjects: findSubjectOptions(),
     defaultReportType: "TEAM",
     defaultSubjectId: team.id,
+    currentDateLabel,
+    quickReport,
   });
 }
 
@@ -185,6 +233,23 @@ function renderProjectDetail(req, res) {
   const isParticipant = project.participants.some(
     (participant) => participant.id === req.session.user.employeeId
   );
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const quarterStart = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+  const quarterEnd = new Date(now.getFullYear(), quarter * 3, 0);
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const quickReport = {
+    contentType: "PROJECT",
+    subjectId: project.id,
+    periodStart: quarterStart.toISOString().slice(0, 10),
+    periodEnd: quarterEnd.toISOString().slice(0, 10),
+    quarterLabel: `Q${quarter}`,
+  };
 
   return renderModule(res, "pages/projectDetail", {
     activeRoute: "/projects",
@@ -195,6 +260,8 @@ function renderProjectDetail(req, res) {
     reportSubjects: findSubjectOptions(),
     defaultReportType: "PROJECT",
     defaultSubjectId: project.id,
+    currentDateLabel,
+    quickReport,
   });
 }
 
@@ -208,6 +275,22 @@ function handleProjectMembership(req, res) {
 }
 
 function renderReports(req, res) {
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const quarterStart = new Date(now.getFullYear(), (quarter - 1) * 3, 1);
+  const quarterEnd = new Date(now.getFullYear(), quarter * 3, 0);
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const quickReport = {
+    periodStart: quarterStart.toISOString().slice(0, 10),
+    periodEnd: quarterEnd.toISOString().slice(0, 10),
+    quarterLabel: `Q${quarter}`,
+  };
+
   return renderModule(res, "pages/reports", {
     activeRoute: "/reports",
     pageTitle: "Reports",
@@ -216,6 +299,8 @@ function renderReports(req, res) {
     reports: getReports(),
     defaultReportType: "PROJECT",
     defaultSubjectId: "",
+    currentDateLabel,
+    quickReport,
   });
 }
 
@@ -252,12 +337,37 @@ function handleGenerateReport(req, res) {
 }
 
 function renderAccountsAdmin(req, res) {
+  const roleFilter = String(req.query.role || "all").toLowerCase();
+  const statusFilter = String(req.query.status || "all").toLowerCase();
+  const allAccounts = getAccounts();
+  const accounts = allAccounts.filter((account) => {
+    const matchesRole =
+      roleFilter === "all" || String(account.role?.name || "").toLowerCase() === roleFilter;
+    const matchesStatus =
+      statusFilter === "all" || String(account.status || "").toLowerCase() === statusFilter;
+    return matchesRole && matchesStatus;
+  });
+
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
   return renderModule(res, "pages/accountsAdmin", {
     activeRoute: "/admin/accounts",
     pageTitle: "Accounts Administration",
     pageSubtitle: "Create accounts and assign roles or statuses.",
-    accounts: getAccounts(),
+    accounts,
+    totalAccounts: allAccounts.length,
     roles: getRoles(),
+    currentDateLabel,
+    currentQuarterLabel: `Q${quarter}`,
+    roleFilter,
+    statusFilter,
   });
 }
 

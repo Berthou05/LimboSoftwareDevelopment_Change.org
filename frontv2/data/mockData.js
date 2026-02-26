@@ -48,13 +48,13 @@ const employees = [
   },
   {
     id: "emp-2",
-    fullName: "Ana Cuevas",
+    fullName: "Camila Cuevas",
     timezone: "America/Mexico_City",
     title: "Frontend Lead",
     bio: "Owns UI consistency and accessibility across modules.",
     teams: ["team-1"],
     projects: ["proj-1"],
-    avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Ana",
+    avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Camila",
   },
   {
     id: "emp-3",
@@ -74,7 +74,7 @@ const employees = [
     bio: "Connects employee workflows and business goals.",
     teams: ["team-2"],
     projects: ["proj-2"],
-    avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Alejandro",
+    avatar: "https://api.dicebear.com/9.x/adventurer/svg?seed=Alejandro_BlackHair",
   },
 ];
 
@@ -83,11 +83,11 @@ const teams = [
     id: "team-1",
     name: "Team Penguin",
     description: "Maintains core modules and authentication workflows.",
-    image: "https://api.dicebear.com/9.x/fun-emoji/svg?seed=Penguin&backgroundType=solid&backgroundColor=dbeafe",
-    responsibleEmployeeId: "emp-2",
+    image: "/images/penguin_avatar.png",
+    responsibleEmployeeId: "emp-3",
     members: [
       { employeeId: "emp-1", role: "Employee", startDate: "2025-08-12" },
-      { employeeId: "emp-2", role: "Lead", startDate: "2025-06-01" },
+      { employeeId: "emp-3", role: "Lead", startDate: "2025-06-01" },
     ],
     projectIds: ["proj-1"],
   },
@@ -95,10 +95,10 @@ const teams = [
     id: "team-2",
     name: "Team Seal",
     description: "Creates analytics, summaries, and operational dashboards.",
-    image: "https://api.dicebear.com/9.x/fun-emoji/svg?seed=Seal&backgroundType=solid&backgroundColor=d1fae5",
-    responsibleEmployeeId: "emp-3",
+    image: "/images/seal_avatar.jpg",
+    responsibleEmployeeId: "emp-2",
     members: [
-      { employeeId: "emp-3", role: "Lead", startDate: "2025-07-10" },
+      { employeeId: "emp-2", role: "Lead", startDate: "2025-07-10" },
       { employeeId: "emp-4", role: "Employee", startDate: "2025-07-12" },
     ],
     projectIds: ["proj-2"],
@@ -264,6 +264,16 @@ const accounts = [
     slackUsername: "@alexis",
     status: "ACTIVE",
     image: "https://api.dicebear.com/9.x/adventurer/svg?seed=Alexis",
+    roleId: "role-user",
+  },
+  {
+    id: "acc-4",
+    employeeId: "emp-4",
+    email: "alejandro@unitas.dev",
+    password: "123456",
+    slackUsername: "@alejandro",
+    status: "ACTIVE",
+    image: "https://api.dicebear.com/9.x/adventurer/svg?seed=Alejandro_BlackHair",
     roleId: "role-user",
   },
 ];
@@ -503,9 +513,7 @@ function updateOwnAccount(accountId, payload) {
 
   account.email = payload.email || account.email;
   account.slackUsername = payload.slackUsername || account.slackUsername;
-  if (payload.password && payload.password.trim().length > 0) {
-    account.password = payload.password;
-  }
+  // Password updates are intentionally excluded from the account module flow.
   account.image = payload.image || account.image;
   return true;
 }
