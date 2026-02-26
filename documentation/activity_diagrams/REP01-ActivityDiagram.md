@@ -1,5 +1,3 @@
-```plantuml
-
 @startuml
 |User|
 start
@@ -94,6 +92,3 @@ endif
 |User|
 :Downloads the generated report;
 stop
-
-@enduml
-```
