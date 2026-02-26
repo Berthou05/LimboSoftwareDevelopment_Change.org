@@ -1,0 +1,71 @@
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+
+<div class="grid gap-6 xl:grid-cols-3">
+  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel xl:col-span-2">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="<%= team.image %>" alt="<%= team.name %>" class="h-16 w-16 rounded-xl object-cover" />
+        <div>
+          <h2 class="font-heading text-xl font-bold"><%= team.name %></h2>
+          <p class="text-sm text-brand-text/70"><%= team.description %></p>
+        </div>
+      </div>
+      <form action="/teams/<%= team.id %>/toggle-membership" method="POST">
+        <button
+          type="submit"
+          class="rounded-xl px-4 py-2 text-sm font-semibold <%= isMember ? 'border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white' : 'bg-brand-primary text-white hover:bg-brand-accent' %>"
+        >
+          <%= isMember ? "Leave Team" : "Join Team" %>
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-6 grid gap-4 md:grid-cols-2">
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Team Participants</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <% team.membersDetailed.forEach((member) => { %>
+            <li class="flex items-center justify-between gap-2 rounded-lg bg-white px-3 py-2">
+              <span><%= member.employee?.fullName %></span>
+              <span class="text-xs text-brand-text/70"><%= member.role %> · <%= member.startDate %></span>
+            </li>
+          <% }) %>
+        </ul>
+      </article>
+
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Team Projects</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <% team.projectsDetailed.forEach((project) => { %>
+            <li>
+              <a href="/projects/<%= project.id %>" class="rounded-lg bg-white px-3 py-2 font-semibold text-brand-primary hover:underline">
+                <%= project.name %>
+              </a>
+            </li>
+          <% }) %>
+        </ul>
+      </article>
+    </div>
+
+    <div class="mt-6">
+      <h3 class="font-heading text-lg font-bold">Team Activity</h3>
+      <p class="mb-3 text-sm text-brand-text/70">Activities starting from the latest date.</p>
+      <%- include("../partials/activityList", { items: team.activityLog }) %>
+    </div>
+  </section>
+
+  <section class="space-y-6 xl:col-span-1">
+    <%- include("../partials/reportGenerator", {
+      reportSubjects,
+      defaultReportType,
+      defaultSubjectId,
+      redirectTo: `/teams/${team.id}`
+    }) %>
+    <a
+      href="/teams"
+      class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+    >
+      Back to teams
+    </a>
+  </section>
+</div>

@@ -1,0 +1,44 @@
+<header class="mb-6">
+  <p class="text-sm font-semibold uppercase tracking-wider text-brand-primary">Authentication</p>
+  <h1 class="mt-1 font-heading text-3xl font-extrabold">Log In</h1>
+  <p class="mt-2 text-sm text-brand-text/70">Authenticate an existing user and start a session.</p>
+</header>
+
+<form action="/login" method="POST" class="space-y-4">
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Username or email</span>
+    <input
+      type="text"
+      name="username"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+      placeholder="rodrigo@unitas.dev"
+    />
+  </label>
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Password</span>
+    <input
+      type="password"
+      name="password"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+      placeholder="123456"
+    />
+  </label>
+
+  <button
+    type="submit"
+    class="w-full rounded-xl bg-brand-primary px-4 py-2 font-semibold text-white transition hover:bg-brand-accent"
+  >
+    Log In
+  </button>
+
+  <div class="flex justify-end text-sm">
+    <a href="/recover" class="font-semibold text-brand-primary hover:underline">Recover Password</a>
+  </div>
+</form>
+
+<div class="mt-6 rounded-xl bg-brand-bg p-3 text-xs text-brand-text/70">
+  Demo account: <span class="font-semibold">rodrigo@unitas.dev / 123456</span>
+</div>

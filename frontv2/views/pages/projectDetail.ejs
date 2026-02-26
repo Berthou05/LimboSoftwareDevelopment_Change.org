@@ -1,0 +1,99 @@
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+
+<div class="grid gap-6 xl:grid-cols-3">
+  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel xl:col-span-2">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 class="font-heading text-xl font-bold"><%= project.name %></h2>
+        <p class="text-sm text-brand-text/70"><%= project.description %></p>
+      </div>
+      <form action="/projects/<%= project.id %>/toggle-membership" method="POST">
+        <button
+          type="submit"
+          class="rounded-xl px-4 py-2 text-sm font-semibold <%= isParticipant ? 'border border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white' : 'bg-brand-primary text-white hover:bg-brand-accent' %>"
+        >
+          <%= isParticipant ? "Leave Project" : "Join Project" %>
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Participants</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <% project.participants.forEach((participant) => { %>
+            <li class="rounded-lg bg-white px-3 py-2"><%= participant.fullName %></li>
+          <% }) %>
+        </ul>
+      </article>
+
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Teams</h3>
+        <ul class="mt-3 space-y-2 text-sm">
+          <% project.teamsDetailed.forEach((team) => { %>
+            <li><a href="/teams/<%= team.id %>" class="font-semibold text-brand-primary hover:underline"><%= team.name %></a></li>
+          <% }) %>
+        </ul>
+      </article>
+    </div>
+
+    <div class="mt-6 grid gap-4 lg:grid-cols-3">
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Goals</h3>
+        <ul class="mt-2 space-y-2 text-sm">
+          <% project.goals.forEach((goal) => { %>
+            <li class="rounded-lg bg-white px-3 py-2">
+              <p class="font-semibold"><%= goal.title %></p>
+              <p class="text-xs text-brand-text/70"><%= goal.status %> · due <%= goal.dueDate %></p>
+            </li>
+          <% }) %>
+        </ul>
+      </article>
+
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Achievements</h3>
+        <ul class="mt-2 space-y-2 text-sm">
+          <% project.achievements.forEach((achievement) => { %>
+            <li class="rounded-lg bg-white px-3 py-2">
+              <p class="font-semibold"><%= achievement.title %></p>
+              <p class="text-xs text-brand-text/70"><%= achievement.achievementDate %></p>
+            </li>
+          <% }) %>
+        </ul>
+      </article>
+
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Highlights</h3>
+        <ul class="mt-2 space-y-2 text-sm">
+          <% project.highlights.forEach((highlight) => { %>
+            <li class="rounded-lg bg-white px-3 py-2">
+              <p class="font-semibold"><%= highlight.title %></p>
+              <p class="text-xs text-brand-text/70"><%= highlight.createdAt %></p>
+            </li>
+          <% }) %>
+        </ul>
+      </article>
+    </div>
+
+    <div class="mt-6">
+      <h3 class="font-heading text-lg font-bold">Team Activity</h3>
+      <p class="mb-3 text-sm text-brand-text/70">Related project activities with time order.</p>
+      <%- include("../partials/activityList", { items: project.activityLog }) %>
+    </div>
+  </section>
+
+  <section class="space-y-6 xl:col-span-1">
+    <%- include("../partials/reportGenerator", {
+      reportSubjects,
+      defaultReportType,
+      defaultSubjectId,
+      redirectTo: `/projects/${project.id}`
+    }) %>
+    <a
+      href="/projects"
+      class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+    >
+      Back to projects
+    </a>
+  </section>
+</div>

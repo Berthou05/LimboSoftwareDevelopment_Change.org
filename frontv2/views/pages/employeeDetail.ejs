@@ -1,0 +1,61 @@
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+
+<div class="grid gap-6 xl:grid-cols-3">
+  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel xl:col-span-2">
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <img src="<%= employee.avatar %>" alt="<%= employee.fullName %>" class="h-16 w-16 rounded-full border border-brand-secondary object-cover" />
+        <div>
+          <h2 class="font-heading text-xl font-bold"><%= employee.fullName %></h2>
+          <p class="text-sm text-brand-text/70"><%= employee.title %></p>
+          <p class="text-xs text-brand-text/60"><%= employee.timezone %></p>
+        </div>
+      </div>
+      <% if (isOwnProfile) { %>
+        <span class="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">Own Profile</span>
+      <% } %>
+    </div>
+
+    <p class="mt-4 text-sm text-brand-text/80"><%= employee.bio %></p>
+
+    <div class="mt-5 grid gap-4 md:grid-cols-2">
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Your Teams</h3>
+        <ul class="mt-2 space-y-2 text-sm">
+          <% employee.teamObjects.forEach((team) => { %>
+            <li><a href="/teams/<%= team.id %>" class="font-semibold text-brand-primary hover:underline"><%= team.name %></a></li>
+          <% }) %>
+        </ul>
+      </article>
+      <article class="rounded-xl border border-brand-secondary bg-brand-bg p-4">
+        <h3 class="font-heading text-sm font-bold uppercase tracking-wide text-brand-text/70">Project Participation</h3>
+        <ul class="mt-2 space-y-2 text-sm">
+          <% employee.projectObjects.forEach((project) => { %>
+            <li><a href="/projects/<%= project.id %>" class="font-semibold text-brand-primary hover:underline"><%= project.name %></a></li>
+          <% }) %>
+        </ul>
+      </article>
+    </div>
+
+    <div class="mt-6">
+      <h3 class="font-heading text-lg font-bold">Your Activity</h3>
+      <p class="mb-3 text-sm text-brand-text/70">Most recent activity log entries.</p>
+      <%- include("../partials/activityList", { items: employee.activityLog }) %>
+    </div>
+  </section>
+
+  <section class="space-y-6 xl:col-span-1">
+    <%- include("../partials/reportGenerator", {
+      reportSubjects,
+      defaultReportType,
+      defaultSubjectId,
+      redirectTo: `/employees/${employee.id}`
+    }) %>
+    <a
+      href="/employees"
+      class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+    >
+      Back to employees
+    </a>
+  </section>
+</div>

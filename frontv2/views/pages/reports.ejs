@@ -1,0 +1,49 @@
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+
+<div class="space-y-6">
+  <%- include("../partials/reportGenerator", {
+    reportSubjects,
+    defaultReportType,
+    defaultSubjectId,
+    redirectTo: "/reports"
+  }) %>
+
+  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+    <div class="flex items-center justify-between">
+      <h2 class="font-heading text-xl font-bold">Found reports</h2>
+      <span class="rounded-full bg-brand-secondary/50 px-3 py-1 text-xs font-semibold"><%= reports.length %> records</span>
+    </div>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="min-w-full divide-y divide-brand-secondary/70 text-sm">
+        <thead>
+          <tr class="text-left text-brand-text/70">
+            <th class="px-3 py-2">Type</th>
+            <th class="px-3 py-2">Subject</th>
+            <th class="px-3 py-2">Period</th>
+            <th class="px-3 py-2">Created</th>
+            <th class="px-3 py-2">Download</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-brand-secondary/60">
+          <% reports.forEach((report) => { %>
+            <tr>
+              <td class="px-3 py-2"><%= report.contentType %></td>
+              <td class="px-3 py-2 font-semibold"><%= report.subjectLabel %></td>
+              <td class="px-3 py-2"><%= report.periodStart %> to <%= report.periodEnd %></td>
+              <td class="px-3 py-2"><%= new Date(report.createdAt).toLocaleString() %></td>
+              <td class="px-3 py-2">
+                <a
+                  href="<%= report.fileUrl %>"
+                  class="rounded-lg border border-brand-primary px-3 py-1 font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white"
+                >
+                  Download
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

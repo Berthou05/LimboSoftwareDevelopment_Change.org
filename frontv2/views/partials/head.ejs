@@ -1,0 +1,37 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Commissioner:wght@500;600;700;800&family=Noto+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              text: "#040316",
+              bg: "#FBFDFE",
+              primary: "#BE1E19",
+              secondary: "#C8C6C7",
+              accent: "#DD2C2C",
+            },
+          },
+          fontFamily: {
+            heading: ["Commissioner", "sans-serif"],
+            body: ["Noto Sans", "sans-serif"],
+          },
+          boxShadow: {
+            panel: "0 14px 35px rgba(4, 3, 22, 0.08)",
+          },
+        },
+      },
+    };
+  </script>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>

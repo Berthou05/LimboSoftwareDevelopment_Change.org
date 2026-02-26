@@ -1,0 +1,48 @@
+<header class="mb-6">
+  <p class="text-sm font-semibold uppercase tracking-wider text-brand-primary">Authentication</p>
+  <h1 class="mt-1 font-heading text-3xl font-extrabold">Reset Password</h1>
+  <p class="mt-2 text-sm text-brand-text/70">Set a new password for your account.</p>
+</header>
+
+<form action="/reset" method="POST" class="space-y-4">
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Username</span>
+    <input
+      type="text"
+      name="username"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+    />
+  </label>
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Password</span>
+    <input
+      type="password"
+      name="password"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+    />
+  </label>
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Confirm password</span>
+    <input
+      type="password"
+      name="confirmPassword"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+    />
+  </label>
+
+  <button
+    type="submit"
+    class="w-full rounded-xl bg-brand-primary px-4 py-2 font-semibold text-white transition hover:bg-brand-accent"
+  >
+    Confirmation
+  </button>
+</form>
+
+<p class="mt-5 text-sm">
+  <a href="/login" class="font-semibold text-brand-primary hover:underline">Back to login</a>
+</p>
