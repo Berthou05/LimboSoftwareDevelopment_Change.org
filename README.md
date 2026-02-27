@@ -57,6 +57,15 @@ The video includes:
 ### Video Link
 https://drive.google.com/file/d/1mFAOzkJWy1emnwmkNC_ackoECuHdU5m-/view?usp=drivesdk
 
+### Canva link (ANNEX of more detailed views in presentation)
+https://www.canva.com/design/DAHCerMAlK4/oW1XYPKw5j2xBZIaxANlag/edit?utm_content=DAHCerMAlK4&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
+### SRS 
+Route: In git branch -> main/**documentation** -> **SRS Unitas System - Limbo SD**
+
+### Navigable prototype
+Route: In git branch -> prototype
+
 ---
 
 ## Current Advancement Status
