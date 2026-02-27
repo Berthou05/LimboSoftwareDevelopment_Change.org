@@ -85,11 +85,21 @@ function filterByQuery(collection, query, keys) {
 
 function renderHome(req, res) {
   const homeData = getHomeData(req.session.user.employeeId);
+  const now = new Date();
+  const quarter = Math.floor(now.getMonth() / 3) + 1;
+  const currentDateLabel = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
   return renderModule(res, "pages/home", {
     activeRoute: "/home",
     pageTitle: "Home",
     pageSubtitle: "Latest activity, team activity, and project highlights.",
+    currentDateLabel,
+    currentQuarterLabel: `Q${quarter}`,
     ...homeData,
   });
 }
