@@ -3,10 +3,23 @@
 start
 :Presses the Generate Report button;
 |System|
-:Validates the date range entered;
-if (start_date <= end_date && created_at<=start_date?) is (no) then
-  :Shows an error message into the screen asking to correct the report date range;
+
+:Validates that content_type and content_id are selected;
+if (Are content_type and content_id present?) is (no) then
+  |User|
+  :Shows error "Please select a content type and specific content";
   stop
+  |System|
+else(yes)
+endif
+
+
+:Validates the date range entered;
+if (start_date <= end_date) is (no) then
+  |User|
+  :Shows error "Please select a valid date range:";
+  stop
+  |System|
 else(yes)
 endif
 
@@ -15,16 +28,22 @@ endif
 :Sends a petition to the server;
 :Selects the query to use based on the content type;
 
+|System|
 if (Is the content_type == Employee?) is (yes) then
   :Selects Employee query;
   elseif  (Is the content_type == Team?) is (yes) then
     :Selects Team query;
-    elseif  (Is the content_type == Project?) is (yes) then
-      :Selects Project query;
-    else(no)
+  elseif  (Is the content_type == Project?) is (yes) then
+    :Selects Project query;
+  else(Invalid)
+    :Return an error;
+    |User|
+    :Show error "Invalid Content Type";
     stop
+  |System|
   endif
-
+  
+|System|
 :Sends specific queries to the database;
 
 |Database|
@@ -34,7 +53,10 @@ if (Is the content_type == Employee?) is (yes) then
 :Verifies ant content was received;
 
 if(Is there any information received from the database?) is (no) then
-  :Returns an error message into the screen informing the User there is no data registered from that Content in the specified data range;
+  |User|
+  :Show error "There is no registered information for {content_type}: {content_id} during the specified date range";
+  stop
+  |System|
 else(yes)
 endif
 
@@ -46,8 +68,10 @@ if (Is the content_type == Employee?) is (yes) then
 :Selects Employee Prompt query;
   else if (Is the content_type == Team?) is (yes) then
       :Selects Team Prompt query;
-  else(no)
-  :Selects Project Prompt query;
+      else if (Is the content_type == Project?) is (yes) then
+      :Selects Project Prompt query;
+  else(Invalid)
+  stop
 endif
 
 :Sends a query to the database;
@@ -57,7 +81,10 @@ endif
 |System|
 :Verifies if the prompt was received;
 if(Is there any information received from the database?) is (no) then
-  :Returns an error message into the screen informing the User there is no prompt registered from that Content in the specified data range;
+  |User|
+  :Show error "There is no prompt registered under the selected Content Type:";
+  stop
+  |System|
 else(yes)
 endif
 
@@ -68,10 +95,14 @@ label step15
 |System|
 :Receives the response from the AI API;
 if(Did the System receive an error message from the API?) is (yes) then
-  :Informs the user about the error, and asks if it desires to retry;
   |User|
+  :Informs the user about the error, and asks if it desires to retry;
   if(Does the User want to try again?) is (yes) then
-  goto step15
+  note right
+    Go to System sends a petition to the AI API  
+  end note
+  stop
+  
   else(no)
   stop
   endif

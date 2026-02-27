@@ -1,7 +1,7 @@
 @startuml
 |User|
 start
-:hovers or makes a click over the Team Information button;
+:Hovers or makes a click over the Team Information button;
 
 |System|
 :Obtains team_id from the Team page;
