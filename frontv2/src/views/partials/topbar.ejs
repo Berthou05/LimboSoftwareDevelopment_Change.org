@@ -1,26 +1,7 @@
-﻿<%# Template: partials/topbar.ejs
-   Purpose: Top app bar with search, date label, and account menu.
-   Expected locals: currentUser, todayLabel.
-   JS integration: `data-account-menu*` attributes are used by initTopbarAccountMenu() in main.js.
-%>
-
 <header class="sticky top-0 z-20 border-b border-brand-secondary/60 bg-brand-bg/90 px-6 py-4 backdrop-blur sm:px-8 lg:px-10">
   <div class="flex flex-wrap items-center justify-between gap-4">
-    <%# This search is intentionally global in UI, but currently submits to /employees for prototype scope. %>
-    <form action="/employees" method="GET" class="flex w-full max-w-lg items-center gap-2 rounded-xl border border-brand-secondary bg-white px-3 py-2 shadow-sm">
-      <input
-        type="text"
-        name="q"
-        placeholder="Search employee, team, or project..."
-        class="w-full border-none bg-transparent text-sm outline-none"
-      />
-      <button
-        type="submit"
-        class="rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white"
-      >
-        Search
-      </button>
-    </form>
+    
+    <%- include("./components/searchbar.ejs") %>
 
     <div class="flex items-center gap-3">
       <div class="rounded-xl border border-brand-secondary bg-white px-3 py-2 text-sm">
@@ -34,7 +15,6 @@
           aria-label="Open account menu"
           aria-expanded="false"
         >
-          <%# Initial fallback avoids blank avatar before user images are implemented in topbar. %>
           <%= currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U" %>
         </button>
 

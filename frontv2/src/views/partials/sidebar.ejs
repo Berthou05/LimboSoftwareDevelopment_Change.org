@@ -12,12 +12,9 @@
 
   <nav class="mt-8 flex-1 space-y-1 overflow-y-auto pr-1">
     <% navItems.forEach((item) => {
-      const active = activeRoute === item.href || (item.href !== "/home" && activeRoute.startsWith(item.href));
-    %>
-      <a
-        href="<%= item.href %>"
-        class="block rounded-xl px-3 py-2 text-sm font-medium transition <%= active ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>"
-      >
+      const active = activeRoute === item.href || (item.href !== "/home" && activeRoute.startsWith(item.href));%>
+      <a href="<%= item.href %>"
+        class="block rounded-xl px-3 py-2 text-sm font-medium transition <%= active ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>">
         <%= item.label %>
       </a>
     <% }); %>

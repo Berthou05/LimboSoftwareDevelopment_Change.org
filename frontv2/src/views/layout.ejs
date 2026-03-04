@@ -29,7 +29,9 @@
         </section>
       </main>
     <% } else { %>
+      
       <%# App pages render persistent navigation and insert the module page in `body`. %>
+
       <div class="flex min-h-screen">
         <%- include("partials/sidebar", { navItems: layoutNavItems, activeRoute: layoutActiveRoute, currentUser: layoutCurrentUser }) %>
         <main class="min-h-screen flex-1">

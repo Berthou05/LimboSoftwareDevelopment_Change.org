@@ -1,9 +1,3 @@
-﻿<%# Template: partials/components/searchbar.ejs
-   Purpose: Reusable search bar component (currently targets /employees).
-   Expected locals: none (current implementation).
-   Duplicate or parameterize this partial if search behavior diverges by module.
-%>
-
 <form action="/employees" method="GET" class="flex w-full max-w-lg items-center gap-2 rounded-xl border border-brand-secondary bg-white px-3 py-2 shadow-sm">
     
     <input type="text" name="q" 
@@ -13,5 +7,4 @@
     <button type="submit" class="rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
         Search
     </button>
-
 </form>
