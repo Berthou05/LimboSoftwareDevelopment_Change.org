@@ -1,0 +1,19 @@
+{
+  "name": "limbosoftwaredevelopment_change.org",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org/issues"
+  },
+  "homepage": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org#readme"
+}
