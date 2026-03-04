@@ -22,8 +22,9 @@
   },
   "homepage": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org#readme",
   "dependencies": {
-    "express": "^5.2.1",
     "@tailwindcss/cli": "^4.2.1",
+    "ejs": "^4.0.1",
+    "express": "^5.2.1",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
