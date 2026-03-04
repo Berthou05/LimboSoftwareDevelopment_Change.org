@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run dev:css & node --watch app.js",
+    "dev:css": "tailwindcss -i ./src/input.css -o ./public/output.css --watch",
+    "build:css": "tailwindcss -i ./src/input.css -o ./public/output.css",
+    "start": "node app.js",
+    "build": "npm run build:css && npm start"
   },
   "repository": {
     "type": "git",
