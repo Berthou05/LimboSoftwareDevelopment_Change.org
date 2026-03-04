@@ -1,0 +1,25 @@
+﻿<%# Template: partials/sidebar.ejs
+   Purpose: Left navigation for authenticated screens.
+   Expected locals: navItems (array), activeRoute (string).
+   Active rule: a link is active when exact match OR when current route starts with module prefix.
+%>
+
+<aside class="hidden h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white/90 px-4 py-6 lg:sticky lg:top-0 lg:flex">
+  <div class="px-3">
+    <p class="font-heading text-2xl font-extrabold text-brand-primary">Unitas</p>
+    <p class="mt-1 text-sm text-brand-text/70">System Prototype</p>
+  </div>
+
+  <nav class="mt-8 flex-1 space-y-1 overflow-y-auto pr-1">
+    <% navItems.forEach((item) => {
+      const active = activeRoute === item.href || (item.href !== "/home" && activeRoute.startsWith(item.href));
+    %>
+      <a
+        href="<%= item.href %>"
+        class="block rounded-xl px-3 py-2 text-sm font-medium transition <%= active ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>"
+      >
+        <%= item.label %>
+      </a>
+    <% }); %>
+  </nav>
+</aside>

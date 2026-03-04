@@ -1,0 +1,73 @@
+﻿<%# Template: partials/reportGenerator.ejs
+   Purpose: Reusable report generation form.
+   Expected locals: redirectTo, defaultReportType, defaultSubjectId, reportSubjects.
+   JS integration: `.report-type` and `.report-subject` are wired by initReportTypeSubjectSelects() in main.js.
+%>
+
+<form action="/reports/generate" method="POST" class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+  <%# redirectTo lets each page return the user to its own context after report generation. %>
+  <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
+  <h3 class="font-heading text-lg font-bold">Report Generator</h3>
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <label class="block text-sm">
+      <span class="mb-1 block text-brand-text/70">Content type</span>
+      <select
+        name="contentType"
+        class="report-type w-full rounded-lg border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        data-default="<%= defaultReportType || 'PROJECT' %>"
+      >
+        <option value="EMPLOYEE">Employee</option>
+        <option value="TEAM">Team</option>
+        <option value="PROJECT">Project</option>
+      </select>
+    </label>
+
+    <label class="block text-sm">
+      <span class="mb-1 block text-brand-text/70">Specific content</span>
+      <select
+        name="subjectId"
+        class="report-subject w-full rounded-lg border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        data-default="<%= defaultSubjectId || '' %>"
+      >
+        <option value="">Select subject</option>
+        <%# data-type is used client-side so the list only shows subjects valid for the selected contentType. %>
+        <% reportSubjects.employees.forEach((subject) => { %>
+          <option value="<%= subject.id %>" data-type="EMPLOYEE"><%= subject.label %></option>
+        <% }); %>
+        <% reportSubjects.teams.forEach((subject) => { %>
+          <option value="<%= subject.id %>" data-type="TEAM"><%= subject.label %></option>
+        <% }); %>
+        <% reportSubjects.projects.forEach((subject) => { %>
+          <option value="<%= subject.id %>" data-type="PROJECT"><%= subject.label %></option>
+        <% }); %>
+      </select>
+    </label>
+
+    <label class="block text-sm">
+      <span class="mb-1 block text-brand-text/70">Period start</span>
+      <input
+        type="date"
+        name="periodStart"
+        required
+        class="w-full rounded-lg border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+      />
+    </label>
+
+    <label class="block text-sm">
+      <span class="mb-1 block text-brand-text/70">Period end</span>
+      <input
+        type="date"
+        name="periodEnd"
+        required
+        class="w-full rounded-lg border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+      />
+    </label>
+  </div>
+  <button
+    type="submit"
+    class="mt-4 rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent"
+  >
+    Generate Report
+  </button>
+</form>
+

@@ -2,10 +2,10 @@
   "name": "frontv2",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch app.js",
-    "start": "node app.js"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",

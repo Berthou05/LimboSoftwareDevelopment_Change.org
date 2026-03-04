@@ -15,6 +15,11 @@ npm run dev
 
 Default URL: `http://localhost:3001`
 
+## Team Onboarding
+
+- Quick onboarding guide: `docs/TEAM_ONBOARDING.md`
+- Module conventions: `src/modules/README.md`
+
 ## Demo Login
 
 - User: `rodrigo@unitas.dev`
@@ -36,14 +41,16 @@ Default URL: `http://localhost:3001`
 
 ## Modular Structure
 
-- `app.js` - app bootstrap and middleware
-- `routes/` - route grouping (auth + modules)
-- `controllers/` - page/action handlers
-- `data/mockData.js` - in-memory prototype data and actions
-- `views/layout.ejs` - shared app shell
-- `views/partials/` - reusable UI modules
-- `views/auth/` and `views/pages/` - screen templates
-- `public/js/main.js` - client behavior (report form filtering)
+- `src/app.js` - express app bootstrap and route mounting
+- `src/server.js` - runtime entrypoint (`app.listen`)
+- `src/modules/index.js` - central router registry (easy place to add new feature routes)
+- `src/modules/*` - feature-first routes, controllers, and services
+- `src/data/repositories/inMemory/mockData.repository.js` - in-memory data/actions
+- `src/middlewares/*` - auth, flash, and error handlers
+- `src/views/layout.ejs` - shared app shell
+- `src/views/partials/` - reusable UI modules
+- `src/views/auth/` and `src/views/pages/` - screen templates
+- `src/public/js/main.js` - client behavior (report form filtering)
 
 ## Notes
 

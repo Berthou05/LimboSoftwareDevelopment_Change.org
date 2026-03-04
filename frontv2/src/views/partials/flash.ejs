@@ -1,0 +1,18 @@
+﻿<%# Template: partials/flash.ejs
+   Purpose: Session flash message renderer (success/warning/error).
+   Expected locals: flash object with { type, message }.
+   Why here: one shared renderer guarantees consistent user feedback style across all pages.
+%>
+
+<% if (flash) { %>
+  <div
+    class="mb-5 rounded-xl border px-4 py-3 text-sm <%= flash.type === 'success'
+      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+      : flash.type === 'warning'
+      ? 'border-amber-300 bg-amber-50 text-amber-800'
+      : 'border-red-300 bg-red-50 text-red-800' %>"
+  >
+    <%= flash.message %>
+  </div>
+<% } %>
+
