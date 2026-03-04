@@ -15,5 +15,13 @@
   "bugs": {
     "url": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org/issues"
   },
-  "homepage": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org#readme"
+  "homepage": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "@tailwindcss/cli": "^4.2.1",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "daisyui": "^5.5.19"
+  }
 }
