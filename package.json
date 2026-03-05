@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npm run dev:css & node --watch app.js",
-    "dev:css": "tailwindcss -i ./src/input.css -o ./public/output.css --watch",
-    "build:css": "tailwindcss -i ./src/input.css -o ./public/output.css",
+    "dev:css": "tailwindcss -i ./src/public/css/input.css -o ./src/public/css/output.css --watch",
+    "build:css": "tailwindcss -i ./src/public/css/input.css -o ./src/public/css/output.css",
     "start": "node app.js",
     "build": "npm run build:css && npm start"
   },
@@ -25,6 +25,7 @@
     "@tailwindcss/cli": "^4.2.1",
     "ejs": "^4.0.1",
     "express": "^5.2.1",
+    "flowbite": "^4.0.1",
     "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
