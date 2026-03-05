@@ -1,0 +1,45 @@
+@startuml
+skinparam conditionStyle diamond
+
+|User (Admin)|
+start
+:Navigates to the **Roles** section;
+:Selects a specific Role to manage;
+
+|System|
+:Captures Role ID;
+:Requests current privilege configuration for the role;
+
+|Database|
+:Queries active/inactive privileges (Employee/Lead status);
+:Returns privilege status list;
+
+|System|
+:Renders the **Roles Administration** table;
+:Displays toggle switches for each privilege;
+
+|User (Admin)|
+:Toggles a specific Privilege switch;
+
+|System|
+:Captures the change (Privilege ID + New State);
+:Sends update request to the server;
+
+|Database|
+:Updates the relationship between Role and Privilege;
+
+if (Update Successful?) then (yes)
+    :Confirms record update;
+    |System|
+    :Displays success notification;
+    :Refreshes toggle state in the UI;
+else (no)
+    |Database|
+    :Returns error (Conflict or Connection error);
+    |System|
+    :Displays error message;
+    :Reverts toggle switch to previous state;
+endif
+
+stop
+@enduml
