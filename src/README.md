@@ -13,6 +13,8 @@
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
 - [Development](#development)
+  - [CSS Development](#css-development)
+  - [Adding New Features](#adding-new-features)
 - [Coding Standards](#coding-standards)
 
 ---
@@ -265,7 +267,7 @@ Follow this workflow when implementing new features:
 Define data structure and database operations (CRUD methods: `getAll()`, `getById()`, `create()`, `update()`, `delete()`).
 
 #### 2. **Create the Module** (`modules/`)
-Implement routes and business logic:
+Implement routes and controllers:
 ```javascript
 const router = express.Router();
 const Model = require('../models/feature.model');
@@ -299,14 +301,6 @@ app.use('/feature', featureRoutes);
 - [ ] Routes registered in `app.js`
 - [ ] Error handling (try-catch blocks)
 - [ ] Tested in development mode
-
-### Naming Conventions
-
-- **Files**: `featureName.model.js`, `featureName.module.js`
-- **Routes**: kebab-case (`/project-details/:id`)
-- **Functions**: camelCase (`getUserProjects()`)
-- **Classes**: PascalCase (`ProjectModel`)
-- **Views**: camelCase (`projectDetail.ejs`)
 
 ---
 
