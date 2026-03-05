@@ -1,200 +1,190 @@
 ﻿<%# Template: pages/home.ejs
-   Purpose: Home dashboard for the signed-in user.
-   Expected locals: employee, latestActivity, teamActivity, projectPanels, currentDateLabel, currentQuarterLabel.
-   Data source: home.controller -> home.service -> repository.
-   Why this template computes maps: activity is grouped by date so day headers render once.
-%>
-
-<%
-  // Group personal activity by YYYY-MM-DD to render a timeline grouped by day.
-  const latestByDay = {};
-  (latestActivity || []).forEach((item) => {
-    const dayKey = new Date(item.completedAt || item.createdAt).toISOString().slice(0, 10);
-    if (!latestByDay[dayKey]) {
-      latestByDay[dayKey] = [];
-    }
-    latestByDay[dayKey].push(item);
-  });
-  const latestDays = Object.keys(latestByDay).sort((a, b) => new Date(b) - new Date(a));
-
-  // Same grouping logic for team-level activity feed.
-  const teamByDay = {};
-  (teamActivity || []).forEach((item) => {
-    const dayKey = new Date(item.completedAt || item.createdAt).toISOString().slice(0, 10);
-    if (!teamByDay[dayKey]) {
-      teamByDay[dayKey] = [];
-    }
-    teamByDay[dayKey].push(item);
-  });
-  const teamDays = Object.keys(teamByDay).sort((a, b) => new Date(b) - new Date(a));
-
-  // Right-side summaries intentionally focus on one project to keep this page compact.
-  const primaryProject = (projectPanels || [])[0] || null;
+    Purpose: Home dashboard for the signed-in user.
+    Expected locals: employee, latestActivitySections, teamActivitySections, projectPanels,
+        primaryProject, currentDateLabel, currentQuarterLabel.
+    Data source: home.controller prepares grouped activity sections so this view only renders UI.
 %>
 
 <div class="space-y-6">
-  <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
-    <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-      <div class="flex items-center gap-4">
-        <div class="h-12 w-12 rounded-full border border-brand-secondary bg-brand-bg"></div>
-        <h1 class="font-heading text-4xl font-bold text-brand-text">Welcome, <%= employee.fullName.split(" ")[0] %></h1>
-      </div>
-    </section>
-
-    <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-      <div class="flex items-start justify-between gap-4">
-        <p class="font-heading text-lg font-bold leading-6 text-brand-text"><%= currentDateLabel %></p>
-        <span class="rounded-lg border border-brand-secondary px-3 py-2 text-sm font-bold text-brand-text">
-          <%= currentQuarterLabel %>
-        </span>
-      </div>
-    </section>
-  </div>
-
-  <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
-    <section class="space-y-6">
-      <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-        <h2 class="font-heading text-3xl font-bold text-brand-text">Your Latest Activity</h2>
-
-        <button
-          type="button"
-          class="mt-4 inline-flex rounded-xl border border-brand-secondary bg-brand-bg px-4 py-2 text-sm font-semibold text-brand-text transition hover:bg-brand-secondary/30"
-        >
-          Add Daily Entry
-        </button>
-
-        <div class="mt-4 space-y-4">
-          <% if (!latestDays.length) { %>
-            <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
-              No recent activity.
-            </p>
-          <% } %>
-
-          <%# `latestDays` is sorted descending so newest day appears first. %>
-          <% latestDays.forEach((day) => { %>
-            <p class="inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
-              <%= new Date(day).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) %>
-            </p>
-            <% latestByDay[day].forEach((item) => { %>
-              <article class="rounded-xl border border-brand-secondary/70 p-4">
-                <div class="flex items-start gap-3">
-                  <div class="mt-1 h-5 w-5 rounded-full border border-brand-secondary"></div>
-                  <div class="flex-1">
-                    <h3 class="font-heading text-base font-bold text-brand-text"><%= item.title %></h3>
-                    <p class="mt-2 text-sm text-brand-text/80"><%= item.description || item.content %></p>
-                  </div>
-                </div>
-              </article>
-            <% }) %>
-          <% }) %>
-        </div>
-      </article>
-
-      <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="font-heading text-3xl font-bold text-brand-text">Team Activity</h2>
-          <div class="flex flex-wrap gap-2">
-            <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">Today</button>
-            <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">3 days</button>
-            <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">5 days</button>
-            <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">Start Date</button>
-            <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">End Date</button>
-          </div>
-        </div>
-
-        <div class="mt-4 space-y-4">
-          <% if (!teamDays.length) { %>
-            <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
-              No team activity available.
-            </p>
-          <% } %>
-
-          <%# `teamDays` is also descending to match "most recent first" behavior. %>
-          <% teamDays.forEach((day) => { %>
-            <p class="inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
-              <%= new Date(day).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) %>
-            </p>
-            <% teamByDay[day].forEach((item) => { %>
-              <article class="rounded-xl border border-brand-secondary/70 p-4">
-                <div class="flex items-start gap-3">
-                  <div class="mt-1 h-5 w-5 rounded-full border border-brand-secondary"></div>
-                  <div class="flex-1">
-                    <h3 class="font-heading text-base font-bold text-brand-text"><%= item.title %></h3>
-                    <p class="mt-2 text-sm text-brand-text/80"><%= item.description || item.content %></p>
-                  </div>
-                </div>
-              </article>
-            <% }) %>
-          <% }) %>
-        </div>
-      </article>
-    </section>
-
-    <section class="space-y-6">
-      <%# `details` blocks keep dense info collapsible without adding custom JavaScript. %>
-      <details open class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-        <summary class="cursor-pointer list-none font-heading text-2xl font-bold text-brand-text">
-          Your Projects
-        </summary>
-        <div class="mt-4 space-y-3">
-          <% if (!(projectPanels || []).length) { %>
-            <p class="text-sm text-brand-text/70">No projects assigned.</p>
-          <% } %>
-          <% (projectPanels || []).forEach((project) => { %>
-            <a href="/projects/<%= project.id %>" class="flex items-center gap-3 rounded-xl border border-brand-secondary p-3 transition hover:bg-brand-bg">
-              <div class="h-8 w-8 rounded-full border border-brand-secondary bg-brand-bg"></div>
-              <div class="flex-1">
-                <p class="text-sm font-semibold text-brand-text"><%= project.name %> - <%= project.status %></p>
-                <p class="text-xs text-brand-text/60">
-                  <%= project.startDate ? new Date(project.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Date unavailable" %>
-                </p>
-              </div>
-            </a>
-          <% }) %>
-        </div>
-      </details>
-
-      <%# `details` blocks keep dense info collapsible without adding custom JavaScript. %>
-      <details open class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-        <summary class="cursor-pointer list-none font-heading text-2xl font-bold text-brand-text">
-          Project Highlights
-        </summary>
-        <div class="mt-4 space-y-3">
-          <% if (!primaryProject || !primaryProject.highlights.length) { %>
-            <p class="text-sm text-brand-text/70">No highlights available.</p>
-          <% } %>
-          <% (primaryProject?.highlights || []).forEach((highlight) => { %>
-            <div class="rounded-xl border border-brand-secondary p-3">
-              <p class="text-sm font-semibold text-brand-text"><%= highlight.title %></p>
-              <p class="mt-1 text-sm text-brand-text/80"><%= highlight.content %></p>
+    <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+            <div class="flex items-center gap-4">
+                <div class="h-12 w-12 rounded-full border border-brand-secondary bg-brand-bg"></div>
+                <h1 class="font-heading text-4xl font-bold text-brand-text">
+                    Welcome, <%= employee.fullName.split(' ')[0] %>
+                </h1>
             </div>
-          <% }) %>
-        </div>
-      </details>
+        </section>
 
-      <%# `details` blocks keep dense info collapsible without adding custom JavaScript. %>
-      <details open class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-        <summary class="cursor-pointer list-none font-heading text-2xl font-bold text-brand-text">
-          Project Achievements
-        </summary>
-        <div class="mt-4 space-y-3">
-          <% if (!primaryProject || !primaryProject.achievements.length) { %>
-            <p class="text-sm text-brand-text/70">No achievements available.</p>
-          <% } %>
-          <% (primaryProject?.achievements || []).forEach((achievement) => { %>
-            <div class="rounded-xl border border-brand-secondary p-3">
-              <span class="inline-flex rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold text-brand-text/70">
-                <%= achievement.achievementDate ? new Date(achievement.achievementDate).toLocaleDateString("en-US", { day: "2-digit", month: "short" }) : "N/A" %>
-              </span>
-              <p class="mt-2 text-sm font-semibold text-brand-text"><%= achievement.title %></p>
-              <p class="mt-1 text-sm text-brand-text/80"><%= achievement.description %></p>
+        <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+            <div class="flex items-start justify-between gap-4">
+                <p class="font-heading text-lg font-bold leading-6 text-brand-text"><%= currentDateLabel %></p>
+                <span class="rounded-lg border border-brand-secondary px-3 py-2 text-sm font-bold text-brand-text">
+                    <%= currentQuarterLabel %>
+                </span>
             </div>
-          <% }) %>
-        </div>
-      </details>
-    </section>
-  </div>
+        </section>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
+        <section class="space-y-6">
+            <%# Report generator section for quick report access from home - full layout with type selector and search. %>
+            <%- include('../partials/reportGenerator', { redirectTo: '/home', defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport, layout: 'full' }) %>
+
+            <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+                <h2 class="font-heading text-3xl font-bold text-brand-text">Your Latest Activity</h2>
+
+                <button
+                    type="button"
+                    class="mt-4 inline-flex rounded-xl border border-brand-secondary bg-brand-bg px-4 py-2 text-sm font-semibold text-brand-text transition hover:bg-brand-secondary/30"
+                >
+                    Add Daily Entry
+                </button>
+
+                <div class="mt-4 space-y-4">
+                    <% if (!(latestActivitySections || []).length) { %>
+                        <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
+                            No recent activity.
+                        </p>
+                    <% } %>
+
+                    <%# Sections are already grouped and sorted in controller. %>
+                    <% (latestActivitySections || []).forEach((section) => { %>
+                        <p class="inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
+                            <%= section.dayLabel %>
+                        </p>
+                        <% section.items.forEach((item) => { %>
+                            <article class="rounded-xl border border-brand-secondary/70 p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 h-5 w-5 rounded-full border border-brand-secondary"></div>
+                                    <div class="flex-1">
+                                        <h3 class="font-heading text-base font-bold text-brand-text"><%= item.title %></h3>
+                                        <p class="mt-2 text-sm text-brand-text/80"><%= item.description || item.content %></p>
+                                    </div>
+                                </div>
+                            </article>
+                        <% }) %>
+                    <% }) %>
+                </div>
+            </article>
+
+            <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="font-heading text-3xl font-bold text-brand-text">Team Activity</h2>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">Today</button>
+                        <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">3 days</button>
+                        <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">5 days</button>
+                        <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">Start Date</button>
+                        <button type="button" class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">End Date</button>
+                    </div>
+                </div>
+
+                <div class="mt-4 space-y-4">
+                    <% if (!(teamActivitySections || []).length) { %>
+                        <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
+                            No team activity available.
+                        </p>
+                    <% } %>
+
+                    <%# Same view model as personal activity; this keeps both feeds consistent. %>
+                    <% (teamActivitySections || []).forEach((section) => { %>
+                        <p class="inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
+                            <%= section.dayLabel %>
+                        </p>
+                        <% section.items.forEach((item) => { %>
+                            <article class="rounded-xl border border-brand-secondary/70 p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 h-5 w-5 rounded-full border border-brand-secondary"></div>
+                                    <div class="flex-1">
+                                        <h3 class="font-heading text-base font-bold text-brand-text"><%= item.title %></h3>
+                                        <p class="mt-2 text-sm text-brand-text/80"><%= item.description || item.content %></p>
+                                    </div>
+                                </div>
+                            </article>
+                        <% }) %>
+                    <% }) %>
+                </div>
+            </article>
+        </section>
+
+        <section class="space-y-6">
+            <%# Your Projects with nested highlights and achievements per project %>
+            <details open class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+                <summary class="cursor-pointer list-none font-heading text-2xl font-bold text-brand-text">
+                    Your Projects
+                </summary>
+                <div class="mt-4 space-y-4">
+                    <% if (!(projectPanels || []).length) { %>
+                        <p class="text-sm text-brand-text/70">No projects assigned.</p>
+                    <% } %>
+                    <% (projectPanels || []).forEach((project) => { %>
+                        <details open class="group rounded-xl border border-brand-secondary">
+                            <summary class="flex cursor-pointer items-center gap-3 p-3 transition hover:bg-brand-bg/50">
+                                <svg class="h-4 w-4 shrink-0 text-brand-text/50 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                                <div class="h-8 w-8 shrink-0 rounded-full border border-brand-secondary bg-brand-bg"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-brand-text truncate"><%= project.name %> - <%= project.status %></p>
+                                    <p class="text-xs text-brand-text/60">
+                                        <%= project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unavailable' %>
+                                    </p>
+                                </div>
+                                <a href="/projects/<%= project.id %>" class="shrink-0 rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold text-brand-text/70 transition hover:bg-brand-secondary/30" onclick="event.stopPropagation();">
+                                    View
+                                </a>
+                            </summary>
+                            
+                            <div class="border-t border-brand-secondary p-3 space-y-3">
+                                <%# Highlights %>
+                                <details class="group/hl rounded-lg border border-brand-secondary/70">
+                                    <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm font-semibold text-brand-text/80 hover:bg-brand-bg/30">
+                                        <svg class="h-3 w-3 shrink-0 text-brand-text/50 transition-transform group-open/hl:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        Highlights
+                                    </summary>
+                                    <div class="border-t border-brand-secondary/50 p-3 space-y-2">
+                                        <% if (!(project.highlights || []).length) { %>
+                                            <p class="text-xs text-brand-text/60">No highlights.</p>
+                                        <% } %>
+                                        <% (project.highlights || []).forEach((highlight) => { %>
+                                            <div class="rounded-xl border border-brand-secondary bg-white p-3">
+                                                <p class="text-xs text-brand-text/50"><%= highlight.createdAt ? new Date(highlight.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '' %></p>
+                                                <p class="mt-1 text-sm font-bold text-brand-text"><%= highlight.title %></p>
+                                                <p class="mt-1 text-sm text-brand-text/70"><%= highlight.content %></p>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                </details>
+
+                                <%# Achievements %>
+                                <details class="group/ach rounded-lg border border-brand-secondary/70">
+                                    <summary class="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm font-semibold text-brand-text/80 hover:bg-brand-bg/30">
+                                        <svg class="h-3 w-3 shrink-0 text-brand-text/50 transition-transform group-open/ach:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        Achievements
+                                    </summary>
+                                    <div class="border-t border-brand-secondary/50 p-3 space-y-2">
+                                        <% if (!(project.achievements || []).length) { %>
+                                            <p class="text-xs text-brand-text/60">No achievements.</p>
+                                        <% } %>
+                                        <% (project.achievements || []).forEach((achievement) => { %>
+                                            <div class="rounded-xl border border-brand-secondary bg-white p-3">
+                                                <p class="text-xs text-brand-text/50"><%= achievement.achievementDate ? new Date(achievement.achievementDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '' %></p>
+                                                <p class="mt-1 text-sm font-bold text-brand-text"><%= achievement.title %></p>
+                                                <p class="mt-1 text-sm text-brand-text/70"><%= achievement.description %></p>
+                                            </div>
+                                        <% }) %>
+                                    </div>
+                                </details>
+                            </div>
+                        </details>
+                    <% }) %>
+                </div>
+            </details>
+        </section>
+    </div>
 </div>
-
-
-

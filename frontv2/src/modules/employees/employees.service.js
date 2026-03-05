@@ -1,18 +1,17 @@
 ﻿const {
-  getEmployees,
-  getEmployeeById,
-} = require("../../data/repositories/inMemory/mockData.repository");
+    getEmployees,
+    getEmployeeById,
+} = require('../../data/repositories/inMemory/mockData.repository');
 
-function listEmployees() {
-  return getEmployees();
-}
-
-function findEmployeeById(employeeId) {
-  return getEmployeeById(employeeId);
-}
-
-module.exports = {
-  listEmployees,
-  findEmployeeById,
+const listEmployees = function listEmployees() {
+    return getEmployees();
 };
 
+const findEmployeeById = function findEmployeeById(employeeId) {
+    return getEmployeeById(employeeId);
+};
+
+module.exports = {
+    listEmployees,
+    findEmployeeById,
+};

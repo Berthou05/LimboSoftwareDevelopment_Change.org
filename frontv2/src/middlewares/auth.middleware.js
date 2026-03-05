@@ -1,28 +1,38 @@
-﻿function requireAuth(req, res, next) {
-  if (!req.session.user) {
-    req.session.flash = {
-      type: "warning",
-      message: "Please sign in to continue.",
-    };
-    return res.redirect("/login");
-  }
-  return next();
-}
+﻿/*
+ * Authentication middleware:
+ * - requireAuth: blocks anonymous users.
+ * - requireAdmin: blocks signed-in users who are not admins.
+ */
 
-function requireAdmin(req, res, next) {
-  const roleName = String(req.session.user?.roleName || "").toLowerCase();
-  if (roleName !== "admin") {
-    req.session.flash = {
-      type: "danger",
-      message: "Admin access required.",
-    };
-    return res.redirect("/home");
-  }
-  return next();
-}
+const requireAuth = function requireAuth(req, res, next) {
+    if (!req.session.user) {
+        req.session.flash = {
+            type: 'warning',
+            message: 'Please sign in to continue.',
+        };
 
-module.exports = {
-  requireAuth,
-  requireAdmin,
+        return res.redirect('/login');
+    }
+
+    return next();
 };
 
+const requireAdmin = function requireAdmin(req, res, next) {
+    const roleName = String(req.session.user?.roleName || '').toLowerCase();
+
+    if (roleName !== 'admin') {
+        req.session.flash = {
+            type: 'danger',
+            message: 'Admin access required.',
+        };
+
+        return res.redirect('/home');
+    }
+
+    return next();
+};
+
+module.exports = {
+    requireAuth,
+    requireAdmin,
+};

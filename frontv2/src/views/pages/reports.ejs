@@ -78,22 +78,22 @@
 
       <div class="relative block text-sm">
         <span class="mb-2 block font-semibold text-brand-text/70">Date Range</span>
-        <div id="reportDateRangeTrigger" class="grid cursor-pointer gap-2 sm:grid-cols-2">
+        <div data-date-trigger class="grid cursor-pointer gap-2 sm:grid-cols-2">
           <div class="rounded-xl border border-brand-secondary bg-white px-3 py-2">
             <p class="text-xs font-semibold text-brand-text/60">Start Date</p>
-            <input id="reportStartDisplay" type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none" value="" />
+            <input data-start-display type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none" value="" />
           </div>
           <div class="rounded-xl border border-brand-secondary bg-white px-3 py-2">
             <p class="text-xs font-semibold text-brand-text/60">End Date</p>
-            <input id="reportEndDisplay" type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none" value="" />
+            <input data-end-display type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none" value="" />
           </div>
         </div>
 
         <%# Hidden date values are submitted to backend; visible fields are read-only presentation. %>
-        <input id="reportStartValue" type="hidden" name="periodStart" value="<%= quickReport.periodStart %>" required />
-        <input id="reportEndValue" type="hidden" name="periodEnd" value="<%= quickReport.periodEnd %>" required />
+        <input data-start-value type="hidden" name="periodStart" value="<%= quickReport.periodStart %>" required />
+        <input data-end-value type="hidden" name="periodEnd" value="<%= quickReport.periodEnd %>" required />
 
-        <div id="reportDateRangePopover" class="absolute right-0 z-40 mt-2 hidden w-[min(44rem,95vw)] rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+        <div data-date-popover class="absolute right-0 z-40 mt-2 hidden w-[min(44rem,95vw)] rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
           <div class="flex items-center justify-between gap-2">
             <button type="button" data-calendar-nav="prev" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">
               &lt;
@@ -119,7 +119,7 @@
               <button type="button" data-quarter="3" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q3</button>
               <button type="button" data-quarter="4" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q4</button>
             </div>
-            <button type="button" id="reportDateApply" class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-accent">
+            <button type="button" data-date-apply class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-accent">
               Apply
             </button>
           </div>

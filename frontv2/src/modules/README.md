@@ -1,13 +1,33 @@
 ﻿# Modules Guide
 
-Each feature module follows the same shape:
-- `*.routes.js`: URL paths and middleware
-- `*.controller.js`: request/response logic (`req`, `res`, redirects, rendering)
-- `*.service.js`: data access/business helpers
+Each feature module has the same 3-file structure:
+
+- `*.routes.js`: declares URLs and middleware.
+- `*.controller.js`: reads request data, calls services, renders/redirects.
+- `*.service.js`: calls repository functions.
+
+## Data Flow Convention
+
+Use this trace when reading code:
+
+1. Route receives URL.
+2. Controller chooses action.
+3. Service fetches/mutates data.
+4. Repository performs in-memory data logic.
+5. Controller passes final values to EJS template.
 
 ## Team Rules
 
-- Keep controllers thin: validate input, call service, render/redirect.
-- Keep services simple: call repository functions and return data.
-- Put shared helpers in `src/modules/shared`.
-- If you add a new module router, register it in `src/modules/index.js`.
+- Keep routes tiny.
+- Keep controllers explicit.
+- Keep services thin.
+- Keep data shape logic in repository/shared utils.
+- Put reusable cross-module helpers in `src/modules/shared`.
+- Register every new router in `src/modules/index.js`.
+
+## Naming Tips
+
+- `renderXxx`: GET page render actions.
+- `handleXxx`: POST/PUT-like mutation actions.
+- `listXxx` / `findXxxById`: read operations.
+- `setXxx` / `toggleXxx`: write operations.
