@@ -13,6 +13,7 @@
 - [Installation](#installation)
 - [Running the Application](#running-the-application)
 - [Development](#development)
+- [Coding Standards](#coding-standards)
 
 ---
 
@@ -306,6 +307,163 @@ app.use('/feature', featureRoutes);
 - **Functions**: camelCase (`getUserProjects()`)
 - **Classes**: PascalCase (`ProjectModel`)
 - **Views**: camelCase (`projectDetail.ejs`)
+
+---
+
+## Coding Standards
+
+### Formatting
+
+- **Indentation**: 4 spaces
+- **Line length**: Max 100 characters
+- **Semicolons**: Always required
+- **Quotes**: Single quotes `''` for strings
+- **Braces**: Required for all control structures (except single-line `if`)
+- **Spacing**: Space before opening braces and around operators
+- **Trailing commas**: Use in multiline arrays/objects
+- **Blank lines**: No multiple consecutive blank lines
+
+### Naming
+
+- **Variables/Parameters**: `lowerCamelCase` (`firstName`, `totalSum`)
+- **Functions/Methods**: `lowerCamelCase` verbs (`getUserData()`, `calculateTotal()`)
+- **Classes/Types**: `UpperCamelCase` nouns (`UserAccount`, `DataProcessor`)
+- **Constants**: `CONSTANT_CASE` (`MAX_SIZE`, `API_URL`)
+- **Enums**: `UpperCamelCase` with `CONSTANT_CASE` values
+- **Directories**: `lowerCamelCase` (`userManagement`, `dataProcessing`)
+
+### Variables
+
+```javascript
+// Use const/let, one per line
+const items = getItems();
+const isActive = true;
+let counter = 0;
+
+// Group consts, then lets
+const foo = 1;
+const bar = 2;
+let baz;
+let qux;
+
+// No unused variables
+```
+
+### Functions
+
+```javascript
+// Named function expressions
+const myFunction = function myFunction() {
+  // ...
+};
+
+// Arrow functions for callbacks
+const sum = (a, b) => a + b;
+items.map((item) => item.id);
+
+// Rest parameters instead of arguments
+function concatenate(...args) {
+  return args.join('');
+}
+```
+
+### Objects
+
+```javascript
+// Shorthand syntax
+const name = 'John';
+const user = { name };
+
+// Method shorthand
+const user = {
+  sayHello() {
+    return 'Hello';
+  },
+};
+
+// Destructuring
+const { name, age } = user;
+
+// Dot notation preferred
+user.name; // ✓
+user['name']; // ✗
+```
+
+### Control Flow
+
+```javascript
+// Strict equality
+if (value === 5) { }  // ✓
+if (value == 5) { }   // ✗
+
+// for-of for arrays
+for (const item of items) { }
+
+// Switch with default
+switch (value) {
+  case 1:
+    break;
+  default:
+    break;
+}
+```
+
+### Strings
+
+```javascript
+// Template literals for interpolation
+const greeting = `Hello, ${name}!`;
+
+// Single quotes
+const message = 'Hello world';
+```
+
+### Comments
+
+```javascript
+// Single line comment
+
+/*
+ * Multiline comment
+ * for documentation
+ */
+
+// TODO: implement feature
+// FIXME: needs review
+```
+
+### Commit Conventions
+
+Follow **Conventional Commits** standard:
+
+```
+<type>: <description>
+```
+
+**Types:**
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation only
+- `style`: Formatting changes
+- `refactor`: Code restructuring
+- `test`: Test changes
+- `chore`: Maintenance tasks
+
+**Rules:**
+- Lowercase type
+- Imperative mood ("add" not "added")
+- Max 72 characters
+- No period at end
+
+**Examples:**
+```
+feat: add user registration endpoint
+fix: correct password validation logic
+docs: update API documentation
+refactor: simplify authentication service
+test: add unit tests for login controller
+chore: update dependencies
+```
 
 ---
 
