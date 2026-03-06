@@ -5,29 +5,26 @@
     Data source: home.controller prepares grouped activity sections so this view only renders UI.
 %>
 
-<div class="space-y-6">
-    <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-            <div class="flex items-center gap-4">
-                <div class="h-12 w-12 rounded-full border border-brand-secondary bg-brand-bg"></div>
-                <h1 class="font-heading text-4xl font-bold text-brand-text">
-                    Welcome, <%= employee.fullName.split(' ')[0] %>
-                </h1>
-            </div>
-        </section>
+<div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
+    <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+        <div class="flex items-center gap-4">
+            <div class="h-12 w-12 rounded-full border border-brand-secondary bg-brand-bg"></div>
+            <h1 class="font-heading text-4xl font-bold text-brand-text">
+                Welcome, <%= employee.fullName.split(' ')[0] %>
+            </h1>
+        </div>
+    </section>
 
-        <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-            <div class="flex items-start justify-between gap-4">
-                <p class="font-heading text-lg font-bold leading-6 text-brand-text"><%= currentDateLabel %></p>
-                <span class="rounded-lg border border-brand-secondary px-3 py-2 text-sm font-bold text-brand-text">
-                    <%= currentQuarterLabel %>
-                </span>
-            </div>
-        </section>
-    </div>
+    <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+        <div class="flex items-start justify-between gap-4">
+            <p class="font-heading text-lg font-bold leading-6 text-brand-text"><%= currentDateLabel %></p>
+            <span class="rounded-lg border border-brand-secondary px-3 py-2 text-sm font-bold text-brand-text">
+                <%= currentQuarterLabel %>
+            </span>
+        </div>
+    </section>
 
-    <div class="grid gap-6 xl:grid-cols-[2fr_1fr]">
-        <section class="space-y-6">
+    <section class="space-y-6">
             <%# Report generator section for quick report access from home - full layout with type selector and search. %>
             <%- include('../partials/reportGenerator', { redirectTo: '/home', defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport, layout: 'full' }) %>
 
@@ -98,16 +95,14 @@
             </div>
 
             <%# Your Projects with nested highlights and achievements per project %>
-            <details class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-                <summary class="cursor-pointer list-none font-heading text-2xl font-bold text-brand-text">
-                    Your Projects
-                </summary>
+            <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+                <h2 class="font-heading text-2xl font-bold text-brand-text">Your Projects</h2>
                 <div class="mt-4 space-y-4">
                     <% if (!(projectPanels || []).length) { %>
                         <p class="text-sm text-brand-text/70">No projects assigned.</p>
                     <% } %>
                     <% (projectPanels || []).forEach((project) => { %>
-                        <details open class="group rounded-xl border border-brand-secondary">
+                        <details class="group rounded-xl border border-brand-secondary">
                             <summary class="flex cursor-pointer items-center gap-3 p-3 transition hover:bg-brand-bg/50">
                                 <svg class="h-4 w-4 shrink-0 text-brand-text/50 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -172,7 +167,6 @@
                         </details>
                     <% }) %>
                 </div>
-            </details>
+            </article>
         </section>
     </div>
-</div>
