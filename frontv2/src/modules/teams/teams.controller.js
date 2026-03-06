@@ -7,13 +7,18 @@ const { getLatestReportsByType } = require('../reports/reports.service');
 
 const renderTeams = function renderTeams(req, res) {
     const query = req.query.q || '';
-    const teams = filterByQuery(listTeams(), query, ['name', 'description']);
+    const currentEmployeeId = req.session.user.employeeId;
+    const allTeams = filterByQuery(listTeams(), query, ['name', 'description']);
+    
+    const myTeams = allTeams.filter((team) => team.members.some((m) => m.employeeId === currentEmployeeId));
+    const otherTeams = allTeams.filter((team) => !team.members.some((m) => m.employeeId === currentEmployeeId));
 
     return renderModule(res, 'pages/teams', {
         activeRoute: '/teams',
         pageTitle: 'Team',
         pageSubtitle: 'Intermediate selection for own and other teams.',
-        teams,
+        myTeams,
+        otherTeams,
         query,
     });
 };

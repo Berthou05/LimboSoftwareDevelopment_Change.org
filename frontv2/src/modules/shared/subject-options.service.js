@@ -117,7 +117,7 @@ const findFilteredSubjectOptions = function findFilteredSubjectOptions(employeeI
         };
     }
 
-    // Employee: can only report on themselves and projects they participate in
+    // Employee: can report on themselves, their teams, and projects they participate in
     const employees = [];
     if (currentEmployee) {
         employees.push({
@@ -125,6 +125,19 @@ const findFilteredSubjectOptions = function findFilteredSubjectOptions(employeeI
             label: currentEmployee.fullName,
             type: 'EMPLOYEE',
         });
+    }
+
+    // Include teams the employee is a member of
+    const teams = [];
+    const employeeTeamIds = currentEmployee?.teams || [];
+    for (const team of allTeams) {
+        if (employeeTeamIds.includes(team.id)) {
+            teams.push({
+                id: team.id,
+                label: team.name,
+                type: 'TEAM',
+            });
+        }
     }
 
     const projects = [];
@@ -141,7 +154,7 @@ const findFilteredSubjectOptions = function findFilteredSubjectOptions(employeeI
 
     return {
         employees,
-        teams: [],
+        teams,
         projects,
     };
 };

@@ -171,12 +171,15 @@
       <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
       <input type="hidden" name="contentType" value="<%= currentType %>" />
       
-      <% if (!showSubjectSelector && singleSubjectId) { %>
+      <% if (defaultSubjectId) { %>
+        <%# On detail pages, always use the page's subject %>
+        <input type="hidden" name="subjectId" value="<%= defaultSubjectId %>" />
+      <% } else if (!showSubjectSelector && singleSubjectId) { %>
         <input type="hidden" name="subjectId" value="<%= singleSubjectId %>" />
       <% } %>
       
       <div class="space-y-4">
-        <% if (showSubjectSelector) { %>
+        <% if (!defaultSubjectId && showSubjectSelector) { %>
           <label class="block text-sm">
             <span class="mb-2 block font-semibold text-brand-text/70">Select <%= currentTypeLabel.toLowerCase() %>:</span>
             <select

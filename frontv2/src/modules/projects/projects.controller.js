@@ -11,13 +11,18 @@ const { getLatestReportsByType } = require('../reports/reports.service');
 
 const renderProjects = function renderProjects(req, res) {
     const query = req.query.q || '';
-    const projects = filterByQuery(listProjects(), query, ['name', 'description', 'status']);
+    const currentEmployeeId = req.session.user.employeeId;
+    const allProjects = filterByQuery(listProjects(), query, ['name', 'description', 'status']);
+    
+    const myProjects = allProjects.filter((project) => project.participantIds.includes(currentEmployeeId));
+    const otherProjects = allProjects.filter((project) => !project.participantIds.includes(currentEmployeeId));
 
     return renderModule(res, 'pages/projects', {
         activeRoute: '/projects',
         pageTitle: 'Project',
         pageSubtitle: 'Intermediate selection for own and other projects.',
-        projects,
+        myProjects,
+        otherProjects,
         query,
     });
 };

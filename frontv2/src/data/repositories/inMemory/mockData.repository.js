@@ -55,7 +55,7 @@ const employees = [
         title: 'Software Engineer',
         bio: 'Builds reporting workflows and keeps team delivery healthy.',
         teams: ['team-1'],
-        projects: ['proj-1', 'proj-2'],
+        projects: ['proj-1', 'proj-2', 'proj-3', 'proj-6', 'proj-7', 'proj-9', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Rodrigo',
     },
     {
@@ -65,7 +65,7 @@ const employees = [
         title: 'Frontend Lead',
         bio: 'Owns UI consistency and accessibility across modules.',
         teams: ['team-1'],
-        projects: ['proj-1'],
+        projects: ['proj-1', 'proj-3', 'proj-5', 'proj-8', 'proj-9', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Camila',
     },
     {
@@ -75,7 +75,7 @@ const employees = [
         title: 'Data Engineer',
         bio: 'Designs data pipelines for report generation.',
         teams: ['team-2'],
-        projects: ['proj-2'],
+        projects: ['proj-2', 'proj-4', 'proj-6', 'proj-7'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Alexis',
     },
     {
@@ -85,7 +85,7 @@ const employees = [
         title: 'Product Engineer',
         bio: 'Connects employee workflows and business goals.',
         teams: ['team-2'],
-        projects: ['proj-2'],
+        projects: ['proj-2', 'proj-4', 'proj-5', 'proj-7', 'proj-8', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Alejandro_BlackHair',
     },
 ];
@@ -101,7 +101,7 @@ const teams = [
             { employeeId: 'emp-1', role: 'Employee', startDate: '2025-08-12' },
             { employeeId: 'emp-3', role: 'Lead', startDate: '2025-06-01' },
         ],
-        projectIds: ['proj-1'],
+        projectIds: ['proj-1', 'proj-3', 'proj-6', 'proj-7', 'proj-9', 'proj-10'],
     },
     {
         id: 'team-2',
@@ -113,7 +113,7 @@ const teams = [
             { employeeId: 'emp-2', role: 'Lead', startDate: '2025-07-10' },
             { employeeId: 'emp-4', role: 'Employee', startDate: '2025-07-12' },
         ],
-        projectIds: ['proj-2'],
+        projectIds: ['proj-2', 'proj-4', 'proj-5', 'proj-7', 'proj-8'],
     },
 ];
 
@@ -189,6 +189,294 @@ const projects = [
                 title: 'Slack report command tested',
                 content: 'Internal test validates report generation from Slack trigger.',
                 createdAt: '2026-02-20',
+            },
+        ],
+    },
+    {
+        id: 'proj-3',
+        name: 'Mobile Companion App',
+        description: 'Native mobile application for activity logging on the go.',
+        status: 'ACTIVE',
+        startDate: '2026-01-10',
+        endDate: '2026-09-30',
+        responsibleEmployeeId: 'emp-2',
+        teamIds: ['team-1'],
+        participantIds: ['emp-1', 'emp-2'],
+        goals: [
+            {
+                id: 'goal-3',
+                title: 'Offline sync capability',
+                description: 'Allow users to log activities without network and sync later.',
+                dueDate: '2026-05-01',
+                status: 'IN_PROGRESS',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-3',
+                title: 'Push notifications working',
+                description: 'Users receive daily reminders to log activities.',
+                achievementDate: '2026-02-25',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-3',
+                title: 'Beta testers onboarded',
+                content: '15 internal users now testing the mobile app daily.',
+                createdAt: '2026-02-28',
+            },
+        ],
+    },
+    {
+        id: 'proj-4',
+        name: 'Analytics Dashboard',
+        description: 'Real-time visualization of team productivity and project metrics.',
+        status: 'ACTIVE',
+        startDate: '2025-12-01',
+        endDate: '2026-07-15',
+        responsibleEmployeeId: 'emp-3',
+        teamIds: ['team-2'],
+        participantIds: ['emp-3', 'emp-4'],
+        goals: [
+            {
+                id: 'goal-4',
+                title: 'Interactive chart components',
+                description: 'Build reusable D3.js chart library for dashboards.',
+                dueDate: '2026-04-15',
+                status: 'IN_PROGRESS',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-4',
+                title: 'KPI cards deployed',
+                description: 'Dashboard now shows team velocity and burn-down metrics.',
+                achievementDate: '2026-02-15',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-4',
+                title: 'Executive preview session',
+                content: 'Leadership approved dashboard design in sprint review.',
+                createdAt: '2026-02-22',
+            },
+        ],
+    },
+    {
+        id: 'proj-5',
+        name: 'Employee Onboarding Portal',
+        description: 'Self-service portal for new hire documentation and training.',
+        status: 'COMPLETED',
+        startDate: '2025-08-01',
+        endDate: '2026-01-31',
+        responsibleEmployeeId: 'emp-4',
+        teamIds: ['team-2'],
+        participantIds: ['emp-2', 'emp-4'],
+        goals: [
+            {
+                id: 'goal-5',
+                title: 'Document upload system',
+                description: 'Enable HR to upload onboarding materials.',
+                dueDate: '2025-12-15',
+                status: 'COMPLETED',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-5',
+                title: 'Portal launched',
+                description: 'Successfully onboarded 12 new employees using the portal.',
+                achievementDate: '2026-01-25',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-5',
+                title: 'HR integration complete',
+                content: 'Portal now syncs with HR systems for automatic user creation.',
+                createdAt: '2026-01-20',
+            },
+        ],
+    },
+    {
+        id: 'proj-6',
+        name: 'Security Audit Automation',
+        description: 'Automated vulnerability scanning and compliance reporting.',
+        status: 'ACTIVE',
+        startDate: '2026-02-01',
+        endDate: '2026-12-31',
+        responsibleEmployeeId: 'emp-1',
+        teamIds: ['team-1'],
+        participantIds: ['emp-1', 'emp-3'],
+        goals: [
+            {
+                id: 'goal-6',
+                title: 'OWASP compliance checks',
+                description: 'Implement automated OWASP Top 10 vulnerability scanning.',
+                dueDate: '2026-06-01',
+                status: 'NOT_STARTED',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-6',
+                title: 'Dependency scanner deployed',
+                description: 'npm audit runs automatically on every PR.',
+                achievementDate: '2026-02-28',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-6',
+                title: 'Zero critical vulnerabilities',
+                content: 'First month closed with no critical security issues.',
+                createdAt: '2026-03-01',
+            },
+        ],
+    },
+    {
+        id: 'proj-7',
+        name: 'API Gateway Redesign',
+        description: 'Modernize API architecture with rate limiting and caching.',
+        status: 'PLANNING',
+        startDate: '2026-04-01',
+        endDate: '2026-10-31',
+        responsibleEmployeeId: 'emp-3',
+        teamIds: ['team-1', 'team-2'],
+        participantIds: ['emp-1', 'emp-3', 'emp-4'],
+        goals: [
+            {
+                id: 'goal-7',
+                title: 'Rate limiting implementation',
+                description: 'Add configurable rate limits per API endpoint.',
+                dueDate: '2026-06-15',
+                status: 'NOT_STARTED',
+            },
+        ],
+        achievements: [],
+        highlights: [
+            {
+                id: 'hl-7',
+                title: 'Architecture RFC approved',
+                content: 'Team agreed on Kong-based gateway solution.',
+                createdAt: '2026-03-02',
+            },
+        ],
+    },
+    {
+        id: 'proj-8',
+        name: 'Customer Feedback System',
+        description: 'In-app feedback collection and sentiment analysis.',
+        status: 'ACTIVE',
+        startDate: '2025-11-15',
+        endDate: '2026-05-31',
+        responsibleEmployeeId: 'emp-4',
+        teamIds: ['team-2'],
+        participantIds: ['emp-2', 'emp-4'],
+        goals: [
+            {
+                id: 'goal-8',
+                title: 'Sentiment dashboard',
+                description: 'Visualize feedback trends with NLP-based sentiment scores.',
+                dueDate: '2026-04-30',
+                status: 'IN_PROGRESS',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-8',
+                title: 'Feedback widget launched',
+                description: 'Users can now submit feedback from any page.',
+                achievementDate: '2026-01-10',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-8',
+                title: '500+ feedback entries',
+                content: 'Reached milestone of 500 customer feedback submissions.',
+                createdAt: '2026-02-15',
+            },
+        ],
+    },
+    {
+        id: 'proj-9',
+        name: 'Performance Optimization Sprint',
+        description: 'Dedicated effort to improve application load times and responsiveness.',
+        status: 'COMPLETED',
+        startDate: '2025-09-01',
+        endDate: '2025-11-30',
+        responsibleEmployeeId: 'emp-2',
+        teamIds: ['team-1'],
+        participantIds: ['emp-1', 'emp-2'],
+        goals: [
+            {
+                id: 'goal-9',
+                title: 'Sub-2s page loads',
+                description: 'Achieve under 2 second load time for all main pages.',
+                dueDate: '2025-11-15',
+                status: 'COMPLETED',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-9',
+                title: '40% load time reduction',
+                description: 'Average page load decreased from 3.2s to 1.9s.',
+                achievementDate: '2025-11-20',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-9',
+                title: 'Lighthouse score 95+',
+                content: 'All pages now score above 95 on Google Lighthouse.',
+                createdAt: '2025-11-25',
+            },
+        ],
+    },
+    {
+        id: 'proj-10',
+        name: 'Internationalization (i18n)',
+        description: 'Multi-language support for global team deployment.',
+        status: 'ACTIVE',
+        startDate: '2026-01-15',
+        endDate: '2026-08-31',
+        responsibleEmployeeId: 'emp-1',
+        teamIds: ['team-1'],
+        participantIds: ['emp-1', 'emp-2', 'emp-4'],
+        goals: [
+            {
+                id: 'goal-10',
+                title: 'Spanish localization',
+                description: 'Complete Spanish translation for all UI strings.',
+                dueDate: '2026-04-01',
+                status: 'IN_PROGRESS',
+            },
+        ],
+        achievements: [
+            {
+                id: 'ach-10',
+                title: 'i18n framework integrated',
+                description: 'All static strings now use translation keys.',
+                achievementDate: '2026-02-05',
+                evidenceLink: '#',
+            },
+        ],
+        highlights: [
+            {
+                id: 'hl-10',
+                title: 'French beta available',
+                content: 'French localization ready for internal testing.',
+                createdAt: '2026-03-01',
             },
         ],
     },
@@ -439,7 +727,13 @@ const getHomeData = function getHomeData(employeeId) {
         }
 
         if (employee.teams.includes(activity.teamId)) {
-            teamActivities.push(activity);
+            // Enrich with author info for team activity feed
+            const author = getEmployeeById(activity.employeeId);
+            teamActivities.push({
+                ...activity,
+                authorName: author ? author.fullName : 'Unknown',
+                authorInitials: author ? author.fullName.split(' ').map(n => n[0]).join('') : '?',
+            });
         }
     }
 
@@ -502,7 +796,12 @@ const getTeams = function getTeams() {
 
         for (const activity of activities) {
             if (activity.teamId === team.id) {
-                activityLog.push(activity);
+                const author = getEmployeeById(activity.employeeId);
+                activityLog.push({
+                    ...activity,
+                    authorName: author ? author.fullName : 'Unknown',
+                    authorInitials: author ? author.fullName.split(' ').map(n => n[0]).join('') : '?',
+                });
             }
         }
 
