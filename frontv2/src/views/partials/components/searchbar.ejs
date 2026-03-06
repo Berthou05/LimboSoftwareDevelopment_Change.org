@@ -1,10 +1,10 @@
-<form action="/employees" method="GET" class="flex w-full max-w-lg items-center gap-2 rounded-xl border border-brand-secondary bg-white px-3 py-2 shadow-sm">
+<form action="/employees" method="GET" class="hidden flex-1 items-center gap-2 rounded-xl border border-brand-secondary bg-white px-3 py-2 shadow-sm sm:flex sm:max-w-lg">
     
     <input type="text" name="q" 
     placeholder="Search employee, team, or project..." 
-    class="w-full border-none bg-transparent text-sm outline-none"/>
+    class="w-full min-w-0 border-none bg-transparent text-sm outline-none"/>
 
-    <button type="submit" class="rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+    <button type="submit" class="shrink-0 rounded-lg bg-brand-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
         Search
     </button>
 </form>

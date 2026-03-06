@@ -34,9 +34,9 @@
 
       <div class="flex min-h-screen">
         <%- include("partials/sidebar", { navItems: layoutNavItems, activeRoute: layoutActiveRoute, currentUser: layoutCurrentUser }) %>
-        <main class="min-h-screen flex-1">
+        <main class="min-h-screen flex-1 min-w-0 w-full">
           <%- include("partials/topbar", { currentUser: layoutCurrentUser, todayLabel: layoutTodayLabel }) %>
-          <section class="px-6 pb-10 pt-6 sm:px-8 lg:px-10">
+          <section class="w-full max-w-full px-4 pb-10 pt-6 sm:px-6 lg:px-10">
             <%- include("partials/flash", { flash: layoutFlash }) %>
             <%- body %>
           </section>

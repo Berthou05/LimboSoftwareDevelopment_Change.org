@@ -4,19 +4,112 @@
    Active rule: a link is active when exact match OR when current route starts with module prefix.
 %>
 
-<aside class="hidden h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white/90 px-4 py-6 lg:sticky lg:top-0 lg:flex">
-  <div class="px-3">
-    <p class="font-heading text-2xl font-extrabold text-brand-primary">Unitas</p>
-    <p class="mt-1 text-sm text-brand-text/70">System Prototype</p>
+<%# Mobile backdrop overlay %>
+<div id="sidebarBackdrop" class="fixed inset-0 z-30 bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden"></div>
+
+<aside id="sidebar" class="group/sidebar fixed left-0 top-0 z-40 h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white px-4 py-6 transition-all duration-300 -translate-x-full lg:relative lg:translate-x-0 lg:flex lg:bg-white/90 data-[collapsed]:w-20 data-[collapsed]:px-2 data-[mobile-open]:translate-x-0 data-[mobile-open]:flex">
+  <div class="flex items-center justify-between px-3 group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-0">
+    <div class="group-data-[collapsed]/sidebar:hidden">
+      <p class="font-heading text-2xl font-extrabold text-brand-primary">Unitas</p>
+      <p class="mt-1 text-sm text-brand-text/70">System Prototype</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <%# Close button for mobile %>
+      <button 
+        id="sidebarClose"
+        type="button" 
+        class="flex h-8 w-8 items-center justify-center rounded-lg border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/30 lg:hidden"
+        title="Close menu"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <%# Collapse toggle for desktop %>
+      <button 
+        id="sidebarToggle"
+        type="button" 
+        class="hidden h-8 w-8 items-center justify-center rounded-lg border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/30 lg:flex"
+        title="Toggle sidebar"
+      >
+        <svg class="h-4 w-4 transition-transform group-data-[collapsed]/sidebar:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+        </svg>
+      </button>
+    </div>
   </div>
 
-  <nav class="mt-8 flex-1 space-y-1 overflow-y-auto pr-1">
+  <nav class="mt-8 flex-1 space-y-1 overflow-y-auto pr-1 group-data-[collapsed]/sidebar:pr-0">
     <% navItems.forEach((item) => {
       const active = activeRoute === item.href || (item.href !== "/home" && activeRoute.startsWith(item.href));%>
       <a href="<%= item.href %>"
-        class="block rounded-xl px-3 py-2 text-sm font-medium transition <%= active ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>">
-        <%= item.label %>
+        class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-2 <%= active ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>"
+        title="<%= item.label %>">
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="<%= item.icon %>" />
+        </svg>
+        <span class="group-data-[collapsed]/sidebar:hidden"><%= item.label %></span>
       </a>
     <% }); %>
   </nav>
 </aside>
+
+<script>
+(function() {
+  const sidebar = document.getElementById('sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const toggle = document.getElementById('sidebarToggle');
+  const closeBtn = document.getElementById('sidebarClose');
+  const mobileToggle = document.getElementById('mobileMenuToggle');
+  const STORAGE_KEY = 'sidebarCollapsed';
+  
+  // Restore collapsed state from localStorage (desktop only)
+  if (localStorage.getItem(STORAGE_KEY) === 'true') {
+    sidebar.dataset.collapsed = '';
+  }
+  
+  // Desktop collapse toggle
+  toggle.addEventListener('click', function() {
+    if (sidebar.hasAttribute('data-collapsed')) {
+      delete sidebar.dataset.collapsed;
+      localStorage.setItem(STORAGE_KEY, 'false');
+    } else {
+      sidebar.dataset.collapsed = '';
+      localStorage.setItem(STORAGE_KEY, 'true');
+    }
+  });
+  
+  // Mobile menu functions
+  function openMobileMenu() {
+    sidebar.dataset.mobileOpen = '';
+    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+    backdrop.classList.add('opacity-100', 'pointer-events-auto');
+    document.body.style.overflow = 'hidden';
+  }
+  
+  function closeMobileMenu() {
+    delete sidebar.dataset.mobileOpen;
+    backdrop.classList.add('opacity-0', 'pointer-events-none');
+    backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+    document.body.style.overflow = '';
+  }
+  
+  // Mobile menu toggle (hamburger in topbar)
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', openMobileMenu);
+  }
+  
+  // Close button
+  closeBtn.addEventListener('click', closeMobileMenu);
+  
+  // Close on backdrop click
+  backdrop.addEventListener('click', closeMobileMenu);
+  
+  // Close on escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && sidebar.hasAttribute('data-mobile-open')) {
+      closeMobileMenu();
+    }
+  });
+})();
+</script>
