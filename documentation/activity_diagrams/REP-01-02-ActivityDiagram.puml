@@ -1,0 +1,60 @@
+@startuml
+|User|
+|System|
+START
+:Unifies report data into filters_json;
+:Selects a prompt based on the content_type;
+
+if (Is the content_type == Employee?) is (yes) then
+:Selects Employee Prompt query;
+    else if (Is the content_type == Team?) is (yes) then
+        :Selects Team Prompt query;
+        else if (Is the content_type == Project?) is (yes) then
+        :Selects Project Prompt query;
+    else(Invalid)
+    :Show error;
+    |User|
+    :Show error "Invalid Content Type";
+    stop
+endif
+
+|System|
+:Sends a query to the database;
+|Database|
+:Returns the prompt requested by the query;
+
+|System|
+:Verifies if the prompt was received;
+if(Is there any information received from the database?) is (no) then
+  |User|
+  :Show error "There is no prompt registered under the selected Content Type:";
+  stop
+  |System|
+else(yes)
+endif
+
+label step15
+:sends a petition to the AI API with prompt, filters_json, input_snapshot_json;
+|AI API|
+:Processes the petition;
+|System|
+:Receives the response from the AI API;
+if(Did the System receive an error message from the API?) is (yes) then
+  |User|
+  :Informs the user about the error, and asks if it desires to retry;
+  if(Does the User want to try again?) is (yes) then
+  note left
+    Go to System sends a petition to the AI API  
+  end note
+  stop
+  
+  else(no)
+  stop
+  endif
+  |System|
+else(no)
+endif
+stop
+
+
+@enduml

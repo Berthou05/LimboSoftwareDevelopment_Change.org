@@ -1,0 +1,40 @@
+@startuml
+|User|
+start
+:Clicks the Join Button;
+|System|
+:Retrieves the employee_id from the authenticated session;
+:Generates a popup asking the user's role in the team;
+|User|
+if(Did the User click the “Close” button?) is (yes) then
+    stop
+else(no)
+    :Enters its role as a string;
+
+    if(Is the role input empty?) is (yes) then
+    |System|
+    :Button "Save" stays disabled;
+    stop
+    note right
+        Return to User enters its role as string
+    end note
+    
+
+    else(no)
+    |System|
+    :Button "Save" is enabled;
+    end if
+|User|
+:Submit its role by clicking the Save button;
+|System|
+:Creates a new EmployeeTeam object;
+|Database|
+:Stores the EmployeeTeam information;
+|System|
+:Gathers Team information through queries;
+|Database|
+:Returns queries response;
+|System|
+:Renders the Team Page with updated information;
+stop
+@enduml

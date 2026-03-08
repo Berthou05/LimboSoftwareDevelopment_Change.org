@@ -1,0 +1,61 @@
+@startuml
+|User|
+start
+:Opens an Activity Log view\n(Own, Team, or Project);
+
+|System|
+:Validates scope;
+if (Scope valid?) is (no) then
+  |User|
+  :Sees error message on screen\n"Invalid Activity Log scope.";
+  stop
+else(yes)
+endif
+
+|User|
+:Sets filters (optional)\n(date range, members, project);
+:Confirms search;
+
+|System|
+:Validates date range;
+if (start_date <= end_date?) is (no) then
+  |User|
+  :Sees error message on screen\n"Invalid date range. Please correct start and end dates.";
+  stop
+else(yes)
+endif
+
+|System|
+:Sends request to server\n(scope + filters);
+
+|Database|
+:Returns matching Activity rows;
+
+|System|
+if (Database error?) is (yes) then
+  |User|
+  :Sees error message on screen\n"Activity Log could not be loaded. Please try again.";
+  stop
+else(no)
+endif
+
+|System|
+if (Any Activities?) is (no) then
+  |User|
+  :Sees empty state message on screen\n"No Activities found for the selected filters.";
+  stop
+else(yes)
+endif
+
+|User|
+:Sees Activity Log entries on screen;
+
+|User|
+:Optionally adjusts filters;
+
+|System|
+:Refreshes Activity Log view;
+|User|
+:Sees updated Activity Log entries on screen;
+stop
+@enduml
