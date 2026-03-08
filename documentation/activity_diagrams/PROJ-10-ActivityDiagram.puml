@@ -1,0 +1,83 @@
+@startuml
+
+|Lead|
+start
+:Clicks the "Edit" button in one Project Goals;
+|System|
+:Makes modifiable the inputs of the Project Goal;
+|Lead|
+:Modifies any input;
+:Clicks the "Save" button;
+|System|
+if(Is the title input empty?) is (yes) then
+    |System|
+    :“Save” button gets disabled;
+    :Shows the message “Some obligatory fields are empty”;
+    stop
+    note right
+        Go to User types the title
+    end note
+
+else(no)
+    |System|
+    :Compared the project goal's titles with input title;
+    if(Is the goal title repeated in the current project?) is (yes) then
+        |System|
+        :“Save” button gets disabled;
+        :Shows the message “Repeated title, type a new one”;
+        stop
+        note right
+            Go to User types the title
+        end note
+    
+    else(no)
+        if(Is the description input empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note right
+                Go to User types the description
+            end note
+        else(no)
+        end if
+            if(Is the due date field empty?) is (no) then
+                |System|
+                if(Is due_date < current_date?) is (no) then
+                    |System|
+                    :“Save” button gets disabled;
+                    :Shows the message “Some obligatory fields are empty”;
+                    stop
+                    note right
+                        Go to User selects a due date
+                    end note
+                else(yes)
+                end if
+            else(yes)
+            end if
+        if(Is the goal status empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note right
+                Go to User selects status 
+            end note
+        else(no)
+    end if
+end if
+    |System|
+    :Accepts the Lead input;
+    :Sends modifications to the Goal project;
+    |Database|
+    :Modifies the Goal object;
+    |System|
+    :Gathers Project information through queries;
+    |Database|
+    :Returns queries response;
+    |System|
+    :Renders the Project Page with updated information;
+    stop
+
+
+@enduml

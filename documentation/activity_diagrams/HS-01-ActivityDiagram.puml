@@ -1,0 +1,32 @@
+@startuml
+
+|User|
+start
+:Clicks the search bar;
+:Types the name of the Employee, Team or Project;
+|User|
+if(Did the user click the “Search” button?) is (no) then
+    stop
+else(yes)
+end if
+|System|
+if(Is the name input empty?) is (yes) then
+    stop
+    note right
+        Go to User types the name.
+    end note
+else(no)
+    |System|
+    :Sends a query to the database with the name;
+end if
+|Database|
+:Returns matching data;
+|System|
+:Verfies query results;
+:Displays the first 10 matching results;
+|User|
+:Clicks a matching result;
+stop
+
+
+@enduml

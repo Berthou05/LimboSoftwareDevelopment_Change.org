@@ -10,23 +10,23 @@ if(Did the User click the “Close” button?) is (yes) then
     stop
 else(no)
     :Enters its role as a string;
+    :Clicks the Save button;
 
-    if(Is the role input empty?) is (yes) then
+    if(Is the role input empty?) is (no) then
     |System|
-    :Button "Save" stays disabled;
+    :Accepts the User input;
+
+    else(yes)
+    |System|
+    :Button "Save" gets disabled;
+    :Shows the message “Some obligatory fields are empty”;
+
     stop
     note right
         Return to User enters its role as string
     end note
-    
+end if
 
-    else(no)
-    |System|
-    :Button "Save" is enabled;
-    end if
-|User|
-:Submit its role by clicking the Save button;
-|System|
 :Creates a new EmployeeTeam object;
 |Database|
 :Stores the EmployeeTeam information;

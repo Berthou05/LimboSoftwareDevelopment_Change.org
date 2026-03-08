@@ -1,0 +1,59 @@
+@startuml
+
+|Lead|
+start
+:Clicks the "Add" button in the Project Achievement module;
+|System|
+:Generates a popup form to register the Achievement;
+|Lead|
+:Types the title;
+:Types the description;
+:Selects an achievement date;
+:May type an evidence link;
+:Clicks the "Save" button;
+|System|
+if(Is the title input empty?) is (yes) then
+    |System|
+    :“Save” button gets disabled;
+    :Shows the message “Some obligatory fields are empty”;
+    stop
+    note right
+        Go to User types the title
+    end note
+else(no)
+    if(Is the description input empty?) is (yes) then
+        |System|
+        :“Save” button gets disabled;
+        :Shows the message “Some obligatory fields are empty”;
+        stop
+        note right
+            Go to User types the description
+        end note
+    else(no)
+    end if
+        if(Is the achievement date field empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note right
+                Go to User selects an achievement date
+            end note
+        else(no)
+        end if
+    end if
+    |System|
+    :Accepts the Lead input;
+    :Creates a new Achievement object;
+    |Database|
+    :Stores the Achievement object;
+    |System|
+    :Gathers Project information through queries;
+    |Database|
+    :Returns queries response;
+    |System|
+    :Renders the Project Page with updated information;
+    stop
+
+
+@enduml
