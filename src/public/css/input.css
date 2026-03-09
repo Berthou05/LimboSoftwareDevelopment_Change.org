@@ -2,7 +2,7 @@
 
 @import "flowbite";
 
-@plugin "daisyui";
+/* @plugin "daisyui";
 
 @plugin "daisyui/theme"{
     --color-base-100: #fbfbfe;
@@ -44,4 +44,4 @@
     --border: 1px;
     --depth: 0;
     --noise: 0;
-}
+} */
