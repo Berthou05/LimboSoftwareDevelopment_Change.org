@@ -1,0 +1,64 @@
+@startuml
+
+|Admin|
+start
+: clicks the “Create Role” button;
+
+|System|
+:Generates a popup to register the new Role information;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
+|Admin|
+:Types Role name;
+
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+
+|System|
+if(Is the name input empty?) is (yes) then
+    |System|
+    :“Save” button gets disabled;
+    :Shows the message “Some obligatory fields are empty”;
+    stop
+    note right
+        Go to User types Role name.
+    end note
+
+else(no)
+    |System|
+    :Compare role's names with input name;
+    if(Is the role name repeated?) is (yes) then
+        |System|
+        :“Save” button gets disabled;
+        :Shows the message “Repeated name, type a new one”;
+        stop
+        note left
+            Go to User types Role name.
+        end note
+    else(no)
+end if
+
+|System|
+:Accepts the Admin input;
+:Creates a new Role object;
+|Database|
+:Stores the Role object;
+|System|
+:Gathers Roles information through queries;
+|Database|
+:Returns queries response;
+|System|
+:Renders the Roles Administration Page with updated information;
+:Displays a success message;
+stop
+
+@enduml

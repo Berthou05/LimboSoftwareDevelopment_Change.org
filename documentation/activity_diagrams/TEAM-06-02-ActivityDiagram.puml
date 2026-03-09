@@ -10,7 +10,17 @@ if(Did the User click the “Close” button?) is (yes) then
 else(no)
 |User|
 :Writes an employee name in the search bar;
-:Submits the search by clicking the "Search" buttton;
+|System|
+if(Did the User click the "Search" button) is(yes) then
+
+else(no)
+    stop
+    note left
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+
+
 |System|
 :Sends a query with the employee name to database;
 |Database|
@@ -22,7 +32,7 @@ if(Did the User select an Employee from the search?) is (no) then
     |System|
     stop
     note left
-    Return to User writes an Employee name in the search bar
+    Go back to Did the User click the "Close" button?
     end note
     
 else(yes)
@@ -31,7 +41,15 @@ else(yes)
 end if
 |User|
 :Enters its role as a string;
-:Clicks the "Save" button;
+|System|
+if(Did the User click the "Save" button) is(yes) then
+
+else(no)
+    stop
+    note left
+        Go back to Did the User click the "Close" button?
+    end note
+end if
     |System|
     if(Is the role input empty?) is (yes) then
     |System|
@@ -58,5 +76,7 @@ end if
 :Returns queries response;
 |System|
 :Renders the Team Page with updated information;
+:Displays a success message;
+
 stop
 @enduml
