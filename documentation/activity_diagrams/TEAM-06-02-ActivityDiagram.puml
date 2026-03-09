@@ -4,10 +4,11 @@ start
 :Clicks the “Add” button in the Team Members module;
 |System|
 :Generates a popup to search for an employee and write their role in the team;
-|User|
+
 if(Did the User click the “Close” button?) is (yes) then
     stop
 else(no)
+|User|
 :Writes an employee name in the search bar;
 :Submits the search by clicking the "Search" buttton;
 |System|
@@ -16,9 +17,9 @@ else(no)
 :Returns matching employees;
 |System|
 :Shows query results;
-|User|
+
 if(Did the User select an Employee from the search?) is (no) then
-    |User|
+    |System|
     stop
     note left
     Return to User writes an Employee name in the search bar
@@ -31,6 +32,7 @@ end if
 |User|
 :Enters its role as a string;
 :Clicks the "Save" button;
+    |System|
     if(Is the role input empty?) is (yes) then
     |System|
     :Button "Save" gets disabled;

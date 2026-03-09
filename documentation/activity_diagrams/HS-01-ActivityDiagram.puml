@@ -4,10 +4,11 @@
 start
 :Clicks the search bar;
 :Types the name of the Employee, Team or Project;
-|User|
+|System|
 if(Did the user click the “Search” button?) is (no) then
     stop
 else(yes)
+
 end if
 |System|
 if(Is the name input empty?) is (yes) then

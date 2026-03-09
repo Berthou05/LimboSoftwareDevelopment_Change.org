@@ -5,13 +5,15 @@ start
 |System|
 :Retrieves the employee_id from the authenticated session;
 :Generates a popup asking the user's role in the team;
-|User|
+|System|
 if(Did the User click the “Close” button?) is (yes) then
     stop
 else(no)
+    |User|
     :Enters its role as a string;
     :Clicks the Save button;
 
+    |System|
     if(Is the role input empty?) is (no) then
     |System|
     :Accepts the User input;

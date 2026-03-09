@@ -42,6 +42,7 @@ label step15
 if(Did the System receive an error message from the API?) is (yes) then
   |User|
   :Informs the user about the error, and asks if it desires to retry;
+  |System|
   if(Does the User want to try again?) is (yes) then
   note left
     Go to System sends a petition to the AI API  
