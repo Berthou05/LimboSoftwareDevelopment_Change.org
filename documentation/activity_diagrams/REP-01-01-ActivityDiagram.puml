@@ -31,13 +31,8 @@ if (Is the content_type == Employee?) is (yes) then
   :Selects Employee query;
   elseif  (Is the content_type == Team?) is (yes) then
     :Selects Team query;
-  elseif  (Is the content_type == Project?) is (yes) then
+  else(no)
     :Selects Project query;
-  else(Invalid)
-    :Return an error;
-    |User|
-    :Show error "Invalid Content Type";
-    stop
   |System|
   endif
   

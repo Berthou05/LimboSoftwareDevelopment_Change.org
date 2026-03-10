@@ -11,6 +11,7 @@ end if
 
 |User|
 :Types the name of the Employee, Team or Project;
+:Clicks a button;
 |System|
 if(Did the user click the “Search” button?) is (yes) then
     

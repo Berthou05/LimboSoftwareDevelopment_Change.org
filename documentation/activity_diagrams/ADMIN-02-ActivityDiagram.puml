@@ -13,6 +13,7 @@ end if
 
 |Admin|
 :Types Role name;
+:Clicks a button;
 
 |System|
 if(Did the User click the "Save" button?) is (yes) then
@@ -27,11 +28,13 @@ end if
 if(Is the name input empty?) is (yes) then
     |System|
     :“Save” button gets disabled;
+    |Admin|
     :Shows the message “Some obligatory fields are empty”;
     stop
     note right
         Go to User types Role name.
     end note
+    |System|
 
 else(no)
     |System|
@@ -39,11 +42,13 @@ else(no)
     if(Is the role name repeated?) is (yes) then
         |System|
         :“Save” button gets disabled;
+        |Admin|
         :Shows the message “Repeated name, type a new one”;
         stop
         note left
             Go to User types Role name.
         end note
+        |System|
     else(no)
 end if
 
@@ -58,6 +63,7 @@ end if
 :Returns queries response;
 |System|
 :Renders the Roles Administration Page with updated information;
+|Admin|
 :Displays a success message;
 stop
 
