@@ -1,0 +1,38 @@
+@startuml
+|User|
+start
+:Clicks the "Delete" button of a Project Achievement;
+
+|System|
+:Prepares a confirmation dialog for the deletion;
+
+|User|
+:Sees the confirmation dialog on the Project Page;
+:Confirms deletion by clicking the "Confirm" button;
+
+|System|
+:Sends a query to delete the ProjectAchievement object;
+
+|Database|
+:Deletes the ProjectAchievement object;
+
+|System|
+if (Was the ProjectAchievement object deleted successfully?) then (yes)
+    :Gathers Project information through queries;
+else (no)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+endif
+
+|Database|
+:Returns the Project information;
+
+|System|
+:Renders the Project Page with updated information;
+
+|User|
+:Sees the Project Page without the deleted Achievement;
+
+stop
+@enduml

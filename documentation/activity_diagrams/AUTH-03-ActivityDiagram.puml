@@ -1,0 +1,48 @@
+@startuml
+|User|
+start
+:Clicks the "Forgot password" option;
+
+|System|
+:Prepares the password recovery form;
+
+|User|
+:Sees the password recovery form on the Login Page;
+:Writes the registered email address;
+:Clicks the "Recover password" button;
+
+|System|
+:Sends a query to verify whether the email exists in the database;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the email exists in the system;
+
+if (Does the email exist in the system?) then (yes)
+    :Generates a password recovery token associated with the User account;
+    :Sends a request to the configured email service to deliver the recovery email;
+
+    |Email Service|
+    :Processes the recovery email request;
+
+    |System|
+    :Receives response from the email service;
+
+    if (Was the request to the email service completed successfully?) then (yes)
+        |User|
+        :Sees confirmation message on the Login Page indicating that the recovery email has been sent;
+        stop
+    else (no)
+        |User|
+        :Sees an error message on the Login Page;
+        stop
+    endif
+
+else (no)
+    |User|
+    :Sees an error message on the Login Page indicating that the email is not registered;
+    stop
+endif
+@enduml

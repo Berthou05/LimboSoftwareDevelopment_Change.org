@@ -1,0 +1,69 @@
+@startuml
+|User|
+start
+:Clicks the "Edit" button in the Employee Information module;
+
+|System|
+:Prepares the editable inputs of the Employee Information module;
+
+|User|
+:Sees the editable Employee profile fields on the Employee Page;
+:Modifies any input;
+:Clicks the "Save" button;
+
+|System|
+:Verifies the Employee names;
+
+if (Are the Employee names input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Employee lastnames;
+
+if (Are the Employee lastnames input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Employee timezone;
+
+if (Is the Employee timezone input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+|System|
+:Accepts the User input;
+:Sends modifications to the Employee object;
+
+|Database|
+:Modifies the Employee object;
+
+|System|
+if (Was the Employee object modified successfully?) then (yes)
+    :Gathers Employee information through queries;
+else (no)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+endif
+
+|Database|
+:Returns the Employee information;
+
+|System|
+:Renders the Employee Page with updated information;
+
+|User|
+:Sees the Employee Page with updated information;
+stop
+@enduml

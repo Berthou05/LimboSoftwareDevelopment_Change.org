@@ -1,0 +1,26 @@
+@startuml
+|User|
+start
+:Enters the Project Page;
+
+|System|
+:Obtains the project_id from the Project Page;
+:Sends a query to obtain the Goals of the selected Project to the database;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the returned Goals are not null;
+
+if (Are the returned Goals null?) then (yes)
+|User|
+    :Displays an error message on the screen;
+    stop
+else (no)
+|User|
+    :Shows the Goals in the Project Page;
+endif
+
+stop
+@enduml
