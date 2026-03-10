@@ -12,6 +12,7 @@ end if
 
 |Lead|
 :Modifies any input;
+:Clicks a button;
 |System|
 if(Did the User click the "Save" button?) is (yes) then
 else(no)
@@ -24,41 +25,49 @@ end if
 if(Is the title input empty?) is (yes) then
     |System|
     :“Save” button gets disabled;
+    |Lead|
     :Shows the message “Some obligatory fields are empty”;
     stop
     note right
         Go to User modifies any input
     end note
+    |System|
 else(no)
     if(Is the description input empty?) is (yes) then
         |System|
         :“Save” button gets disabled;
+        |Lead|
         :Shows the message “Some obligatory fields are empty”;
         stop
         note right
             Go to User modifies any input
         end note
+        |System|
     else(no)
     end if
         if(Is the project status empty?) is (yes) then
             |System|
             :“Save” button gets disabled;
+            |Lead|
             :Shows the message “Some obligatory fields are empty”;
             stop
             note right
                 Go to User modifies any input
             end note
+            |System|
         else(no)
         end if
 
         if(Is the project start_date empty?) is (yes) then
             |System|
             :“Save” button gets disabled;
+            |Lead|
             :Shows the message “Some obligatory fields are empty”;
             stop
             note right
                 Go to User modifies any input
             end note
+            |System|
         else(no)
         end if
 
@@ -67,11 +76,13 @@ else(no)
             if(Is start_date <= end_date?) is (no) then
                 |System|
                 :“Save” button gets disabled;
+                |Lead|
                 :Shows the message “End date cannot be before start date”;
                 stop
                 note right
                     Go to User modifies any input
                 end note
+                |System|
             else(yes)
             end if
         else(yes)
@@ -88,6 +99,7 @@ else(no)
 :Returns queries response;
 |System|
 :Renders the Team Page with updated information;
+|Lead|
 :Displays a success message;
 stop
 

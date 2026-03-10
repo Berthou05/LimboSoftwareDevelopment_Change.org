@@ -11,6 +11,7 @@ if(Did the User click the “Close” button?) is (yes) then
 else(no)
     |User|
     :Enters its role as a string;
+    :Clicks a button;
     |System|
     if(Did the User click the "Save" button) is(yes) then
 
@@ -29,12 +30,13 @@ else(no)
     else(yes)
     |System|
     :Button "Save" gets disabled;
+    |User|
     :Shows the message “Some obligatory fields are empty”;
-
     stop
     note right
         Return to User enters its role as string
     end note
+|System|
 end if
 
 :Creates a new EmployeeTeam object;
@@ -46,6 +48,7 @@ end if
 :Returns queries response;
 |System|
 :Renders the Team Page with updated information;
+|User|
 :Displays a success message;
 stop
 @enduml
