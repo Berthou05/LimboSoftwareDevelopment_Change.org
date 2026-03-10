@@ -5,9 +5,21 @@ start
 :Clicks on the "Add" button in the Project Information module;
 |System|
 :Makes modifiable the inputs of the Project Information module;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
 |Lead|
 :Modifies any input;
-:Clicks the "Save" button;
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
 |System|
 if(Is the title input empty?) is (yes) then
     |System|
@@ -65,18 +77,19 @@ else(no)
         else(yes)
         end if
     end if
-    |System|
-    :Accepts the Lead input;
-    :Sends modifications to the Project object;
-    |Database|
-    :Modifies the Project object;
-    |System|
-    :Gathers Team information through queries;
-    |Database|
-    :Returns queries response;
-    |System|
-    :Renders the Team Page with updated information;
-    stop
+|System|
+:Accepts the Lead input;
+:Sends modifications to the Project object;
+|Database|
+:Modifies the Project object;
+|System|
+:Gathers Team information through queries;
+|Database|
+:Returns queries response;
+|System|
+:Renders the Team Page with updated information;
+:Displays a success message;
+stop
 
 
 @enduml

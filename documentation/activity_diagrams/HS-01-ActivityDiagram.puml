@@ -3,11 +3,24 @@
 |User|
 start
 :Clicks the search bar;
-:Types the name of the Employee, Team or Project;
-|User|
-if(Did the user click the “Search” button?) is (no) then
+|System|
+if(Did the User click outside the search bar or touch ESC?) is (yes) then
     stop
-else(yes)
+else(no)
+end if
+
+|User|
+:Types the name of the Employee, Team or Project;
+|System|
+if(Did the user click the “Search” button?) is (yes) then
+    
+else(no)
+    stop
+    note right
+        Go back to Did the User click 
+        outside the search bar or touch 
+        ESC?
+    end note
 end if
 |System|
 if(Is the name input empty?) is (yes) then

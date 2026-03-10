@@ -5,12 +5,26 @@ start
 :Clicks the "Add" button in the Project Achievement module;
 |System|
 :Generates a popup form to register the Achievement;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
 |Lead|
 :Types the title;
 :Types the description;
 :Selects an achievement date;
 :May type an evidence link;
-:Clicks the "Save" button;
+
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+
 |System|
 if(Is the title input empty?) is (yes) then
     |System|
@@ -53,6 +67,7 @@ else(no)
     :Returns queries response;
     |System|
     :Renders the Project Page with updated information;
+    :Displays a success message;
     stop
 
 

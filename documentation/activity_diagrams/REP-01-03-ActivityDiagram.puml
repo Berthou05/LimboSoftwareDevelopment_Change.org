@@ -9,6 +9,7 @@
 |System|
 :Receives the content of the generated report;
 :Displays the new Report object below the Report Generator module;
+:Displays a sucess message;
 stop
 
 @enduml

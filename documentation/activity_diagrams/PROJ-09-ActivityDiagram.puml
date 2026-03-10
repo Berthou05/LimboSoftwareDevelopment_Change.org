@@ -5,12 +5,26 @@ start
 :Clicks the "Add" button in the Project Goals module;
 |System|
 :Generates a popup form to register the goal;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
 |Lead|
 :Types the title;
 :Types the description;
 :May select a due date;
 :Selects a status;
-:Clicks the "Save" button;
+
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+
 |System|
 if(Is the title input empty?) is (yes) then
     |System|
@@ -29,7 +43,7 @@ else(no)
         :“Save” button gets disabled;
         :Shows the message “Repeated title, type a new one”;
         stop
-        note right
+        note left
             Go to User types the title
         end note
     
@@ -39,7 +53,7 @@ else(no)
             :“Save” button gets disabled;
             :Shows the message “Some obligatory fields are empty”;
             stop
-            note right
+            note left
                 Go to User types the description
             end note
         else(no)
@@ -51,7 +65,7 @@ else(no)
                     :“Save” button gets disabled;
                     :Shows the message “Some obligatory fields are empty”;
                     stop
-                    note right
+                    note left
                         Go to User selects a due date
                     end note
                 else(yes)
@@ -63,7 +77,7 @@ else(no)
             :“Save” button gets disabled;
             :Shows the message “Some obligatory fields are empty”;
             stop
-            note right
+            note left
                 Go to User selects status 
             end note
         else(no)
@@ -80,6 +94,8 @@ end if
     :Returns queries response;
     |System|
     :Renders the Project Page with updated information;
+    :Displays a success message;
+
     stop
 
 
