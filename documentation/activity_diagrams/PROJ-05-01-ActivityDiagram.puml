@@ -1,0 +1,40 @@
+@startuml
+|User|
+start
+:Clicks the Join button;
+
+|System|
+:Retrieves the employee_id from the authenticated session;
+:Obtains the project_id from the Project Page;
+:Sends a query to verify whether the User is already registered as an individual participant in the selected Project;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the User is not already registered in the selected Project;
+if (Is the User already registered as an individual participant in the selected Project?) then (yes)
+    :Informs the User they are already part of the Project;
+    stop
+else (no)
+    :Creates a new Collaboration object;
+endif
+
+|Database|
+:Stores the Collaboration information;
+
+|System|
+if (Was the Collaboration object stored successfully?) then (yes)
+    :Gathers Project information through queries;
+else (no)
+    :Informs the User an error has occurred;
+    stop
+endif
+
+|Database|
+:Returns queries response;
+
+|System|
+:Renders the Project Page with updated information;
+stop
+@enduml
