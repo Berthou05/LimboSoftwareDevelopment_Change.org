@@ -1,5 +1,5 @@
 @startuml
-|Employee|
+|User|
 start
 :Fills Daily Standup form in Slack\n(Did Today, Doing Tomorrow, Blockers optional);
 :Submits the form;
@@ -11,7 +11,7 @@ start
 :Validates required fields are present;
 if (Did Today AND Doing Tomorrow present?) is (no) then
   |Slack Workflow|
-  :Shows error message to Employee\n"Please complete Did Today and Doing Tomorrow.";
+  :Shows error message to User\n"Please complete Did Today and Doing Tomorrow.";
   stop
 else(yes)
 endif
@@ -20,26 +20,26 @@ endif
 :Validates Slack request signature;
 if (Signature valid?) is (no) then
   |Slack Workflow|
-  :Shows error message to Employee\n"Verification failed. Please try again later.";
+  :Shows error message to User\n"Verification failed. Please try again later.";
   stop
 else(yes)
 endif
 
 |System|
-:Identifies Employee by Slack user id;
-if (Employee exists in system?) is (no) then
+:Identifies User by Slack user id;
+if (User exists in system?) is (no) then
   |Slack Workflow|
-  :Shows error message to Employee\n"Your Slack account is not linked to Unitas.";
+  :Shows error message to User\n"Your Slack account is not linked to Unitas.";
   stop
 else(yes)
 endif
 
 |System|
 :Determines entry_date;
-:Checks if Daily Entry already exists for Employee and date;
+:Checks if Daily Entry already exists for User and date;
 if (Daily Entry already exists?) is (yes) then
   |Slack Workflow|
-  :Shows error message to Employee\n"You have already submitted today's standup.";
+  :Shows error message to User\n"You have already submitted today's standup.";
   stop
 else(no)
 endif
@@ -54,7 +54,7 @@ endif
 |System|
 if (Insert successful?) is (no) then
   |Slack Workflow|
-  :Shows error message to Employee\n"Your standup could not be saved. Please retry.";
+  :Shows error message to User\n"Your standup could not be saved. Please retry.";
   stop
 else(yes)
 endif
@@ -71,7 +71,7 @@ label AI_step
 :Receives AI response;
 if (AI error or timeout?) is (yes) then
   |Slack Workflow|
-  :Shows warning to Employee\n"Standup saved, but Activities could not be generated.";
+  :Shows warning to User\n"Standup saved, but Activities could not be generated.";
   stop
 else(no)
 endif
@@ -80,7 +80,7 @@ endif
 :Validates AI response format;
 if (Format valid?) is (no) then
   |Slack Workflow|
-  :Shows warning to Employee\n"Standup saved, but processing failed.";
+  :Shows warning to User\n"Standup saved, but processing failed.";
   stop
 else(yes)
 endif
@@ -94,12 +94,12 @@ else(no)
   :Set project_id = null;
 endif
 
-:Saves Activities linked to Employee and Daily Entry;
+:Saves Activities linked to User and Daily Entry;
 
 |Database|
 :Insert Activity rows;
 
 |Slack Workflow|
-:Shows confirmation message to Employee\n"Standup submitted successfully.";
+:Shows confirmation message to User\n"Standup submitted successfully.";
 stop
 @enduml
