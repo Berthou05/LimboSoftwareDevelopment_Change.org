@@ -1,0 +1,150 @@
+@startuml
+skinparam style strictuml
+
+actor Admin as A   
+boundary "routes" as RO
+boundary "vista roleAdmin.ejs" as V
+entity "roleAdmin.controller" as C
+entity "Role.model" as R
+entity "RolePrivilege.model" as RP
+entity "Privilege.model" as P
+entity "AccountRole.model" as AR
+database "unitas_system" as BD
+
+activate A
+== Page Access ==
+
+A -> RO:GET/roleAdmin
+deactivate A
+    activate RO
+    RO -> C:getRoleAdmin(request,response)
+    deactivate RO
+        activate C
+        C ->> R:getRoles()
+            activate R
+            R->>BD:execute('SELECT * FROM roles');
+                activate BD
+                BD-->R:roles
+                deactivate BD
+            R-->C:roles
+            deactivate R
+        C->>RP:getRolePrivileges();
+            activate RP
+            RP-->BD:execute('SELECT * FROM roleprivilege');
+                activate BD
+                BD-->RP:role_privileges
+                deactivate BD
+            RP-->C:role_privileges
+            deactivate RP
+        C->>P:getPrivileges();
+            activate P
+            P->>BD:execute('SELECT * FROM privilege');
+                activate BD
+                BD-->P:privileges
+                deactivate BD
+            P-->C:privileges
+            deactivate P
+        C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:role_privileges})
+        deactivate C
+    activate V
+    V->A:HTML
+    deactivate V
+activate A
+
+== ADMIN-03 ==
+
+A->V:Clicks "Delete" on a role
+deactivate A
+    activate V
+    V->V:showConfirmPopup(roleId);
+    deactivate V
+
+activate A
+opt Admin annotation
+A->V:Clicks "Cancel" button
+deactivate A
+    activate V
+    V->V:hidePopup();
+    deactivate V
+end
+activate A
+
+A->V:Clicks "Confirm" button
+deactivate A
+    activate V
+    V->R: GET/roleAdmin/:roleId
+    deactivate V
+        activate R
+        R->C:deleteRole(request.params.roleId);
+        deactivate R
+            activate C
+                
+                C->>AR:update(delete_role_id);
+                activate AR    
+                    AR->>BD:execute('UPDATE accountrole SET role_id=role WHERE role_id=deletedRole values(?,?)'[ROLE_ID, delete_role_id]);
+                    activate BD
+                    BD-->AR:Query OK
+                    deactivate BD
+                AR-->C:Query OK
+                deactivate AR
+
+                C ->> R:deleteRole(delete_role_id)
+                    activate R
+                    R->>BD:execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
+                        activate BD
+                        BD-->R:Query OK
+                        deactivate BD
+                    R-->C:Query OK
+                    deactivate R
+                C->>RP:deleteRolePrivileges(delete_role_id);
+                    activate RP
+                    RP-->BD:execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
+                        activate BD
+                        BD-->RP:Query OK
+                        deactivate BD
+                    RP-->C:Query OK
+                    deactivate RP
+                C->V:response.redirect('/roleAdmin')
+                deactivate C
+            activate V
+            == Page Render ==
+            V->C: GET/roleAdmin/:roleId
+            deactivate V 
+                activate C 
+                
+                C ->> R:getRoles()
+                    activate R
+                    R->>BD:execute('SELECT * FROM roles');
+                        activate BD
+                        BD-->R:roles
+                        deactivate BD
+                    R-->C:roles
+                    deactivate R
+                C->>RP:getRolePrivileges();
+                    activate RP
+                    RP-->BD:execute('SELECT * FROM roleprivilege');
+                        activate BD
+                        BD-->RP:role_privileges
+                        deactivate BD
+                    RP-->C:role_privileges
+                    deactivate RP
+                C->>P:getPrivileges();
+                    activate P
+                    P->>BD:execute('SELECT * FROM privilege');
+                        activate BD
+                        BD-->P:privileges
+                        deactivate BD
+                    P-->C:privileges
+                    deactivate P
+                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:role_privileges})
+                deactivate C
+            activate V
+            V->A:HTML+Mensaje de Exito Flash
+            deactivate V
+activate A
+
+
+
+
+
+@enduml
