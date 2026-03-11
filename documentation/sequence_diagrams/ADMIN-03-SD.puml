@@ -4,7 +4,7 @@ skinparam style strictuml
 actor Admin as A   
 boundary "routes" as RO
 boundary "vista roleAdmin.ejs" as V
-entity "roleAdmin.controller" as C
+control "roleAdmin.controller" as C
 entity "Role.model" as R
 entity "RolePrivilege.model" as RP
 entity "Privilege.model" as P
@@ -50,9 +50,7 @@ deactivate A
     V->A:HTML
     deactivate V
 activate A
-
 == ADMIN-03 ==
-
 A->V:Clicks "Delete" on a role
 deactivate A
     activate V
