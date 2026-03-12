@@ -103,7 +103,7 @@ Pending:
 ## Technology Stack
 
 - **Backend**: Node.js + Express.js
-- **Frontend**: EJS + Flowbite + DaisyUI + Tailwind CSS 
+- **Frontend**: EJS + Flowbite + Tailwind CSS 
 - **Architecture**: MVC Pattern
 >>>>>>> 7929a9791226978de8a80cf6aa93f76b2c390703
 
