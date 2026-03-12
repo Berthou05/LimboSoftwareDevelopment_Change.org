@@ -2,12 +2,8 @@
 |Admin|
 start
 :Select "Create Account";
-
-|System|
 :Display form;
-
-|Admin|
-:Enter email & password;
+:Enter email, password & Slack username;
 :Submit form;
 
 |System|
@@ -15,25 +11,31 @@ start
 
 if (Valid?) then (Yes)
   :Check email exists;
+  
+  if (Email exists?) then (Yes)
+    |Admin|
+    :Show duplicate message;
+    stop
+  else (No)
+    |System|
+  endif
 else (No)
+  |Admin|
   :Show validation errors;
   stop
 endif
 
-if (Email exists?) then (Yes)
-  :Show duplicate message;
-  stop
-else (No)
-endif
-
+|System|
 :Generate account_id;
 :Encrypt password;
 :Set defaults & created_at;
-:Store Account;
+:Store Account (email, password_hash, Slack username);
 
 if (Stored?) then (Yes)
+  |Admin|
   :Show success message;
 else (No)
+  |Admin|
   :Show error message;
 endif
 
