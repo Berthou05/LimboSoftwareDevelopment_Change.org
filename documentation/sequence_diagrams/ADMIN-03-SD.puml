@@ -70,13 +70,13 @@ activate A
 A->V:Clicks "Confirm" button
 deactivate A
     activate V
-    V->R: GET/roleAdmin/:roleId
+    V->RO: GET/roleAdmin/:roleId
     deactivate V
-        activate R
-        R->C:deleteRole(request.params.roleId);
-        deactivate R
+        activate RO
+        RO->C:deleteRole(request.params.roleId);
+        deactivate RO
             activate C
-                
+
                 C->>AR:update(delete_role_id);
                 activate AR    
                     AR->>BD:execute('UPDATE accountrole SET role_id=role WHERE role_id=deletedRole values(?,?)'[ROLE_ID, delete_role_id]);
