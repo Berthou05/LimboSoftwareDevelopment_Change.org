@@ -1,0 +1,37 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open account info;
+:Select Edit;
+
+|System|
+:Show edit form;
+
+|User|
+:Update data;
+:Submit;
+
+|System|
+:Validate data;
+
+if (Valid?) then (Yes)
+
+  :Update account;
+
+  if (Updated?) then (Yes)
+    |User|
+    :Show confirmation;
+  else
+    |User|
+    :Show update error;
+  endif
+
+else
+  |User|
+  :Show validation errors;
+endif
+
+stop
+@enduml
