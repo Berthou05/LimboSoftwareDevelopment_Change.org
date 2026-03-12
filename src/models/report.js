@@ -1,9 +1,9 @@
 // Report Model
-// Report(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, file_url, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text)
+// Report(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text)
 
 module.exports = class Report {
 
-    constructor(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, file_url, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
+    constructor(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
         this.report_id = report_id;
         this.generated_by_employee_id = generated_by_employee_id;
         this.content_id = content_id;
@@ -11,7 +11,6 @@ module.exports = class Report {
         this.prompt_id = prompt_id;
         this.period_start = period_start;
         this.period_end = period_end;
-        this.file_url = file_url;
         this.created_at = created_at;
         this.content_json = content_json;
         this.filters_json = filters_json;
