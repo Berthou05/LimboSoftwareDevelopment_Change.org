@@ -1,0 +1,20 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Click profile picture;
+
+|System|
+:Retrieve account info;
+
+if (Retrieved?) then (Yes)
+  |User|
+  :Show account info;
+else
+  |User|
+  :Show error;
+endif
+
+stop
+@enduml
