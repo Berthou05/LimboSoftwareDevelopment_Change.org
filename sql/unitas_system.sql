@@ -1,11 +1,6 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Mar 06, 2026 at 09:57 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+DROP DATABASE IF EXISTS unitas_system;
+CREATE DATABASE unitas_system;
+USE unitas_system;
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
