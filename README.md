@@ -12,7 +12,7 @@
 ## Technology Stack
 
 - **Backend**: Node.js + Express.js
-- **Frontend**: EJS + Flowbite + DaisyUI + Tailwind CSS 
+- **Frontend**: EJS + Flowbite + Tailwind CSS 
 - **Architecture**: MVC Pattern
 
 ---
