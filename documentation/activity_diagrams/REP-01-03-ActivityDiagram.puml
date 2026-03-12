@@ -1,0 +1,15 @@
+@startuml
+|User|
+|System|
+:Gathers the information of the petition and sends it to the database;
+
+|Database|
+:Inserts and saves new Report information;
+
+|System|
+:Receives the content of the generated report;
+:Displays the new Report object below the Report Generator module;
+:Displays a sucess message;
+stop
+
+@enduml

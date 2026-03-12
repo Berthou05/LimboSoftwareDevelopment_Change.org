@@ -1,0 +1,69 @@
+@startuml
+|User|
+start
+:Clicks the "Edit" button of a Project Achievement;
+
+|System|
+:Prepares the editable fields of the selected Achievement;
+
+|User|
+:Sees editable Achievement fields on the Project Page;
+:Modifies any field;
+:Clicks the "Save" button;
+
+|System|
+:Verifies the Achievement title;
+
+if (Is the Achievement title input empty?) then (yes)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Achievement description;
+
+if (Is the Achievement description input empty?) then (yes)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Achievement date;
+
+if (Is the Achievement date input empty?) then (yes)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+else (no)
+endif
+
+|System|
+:Accepts the User input;
+:Sends modifications to the ProjectAchievement object;
+
+|Database|
+:Modifies the ProjectAchievement object;
+
+|System|
+if (Was the ProjectAchievement object modified successfully?) then (yes)
+    :Gathers Project information through queries;
+else (no)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+endif
+
+|Database|
+:Returns the Project information;
+
+|System|
+:Renders the Project Page with updated information;
+
+|User|
+:Sees the Project Page with the updated Achievement;
+stop
+@enduml

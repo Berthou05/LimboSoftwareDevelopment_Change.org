@@ -1,0 +1,111 @@
+@startuml
+
+|Lead|
+start
+:Clicks the "Add" button in the Project Goals module;
+|System|
+:Generates a popup form to register the goal;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
+|Lead|
+:Types the title;
+:Types the description;
+:May select a due date;
+:Selects a status;
+:Clicks a button;
+
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+
+|System|
+if(Is the title input empty?) is (yes) then
+    |System|
+    :“Save” button gets disabled;
+    |Lead|
+    :Shows the message “Some obligatory fields are empty”;
+    stop
+    note right
+        Go to User types the title
+    end note
+
+else(no)
+    |System|
+    :Compared the project goal's titles with input title;
+    if(Is the goal title repeated in the current project?) is (yes) then
+        |System|
+        :“Save” button gets disabled;
+        |Lead|
+        :Shows the message “Repeated title, type a new one”;
+        stop
+        note left
+            Go to User types the title
+        end note
+    |System|
+    else(no)
+        if(Is the description input empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            |Lead|
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note left
+                Go to User types the description
+            end note
+            |System|
+        else(no)
+        end if
+            if(Is the due date field empty?) is (no) then
+                |System|
+                if(Is due_date < current_date?) is (no) then
+                    |System|
+                    :“Save” button gets disabled;
+                    |Lead|
+                    :Shows the message “Some obligatory fields are empty”;
+                    stop
+                    note left
+                        Go to User selects a due date
+                    end note
+                |System|
+                else(yes)
+                end if
+            else(yes)
+            end if
+        if(Is the goal status empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            |Lead|
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note left
+                Go to User selects status 
+            end note
+        else(no)
+    end if
+end if
+    |System|
+    :Accepts the Lead input;
+    :Creates a new Goal object;
+    |Database|
+    :Stores the Goal object;
+    |System|
+    :Gathers Project information through queries;
+    |Database|
+    :Returns queries response;
+    |System|
+    :Renders the Project Page with updated information;
+    |Lead|
+    :Displays a success message;
+
+    stop
+
+
+@enduml

@@ -1,3 +1,5 @@
+' ! Deprecated. The present activity diagram required modification after becoming an optional user case.
+
 @startuml
 
 |User|

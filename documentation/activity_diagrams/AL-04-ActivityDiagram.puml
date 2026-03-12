@@ -1,0 +1,40 @@
+@startuml
+|User|
+start
+:Opens an Activity Log view\n(Own, Team, or Project);
+
+repeat
+  |System|
+  :Sets filters (optional)\n(date range, members, project);
+  :Confirms search;
+
+  |System|
+  :Sends query to database\n(filters);
+
+  |Database|
+  :Returns matching Activity rows;
+
+  |System|
+  if (Database error?) is (yes) then
+    |User|
+    :Sees error message on screen\n"Activity Log could not be loaded. Please try again.";
+    stop
+  else(no)
+  endif
+
+  |System|
+  if (Is there any content returned?) is (no) then
+    |User|
+    :Sees empty state message on screen\n"No Activities found for the selected filters.";
+    stop
+  else(yes)
+  endif
+
+  |User|
+  :Sees Activity Log entries on screen;
+
+  |System|
+  repeat while (Adjusts filters?) is (yes)
+  ->no;
+  stop
+@enduml

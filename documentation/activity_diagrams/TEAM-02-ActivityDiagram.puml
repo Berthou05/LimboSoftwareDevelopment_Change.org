@@ -1,0 +1,101 @@
+@startuml
+|User|
+start
+:Clicks the "Edit" button in the Team Information module;
+
+|System|
+:Makes modifiable the inputs of the Team Information module;
+
+|User|
+:Modifies any input;
+:Clicks the "Save" button;
+
+|System|
+:Verifies the Team name;
+
+if (Is the Team name input empty?) then (yes)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Owner;
+
+if (Is the Owner input empty?) then (yes)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Description;
+
+if (Is the Description input empty?) then (yes)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Start Date;
+
+if (Is the Start Date input empty?) then (yes)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the End Date;
+
+if (Is the End Date input empty?) then (yes)
+else (no)
+    if (Is Start Date <= End Date?) then (yes)
+    else (no)
+        |User|
+        :Sees an error message on the Team Page indicating that the End Date cannot be earlier than the Start Date;
+        stop
+    endif
+endif
+
+|System|
+:Verifies the Status;
+
+if (Is the Status input empty?) then (yes)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+else (no)
+endif
+
+|System|
+:Accepts the User input;
+:Sends modifications to the Team object;
+
+|Database|
+:Modifies the Team object;
+
+|System|
+if (Was the Team object modified successfully?) then (yes)
+    :Gathers Team information through queries;
+else (no)
+    |User|
+    :Sees an error message on the Team Page;
+    stop
+endif
+
+|Database|
+:Returns the Team information;
+
+|System|
+:Renders the Team Page with updated information;
+
+|User|
+:Sees the Team Page with updated information;
+stop
+@enduml
