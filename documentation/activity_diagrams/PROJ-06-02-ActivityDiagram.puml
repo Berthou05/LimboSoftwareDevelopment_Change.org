@@ -1,0 +1,37 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open project;
+
+|System|
+:Retrieve members;
+
+|User|
+:Show members;
+:Select member;
+:Select Remove;
+
+|System|
+:Check permissions;
+
+if (Authorized?) then (Yes)
+
+  :Remove member;
+
+  if (Removed?) then (Yes)
+    |User|
+    :Show confirmation;
+  else
+    |User|
+    :Show removal error;
+  endif
+
+else
+  |User|
+  :Show permission error;
+endif
+
+stop
+@enduml

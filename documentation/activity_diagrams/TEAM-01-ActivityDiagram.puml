@@ -1,0 +1,49 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|Lead|
+start
+:Register Team;
+
+|System|
+:Show form;
+
+|Lead|
+:Enter team data;
+:Submit;
+
+|System|
+:Validate input;
+
+if (Valid?) then (Yes)
+
+  :Check name;
+
+  if (Name exists?) then (Yes)
+    |Lead|
+    :Show name error;
+    stop
+  else (No)
+
+    |System|
+    :Init team (id, time);
+    :Save team;
+
+    if (Saved?) then (Yes)
+      |Lead|
+      :Show success;
+    else
+      |Lead|
+      :Show error;
+    endif
+
+  endif
+
+else (No)
+  |Lead|
+  :Show validation error;
+  stop
+endif
+
+stop
+@enduml

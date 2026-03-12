@@ -1,0 +1,33 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open Teams section;
+
+|System|
+:Retrieve teams;
+
+|User|
+:Show teams;
+:Select team;
+
+|System|
+:Retrieve team details;
+
+|User|
+:Show team details;
+
+|System|
+:Check projects;
+
+if (Projects exist?) then (Yes)
+  |User|
+  :Show team projects;
+else (No)
+  |User|
+  :Show "No projects";
+endif
+
+stop
+@enduml
