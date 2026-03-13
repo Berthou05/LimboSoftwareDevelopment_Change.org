@@ -1,6 +1,11 @@
-DROP DATABASE IF EXISTS unitas_system;
-CREATE DATABASE unitas_system;
-USE unitas_system;
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Mar 13, 2026 at 04:40 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -15,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Database: `unitas_system`
 --
+CREATE DATABASE IF NOT EXISTS `unitas_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `unitas_system`;
 
 -- --------------------------------------------------------
 
@@ -154,7 +161,7 @@ INSERT INTO `achievement` (`achievement_id`, `project_id`, `employee_responsible
 
 CREATE TABLE `activity` (
   `activity_id` char(36) NOT NULL,
-  `project_id` char(36) NOT NULL,
+  `project_id` char(36) DEFAULT NULL,
   `employee_id` char(36) NOT NULL,
   `entry_id` char(36) NOT NULL,
   `title` varchar(150) NOT NULL,
