@@ -96,6 +96,7 @@ endif
 :Renders the Team Page with updated information;
 
 |User|
+:Sees a success message on the Team Page;
 :Sees the Team Page with updated information;
 stop
 @enduml

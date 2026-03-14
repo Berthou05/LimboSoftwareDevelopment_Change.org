@@ -14,6 +14,8 @@ start
 |System|
 :Verifies the User is not already registered in the selected Project;
 if (Is the User already registered as an individual participant in the selected Project?) then (yes)
+|User|
+
     :Informs the User they are already part of the Project;
     stop
 else (no)
@@ -27,6 +29,7 @@ endif
 if (Was the Collaboration object stored successfully?) then (yes)
     :Gathers Project information through queries;
 else (no)
+|User|
     :Informs the User an error has occurred;
     stop
 endif

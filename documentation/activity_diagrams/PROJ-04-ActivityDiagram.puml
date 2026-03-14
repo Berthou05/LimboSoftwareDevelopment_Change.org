@@ -5,14 +5,14 @@ start
 :Select a proyect from the list;
 
 |Sistema|
-:Caputre selected proyect's ID;
-:Send pryect's details consult;
+:Capture selected proyect's ID;
+:Send proyect's details consult;
 
 |Base de Datos|
 :Search proyect's information\n(Name, Desc, Team, etc.);
 
 if (¿Register exist?) then (yes)
-    :Return pryect's details;
+    :Return proyect's details;
     |Sistema|
     :Process and format data for visualization;
     :Render details' interface;
