@@ -19,6 +19,7 @@ if (Is the User already registered as an individual participant in the selected 
     :Informs the User they are already part of the Project;
     stop
 else (no)
+|System|
     :Creates a new Collaboration object;
 endif
 
@@ -29,7 +30,7 @@ endif
 if (Was the Collaboration object stored successfully?) then (yes)
     :Gathers Project information through queries;
 else (no)
-|User|
+|User|  
     :Informs the User an error has occurred;
     stop
 endif
@@ -37,7 +38,7 @@ endif
 |Database|
 :Returns queries response;
 
-|System|
-:Renders the Project Page with updated information;
+|User|
+:Views the Project Page with updated information;
 stop
 @enduml

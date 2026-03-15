@@ -4,10 +4,9 @@ start
 :Clicks the "Delete" button of a Project Achievement;
 
 |System|
-:Prepares a confirmation dialog for the deletion;
+:Generates a confirmation dialog for the deletion;
 
 |User|
-:Sees the confirmation dialog on the Project Page;
 :Confirms deletion by clicking the "Confirm" button;
 
 |System|

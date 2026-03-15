@@ -7,8 +7,7 @@ start
 :Prepares the editable fields of the selected Achievement;
 
 |User|
-:Sees editable Achievement fields on the Project Page;
-:Modifies any field;
+:Modifies editable fields;
 :Clicks the "Save" button;
 
 |System|
@@ -65,5 +64,6 @@ endif
 
 |User|
 :Sees the Project Page with the updated Achievement;
+:Sees a confirmation message "successfully updated achievement";
 stop
 @enduml
