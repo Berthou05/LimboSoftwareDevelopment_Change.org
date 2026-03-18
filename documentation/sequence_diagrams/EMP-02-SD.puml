@@ -1,0 +1,34 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "vista employee.ejs" as V
+boundary "routes" as RO
+control "employee.controller" as C
+entity "EmployeeTeam.model" as ET
+database "unitas_system" as BD
+
+activate U
+U->RO: GET /employee/:employee_id
+deactivate U
+    activate RO
+    RO -> C: get('/employee/:employee_id',isAuth,viewEmployee, employeeController.getEmployeePage)
+    deactivate RO
+        activate C
+        note right: This function is used by multiple User Cases\n more internal functional calls may be before or after
+        C->>ET: getEmployeeTeams(employee_id);
+            activate ET
+            ET->>BD: execute('SELECT joined_at, role, T.name, T.image FROM employeeteam as ET INNER JOIN team as T ON T.team_id=ET.team_id WHERE ET.employee_id=?',[employee_id])
+                activate BD
+                BD-->ET: teams
+                deactivate BD
+            ET-->C: teams
+            deactivate ET
+        C->V: response.render('employee.ejs', { teams: teams })
+        note right: Same render is returned by all User Cases, \n more parameters to render must be contemplated.
+        deactivate C
+    activate V
+    V->U: HTML
+    deactivate V
+
+@enduml
