@@ -61,22 +61,7 @@ else(no)
             |System|
         else(no)
         end if
-            if(Is the due date field empty?) is (no) then
-                |System|
-                if(Is due_date < current_date?) is (no) then
-                    |System|
-                    :“Save” button gets disabled;
-                    |Lead|
-                    :Shows the message “Some obligatory fields are empty”;
-                    stop
-                    note right
-                        Go to User selects a due date
-                    end note
-                    |System|
-                else(yes)
-                end if
-            else(yes)
-            end if
+
         if(Is the goal status empty?) is (yes) then
             |System|
             :“Save” button gets disabled;
@@ -96,14 +81,13 @@ end if
     |Database|
     :Modifies the Goal object;
     |System|
-    :Gathers Project information through queries;
+    :Gathers modified Goal information through query;
     |Database|
     :Returns queries response;
     |System|
-    :Renders the Project Page with updated information;
+    :Sends Goal information into JSON;
+    :Modifies Goal information into the Goals module;
     |Lead|
     :Displays a success message;
     stop
-
-
 @enduml

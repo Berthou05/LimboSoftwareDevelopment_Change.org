@@ -1,0 +1,67 @@
+@startuml
+skinparam style strictuml
+
+actor Lead as L
+boundary "vista project.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Goal.model" as G
+database "unitas_system" as BD
+
+activate L
+
+L -> V:Click "Delete" button of a Project Goal.
+deactivate L
+    activate V
+    V -> V: showConfirmationPopup(goal_id);
+    deactivate V
+
+
+opt Cancel Elimination
+activate L
+L -> V: Click "Cancel" button
+deactivate L
+    activate V
+    V -> V: closePopup();
+    deactivate V
+end
+
+activate L
+L -> V: Click "Confirm" button
+deactivate L
+    activate V
+    V -> V: deleteGoal(goal_id);
+    V -> RO: fetch(`/project/goal/${goal_id}`, {method: DELETE, headers:{'Accept': 'application/json'}})
+    deactivate V
+        activate RO
+            RO -> C: router.delete('/project/goal/:goal_id',isAuth,deleteGoal,projectController.deleteGoal);
+        deactivate RO
+            activate C
+            C ->> G: deleteGoal(goal_id);
+                activate G
+                G->>BD: bd.execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
+                    activate BD
+                    BD-->G: Query OK
+                    deactivate BD
+                G-->C: Query OK
+                deactivate G
+                C->V: response.json({success:true});
+            deactivate C
+    activate V
+    V->V: deleteGoalView(goal_id);
+    deactivate V
+
+    alt Deletion failed
+            activate C
+                C->V: response.json({success:false, error: error});        
+            deactivate C
+    activate V
+    V->V: showErrorPopup(error);
+    end
+    
+    V->L: View updated
+    deactivate V
+
+
+
+@enduml
