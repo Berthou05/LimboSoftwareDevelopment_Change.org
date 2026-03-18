@@ -36,11 +36,34 @@ end if
 |Database|
 :Returns matching data;
 |System|
-:Verfies query results;
-:Displays the first 10 matching results;
-|User|
-:Clicks a matching result;
+if(Are the results of the query > 0?) is (yes) then
+    if(Did the query return > than 10 elements?) is(yes) then
+        :Display the first 10 elements;
+    else(no)
+        :Display as many elements as the query returned;    
+    end if
+else(no)
+:Display message "No matching result found";
 stop
+note right
+    Go to User types the name
+end note
+end if
+
+|User|
+:Clicks somewhere;
+
+|System|
+if(Did the user click on a matching result?) is (yes) then
+    :Redirect user to the result page;
+    stop
+else (no)
+stop
+note right
+    Go back to Did the User click outside
+    the search bar or touch ESC?
+end note
+end if
 
 
 @enduml
