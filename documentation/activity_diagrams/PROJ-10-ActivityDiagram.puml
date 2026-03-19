@@ -5,7 +5,7 @@ start
 :Clicks the "Edit" button in one Project Goals;
 |System|
 :Makes modifiable the inputs of the Project Goal;
-if(Did the User click the "Close" button?) is (yes) then
+if(Did the User click the "Cancel" button?) is (yes) then
     stop
 else(no)
 end if

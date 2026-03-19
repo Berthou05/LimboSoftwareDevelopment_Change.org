@@ -12,7 +12,7 @@ activate U
 U->RO: GET /employee/:employee_id
 deactivate U
     activate RO
-    RO -> C: get('/employee/:employee_id',isAuth,viewEmployee, employeeController.getEmployeePage)
+    RO -> C: getEmployeePage(request, response)
     deactivate RO
         activate C
         note right: This function is used by multiple User Cases\n more internal functional calls may be before or after

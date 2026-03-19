@@ -1,0 +1,78 @@
+@startuml
+skinparam style strictuml
+
+actor Admin as A   
+boundary "vista roleAdmin.ejs" as V
+boundary "routes" as RO
+control "roleAdmin.controller" as C
+entity "Role.model" as R
+database "unitas_system" as BD
+
+activate A
+A -> V: Clicks "Create Role" button.
+deactivate A
+    activate V
+    V->V:createRole();
+    V -> A: Show popup form.
+    deactivate V
+
+alt Cancel role creation
+activate A
+A->V: Clicks "Close" button.
+deactivate A
+    activate V
+    V->V:closePopup();
+    deactivate V
+end
+
+activate A
+A->V: Clicks "Submit" button.
+deactivate A
+    activate V
+    V->RO: GET /roleAdmin/newRole/:name
+    deactivate V
+        activate RO
+        RO -> C: createRole(request, response);
+        deactivate RO
+            activate C
+            C->>R: createRole(name);
+                activate R
+                R->>BD: execute('INSERT INTO role(role_id, name) VALUES(UUID(),?)',[name]);
+                    activate BD
+                    BD-->R: Query OK
+                    deactivate BD
+                R-->C: Query OK
+                deactivate R
+            == Page Render ==
+                C ->> R:getRoles()
+                    activate R
+                    R->>BD:execute('SELECT * FROM roles');
+                        activate BD
+                        BD-->R:roles
+                        deactivate BD
+                    R-->C:roles
+                    deactivate R
+                C->>RP:getRolePrivileges();
+                    activate RP
+                    RP-->BD:execute('SELECT * FROM roleprivilege');
+                        activate BD
+                        BD-->RP:role_privileges
+                        deactivate BD
+                    RP-->C:role_privileges
+                    deactivate RP
+                C->>P:getPrivileges();
+                    activate P
+                    P->>BD:execute('SELECT * FROM privilege');
+                        activate BD
+                        BD-->P:privileges
+                        deactivate BD
+                    P-->C:privileges
+                    deactivate P
+                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
+                deactivate C
+            activate V
+            V->A:HTML+Mensaje de Exito Flash
+            deactivate V
+activate A
+                
+@enduml

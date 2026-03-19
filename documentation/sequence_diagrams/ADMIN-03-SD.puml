@@ -44,7 +44,7 @@ deactivate A
                 deactivate BD
             P-->C:privileges
             deactivate P
-        C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:role_privileges})
+            C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
         deactivate C
     activate V
     V->A:HTML
@@ -70,13 +70,12 @@ activate A
 A->V:Clicks "Confirm" button
 deactivate A
     activate V
-    V->RO: GET/roleAdmin/:roleId
+    V->RO: GET /roleAdmin/:roleId
     deactivate V
         activate RO
-        RO->C:deleteRole(request.params.roleId);
+        RO->C:deleteRole(request, response);
         deactivate RO
             activate C
-
                 C->>AR:update(delete_role_id);
                 activate AR    
                     AR->>BD:execute('UPDATE accountrole SET role_id=role WHERE role_id=deletedRole values(?,?)'[ROLE_ID, delete_role_id]);
@@ -135,7 +134,7 @@ deactivate A
                         deactivate BD
                     P-->C:privileges
                     deactivate P
-                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:role_privileges})
+                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
                 deactivate C
             activate V
             V->A:HTML+Mensaje de Exito Flash

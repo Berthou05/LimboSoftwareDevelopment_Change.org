@@ -16,7 +16,7 @@ end if
 :Clicks a button;
 
 |System|
-if(Did the User click the "Save" button?) is (yes) then
+if(Did the User click the "Submit" button?) is (yes) then
 else(no)
     stop
     note right

@@ -2,7 +2,7 @@
 
 |Lead|
 start
-:Clicks on the "Add" button in the Project Information module;
+:Clicks on the "Edit" button in the Project Information module;
 |System|
 :Makes modifiable the inputs of the Project Information module;
 if(Did the User click the "Close" button?) is (yes) then

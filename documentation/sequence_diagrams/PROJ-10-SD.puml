@@ -1,7 +1,7 @@
 @startuml
 skinparam style strictuml
 
-actor Lead as L
+actor Lead as L   
 boundary "vista project.ejs" as V
 boundary "routes" as RO
 control "project.controller" as C
@@ -10,54 +10,53 @@ database "unitas_system" as BD
 
 activate L
 
-L -> V:Click "Delete" button of a Project Goal.
+L -> V:Click "Edit" button of a Project Goal.
 deactivate L
     activate V
-    V -> V: showConfirmationPopup(goal_id);
+    V -> V: unlockInputs(goal_id);
     deactivate V
 
 
-opt Cancel Elimination
+opt Cancel Edition
 activate L
 L -> V: Click "Cancel" button
 deactivate L
     activate V
-    V -> V: closePopup();
+    V -> V: lockInputs(goal_id);
     deactivate V
 end
 
 activate L
-L -> V: Click "Confirm" button
+L -> V: Click "Save" button
 deactivate L
     activate V
-    V -> V: deleteGoal(goal_id);
-    V -> RO: fetch(`/project/goal/${goal_id}`, {method: DELETE, headers:{'Accept': 'application/json'}})
+    V -> V: updateGoal(goal_id);
+    V -> RO: fetch(`/project/goal/${goal_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)});
     deactivate V
         activate RO
-            RO -> C: deleteGoal(request, response);
+            RO -> C: updateGoal(request, response);
         deactivate RO
             activate C
-            C ->> G: deleteGoal(goal_id);
+            C ->> G: updateGoal(goal_id, title, description, due_date, status);
                 activate G
-                G->>BD: execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
+                G->>BD: execute('UPDATE goal SET title=?, description=?, due_date=?, status=? WHERE goal_id=?',[title, description, due_date, status, goal_id]);
                     activate BD
                     BD-->G: Query OK
                     deactivate BD
                 G-->C: Query OK
                 deactivate G
-                C->V: response.json({success:true});
+            C->V: response.json({success:true});
             deactivate C
     activate V
-    V->V: deleteGoalView(goal_id);
-    V->V: closePopup();
+    V->V: lockInputs(goal_id);
     deactivate V
 
-    alt Deletion failed
+    alt Edition failed
             activate C
                 C->V: response.json({success:false, error: error});        
             deactivate C
     activate V
-    V->V: closePopup();
+    V->V: lockInputs(goal_id);
     V->V: showErrorPopup(error);
     end
     
