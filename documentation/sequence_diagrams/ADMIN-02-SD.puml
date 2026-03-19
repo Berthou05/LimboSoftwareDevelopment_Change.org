@@ -7,6 +7,7 @@ boundary "routes" as RO
 control "roleAdmin.controller" as C
 entity "Role.model" as R
 database "unitas_system" as BD
+autonumber
 
 activate A
 A -> V: Clicks "Create Role" button.

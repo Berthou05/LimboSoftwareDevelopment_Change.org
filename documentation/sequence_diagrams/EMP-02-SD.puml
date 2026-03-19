@@ -7,6 +7,7 @@ boundary "routes" as RO
 control "employee.controller" as C
 entity "EmployeeTeam.model" as ET
 database "unitas_system" as BD
+autonumber
 
 activate U
 U->RO: GET /employee/:employee_id

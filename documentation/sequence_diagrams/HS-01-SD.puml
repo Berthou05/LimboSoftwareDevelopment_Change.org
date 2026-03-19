@@ -1,0 +1,16 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "layout.ejs" as V
+boundary "routes" as RO
+control "search.controller" as C
+entity "Employee.model" as E
+entity "Project.model" as P
+entity "Team.model" as T
+database "unitas_system" as BD
+
+autonumber
+
+
+@enduml

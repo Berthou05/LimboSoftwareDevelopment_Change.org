@@ -7,6 +7,7 @@ boundary "routes" as RO
 control "project.controller" as C
 entity "Project.model" as P
 database "unitas_system" as BD
+autonumber
 
 activate L
 

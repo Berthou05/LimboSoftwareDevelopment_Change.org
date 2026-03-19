@@ -10,6 +10,7 @@ entity "RolePrivilege.model" as RP
 entity "Privilege.model" as P
 entity "AccountRole.model" as AR
 database "unitas_system" as BD
+autonumber
 
 activate A
 == Page Access ==

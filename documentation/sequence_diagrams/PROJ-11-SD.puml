@@ -7,9 +7,9 @@ boundary "routes" as RO
 control "project.controller" as C
 entity "Goal.model" as G
 database "unitas_system" as BD
+autonumber
 
 activate L
-
 L -> V:Click "Delete" button of a Project Goal.
 deactivate L
     activate V
