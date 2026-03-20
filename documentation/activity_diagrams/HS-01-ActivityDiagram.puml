@@ -1,34 +1,11 @@
 @startuml
 
 |User|
-start
-:Clicks the search bar;
-|System|
-if(Did the User click outside the search bar or touch ESC?) is (yes) then
-    stop
-else(no)
-end if
+:Clicks "Search" button;
 
-|User|
-:Types the name of the Employee, Team or Project;
-:Clicks a button;
-|System|
-if(Did the user click the “Search” button?) is (yes) then
-    
-else(no)
-    stop
-    note right
-        Go back to Did the User click 
-        outside the search bar or touch 
-        ESC?
-    end note
-end if
 |System|
 if(Is the name input empty?) is (yes) then
     stop
-    note right
-        Go to User types the name.
-    end note
 else(no)
     |System|
     :Sends a query to the database with the name;
@@ -45,9 +22,6 @@ if(Are the results of the query > 0?) is (yes) then
 else(no)
 :Display message "No matching result found";
 stop
-note right
-    Go to User types the name
-end note
 end if
 
 |User|
@@ -58,12 +32,21 @@ if(Did the user click on a matching result?) is (yes) then
     :Redirect user to the result page;
     stop
 else (no)
-stop
-note right
-    Go back to Did the User click outside
-    the search bar or touch ESC?
-end note
+    if(Did the user click outside of the search bar or pressed ESC?) is (yes) then
+        :Hide results;
+    else(no)
+        if(Did the user click View More button?) is (yes) then
+            stop
+            note right
+            Go to System sends a query to database.
+            end note
+        else(no)
+            :Keep results;
+            stop
+        end if
+    end if
 end if
+stop
 
 
 @enduml
