@@ -1,0 +1,41 @@
+@startuml
+skinparam ActivityDiamondMaxWidth 100
+skinparam Padding 5
+
+|User|
+start
+:Navigates to the "Team" section;
+:Clicks to view the active members;
+
+|System|
+:Captures the current team_id;
+:Sends query for profile details and team history;
+
+|Database|
+:Fetches employee data and active status;
+:Returns data to System;
+
+|System|
+if (Is employee still active on this team?) then (yes)
+    if (Does profile data load?) then (yes)
+        :Processes data and prepares View;
+        :Renders the Active Members page;
+        |User|
+        :Views detailed profile and contact info;
+    else (no)
+        |System|
+        :Generates "Profile temporarily unavailable" message;
+        |User|
+        :Displays error message;
+    endif
+else (no)
+    |System|
+    :Prepares "No longer active" notification;
+    :Refreshes the member list;
+    |User|
+    :Displays notification and updated list;
+endif
+
+|User|
+stop
+@enduml

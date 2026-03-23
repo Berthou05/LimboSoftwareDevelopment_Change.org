@@ -1,0 +1,35 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Accesses Employee profile
+activate Sys
+
+User -> Sys: Navigates to "Your Projects" section
+Sys -> Sys: Captures Employee ID
+
+Sys -> DB: Request project list associated with Employee
+activate DB
+
+DB -> DB: Queries Projects where Employee is a member
+
+alt Connection or Data Error? (yes)
+    DB --> Sys: Return error status
+    deactivate DB
+    Sys -> User: Informs the user an error has occurred
+    Sys -> User: Show "no projects yet message"
+else Connection or Data Error? (no)
+    activate DB
+    DB --> Sys: Return list of associated projects
+    deactivate DB
+    Sys -> Sys: Displays summary list in "Your Projects" widget
+    Sys -> Sys: Render Page with user's information
+    Sys --> User: Views all projects linked to that Employee
+end
+
+deactivate Sys
+@enduml

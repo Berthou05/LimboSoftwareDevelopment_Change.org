@@ -1,0 +1,33 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Data Base" as DB
+
+User -> Sys: Select a project from the list
+activate Sys
+
+Sys -> Sys: Capture selected project's ID
+Sys -> DB: Send project's details consult
+activate DB
+
+DB -> DB: Search project's information\n(Name, Desc, Team, etc.)
+
+alt Register exists? (yes)
+    DB --> Sys: Return project's details
+    deactivate DB
+    Sys -> Sys: Process and format data for visualization
+    Sys -> Sys: Render details' interface
+    Sys --> User: Visualize project's information
+else Register exists? (no)
+    activate DB
+    DB --> Sys: Return error (Register not found)
+    deactivate DB
+    Sys -> User: Show error message on the interface
+    Sys -> User: Return to list of projects
+end
+
+deactivate Sys
+@enduml
