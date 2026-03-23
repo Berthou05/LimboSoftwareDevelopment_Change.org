@@ -1,0 +1,32 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Enters company email and password
+User -> Sys: Clicks "Sign In" button
+activate Sys
+
+Sys -> Sys: Validates input format
+Sys -> DB: Requests user credentials
+activate DB
+
+DB -> DB: Searches for user record
+DB --> Sys: Returns user data, hashed password, and role
+deactivate DB
+
+alt Credentials valid? (yes)
+    Sys -> Sys: Generates session token
+    Sys -> Sys: Determines Role (Admin, Lead, or Employee)
+    Sys -> Sys: Redirects to role-specific Dashboard
+    Sys --> User: Displays home page
+else Credentials valid? (no)
+    Sys -> Sys: Clears password field
+    Sys --> User: Displays "Invalid Credentials" message
+end
+
+deactivate Sys
+@enduml

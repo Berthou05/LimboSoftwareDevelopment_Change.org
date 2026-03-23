@@ -1,0 +1,36 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Navigates to the "Team" section
+activate Sys
+User -> Sys: Clicks to view the active members
+
+Sys -> Sys: Captures the current team_id
+Sys -> DB: Sends query for profile details and team history
+activate DB
+DB -> DB: Fetches employee data and active status
+DB --> Sys: Returns data to System
+deactivate DB
+
+alt Is employee still active on this team? (yes)
+    alt Does profile data load? (yes)
+        Sys -> Sys: Processes data and prepares View
+        Sys -> Sys: Renders the Active Members page
+        Sys --> User: Views detailed profile and contact info
+    else Does profile data load? (no)
+        Sys -> Sys: Generates "Profile temporarily unavailable" message
+        Sys --> User: Displays error message
+    end
+else Is employee still active on this team? (no)
+    Sys -> Sys: Prepares "No longer active" notification
+    Sys -> Sys: Refreshes the member list
+    Sys --> User: Displays notification and updated list
+end
+
+deactivate Sys
+@enduml

@@ -1,0 +1,36 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor "User (Admin)" as Admin
+participant "System" as Sys
+database "Database" as DB
+
+Admin -> Sys: Navigates to Roles section
+activate Sys
+Sys -> Sys: Renders Roles Administration table
+Sys -> Sys: Displays toggle switches for each privilege
+Sys --> Admin: Show Roles UI
+
+Admin -> Sys: Toggles a specific Privilege switch
+Sys -> Sys: Captures change (Privilege ID + New State)
+Sys -> DB: Sends update request to server
+activate DB
+
+DB -> DB: Updates relationship between Role and Privilege
+
+alt Update Successful? (yes)
+    DB --> Sys: Confirms record update
+    Sys -> Sys: Displays success notification
+    Sys -> Sys: Refreshes toggle state in the UI
+    Sys --> Admin: UI updated (Success)
+else Update Successful? (no)
+    DB --> Sys: Returns error (Conflict/Connection)
+    deactivate DB
+    Sys -> Sys: Displays error message
+    Sys -> Sys: Reverts toggle switch to previous state
+    Sys --> Admin: UI reverted (Error)
+end
+
+deactivate Sys
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+|User|
+start
+:Clicks "Delete Project" button;
+
+|System|
+:Displays confirmation modal;
+
+|User|
+if (Confirms deletion?) then (yes)
+    |System|
+    :Sends deletion request (project_id);
+    
+    |Database|
+    :Executes DELETE/ARCHIVE query;
+    |System|
+    :Returns success/failure status;
+    
+    |System|
+    if (Success?) then (yes)
+        :Redirects to Projects Dashboard;
+        |User|
+        :Displays
+        "Project Deleted
+        Successfully" notification;
+    else (no)
+        |System|
+        :Generates error log;
+        |User|
+        :Displays
+        "Error: Could not
+        delete project" message;
+    endif
+else (no)
+    |System|
+    :Closes modal;
+    |User|
+    :Displays Project Details page (no changes);
+endif
+
+|User|
+stop
+@enduml

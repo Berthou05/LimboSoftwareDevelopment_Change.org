@@ -19,18 +19,12 @@ if (Is there a connection or data error?) then (yes)
     :Show "no proyects yet message";
     stop
 else (no)
-    |Database|
-    :Returns project list (Name, Role, Date);
+    |System|
+    :Displays summary list in the "Your Projects" widget;
 endif
 
 |System|
-:Displays summary list in the "Your Projects" widget;
-
-|User|
-:Clicks on the "Your Projects" header/button;
-
-|System|
-:Redirects to the **Full Projects List** view;
+:Render Page with user’s information;
 
 |User|
 :Views all projects linked to that Employee;

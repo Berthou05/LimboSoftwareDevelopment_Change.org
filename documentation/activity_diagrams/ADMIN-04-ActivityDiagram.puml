@@ -4,15 +4,6 @@ skinparam conditionStyle diamond
 |User (Admin)|
 start
 :Navigates to the **Roles** section;
-:Selects a specific Role to manage;
-
-|System|
-:Captures Role ID;
-:Requests current privilege configuration for the role;
-
-|Database|
-:Queries active/inactive privileges (Employee/Lead status);
-:Returns privilege status list;
 
 |System|
 :Renders the **Roles Administration** table;
@@ -28,6 +19,7 @@ start
 |Database|
 :Updates the relationship between Role and Privilege;
 
+|System|
 if (Update Successful?) then (yes)
     :Confirms record update;
     |System|

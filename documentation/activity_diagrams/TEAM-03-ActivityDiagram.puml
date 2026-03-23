@@ -1,0 +1,37 @@
+@startuml
+skinparam ActivityDiamondMaxWidth 100
+skinparam Padding 5
+
+|User|
+start
+:Selects "Delete Team";
+
+|System|
+:Displays warning modal;
+note right: Projects will not\nbe deleted
+
+|User|
+if (Confirms permanent deletion?) then (yes)
+    |System|
+    :Sends deactivation request (team_id);
+    
+    |Database|
+    :Sets Team status to 'Inactive';
+    :Unlinks active member associations;
+    :Returns success status;
+    
+    |System|
+    :Removes Team from navigation menu;
+    :Redirects to Global Dashboard;
+    |User|
+    :Displays "Team successfully removed" message;
+else (no)
+    |System|
+    :Closes modal;
+    |User|
+    :Displays Team Settings (no changes);
+endif
+
+|User|
+stop
+@enduml
