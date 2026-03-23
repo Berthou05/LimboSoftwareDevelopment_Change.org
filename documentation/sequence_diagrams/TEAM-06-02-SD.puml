@@ -1,0 +1,147 @@
+@startuml
+skinparam style strictuml
+
+actor Lead as L
+boundary "team.ejs" as V
+boundary "team.routes" as RO
+boundary "search.routes" as SR
+control "team.controller" as C
+control "search.controller" as CS
+entity "search.model" as S
+entity "employeeteam.model" as  ET
+entity "employee.model" as E
+database "unitas_system" as BD
+
+autonumber
+activate L
+L->V: Click "Add" button
+deactivate L
+    activate V
+    V->V: showSearchPopup();
+    V->L: Show popup
+    deactivate V
+
+alt Cancel Search Join
+activate L
+L->V: Click "Close" button.
+deactivate L
+    activate V
+    V->V: hidePopup();
+    deactivate V
+end
+
+group Search [Employee Search]
+    V->V:validateInput();
+    V->V:startEmployeeSearch(name);
+    V->SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate SR
+        SR->CS: getEmployeeSearchResult(request, results); 
+        deactivate SR
+            activate C
+            C->>S: getEmployeeSearch(name, page, limit);
+                activate S
+                S->>BD: execute('SELECT employee_id, full_name AS label FROM employee WHERE LOWER(full_name) LIKE ?\n LIMIT ? OFFSET ?'\n,[normal_name, 11, offset]);
+                    activate BD
+                    BD-->S:results
+                    deactivate BD
+                S-->C: results
+                deactivate S
+            C->V: response.json({body:results});
+            deactivate C
+    activate V
+    V->V:generateEmployeeResults(results);
+    V->L:updated view
+    deactivate V
+activate L
+opt View More Results
+L->V: Clicks the "View More" button.
+deactivate L
+    activate V
+    V->V:continueEmployeeSearch(name);
+    V->SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate SR
+        SR->CS: getEmployeeSearchResult(request, results); 
+        deactivate SR
+            activate C
+            C->>S: getEmployeeSearch(name, page, limit);
+                activate S
+                S->>BD: execute('SELECT employee_id, full_name AS label FROM employee WHERE LOWER(full_name) LIKE ?\n LIMIT ? OFFSET ?'\n,[normal_name, 11, offset]);
+                activate BD
+                    BD-->S:results
+                    deactivate BD
+                S-->C: results
+                deactivate S
+            C->V: response.json({body:results});
+            deactivate C
+    activate V
+    V->V:generateResults(results);
+    V->L:updated view
+    deactivate V
+activate L
+end
+L->V: click on a matching result
+deactivate L
+end
+
+    activate V
+    V->V: showRolePopup();
+    V->L: Show popup
+    deactivate V
+
+alt Cancel Role Join
+activate L
+L->V: Click "Close" button.
+deactivate L
+    activate V
+    V->V: hidePopup();
+    deactivate V
+end
+
+activate L
+L->V: Click "Submit" button.
+deactivate L
+    activate V
+    V->V: addEmployeeTeam(team_id, employee_id, role)
+    V->RO: fetch('/team/join', {method:'POST', headers: { 'Accept': 'application/json'}, body:JSON.stringify({team_id= ..., employee_id: ..., role:...})})
+    deactivate V
+        activate RO
+        RO->C: addEmployeeTeam(request, response);
+        deactivate RO
+            activate C
+            C->>ET: addEmployeeTeam(team_id, employee_id, role);
+                activate ET
+                ET->>BD: execute('INSERT INTO employeeteam(employee_id,team_id,joined_at,role) VALUES(?,?,NOW(),?)',[employee_id, team_id,role]);
+                    activate BD
+                    BD-->ET: Query OK
+                    deactivate BD
+                ET-->C: Query OK
+                deactivate ET
+            C->>ET:getEmployeesTo(team_id);
+                activate ET
+                ET->>BD: execute('SELECT * FROM employeeteam WHERE team_id=? AND left_at IS NULL',[team_id]);
+                    activate BD
+                    BD-->ET: employees
+                    deactivate BD
+                ET-->C: employees
+                deactivate ET
+            C->V: response.json({success:true, body: employees});
+            deactivate C
+    activate V
+    V->V: showTeamMembers(employees);
+    V->V: showSuccessJoinMessage(team_id, employee_id, role);
+    V->L: Updated view + success message
+    deactivate V
+
+alt Join Failed
+            activate C
+            C->V: response.json({success:false, body:error});
+            deactivate C
+    activate V
+    V->V: showFailingJoinMessage(team_id, employee_id, role, error);
+    V->L: Error message
+    deactivate V
+end
+
+@enduml
