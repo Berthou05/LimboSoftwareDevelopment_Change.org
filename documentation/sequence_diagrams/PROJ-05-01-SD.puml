@@ -1,0 +1,81 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "project-members.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+control "project.service" as SV
+entity "employee.model" as E
+entity "collaboration.model" as X
+database "unitas_system" as DB
+
+U -> V: Click "Join"
+activate V
+
+opt Cancel join dialog
+V -> V: closeJoinDialog()
+end
+
+V -> RO: fetch('/projects/:projectId/members/self',\n{method:'POST', headers:{'Content-Type':'application/json'}})
+activate RO
+RO -> C: addSelfToProject(request, response)
+activate C
+C -> SV: addSelfToProject(projectId, session.accountId)
+activate SV
+SV -> E: findByAccountId(session.accountId)
+activate E
+E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE account_id = ?
+activate DB
+DB --> E: employee row
+deactivate DB
+E --> SV: employee
+deactivate E
+SV -> X: findActiveMembership(projectId, employee.id)
+activate X
+X -> DB: SELECT id\nFROM collaboration\nWHERE project_id = ? AND employee_id = ? AND left_at IS NULL
+activate DB
+DB --> X: membership row / null
+deactivate DB
+X --> SV: membership / null
+deactivate X
+
+alt Membership already exists
+SV --> C: duplicate membership error
+deactivate SV
+C --> RO: response.json({success:false,error:"Already joined"})
+deactivate C
+RO --> V: HTTP 409 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showJoinProjectError(error)
+else Membership does not exist
+SV -> X: createMembership(projectId, employee.id)
+activate X
+X -> DB: INSERT INTO collaboration(project_id, employee_id, joined_at)\nVALUES (?, ?, NOW())
+activate DB
+DB --> X: inserted collaboration id
+deactivate DB
+X --> SV: collaboration created
+deactivate X
+SV -> X: listProjectParticipants(projectId)
+activate X
+X -> DB: SELECT c.id, e.id AS employee_id, e.first_name, e.last_name\nFROM collaboration c\nJOIN employee e ON e.id = c.employee_id\nWHERE c.project_id = ? AND c.left_at IS NULL\nORDER BY e.first_name, e.last_name
+activate DB
+DB --> X: participant rows
+deactivate DB
+X --> SV: participants
+deactivate X
+SV --> C: participants data
+deactivate SV
+C --> RO: response.json({success:true,data:participants})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: updateParticipantsModule(data)
+end
+deactivate V
+
+@enduml
