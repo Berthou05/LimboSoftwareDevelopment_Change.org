@@ -5,6 +5,8 @@ Modified by: Hurtado, R.
 */
 
 const express = require('express');
+const navigationMiddleware = require('./middleware/navigationMiddleware');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -22,6 +24,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 
 //Routes declaration
+
+app.use(navigationMiddleware);
 
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');
