@@ -1,0 +1,31 @@
+@startuml
+skinparam ActivityDiamondMaxWidth 100
+skinparam Padding 5
+
+|User|
+start
+:Clicks "Edit Entry";
+:Updates "Today", "Tomorrow", and "Blockers" fields;
+:Clicks "Update Entry";
+
+|System|
+:Validates input fields;
+if (Inputs valid?) then (yes)
+    :Sends update request (entry_id);
+    |Database|
+    :Updates Daily Entry record;
+    :Returns success;
+    |System|
+    :Refreshes Activity Log view;
+    |User|
+    :Displays "Entry updated successfully";
+else (no)
+    |System|
+    :Highlights missing or invalid fields;
+    |User|
+    :Displays validation error;
+endif
+
+|User|
+stop
+@enduml

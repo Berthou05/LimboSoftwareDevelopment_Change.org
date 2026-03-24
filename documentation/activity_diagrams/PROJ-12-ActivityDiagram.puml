@@ -1,0 +1,27 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open Projects section;
+
+|System|
+:Retrieve projects;
+
+|User|
+:Show projects;
+:Select project;
+
+|System|
+:Retrieve project achievements;
+
+if (Achievements exist?) then (Yes)
+  |User|
+  :Show achievements;
+else (No)
+  |User|
+  :Show "No achievements";
+endif
+
+stop
+@enduml

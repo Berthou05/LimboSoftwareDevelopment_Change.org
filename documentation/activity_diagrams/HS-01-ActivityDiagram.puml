@@ -1,0 +1,52 @@
+@startuml
+
+|User|
+:Clicks "Search" button;
+
+|System|
+if(Is the name input empty?) is (yes) then
+    stop
+else(no)
+    |System|
+    :Sends a query to the database with the name;
+end if
+|Database|
+:Returns matching data;
+|System|
+if(Are the results of the query > 0?) is (yes) then
+    if(Did the query return > than 10 elements?) is(yes) then
+        :Display the first 10 elements;
+    else(no)
+        :Display as many elements as the query returned;    
+    end if
+else(no)
+:Display message "No matching result found";
+stop
+end if
+
+|User|
+:Clicks somewhere;
+
+|System|
+if(Did the user click on a matching result?) is (yes) then
+    :Redirect user to the result page;
+    stop
+else (no)
+    if(Did the user click outside of the search bar or pressed ESC?) is (yes) then
+        :Hide results;
+    else(no)
+        if(Did the user click View More button?) is (yes) then
+            stop
+            note right
+            Go to System sends a query to database.
+            end note
+        else(no)
+            :Keep results;
+            stop
+        end if
+    end if
+end if
+stop
+
+
+@enduml

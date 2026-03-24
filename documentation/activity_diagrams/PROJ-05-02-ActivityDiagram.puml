@@ -1,0 +1,59 @@
+@startuml
+|User|
+start
+:Clicks the "Add" button in the Project Participants module;
+
+|System|
+:Generates a popup to search for an Employee;
+
+|User|
+:Writes an Employee name in the search bar;
+:Submits the search by clicking the "Search" button;
+
+|System|
+:Sends a query with the Employee name to the database;
+
+|Database|
+:Returns matching Employees;
+
+|System|
+:Shows query results;
+
+|User|
+:Selects an Employee searched;
+:Clicks the "Save" button;
+
+|System|
+:Verifies the selected Employee is not already registered in the selected Project;
+
+if (Is the selected Employee already registered in the selected Project?) then (yes)
+    |User|
+    :Sees an error message on the Project Page indicating that the selected Employee is already part of the Project;
+    stop
+else (no)
+    :Accepts the User input;
+    :Creates a new Collaboration object;
+endif
+
+|Database|
+:Stores the Collaboration object;
+
+|System|
+if (Was the Collaboration object stored successfully?) then (yes)
+    :Gathers Project information through queries;
+else (no)
+    |User|
+    :Sees an error message on the Project Page;
+    stop
+endif
+
+|Database|
+:Returns the Project information;
+
+|System|
+:Renders the Project Page with updated information;
+
+|User|
+:Sees a success message on the Project Page;
+stop
+@enduml

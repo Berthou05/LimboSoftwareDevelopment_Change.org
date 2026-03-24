@@ -1,0 +1,56 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista login.ejs" as V
+control "auth.controller" as C
+entity "Session.model" as SM
+database "unitas_system" as BD
+
+activate U
+U -> RO:POST /logout
+deactivate U
+    activate RO
+    RO -> C:logout(request, response)
+    deactivate RO
+        activate C
+        C ->> SM:destroy(session_id)
+            activate SM
+            SM ->> BD:execute('DELETE FROM sessions WHERE id=?', [session_id])
+                activate BD
+                
+                alt success
+                    BD --> SM:Query OK
+                    deactivate BD
+                    SM --> C:destroyed
+                    deactivate SM
+                    
+                    C -> RO:response.redirect('/login')
+                    deactivate C
+                        activate RO
+                        RO -> C:loginPage(request, response)
+                        deactivate RO
+                            activate C
+                            C -> V:response.render('auth/login.ejs', {success: "Successfully signed out"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML login screen
+                                deactivate V
+                
+                else fail
+                    BD --> SM:error
+                    deactivate BD
+                    SM --> C:error
+                    deactivate SM
+                    
+                    C -> V:response.render('error.ejs', {error: "Unable to sign out"})
+                    deactivate C
+                        activate V
+                        V -> U:HTML + Error message
+                        deactivate V
+                end
+
+activate U
+
+@enduml

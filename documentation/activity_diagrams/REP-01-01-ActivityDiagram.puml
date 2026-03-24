@@ -1,0 +1,58 @@
+@startuml
+|User|
+start
+:Presses the Generate Report button;
+|System|
+
+:Validates that content_type and content_id are selected;
+if (Are content_type and content_id present?) is (no) then
+  |User|
+  :Shows error "Please select a content type and specific content";
+  stop
+  |System|
+else(yes)
+endif
+
+
+:Validates the date range entered;
+if (start_date <= end_date) is (no) then
+  |User|
+  :Shows error "Please select a valid date range:";
+  stop
+  |System|
+else(yes)
+endif
+
+|System|
+:Selects the query to use based on the content type;
+
+|System|
+if (Is the content_type == Employee?) is (yes) then
+  :Selects Employee query;
+  elseif  (Is the content_type == Team?) is (yes) then
+    :Selects Team query;
+  else(no)
+    :Selects Project query;
+  |System|
+  endif
+  
+|System|
+:Sends specific queries to the database;
+
+|Database|
+:Return queries;
+
+|System|
+:Verifies ant content was received;
+
+if(Is there any information received from the database?) is (no) then
+  |User|
+  :Show error "There is no registered information for {content_type}: {content_id} during the specified date range";
+  stop
+  |System|
+else(yes)
+endif
+
+:Unifies data into input_snapshot_json format;
+stop
+@enduml

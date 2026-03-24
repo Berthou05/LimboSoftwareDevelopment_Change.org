@@ -1,0 +1,27 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open Employees section;
+
+|System|
+:Retrieve employees;
+
+|User|
+:Show employees;
+:Select employee;
+
+|System|
+:Retrieve profile data;
+
+if (Profile found?) then (Yes)
+  |User|
+  :Show employee profile;
+else (No)
+  |User|
+  :Show profile error;
+endif
+
+stop
+@enduml

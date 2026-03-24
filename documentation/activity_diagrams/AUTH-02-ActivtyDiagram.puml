@@ -1,0 +1,21 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Select Sign Out;
+
+|System|
+:Terminate session;
+
+if (Session closed?) then (Yes)
+  :Redirect to login;
+  |User|
+  :Show login page;
+else (No)
+  |User|
+  :Show sign out error;
+endif
+
+stop
+@enduml

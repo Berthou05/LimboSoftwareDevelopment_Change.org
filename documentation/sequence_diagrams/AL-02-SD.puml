@@ -1,0 +1,32 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Clicks "Edit Entry"
+activate Sys
+
+Sys --> User: Displays pre-filled entry form
+
+User -> Sys: Updates fields and clicks "Update Entry"
+Sys -> Sys: Validates input fields
+
+alt Inputs valid? (yes)
+    Sys -> DB: Sends update request (entry_id)
+    activate DB
+    DB -> DB: Updates Daily Entry record
+    DB --> Sys: Returns success
+    deactivate DB
+    
+    Sys -> Sys: Refreshes Activity Log view
+    Sys --> User: Displays "Entry updated successfully"
+else Inputs valid? (no)
+    Sys -> Sys: Highlights missing or invalid fields
+    Sys --> User: Displays validation error
+end
+
+deactivate Sys
+@enduml

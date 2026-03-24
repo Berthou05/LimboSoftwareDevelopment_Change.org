@@ -1,0 +1,22 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open admin panel;
+
+|System|
+:Retrieve accounts;
+
+|User|
+:Show accounts;
+:Select account;
+
+|System|
+:Retrieve account info;
+
+|User|
+:Show account info;
+
+stop
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "team.ejs" as V
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "team.model" as T
+database "unitas_system" as BD
+
+autonumber
+
+activate U
+U->V: Hover/Click over the "Team Information" button
+deactivate U
+    activate V
+    V->V: showTeamInfo();
+    V->RO: fetch('/team/info/`${team_id}`', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate RO
+        RO->C:getTeamInfo(request, response);
+        deactivate RO
+            activate C
+            C->>T: getTeamInfo(team_id);
+                activate T
+                T->>BD: execute('SELECT * FROM team WHERE team_id=?',[team_id]);
+                    activate BD
+                    BD-->T:info
+                    deactivate BD
+                T-->C:info
+                deactivate T
+            C->V: response.json({body:info});
+            deactivate C
+    activate V
+    V->V: createInfoPopover(info);
+    V->U: Updated view
+    deactivate V
+
+activate U
+opt Close Information
+U->V: Clicks or hovers outside the "Team Information" button
+deactivate U
+    activate V
+    V->V: closePopover();
+    U->V: Updated view
+    deactivate V
+end
+    
+
+@enduml

@@ -1,0 +1,44 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "project-goals.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+control "project.service" as SV
+entity "goal.model" as X
+database "unitas_system" as DB
+
+U -> V: Open Goals module
+activate V
+V -> RO: fetch('/projects/:projectId/goals')
+activate RO
+RO -> C: getProjectGoals(request, response)
+activate C
+C -> SV: getProjectGoals(projectId)
+activate SV
+SV -> X: findByProjectId(projectId)
+activate X
+X -> DB: SELECT id, title, description, status, target_date\nFROM goal\nWHERE project_id = ?\nORDER BY target_date ASC
+activate DB
+DB --> X: goal rows
+deactivate DB
+X --> SV: goals
+deactivate X
+SV --> C: goals data
+deactivate SV
+C --> RO: response.json({success:true,data:goals})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+
+alt No goals returned
+V -> V: renderGoalsModule({items:[],empty:true})
+else Goals returned
+V -> V: renderGoalsModule(data)
+end
+deactivate V
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+|User|
+start
+:Navigates to a page that contains an Activity Log view;
+
+|System|
+:Validates receiving a scope context;
+
+if (Is the scope context valid?) then (yes)
+    :Loads a default filter set for the Activity Log;
+    :Sends a petition to the server with scope and filters;
+    :Validates the filter values;
+else (no)
+    |User|
+    :Sees an error message informing an invalid Activity Log scope has been selected;
+    stop
+endif
+
+|System|
+if (Are filter values valid?) then (yes)
+    :Selects the query to use based on the scope;
+    :Sends the corresponding query to the database;
+else (no)
+    |User|
+    :Sees an error message asking to correct the filter values;
+    stop
+endif
+
+|Database|
+:Returns the matching Activity rows;
+
+|System|
+:Verifies if any content was received;
+
+if (Is there any information received from the database?) then (yes)
+    :Formats the Activity rows into Activity Log cards or table entries;
+else (no)
+    |User|
+    :Sees a message informing there are no Activity entries for the selected scope and date range;
+    stop
+endif
+
+|System|
+if (Did the System receive an error from the server or database?) then (yes)
+    |User|
+    :Sees an error message informing the Activity Log could not be loaded and is asked to retry;
+    stop
+else (no)
+endif
+
+|User|
+:Sees the Activity Log entries;
+:Applies filters or changes the date range;
+
+|System|
+:Sends a new petition to the server with updated filters;
+:Refreshes the Activity Log view with the filtered results;
+
+|User|
+:Sees the updated Activity Log entries;
+stop
+@enduml

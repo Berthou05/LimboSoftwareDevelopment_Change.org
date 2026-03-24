@@ -1,0 +1,31 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Selects specific Project from dashboard
+activate Sys
+
+Sys -> Sys: Retrieves project_id from selection
+Sys -> DB: Sends query for employees by project_id
+activate DB
+
+DB --> Sys: Returns list of participants and roles
+deactivate DB
+
+alt Are participants assigned? (yes)
+    Sys -> DB: Retrieves profile metadata and images
+    activate DB
+    DB --> Sys: Returns metadata
+    deactivate DB
+    Sys -> Sys: Renders "Project Participants" module
+    Sys --> User: Displays participant list and contact info
+else Are participants assigned? (no)
+    Sys --> User: Displays "No participants assigned" message
+end
+
+deactivate Sys
+@enduml

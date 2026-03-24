@@ -1,0 +1,72 @@
+@startuml
+|User|
+start
+:Clicks the "Forgot password" option in the Login Page;
+
+|System|
+:Generates a password recovery form;
+
+|User|
+:Writes the registered email address;
+:Submits the request by clicking the "Recover password" button;
+
+|System|
+:Sends a query to verify whether the email exists in the database;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the email exists in the system;
+
+if (Does the email exist in the system?) then (yes)
+    :Generates a password recovery token associated with the User account;
+    :Sends a request to the configured email service to deliver a password recovery email containing the reset link;
+else (no)
+    |User|
+    :Sees an error message on the Login Page indicating that the email is not registered;
+    stop
+endif
+
+|Email Service|
+:Sends the password recovery email containing the reset link;
+
+|System|
+:Verifies whether the recovery email was sent successfully;
+
+if (Was the recovery email sent successfully?) then (yes)
+    |User|
+    :Sees a confirmation message on the Login Page indicating that the recovery email has been sent;
+    :Clicks on the recovery link received by email;
+else (no)
+    |User|
+    :Sees an error message on the Login Page;
+    stop
+endif
+
+|System|
+:Generates the password reset screen;
+
+|User|
+:Sees the password reset screen;
+:Writes a new password;
+:Submits the new password;
+
+|System|
+:Validates the new password;
+
+if (Is the new password a valid password?) then (yes)
+    :Sends a query to update the password in the database;
+    |Database|
+    :Updates the password;
+    |System|
+    :Confirms the password was updated successfully;
+    |User|
+    :Sees a confirmation message indicating that the password has been updated;
+    stop
+else (no)
+    |User|
+    :Sees an error message on the password reset screen asking to enter another password;
+    stop
+endif
+@enduml

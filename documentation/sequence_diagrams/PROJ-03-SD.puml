@@ -1,0 +1,37 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Clicks "Delete Project" button
+activate Sys
+
+Sys --> User: Displays confirmation modal
+
+alt Confirms deletion? (yes)
+    User -> Sys: Selects "yes"
+    Sys -> DB: Sends deletion request (project_id)
+    activate DB
+    DB -> DB: Executes DELETE/ARCHIVE query
+    DB --> Sys: Returns success/failure status
+    deactivate DB
+    
+    alt Success? (yes)
+        Sys -> Sys: Redirects to Projects Dashboard
+        Sys --> User: Displays "Project Deleted Successfully" notification
+    else Success? (no)
+        Sys -> Sys: Generates error log
+        Sys --> User: Displays "Error: Could not delete project" message
+    end
+    
+else Confirms deletion? (no)
+    User -> Sys: Selects "no"
+    Sys -> Sys: Closes modal
+    Sys --> User: Displays Project Details page (no changes)
+end
+
+deactivate Sys
+@enduml

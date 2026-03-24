@@ -1,0 +1,94 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista accountForm.ejs" as V
+control "account.controller" as C
+entity "Account.model" as AM
+database "unitas_system" as BD
+
+activate U
+U -> RO:GET /accounts/new
+deactivate U
+    activate RO
+    RO -> C:getNew(request, response)
+    deactivate RO
+        activate C
+        C -> V:response.render('accountForm.ejs')
+        deactivate C
+    activate V
+    V -> U:HTML form
+    deactivate V
+
+activate U
+U -> RO:POST /accounts
+deactivate U
+    activate RO
+    RO -> C:create(request, response)
+    deactivate RO
+        activate C
+        C -> C:validate(data)
+        
+        alt invalid data
+            C -> V:response.render('accountForm.ejs', {errors: errors})
+            deactivate C
+                activate V
+                V -> U:HTML + Error messages
+                deactivate V
+        
+        else valid data
+            C ->> AM:findByEmail(email)
+                activate AM
+                AM ->> BD:execute('SELECT * FROM accounts WHERE email=?', [email])
+                    activate BD
+                    BD --> AM:result
+                    deactivate BD
+                AM --> C:exists / null
+                deactivate AM
+            
+            alt email exists
+                C -> V:response.render('accountForm.ejs', {error: "Email already exists"})
+                deactivate C
+                    activate V
+                    V -> U:HTML + Error message
+                    deactivate V
+            
+            else new email
+                C -> C:hash(password)
+                
+                C ->> AM:create(data)
+                    activate AM
+                    AM ->> BD:execute('INSERT INTO accounts (email, password, ...) VALUES (?, ?, ...)', [data])
+                        activate BD
+                        
+                        alt success
+                            BD --> AM:Query OK
+                            deactivate BD
+                            AM --> C:saved
+                            deactivate AM
+                            
+                            C -> V:response.render('success.ejs', {success: "Account created successfully"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML + Success message
+                                deactivate V
+                        
+                        else fail
+                            BD --> AM:error
+                            deactivate BD
+                            AM --> C:error
+                            deactivate AM
+                            
+                            C -> V:response.render('accountForm.ejs', {error: "Could not create account. Please try again"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML + Error message
+                                deactivate V
+                        end
+            end
+        end
+
+activate U
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor User
+participant "System" as Sys
+database "Database" as DB
+
+User -> Sys: Selects "Delete Team"
+activate Sys
+
+Sys --> User: Displays warning modal\n(Note: Projects will not be deleted)
+
+alt Confirms permanent deletion? (yes)
+    User -> Sys: Selects "yes"
+    Sys -> DB: Sends deactivation request (team_id)
+    activate DB
+    
+    DB -> DB: Sets Team status to 'Inactive'
+    DB -> DB: Unlinks active member associations
+    DB --> Sys: Returns success status
+    deactivate DB
+    
+    Sys -> Sys: Removes Team from navigation menu
+    Sys -> Sys: Redirects to Global Dashboard
+    Sys --> User: Displays "Team successfully removed" message
+    
+else Confirms permanent deletion? (no)
+    User -> Sys: Selects "no"
+    Sys -> Sys: Closes modal
+    Sys --> User: Displays Team Settings (no changes)
+end
+
+deactivate Sys
+@enduml

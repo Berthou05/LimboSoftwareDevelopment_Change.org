@@ -1,0 +1,82 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista projectShow.ejs" as V
+control "project.controller" as C
+entity "Project.model" as PM
+entity "ProjectUser.model" as PU
+database "unitas_system" as BD
+
+activate U
+U -> V:Clicks "Leave Project" button
+deactivate U
+    activate V
+    V -> V:showConfirmPopup(projectId)
+    V --> U:Confirmation popup displayed
+    deactivate V
+
+activate U
+
+opt User cancels
+    U -> V:Clicks "Cancel" button
+    deactivate U
+        activate V
+        V -> V:hidePopup()
+        deactivate V
+end
+
+activate U
+U -> V:Clicks "Confirm" button
+deactivate U
+    activate V
+    V -> RO:POST /projects/:id/leave
+    deactivate V
+        activate RO
+        RO -> C:leave(request, response)
+        deactivate RO
+            activate C
+            
+            C ->> PU:removeUser(user_id, project_id)
+                activate PU
+                PU ->> BD:execute('DELETE FROM project_users WHERE user_id=? AND project_id=?', [user_id, project_id])
+                    activate BD
+                    
+                    alt Database Error
+                        BD --> PU:error
+                        deactivate BD
+                        PU --> C:error
+                        deactivate PU
+                        
+                        C -> V:response.render('projects/show.ejs', {error: "Unable to leave the project"})
+                        deactivate C
+                            activate V
+                            V -> U:HTML + Error message
+                            deactivate V
+                    
+                    else Success
+                        BD --> PU:Query OK
+                        deactivate BD
+                        PU --> C:removed
+                        deactivate PU
+                        
+                        C ->> PM:findById(project_id)
+                            activate PM
+                            PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                                activate BD
+                                BD --> PM:project
+                                deactivate BD
+                            PM --> C:project
+                            deactivate PM
+                        
+                        C -> V:response.render('projects/show.ejs', {project: project, success: "Successfully left the project"})
+                        deactivate C
+                            activate V
+                            V -> U:HTML + Success message
+                            deactivate V
+                    end
+            
+activate U
+
+@enduml

@@ -1,0 +1,69 @@
+@startuml
+skinparam style strictuml
+
+actor Lead as L   
+boundary "vista project.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as P
+database "unitas_system" as BD
+autonumber
+
+activate L
+
+L -> V:Click "Edit" button in the Information Module.
+deactivate L
+    activate V
+    V -> V: unlockInputs(project_id);
+    deactivate V
+
+
+opt Cancel Edition
+activate L
+L -> V: Click "Cancel" button
+deactivate L
+    activate V
+    V -> V: lockInputs(project_id);
+    deactivate V
+end
+
+activate L
+L -> V: Click "Save" button
+deactivate L
+    activate V
+    V -> V: updateInfo(project_id);
+    V -> RO: fetch(`/project/info/${project_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.strinPify(data)});
+    deactivate V
+        activate RO
+            RO -> C: updateInfo(request, response);
+        deactivate RO
+            activate C
+            C ->> P: updateInfo(project_id, name, description, status, end_date);
+                activate P
+                P->>BD: execute('UPDATE project SET name=?, description=?, status=?, end_date=? WHERE project_id=?',[name, description, status, end_date, project_id]);
+                    activate BD
+                    BD-->P: Query OK
+                    deactivate BD
+                P-->C: Query OK
+                deactivate P
+            C->V: response.json({success:true});
+            deactivate C
+    activate V
+    V->V: lockInputs(project_id);
+    deactivate V
+
+    alt Edition failed
+            activate C
+                C->V: response.json({success:false, error: error});        
+            deactivate C
+    activate V
+    V->V: lockInputs(project_id);
+    V->V: showErrorPopup(error);
+    end
+    
+    V->L: View updated
+    deactivate V
+
+
+
+@enduml

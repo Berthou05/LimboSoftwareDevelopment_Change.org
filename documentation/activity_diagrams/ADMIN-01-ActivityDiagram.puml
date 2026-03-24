@@ -1,0 +1,28 @@
+@startuml
+|User|
+start
+:Navigates to the Roles Page;
+
+|System|
+:Sends a query to obtain the Roles registered in the system;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the returned Roles are not null;
+
+if (Are the returned Roles null?) then (yes)
+    |User|
+    :Sees an error message on the Roles Page;
+    stop
+else (no)
+|System|
+    :Prepares the Roles information for visualization;
+endif
+
+|User|
+:Sees the list of Roles on the Roles Page;
+
+stop
+@enduml
