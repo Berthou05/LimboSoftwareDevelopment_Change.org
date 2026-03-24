@@ -1,0 +1,63 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "login.ejs" as V
+boundary "routes" as RO
+control "auth.controller" as C
+entity "User.model" as M
+database "unitas_system" as BD
+
+autonumber
+
+== User Sign In ==
+
+activate U
+U -> V: Enters company email and password
+U -> V: Clicks "Sign In" button
+deactivate U
+
+activate V
+V -> V: validatesInputFormat()
+V -> RO: fetch('/auth/login', {method: POST, body: credentials})
+deactivate V
+
+activate RO
+RO -> C: login(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchUserByEmail(email)
+activate M
+
+M -> BD: execute('SELECT * FROM user WHERE email = ?', [email])
+activate BD
+BD --> M: user_record (includes hashed_password and role)
+deactivate BD
+
+M --> C: user_record
+deactivate M
+
+alt Credentials valid? (yes)
+    C -> C: comparePassword(input, hashed)
+    C -> C: generateSessionToken()
+    C -> C: determineRole(Admin, Lead, or Employee)
+    
+    C -> V: response.json({success: true, redirect: '/dashboard'})
+    activate V
+    V -> V: redirectToRoleSpecificDashboard()
+    V -> U: Displays home page / Dashboard
+    deactivate V
+    
+else Credentials valid? (no)
+    C -> V: response.json({success: false, error: 'Invalid Credentials'})
+    activate V
+    V -> V: clearsPasswordField()
+    V -> V: displayErrorMessage("Invalid Credentials")
+    V -> U: Displays "Invalid Credentials" message
+    deactivate V
+end
+
+deactivate C
+
+@enduml
