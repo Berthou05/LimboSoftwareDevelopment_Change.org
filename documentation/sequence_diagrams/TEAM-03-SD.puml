@@ -1,35 +1,74 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "team_settings.ejs" as V
+boundary "routes" as RO
+control "team.controller" as C
+entity "Team.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== Delete (Deactivate) Team ==
 
-User -> Sys: Selects "Delete Team"
-activate Sys
+activate U
+U -> V: Selects "Delete Team"
+deactivate U
 
-Sys --> User: Displays warning modal\n(Note: Projects will not be deleted)
+activate V
+V -> V: displayWarningModal()
+V -> U: Shows warning modal (Projects will not be deleted)
+deactivate V
 
-alt Confirms permanent deletion? (yes)
-    User -> Sys: Selects "yes"
-    Sys -> DB: Sends deactivation request (team_id)
-    activate DB
+alt Confirms permanent deletion? (no)
+    activate U
+    U -> V: Closes modal
+    deactivate U
+    activate V
+    V -> V: closeModal()
+    V -> U: Displays Team Settings (no changes)
+    deactivate V
+
+else Confirms permanent deletion? (yes)
+    activate U
+    U -> V: Confirms deletion
+    deactivate U
     
-    DB -> DB: Sets Team status to 'Inactive'
-    DB -> DB: Unlinks active member associations
-    DB --> Sys: Returns success status
-    deactivate DB
+    activate V
+    V -> RO: fetch('/team/deactivate', {method: PATCH, body: JSON.stringify({team_id})})
+    deactivate V
+
+    activate RO
+    RO -> C: deactivateTeam(request, response)
+    deactivate RO
+
+    activate C
+    C -> M: deactivateTeam(team_id)
+    activate M
     
-    Sys -> Sys: Removes Team from navigation menu
-    Sys -> Sys: Redirects to Global Dashboard
-    Sys --> User: Displays "Team successfully removed" message
-    
-else Confirms permanent deletion? (no)
-    User -> Sys: Selects "no"
-    Sys -> Sys: Closes modal
-    Sys --> User: Displays Team Settings (no changes)
+    M -> BD: execute('UPDATE team SET status = "Inactive" WHERE id = ?', [team_id])
+    activate BD
+    BD --> M: success
+    deactivate BD
+
+    M -> BD: execute('DELETE FROM team_members WHERE team_id = ?', [team_id])
+    activate BD
+    BD --> M: success
+    deactivate BD
+
+    M --> C: success
+    deactivate M
+
+    C -> V: response.json({success: true})
+    activate V
+    V -> V: removeTeamFromNavigationMenu()
+    V -> V: redirectToGlobalDashboard()
+    V -> V: displaySuccessMessage("Team successfully removed")
+    V -> U: Final updated view
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

@@ -1,36 +1,72 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "team_view.ejs" as V
+boundary "routes" as RO
+control "team.controller" as C
+entity "Employee.model" as M
+database "unitas_system" as DB
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== View Active Team Members ==
 
-User -> Sys: Navigates to the "Team" section
-activate Sys
-User -> Sys: Clicks to view the active members
+activate U
+U -> V: Navigates to the "Team" section
+activate V
+V -> U: Displays team dashboard
+deactivate V
 
-Sys -> Sys: Captures the current team_id
-Sys -> DB: Sends query for profile details and team history
+U -> V: Clicks to view the active members
+deactivate U
+
+activate V
+V -> V: captureTeamId(id)
+V -> RO: fetch('/team/active-members/:id', {method: GET})
+deactivate V
+
+activate RO
+RO -> C: getActiveMembers(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchTeamMembersData(team_id)
+activate M
+
+M -> DB: execute('SELECT * FROM team_members WHERE team_id = ? AND status = "active"', [team_id])
 activate DB
-DB -> DB: Fetches employee data and active status
-DB --> Sys: Returns data to System
+DB --> M: team_data
 deactivate DB
 
-alt Is employee still active on this team? (yes)
+M --> C: team_data
+deactivate M
+
+alt Is employee still active on this team? (no)
+    C -> V: response.json({success: false, type: 'inactive'})
+    activate V
+    V -> V: prepareNoLongerActiveNotification()
+    V -> V: refreshMemberList()
+    V -> U: Displays notification and updated list
+    deactivate V
+
+else Is employee still active on this team? (yes)
     alt Does profile data load? (yes)
-        Sys -> Sys: Processes data and prepares View
-        Sys -> Sys: Renders the Active Members page
-        Sys --> User: Views detailed profile and contact info
+        C -> V: response.json({success: true, body: team_data})
+        activate V
+        V -> V: processDataAndPrepareView(team_data)
+        V -> V: renderActiveMembersPage()
+        V -> U: Views detailed profile and contact info
+        deactivate V
     else Does profile data load? (no)
-        Sys -> Sys: Generates "Profile temporarily unavailable" message
-        Sys --> User: Displays error message
+        C -> V: response.json({success: false, type: 'load_error'})
+        activate V
+        V -> V: generateProfileUnavailableMessage()
+        V -> U: Displays error message
+        deactivate V
     end
-else Is employee still active on this team? (no)
-    Sys -> Sys: Prepares "No longer active" notification
-    Sys -> Sys: Refreshes the member list
-    Sys --> User: Displays notification and updated list
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

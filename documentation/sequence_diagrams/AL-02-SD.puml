@@ -1,32 +1,64 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "daily_log.ejs" as V
+boundary "routes" as RO
+control "daily.controller" as C
+entity "DailyEntry.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== Edit Today Daily Entry ==
 
-User -> Sys: Clicks "Edit Entry"
-activate Sys
+activate U
+U -> V: Clicks "Edit Entry"
+activate V
+V -> V: enableFieldsEdit()
+V -> U: Shows editable fields
+deactivate V
 
-Sys --> User: Displays pre-filled entry form
+U -> V: Updates "Today", "Tomorrow", and "Blockers" fields
+U -> V: Clicks "Update Entry"
+deactivate U
 
-User -> Sys: Updates fields and clicks "Update Entry"
-Sys -> Sys: Validates input fields
+activate V
+V -> V: validateInputFields()
+V -> RO: fetch('/daily/update', {method: POST, body: JSON.stringify(data)})
+deactivate V
 
+activate RO
+RO -> C: updateEntry(request, response)
+deactivate RO
+
+activate C
 alt Inputs valid? (yes)
-    Sys -> DB: Sends update request (entry_id)
-    activate DB
-    DB -> DB: Updates Daily Entry record
-    DB --> Sys: Returns success
-    deactivate DB
+    C -> M: updateDailyEntry(entry_id, data)
+    activate M
+    M -> BD: execute('UPDATE daily_entry SET today=?, tomorrow=?, blockers=? WHERE id=?', [data])
+    activate BD
+    BD --> M: success_status
+    deactivate BD
+    M --> C: success_status
+    deactivate M
     
-    Sys -> Sys: Refreshes Activity Log view
-    Sys --> User: Displays "Entry updated successfully"
+    C -> V: response.json({success: true})
+    activate V
+    V -> V: refreshActivityLogView()
+    V -> V: displaySuccessMessage("Entry updated successfully")
+    V -> U: Displays "Entry updated successfully"
+    deactivate V
+
 else Inputs valid? (no)
-    Sys -> Sys: Highlights missing or invalid fields
-    Sys --> User: Displays validation error
+    C -> V: response.json({success: false, error: 'Invalid fields'})
+    activate V
+    V -> V: highlightMissingOrInvalidFields()
+    V -> V: displayValidationError()
+    V -> U: Displays validation error highlights
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml
