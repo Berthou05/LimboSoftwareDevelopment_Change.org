@@ -5,7 +5,8 @@ Modified by: Hurtado, R.
 */
 
 const express = require('express');
-const navigationMiddleware = require('./middleware/navigationMiddleware');
+const navigationMiddleware = require('./src/middleware/navigationMiddleware');
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
@@ -56,8 +57,6 @@ app.use('/account', routesAccount);
 
 
 //Any additional route outside our domain
-app.use((request, response, next) => {
-    response.status(404).render('pages/error404');
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-app.listen((3000));
