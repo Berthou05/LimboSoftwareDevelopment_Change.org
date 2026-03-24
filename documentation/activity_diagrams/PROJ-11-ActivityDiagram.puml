@@ -1,0 +1,35 @@
+@startuml
+
+|Lead|
+start
+:Clicks the “Delete” button in one Project Goal;
+|System|
+:Generates a confirmation popup;
+|Lead|
+:Clicks a button;
+|System|
+if(Did the User click the “Confirmation” button?) is(yes) then
+else(no)
+    if(Did the User click the “Cancel” button?) is(yes) then
+    stop
+    else(no)
+    stop
+    note right
+        Return to Lead clicks a button
+    end note
+    end if
+end if
+:Sends a drop record request to the database;
+|Database|
+:Deletes the Goal record from goals;
+|System|
+:Gathers Project information through queries;
+|Database|
+:Returns queries response;
+|System|
+:Renders the Project Page with updated information;
+|Lead|
+:Displays a success message;
+stop
+
+@enduml

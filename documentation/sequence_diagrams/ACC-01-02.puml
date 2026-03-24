@@ -1,0 +1,70 @@
+@startuml
+skinparam style strictuml
+
+actor Administrator as A
+boundary "routes" as RO
+boundary "vista accountList.ejs" as VL
+boundary "vista accountInfo.ejs" as VI
+control "account.controller" as C
+entity "Account.model" as AM
+database "unitas_system" as BD
+
+activate A
+A -> RO:GET /admin/accounts
+deactivate A
+    activate RO
+    RO -> C:index(request, response)
+    deactivate RO
+        activate C
+        C ->> AM:findAll()
+            activate AM
+            AM ->> BD:execute('SELECT * FROM accounts')
+                activate BD
+                BD --> AM:accounts
+                deactivate BD
+            AM --> C:accounts
+            deactivate AM
+        
+        alt no accounts available
+            C -> VL:response.render('admin/accounts/list.ejs', {accounts: [], message: "No accounts available"})
+            deactivate C
+                activate VL
+                VL -> A:HTML + "No accounts available" message
+                deactivate VL
+        
+        else accounts exist
+            C -> VL:response.render('admin/accounts/list.ejs', {accounts: accounts})
+            deactivate C
+                activate VL
+                VL -> A:HTML with accounts list
+                deactivate VL
+        end
+
+activate A
+A -> VL:Clicks on an Account
+deactivate A
+    activate VL
+    VL -> RO:GET /admin/accounts/:id
+    deactivate VL
+        activate RO
+        RO -> C:show(request, response)
+        deactivate RO
+            activate C
+            C ->> AM:findById(account_id)
+                activate AM
+                AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [account_id])
+                    activate BD
+                    BD --> AM:account
+                    deactivate BD
+                AM --> C:account
+                deactivate AM
+            
+            C -> VI:response.render('admin/accounts/info.ejs', {account: account})
+            deactivate C
+                activate VI
+                VI -> A:HTML + Account Information page
+                deactivate VI
+
+activate A
+
+@enduml

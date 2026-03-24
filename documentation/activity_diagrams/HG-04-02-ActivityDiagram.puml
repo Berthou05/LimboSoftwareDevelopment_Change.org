@@ -1,0 +1,37 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open project;
+
+|System|
+:Retrieve highlights;
+
+|User|
+:Show highlights;
+:Select highlight;
+:Select Delete;
+
+|System|
+:Check permissions;
+
+if (Authorized?) then (Yes)
+
+  :Delete highlight;
+
+  if (Deleted?) then (Yes)
+    |User|
+    :Show confirmation;
+  else
+    |User|
+    :Show error;
+  endif
+
+else
+  |User|
+  :Show permission error;
+endif
+
+stop
+@enduml

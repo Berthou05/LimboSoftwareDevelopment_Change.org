@@ -1,0 +1,151 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista projectShow.ejs" as V
+control "highlight.controller" as C
+entity "Project.model" as PM
+entity "Highlight.model" as HM
+database "unitas_system" as BD
+
+activate U
+U -> RO:GET /projects/:id
+deactivate U
+    activate RO
+    RO -> C:showProject(request, response)
+    deactivate RO
+        activate C
+        C ->> PM:findById(project_id)
+            activate PM
+            PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                activate BD
+                BD --> PM:project
+                deactivate BD
+            PM --> C:project
+            deactivate PM
+        
+        C ->> HM:getByProjectId(project_id)
+            activate HM
+            HM ->> BD:execute('SELECT h.*, e.name as employee_name FROM highlights h JOIN employees e ON h.employee_id = e.id WHERE h.project_id=?', [project_id])
+                activate BD
+                BD --> HM:highlights
+                deactivate BD
+            HM --> C:highlights
+            deactivate HM
+        
+        C -> V:response.render('projects/show.ejs', {project: project, highlights: highlights})
+        deactivate C
+    activate V
+    V -> U:HTML + Project page with Highlights list
+    deactivate V
+
+activate U
+U -> V:Selects a Highlight
+U -> V:Clicks "Delete Highlight" button
+deactivate U
+    activate V
+    V -> V:showConfirmPopup(highlightId)
+    V --> U:Confirmation popup displayed
+    deactivate V
+
+activate U
+U -> V:Clicks "Confirm" button
+deactivate U
+    activate V
+    V -> RO:DELETE /highlights/:id
+    deactivate V
+        activate RO
+        RO -> C:deleteHighlight(request, response)
+        deactivate RO
+            activate C
+            
+            C ->> HM:findById(highlight_id)
+                activate HM
+                HM ->> BD:execute('SELECT * FROM highlights WHERE id=?', [highlight_id])
+                    activate BD
+                    BD --> HM:highlight
+                    deactivate BD
+                HM --> C:highlight
+                deactivate HM
+            
+            C -> C:checkPermission(user_id, highlight.employee_id, user_role)
+            
+            alt no permission
+                C -> V:response.render('projects/show.ejs', {project: project, highlights: highlights, error: "You do not have permission to delete this highlight"})
+                deactivate C
+                    activate V
+                    V -> U:HTML + Error message
+                    deactivate V
+            
+            else has permission
+                C ->> HM:delete(highlight_id)
+                    activate HM
+                    HM ->> BD:execute('DELETE FROM highlights WHERE id=?', [highlight_id])
+                        activate BD
+                        
+                        alt database error
+                            BD --> HM:error
+                            deactivate BD
+                            HM --> C:error
+                            deactivate HM
+                            
+                            C ->> PM:findById(project_id)
+                                activate PM
+                                PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                                    activate BD
+                                    BD --> PM:project
+                                    deactivate BD
+                                PM --> C:project
+                                deactivate PM
+                            
+                            C ->> HM:getByProjectId(project_id)
+                                activate HM
+                                HM ->> BD:execute('SELECT h.*, e.name as employee_name FROM highlights h JOIN employees e ON h.employee_id = e.id WHERE h.project_id=?', [project_id])
+                                    activate BD
+                                    BD --> HM:highlights
+                                    deactivate BD
+                                HM --> C:highlights
+                                deactivate HM
+                            
+                            C -> V:response.render('projects/show.ejs', {project: project, highlights: highlights, error: "The highlight could not be deleted"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML + Error message
+                                deactivate V
+                        
+                        else success
+                            BD --> HM:Query OK
+                            deactivate BD
+                            HM --> C:deleted
+                            deactivate HM
+                            
+                            C ->> PM:findById(project_id)
+                                activate PM
+                                PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                                    activate BD
+                                    BD --> PM:project
+                                    deactivate BD
+                                PM --> C:project
+                                deactivate PM
+                            
+                            C ->> HM:getByProjectId(project_id)
+                                activate HM
+                                HM ->> BD:execute('SELECT h.*, e.name as employee_name FROM highlights h JOIN employees e ON h.employee_id = e.id WHERE h.project_id=?', [project_id])
+                                    activate BD
+                                    BD --> HM:highlights
+                                    deactivate BD
+                                HM --> C:highlights
+                                deactivate HM
+                            
+                            C -> V:response.render('projects/show.ejs', {project: project, highlights: highlights, success: "Highlight deleted successfully"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML + Updated page + Success message
+                                deactivate V
+                        end
+            end
+
+activate U
+
+@enduml

@@ -1,0 +1,107 @@
+@startuml
+
+|Lead|
+start
+:Clicks on the "Edit" button in the Project Information module;
+|System|
+:Makes modifiable the inputs of the Project Information module;
+if(Did the User click the "Close" button?) is (yes) then
+    stop
+else(no)
+end if
+
+|Lead|
+:Modifies any input;
+:Clicks a button;
+|System|
+if(Did the User click the "Save" button?) is (yes) then
+else(no)
+    stop
+    note right
+        Go back to Did the User click the "Close" button?
+    end note
+end if
+|System|
+if(Is the title input empty?) is (yes) then
+    |System|
+    :“Save” button gets disabled;
+    |Lead|
+    :Shows the message “Some obligatory fields are empty”;
+    stop
+    note right
+        Go to User modifies any input
+    end note
+    |System|
+else(no)
+    if(Is the description input empty?) is (yes) then
+        |System|
+        :“Save” button gets disabled;
+        |Lead|
+        :Shows the message “Some obligatory fields are empty”;
+        stop
+        note right
+            Go to User modifies any input
+        end note
+        |System|
+    else(no)
+    end if
+        if(Is the project status empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            |Lead|
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note right
+                Go to User modifies any input
+            end note
+            |System|
+        else(no)
+        end if
+
+        if(Is the project start_date empty?) is (yes) then
+            |System|
+            :“Save” button gets disabled;
+            |Lead|
+            :Shows the message “Some obligatory fields are empty”;
+            stop
+            note right
+                Go to User modifies any input
+            end note
+            |System|
+        else(no)
+        end if
+
+        if(Is the project end_date empty?) is (no) then
+            |System|
+            if(Is start_date <= end_date?) is (no) then
+                |System|
+                :“Save” button gets disabled;
+                |Lead|
+                :Shows the message “End date cannot be before start date”;
+                stop
+                note right
+                    Go to User modifies any input
+                end note
+                |System|
+            else(yes)
+            end if
+        else(yes)
+        end if
+    end if
+|System|
+:Accepts the Lead input;
+:Sends modifications to the Project object;
+|Database|
+:Modifies the Project object;
+|System|
+:Gathers Team information through queries;
+|Database|
+:Returns queries response;
+|System|
+:Renders the Team Page with updated information;
+|Lead|
+:Displays a success message;
+stop
+
+
+@enduml

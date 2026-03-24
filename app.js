@@ -5,6 +5,8 @@ Modified by: Hurtado, R.
 */
 
 const express = require('express');
+const navigationMiddleware = require('./middleware/navigationMiddleware');
+
 const app = express();
 
 //Creation of static folder
@@ -21,6 +23,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 
 //Routes declaration
+
+app.use(navigationMiddleware);
 
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');

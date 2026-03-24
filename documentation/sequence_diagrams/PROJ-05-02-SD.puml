@@ -1,0 +1,157 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "project-members.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+control "project.service" as SV
+entity "employee.model" as E
+entity "team.model" as T
+entity "collaboration.model" as X
+entity "projectteam.model" as PT
+database "unitas_system" as DB
+
+U -> V: Open "Add members" modal
+activate V
+V -> V: showAddMembersModal()
+
+U -> V: Search employees or teams
+V -> RO: fetch('/projects/:projectId/members/search?term=ana&type=all')
+activate RO
+RO -> C: searchProjectMembers(request, response)
+activate C
+C -> SV: searchProjectMembers(projectId, filters)
+activate SV
+SV -> SV: validateSearchFilters(term, type)
+
+alt Search filters invalid
+SV --> C: validation error
+deactivate SV
+C --> RO: response.json({success:false,error:"Invalid search filters"})
+deactivate C
+RO --> V: HTTP 400 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showMemberSearchError(error)
+else Search filters valid
+SV -> E: searchAvailableEmployees(projectId, term)
+activate E
+E -> DB: SELECT e.id, e.first_name, e.last_name\nFROM employee e\nWHERE CONCAT(e.first_name, ' ', e.last_name) LIKE ?\nAND NOT EXISTS (\nSELECT 1 FROM collaboration c\nWHERE c.project_id = ? AND c.employee_id = e.id AND c.left_at IS NULL\n)
+activate DB
+DB --> E: employee candidates
+deactivate DB
+E --> SV: employees
+deactivate E
+SV -> T: searchAvailableTeams(projectId, term)
+activate T
+T -> DB: SELECT t.id, t.name\nFROM team t\nWHERE t.name LIKE ?\nAND NOT EXISTS (\nSELECT 1 FROM projectteam pt\nWHERE pt.project_id = ? AND pt.team_id = t.id AND pt.left_at IS NULL\n)
+activate DB
+DB --> T: team candidates
+deactivate DB
+T --> SV: teams
+deactivate T
+SV --> C: search results
+deactivate SV
+C --> RO: response.json({success:true,data:{employees,teams}})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: renderMemberSearchResults(data)
+end
+
+U -> V: Select results and click "Save"
+V -> RO: fetch('/projects/:projectId/members',\n{method:'POST', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify({employees:[...],teams:[...]})})
+activate RO
+RO -> C: addProjectMembers(request, response)
+activate C
+C -> SV: addProjectMembers(projectId, selections)
+activate SV
+SV -> SV: validateSelections(selections)
+
+alt No selections submitted
+SV --> C: validation error
+deactivate SV
+C --> RO: response.json({success:false,error:"Select at least one member"})
+deactivate C
+RO --> V: HTTP 400 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showMemberSaveError(error)
+else Selections valid
+loop Each selected employee
+SV -> X: findActiveMembership(projectId, employeeId)
+activate X
+X -> DB: SELECT id\nFROM collaboration\nWHERE project_id = ? AND employee_id = ? AND left_at IS NULL
+activate DB
+DB --> X: membership row / null
+deactivate DB
+X --> SV: membership / null
+deactivate X
+alt Employee already in project
+SV -> SV: markDuplicateEmployee(employeeId)
+else Employee not in project
+SV -> X: createMembership(projectId, employeeId)
+activate X
+X -> DB: INSERT INTO collaboration(project_id, employee_id, joined_at)\nVALUES (?, ?, NOW())
+activate DB
+DB --> X: inserted collaboration id
+deactivate DB
+X --> SV: employee added
+deactivate X
+end
+end
+
+loop Each selected team
+SV -> PT: findActiveProjectTeam(projectId, teamId)
+activate PT
+PT -> DB: SELECT id\nFROM projectteam\nWHERE project_id = ? AND team_id = ? AND left_at IS NULL
+activate DB
+DB --> PT: projectteam row / null
+deactivate DB
+PT --> SV: projectteam / null
+deactivate PT
+alt Team already linked to project
+SV -> SV: markDuplicateTeam(teamId)
+else Team not linked to project
+SV -> PT: createProjectTeam(projectId, teamId)
+activate PT
+PT -> DB: INSERT INTO projectteam(project_id, team_id, joined_at)\nVALUES (?, ?, NOW())
+activate DB
+DB --> PT: inserted projectteam id
+deactivate DB
+PT --> SV: team linked
+deactivate PT
+end
+end
+
+SV -> X: listProjectParticipants(projectId)
+activate X
+X -> DB: SELECT c.id, e.id AS employee_id, e.first_name, e.last_name\nFROM collaboration c\nJOIN employee e ON e.id = c.employee_id\nWHERE c.project_id = ? AND c.left_at IS NULL\nORDER BY e.first_name, e.last_name
+activate DB
+DB --> X: participant rows
+deactivate DB
+X --> SV: participants
+deactivate X
+SV -> PT: listProjectTeams(projectId)
+activate PT
+PT -> DB: SELECT pt.id, t.id AS team_id, t.name\nFROM projectteam pt\nJOIN team t ON t.id = pt.team_id\nWHERE pt.project_id = ? AND pt.left_at IS NULL\nORDER BY t.name
+activate DB
+DB --> PT: linked team rows
+deactivate DB
+PT --> SV: teams
+deactivate PT
+SV --> C: refreshed member data
+deactivate SV
+C --> RO: response.json({success:true,data:{participants,teams,duplicates}})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: updateParticipantsModule(data)
+end
+deactivate V
+
+@enduml

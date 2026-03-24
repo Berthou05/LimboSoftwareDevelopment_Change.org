@@ -1,0 +1,49 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|Lead|
+start
+:Create Project;
+
+|System|
+:Show form;
+
+|Lead|
+:Enter project data;
+:Submit;
+
+|System|
+:Validate fields;
+
+if (Fields OK?) then (Yes)
+
+  :Check name;
+
+  if (Name exists?) then (Yes)
+    |Lead|
+    :Show name error;
+    stop
+  else (No)
+
+    |System|
+    :Initialize project;
+    :Save project;
+
+    if (Saved?) then (Yes)
+      |Lead|
+      :Show success;
+    else
+      |Lead|
+      :Show error;
+    endif
+
+  endif
+
+else (No)
+  |Lead|
+  :Show validation error;
+  stop
+endif
+
+stop
+@enduml

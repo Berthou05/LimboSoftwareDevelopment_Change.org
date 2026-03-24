@@ -1,0 +1,267 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "default.ejs" as V
+boundary "report.routes" as RO
+control "report.controller" as C
+control "openaiapi.wrapper" as W
+entity "employee.model" as E
+entity "project.model" as P
+entity "team.model" as T
+entity "activity.model" as A
+entity "achievement.model" as AC
+entity "goal.model" as G
+entity "report.model" as R
+boundary "Open AI API" as OP
+database "unitas_system" as BD
+
+autonumber
+
+activate U
+U->V:Click "Generate Report" button
+note right
+The validation of the Report model
+are done within the inner JS of the
+view before User Case.
+
+Each modal is locked or open 
+which gives a content type. 
+
+end note
+deactivate U
+    activate V
+    V->V:idenfityReportType();
+    V->RO: fetch(`/report/generate`, {method: POST, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
+    deactivate V
+        activate RO
+        RO->C: generateReport(request, response);
+        deactivate RO
+            activate C
+
+
+            alt Employee Report
+            C->>E: getEmployeeInfo(employee_id)
+                activate E
+                E->>BD: execute('SELECT * FROM employee WHERE employee_id=?',[employee_id])
+                    activate BD
+                    BD-->E: info
+                    deactivate BD
+                E-->C:info
+                deactivate E
+
+            C->>A: getEmployeeActivitiesBtw(employee_id, start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT title, description, completed_at, project_id \nFROM activity \nWHERE employee_id=? AND completed_at BETWEEN ? AND ?',\n[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->A: employee_activities
+                    deactivate BD
+                A-->C:employee_activities
+                deactivate A
+
+            C->>T: getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
+                activate T
+                T->>BD: execute('SELECT name, description \nFROM team AS T \nINNER JOIN employeeteam as ET ON ET.team_id=T.team_id \nWHERE ET.employee_id=? AND ET.joined_at >= ? AND \n(ET.left_at <= ? OR ET.left_at IS NULL);',\n[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->T: teams_info
+                    deactivate BD
+                T-->C:teams_info
+                deactivate T
+
+            C->>A: getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id \nFROM activity as A \nWHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN \n( SELECT ET.employee_id \nFROM employeeteam as ET \nWHERE ET.team_id \nIN( SELECT ET.team_id \nFROM employeeteam as ET \nWHERE ET.employee_id = ?));',\n[start_date, end_date, employee_id]);
+                    activate BD
+                    BD-->A: team_activities
+                    deactivate BD
+                A-->C:team_activities
+                deactivate A
+            
+            C->>P: getEmployeeProjectsInfoBtw(employee_id, start_date, end_date)
+                activate P
+                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date \nFROM project as P \nINNER JOIN collaboration as C ON C.project_id=P.project_id \nWHERE C.employee_id=? AND C.started_at>=? \nAND (C.ended_at<=? OR C.ended_at IS NULL);'\n,[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->P: employee_projects
+                    deactivate BD
+                P-->C:employee_projects
+                deactivate P
+
+            C->>A: getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN\n( SELECT C.project_id \nFROM collaboration as C \nWHERE C.employee_id=? AND C.started_at>=? \nAND (C.ended_at<= ? OR C.ended_at IS NULL))',[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->A: project_activities
+                    deactivate BD
+                A-->C:project_activities
+                deactivate A
+
+            C->>AC: getAchievementsFromEmp(employee_id, start_date, end_date)
+                activate AC
+                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.employee_id=? AND C.started_at>=? \nAND (C.ended_at<= ? OR C.ended_at IS NULL);',[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->AC: project_achievements
+                    deactivate BD
+                AC-->C:project_achievements
+                deactivate AC
+
+            C->>G: getGoalsFromEmp(employee_id)
+                activate G
+                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.employee_id=? AND C.started_at>=? \nAND (C.ended_at<=? OR C.ended_at IS NULL);',\n[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->G: project_goals
+                    deactivate BD
+                G-->C:project_goals
+                deactivate G
+            end
+
+            alt Team Report
+
+            C->>T: getTeamInfo(team_id)
+                activate T
+                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nWHERE T.team_id=? ;',\n[team_id])
+                    activate BD
+                    BD-->T: team_info
+                    deactivate BD
+                T-->C:team_info
+                deactivate T
+            
+            C->>A: getEmployeeActivitiesFromTeamBtw(team_id,start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id \nFROM activity as A \nWHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN \n(SELECT ET.employee_id \nFROM employeeteam as ET \nWHERE ET.team_id =?);',\n[start_date, end_date, team_id]);
+                    activate BD
+                    BD-->A: team_activities
+                    deactivate BD
+                A-->C:team_activities
+                deactivate A
+            
+            C->>E: getEmployeeInfoFromTeam(team_id)
+                activate E
+                E->>BD: execute('SELECT E.full_name, ET.role \nFROM employee AS E \nINNER JOIN employeeteam AS ET ON E.employee_id=ET.employee_id \nWHERE ET.team_id=?;'\n,[team_id])
+                    activate BD
+                    BD-->E: employees_info
+                    deactivate BD
+                E-->C:employees_info
+                deactivate E
+            
+            C->>P: getTeamProjectsInfoBtw(team_id, start_date)
+                activate P
+                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date \nFROM project as P \nINNER JOIN projectteam as PT ON P.project_id=PT.project_id \nWHERE PT.team_id=? AND PT.joined_at>=?;'\n,[team_id, start_date])
+                    activate BD
+                    BD-->P: team_projects
+                    deactivate BD
+                P-->C:team_projects
+                deactivate P
+
+            C->>A: getProjectActivitiesFromTeamBtw(team_id, start_date)
+                activate A
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam as PT \nWHERE PT.team_id = ? AND PT.joined_at>=?);',\n[team_id, start_date])
+                    activate BD
+                    BD-->A: project_activities
+                    deactivate BD
+                A-->C:project_activities
+                deactivate A
+
+            C->>AC: getAchievementsFromTeam(team_id, start_date)
+                activate AC
+                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',[team_id, start_date])
+                    activate BD
+                    BD-->AC: project_achievements
+                    deactivate BD
+                AC-->C:project_achievements
+                deactivate AC
+
+            C->>G: getGoalsFromEmp(team_id, start_date)
+                activate G
+                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',\n[employee_id, start_date])
+                    activate BD
+                    BD-->G: project_goals
+                    deactivate BD
+                G-->C:project_goals
+                deactivate G
+            end
+
+            alt Project Report
+
+            C->>P: getProjectInfo(project_id)
+                activate P
+                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date \nFROM project as P \nWHERE P.project_id = ?;'\n,[project_id])
+                    activate BD
+                    BD-->P: project_info
+                    deactivate BD
+                P-->C:project_info
+                deactivate P
+            
+            C->>E: getEmployeeInfoFromTeam(project_id, start_date, end_date)
+                activate E
+                E->>BD: execute('SELECT E.full_name, C.description \nFROM employee AS E \nINNER JOIN collaboration AS C ON E.employee_id=C.employee_id \nWHERE C.project_id=? AND C.started_at>=? \nAND (C.ended_at<=? OR C.ended_at IS NULL);'\n,[project_id, start_date, end_date])
+                    activate BD
+                    BD-->E: employees_info
+                    deactivate BD
+                E-->C:employees_info
+                deactivate E
+            
+            C->>A: getEmployeeActivitiesFromProjBtw(project_id, start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT DISTINCT A.title, A.description, A.completed_at, A.employee_id, A.project_id \nFROM activity as A \nINNER JOIN collaboration AS C ON A.project_id=C.project_id \nWHERE (A.completed_at BETWEEN ? AND ?) \nAND C.project_id =?;',\n[start_date, end_date, project_id]);
+                    activate BD
+                    BD-->A: employee_activities
+                    deactivate BD
+                A-->C:employee_activities
+                deactivate A
+
+            C->>T: getTeamInfoFromProj(project_id, start_date, end_date)
+                activate T
+                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nINNER JOIN projectteam as PT ON T.team_id=PT.team_id \nWHERE PT.project_id=? AND PT.joined_at>=?;',\n[team_id, start_date])
+                    activate BD
+                    BD-->T: team_info
+                    deactivate BD
+                T-->C:team_info
+                deactivate T
+
+            C->>A: getTeamActivitiesFromProjectBtw(project_id, start_date, end_date)
+                activate A
+                A->>BD: execute('SELECT DISTINCT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN projectteam AS PT ON PT.project_id=A.project_id \nWHERE (A.completed_at BETWEEN ? AND ?) \nAND PT.project_id=?;',\n[start_date, end_date, project_id])
+                    activate BD
+                    BD-->A: team_activities
+                    deactivate BD
+                A-->C:team_activities
+                deactivate A
+
+            C->>AC: getAchievementsFromProj(project_id, start_date, end_date)
+                activate AC
+                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nWHERE A.project_id=? AND A.achievement_date BETWEEN ? AND ?;',\n[project_id, start_date, end_date])
+                    activate BD
+                    BD-->AC: project_achievements
+                    deactivate BD
+                AC-->C:project_achievements
+                deactivate AC
+
+            C->>G: getGoalsFromProj(project_id, start_date, end_date)
+                activate G
+                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id FROM goal as G WHERE G.project_id=? AND G.created_at BETWEEN ? AND ?;', \n[project_id, start_date, end_date])
+                    activate BD
+                    BD-->G: project_goals
+                    deactivate BD
+                G-->C:project_goals
+                deactivate G
+            end
+
+            C->>W: generateReport(body, prompt);
+                activate W
+                note right
+                Need to install axios
+                end note
+                W->W: integratePrompt(body, prompt);
+                W->>OP:axios.post('https://api.openai.com/v1/responses',{model: 'gpt-5.3', input:integrated_prompt, temperature:0.2}, {headers:{Authorization: `Bearer ${process.env.OPEN_API_KEY}`, 'Content-Type':'application/json'}});
+                    activate OP
+                    OP-->W: API response
+                    deactivate OP
+                W-->C: Report object
+                deactivate W
+            
+            C->>R
+
+
+            deactivate C
+
+@enduml

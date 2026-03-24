@@ -1,0 +1,108 @@
+@startuml
+skinparam style strictuml
+
+actor Lead as U
+boundary "routes" as RO
+boundary "vista teamNew.ejs" as V
+control "team.controller" as C
+entity "Team.model" as TM
+database "unitas_system" as BD
+
+activate U
+U -> RO:GET /teams/new
+deactivate U
+    activate RO
+    RO -> C:new(request, response)
+    deactivate RO
+        activate C
+        C -> V:response.render('teams/new.ejs')
+        deactivate C
+    activate V
+    V -> U:HTML form
+    deactivate V
+
+activate U
+U -> RO:POST /teams
+deactivate U
+    activate RO
+    RO -> C:create(request, response)
+    deactivate RO
+        activate C
+        C -> C:validate(request.body)
+        
+        alt missing required (name)
+            C -> V:response.render('teams/new.ejs', {errors: errors})
+            deactivate C
+                activate V
+                V -> U:HTML + Error messages
+                deactivate V
+        
+        else valid
+            C ->> TM:findByName(name)
+                activate TM
+                TM ->> BD:execute('SELECT * FROM teams WHERE name=?', [name])
+                    activate BD
+                    BD --> TM:row/null
+                    deactivate BD
+                TM --> C:exists/null
+                deactivate TM
+            
+            alt name exists
+                C -> V:response.render('teams/new.ejs', {error: "Team already exists"})
+                deactivate C
+                    activate V
+                    V -> U:HTML + Error message
+                    deactivate V
+            
+            else new
+                C -> C:setDefaults(status, created_at)
+                
+                C ->> TM:insert(data)
+                    activate TM
+                    TM ->> BD:execute('INSERT INTO teams (name, status, created_at, ...) VALUES (?, ?, ?, ...)', [data])
+                        activate BD
+                        
+                        alt success
+                            BD --> TM:team_id
+                            deactivate BD
+                            TM --> C:id
+                            deactivate TM
+                            
+                            C -> RO:response.redirect('/teams/' + id)
+                            deactivate C
+                                activate RO
+                                RO -> C:show(request, response)
+                                deactivate RO
+                                    activate C
+                                    C ->> TM:findById(id)
+                                        activate TM
+                                        TM ->> BD:execute('SELECT * FROM teams WHERE id=?', [id])
+                                            activate BD
+                                            BD --> TM:row
+                                            deactivate BD
+                                        TM --> C:team
+                                        deactivate TM
+                                    C -> V:response.render('teams/show.ejs', {team: team, success: "Team created successfully"})
+                                    deactivate C
+                                        activate V
+                                        V -> U:HTML + Success message
+                                        deactivate V
+                        
+                        else fail
+                            BD --> TM:error
+                            deactivate BD
+                            TM --> C:error
+                            deactivate TM
+                            
+                            C -> V:response.render('teams/new.ejs', {error: "Could not save team"})
+                            deactivate C
+                                activate V
+                                V -> U:HTML + Error message
+                                deactivate V
+                        end
+            end
+        end
+
+activate U
+
+@enduml

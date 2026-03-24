@@ -1,0 +1,48 @@
+@startuml
+|User|
+start
+:Clicks the Remove button of an Employee in the Team Participants module;
+
+|System|
+:Obtains the employee_id of the selected Employee;
+:Obtains the team_id from the Team Page;
+:Sends a query to verify whether the selected Employee is an active member of the Team;
+
+|Database|
+:Returns the query;
+
+|System|
+:Verifies the selected Employee is an active member of the Team;
+
+if (Is the selected Employee an active member of the Team?) then (yes)
+    :Sends a query to update the EmployeeTeam object with the left_at field;
+else (no)
+|User|
+
+    :Informs the User the selected Employee is not a member of the Team;
+    stop
+endif
+
+|Database|
+:Updates the EmployeeTeam object;
+
+|System|
+if (Was the EmployeeTeam object updated successfully?) then (yes)
+    :Gathers Team information through queries;
+else (no)
+|User|
+
+    :Informs the User an error has occurred;
+    stop
+endif
+
+|Database|
+:Returns the Team information;
+
+|System|
+:Renders the Team Page with updated information;
+|User|
+:Sees the updated Team Page;
+:Informs the User the selected Employee has been removed from the Team;
+stop
+@enduml

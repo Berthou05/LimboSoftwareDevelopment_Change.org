@@ -1,0 +1,27 @@
+@startuml
+skinparam activityFlowDirection Down
+
+|User|
+start
+:Open project;
+
+|System|
+:Retrieve members;
+
+|User|
+:Show members;
+:Select Leave Project;
+
+|System|
+:Remove user from project;
+
+if (Removed?) then (Yes)
+  |User|
+  :Show confirmation;
+else
+  |User|
+  :Show error;
+endif
+
+stop
+@enduml

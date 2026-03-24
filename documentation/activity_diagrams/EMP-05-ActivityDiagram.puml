@@ -1,0 +1,33 @@
+@startuml
+skinparam conditionStyle diamond
+
+|User|
+start
+:Accesses an Employee's profile;
+:Navigates to the **"Your Projects"** section;
+
+|System|
+:Captures Employee ID;
+:Requests project list associated with the Employee;
+
+|Database|
+:Queries Projects where Employee is a member;
+if (Is there a connection or data error?) then (yes)
+    |System|
+    :Informs the user an error has occurred;
+    |User|
+    :Show "no proyects yet message";
+    stop
+else (no)
+    |System|
+    :Displays summary list in the "Your Projects" widget;
+endif
+
+|System|
+:Render Page with user’s information;
+
+|User|
+:Views all projects linked to that Employee;
+
+stop
+@enduml

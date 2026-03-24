@@ -1,0 +1,89 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "layout.ejs" as V
+boundary "search.routes" as RO
+boundary "routes" as RR
+control "search.controller" as C
+control "controlers" as CC
+entity "search.model" as S
+database "unitas_system" as BD
+
+autonumber
+
+activate U
+U->V: Clicks the "Search" button.
+deactivate U
+    activate V
+    V->V:validateInput();
+    V->V:startSearch(name);
+    V->RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate RO
+        RO->CS: getSearchResult(request, results); 
+        deactivate RO
+            activate C
+            C->>S: getSearch(name, page, limit);
+                activate S
+                S->>BD: execute('SELECT employee_id, full_name AS label FROM employee WHERE LOWER(full_name) LIKE ? \n UNION ALL\n SELECT team_id, name AS label FROM team WHERE LOWER(name) LIKE ?\n UNION ALL \n SELECT project_id, name AS label FROM project WHERE LOWER(name) LIKE ?\n ORDER BY label ASC \n LIMIT ? OFFSET ?'\n,[normal_name, normal_name, normal_name, 11, offset]);
+                    activate BD
+                    BD-->S:results
+                    deactivate BD
+                S-->C: results
+                deactivate S
+            C->V: response.json({body:results});
+            deactivate C
+    activate V
+    V->V:generateResults(results);
+    V->U:updated view
+    deactivate V
+
+opt View More Results
+activate U
+U->V: Clicks the "View More" button.
+deactivate U
+    activate V
+    V->V:continueSearch(name);
+    V->RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate RO
+        RO->CS: getSearchResult(request, results); 
+        deactivate RO
+            activate C
+            C->>S: getSearch(name, page, limit);
+                activate S
+                S->>BD: execute('SELECT employee_id, full_name AS label FROM employee WHERE LOWER(full_name) LIKE ? \n UNION ALL\n SELECT team_id, name AS label FROM team WHERE LOWER(name) LIKE ?\n UNION ALL \n SELECT project_id, name AS label FROM project WHERE LOWER(name) LIKE ?\n ORDER BY label ASC \n LIMIT ? OFFSET ?'\n,[normal_name, normal_name, normal_name, 11, offset]);
+                    activate BD
+                    BD-->S:results
+                    deactivate BD
+                S-->C: results
+                deactivate S
+            C->V: response.json({body:results});
+            deactivate C
+    activate V
+    V->V:generateResults(results);
+    V->U:updated view
+    deactivate V
+end
+activate U
+U->V: click on a matching result
+deactivate U
+    activate V
+        V->RR: GET /${label}/${id}
+    deactivate V
+            activate RR
+                RR->CC: get{label}Page(request, response);
+            deactivate RR
+                    activate CC
+                        note right
+                        From here each route and controller will 
+                        control the render of each page
+                        end note
+                        CC->V: HTML
+                    deactivate CC
+    activate V
+        V->U: HTML
+    deactivate V
+
+@enduml

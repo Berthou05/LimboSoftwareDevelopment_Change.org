@@ -1,0 +1,96 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista accountEdit.ejs" as V
+control "account.controller" as C
+entity "Account.model" as AM
+database "unitas_system" as BD
+
+activate U
+U -> RO:GET /accounts/:id/edit
+deactivate U
+    activate RO
+    RO -> C:edit(request, response)
+    deactivate RO
+        activate C
+        C ->> AM:findById(id)
+            activate AM
+            AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [id])
+                activate BD
+                BD --> AM:account
+                deactivate BD
+            AM --> C:account
+            deactivate AM
+        C -> V:response.render('accounts/edit.ejs', {account: account})
+        deactivate C
+    activate V
+    V -> U:HTML form
+    deactivate V
+
+activate U
+U -> RO:PUT /accounts/:id
+deactivate U
+    activate RO
+    RO -> C:update(request, response)
+    deactivate RO
+        activate C
+        C -> C:validate(request.body)
+        
+        alt invalid data
+            C -> V:response.render('accounts/edit.ejs', {errors: errors})
+            deactivate C
+                activate V
+                V -> U:HTML + Error messages
+                deactivate V
+        
+        else valid data
+            C ->> AM:update(id, data)
+                activate AM
+                AM ->> BD:execute('UPDATE accounts SET ... WHERE id=?', [data, id])
+                    activate BD
+                    
+                    alt success
+                        BD --> AM:Query OK
+                        deactivate BD
+                        AM --> C:updated
+                        deactivate AM
+                        
+                        C -> RO:response.redirect('/accounts/' + id)
+                        deactivate C
+                            activate RO
+                            RO -> C:show(request, response)
+                            deactivate RO
+                                activate C
+                                C ->> AM:findById(id)
+                                    activate AM
+                                    AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [id])
+                                        activate BD
+                                        BD --> AM:account
+                                        deactivate BD
+                                    AM --> C:account
+                                    deactivate AM
+                                C -> V:response.render('accounts/show.ejs', {account: account, success: "Account updated successfully"})
+                                deactivate C
+                                    activate V
+                                    V -> U:HTML + Success message
+                                    deactivate V
+                    
+                    else fail
+                        BD --> AM:error
+                        deactivate BD
+                        AM --> C:error
+                        deactivate AM
+                        
+                        C -> V:response.render('accounts/edit.ejs', {error: "Account could not be updated"})
+                        deactivate C
+                            activate V
+                            V -> U:HTML + Error message
+                            deactivate V
+                    end
+        end
+
+activate U
+
+@enduml

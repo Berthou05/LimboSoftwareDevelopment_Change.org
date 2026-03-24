@@ -1,0 +1,18 @@
+@startuml
+|User|
+start
+:Enters the Employee Page;
+|System|
+:Retrieves the page’s employee_id;
+:Sends a query to the database;
+|Database|
+:Return query results;
+|System|
+if(Is there any information received from the database?) is(yes) then
+else(no)
+    :Shows a message in the Team module "The Employee does not belong to any team";
+end if
+:Renders the Employee Page with team information in the Team module;
+stop
+
+@enduml
