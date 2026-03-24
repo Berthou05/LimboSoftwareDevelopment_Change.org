@@ -1,1 +1,8 @@
-<%- include('../layout', { page: 'pages/content/home', pageTitle: 'Home', sidebarNavItems, layoutActiveRoute, layoutCurrentUser, layoutTodayLabel }) %>
+<%- include('../layout', {
+  page: 'pages/content/home',
+  pageTitle: 'Home',
+  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/home',
+  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
+}) %>

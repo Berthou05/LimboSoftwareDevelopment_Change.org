@@ -1,1 +1,8 @@
-<%- include('../layout', { page: 'pages/content/error404', pageTitle: '404', sidebarNavItems, layoutActiveRoute, layoutCurrentUser, layoutTodayLabel }) %>
+<%- include('../layout', {
+  page: 'pages/content/error404',
+  pageTitle: '404',
+  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '',
+  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
+}) %>

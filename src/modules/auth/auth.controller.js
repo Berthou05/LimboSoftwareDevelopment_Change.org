@@ -5,5 +5,5 @@ Modified by: Hurtado, R.
 */
 
 exports.getAuth = (request, response, next) => {
-    response.render('pages/auth');
+    response.render('pages/login', { isAuth: false });
 };

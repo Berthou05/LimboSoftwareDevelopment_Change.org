@@ -2,15 +2,23 @@
 <html lang="en">
   <%- include("partials/head") %>
   <body>
-    <div class="flex min-h-screen">
-      <%- include("partials/sidebar", { navItems: sidebarNavItems, activeRoute: layoutActiveRoute, currentUser: layoutCurrentUser }) %>
-      <main class="min-h-screen flex-1 min-w-0 w-full">
-        <%- include("partials/topbar", { currentUser: layoutCurrentUser, todayLabel: layoutTodayLabel }) %>
-        <section class="min-h-[calc(100vh-81px)] bg-brand-bg px-4 py-6 sm:px-6 lg:px-10">
+    <% if (typeof isLoginPage !== 'undefined' && isLoginPage) { %>
+      <main class="min-h-screen flex items-center justify-center bg-brand-bg">
+        <section class="w-full max-w-md p-8">
           <%- include(page) %>
         </section>
       </main>
-    </div>
+    <% } else { %>
+      <div class="flex min-h-screen">
+        <%- include("partials/sidebar", { navItems: sidebarNavItems, activeRoute: layoutActiveRoute, currentUser: layoutCurrentUser }) %>
+        <main class="min-h-screen flex-1 min-w-0 w-full">
+          <%- include("partials/topbar", { currentUser: layoutCurrentUser, todayLabel: layoutTodayLabel }) %>
+          <section class="min-h-[calc(100vh-81px)] bg-brand-bg px-4 py-6 sm:px-6 lg:px-10">
+            <%- include(page) %>
+          </section>
+        </main>
+      </div>
+    <% } %>
     <script src="/js/main.js"></script>
   </body>
 </html>
