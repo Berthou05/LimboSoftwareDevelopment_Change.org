@@ -23,7 +23,6 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 
 //Routes declaration
-
 app.use(navigationMiddleware);
 
 //routesHome
