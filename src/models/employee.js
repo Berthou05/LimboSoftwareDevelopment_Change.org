@@ -1,20 +1,25 @@
 // Employee Model
-// Employee(employee_id, full_name, names, lastnames, timezone)
+// Employee(employee_id, full_name, names, lastnames)
+
+const db = require('../util/database');
 
 module.exports = class Employee {
 
-    constructor(employee_id, full_name, names, lastnames, timezone) {
-        this.employee_id = employee_id;
-        this.full_name = full_name;
+    constructor(fullname ,names, lastnames) {
+        this.fullname = fullname;
         this.names = names;
         this.lastnames = lastnames;
-        this.timezone = timezone;
     }
 
     // Create or Update employee
     save() {
-        // TODO: Implement database logic
-        // If employee_id exists, update; otherwise, insert new record
+        return db.execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',
+                [this.fullname, this.names, this.lastnames]);
+    }
+
+    static getEmployeeIdByFullname(fullname){
+        return db.execute('SELECT employee_id FROM employee WHERE full_name=?',
+            [fullname]);
     }
 
     // Read all employees

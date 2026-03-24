@@ -1,24 +1,21 @@
 // Account Model
 // Account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at)
 
+const bcrypt = require('bcrypt');
+const db = require('../util/database');
+const { response } = require('express');
+
 const AccountStatus = {
     ACTIVE: 'ACTIVE',
     DISABLED: 'DISABLED'
 };
 
 module.exports = class Account {
-
-    constructor(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) {
-        this.account_id = account_id;
+    constructor(employee_id, email, password, slack_username) {
         this.employee_id = employee_id;
         this.email = email;
-        this.password_hash = password_hash;
+        this.password = password;
         this.slack_username = slack_username;
-        this.status = status; // AccountStatus ENUM
-        this.first_login = first_login;
-        this.last_login = last_login;
-        this.image = image;
-        this.created_at = created_at;
     }
 
     findById(account_id){
@@ -28,7 +25,20 @@ module.exports = class Account {
     // Create or Update account
     save() {
         // TODO: Implement database logic
-        // If account_id exists, update; otherwise, insert new record
+        return bcrypt.hash(this.password, 12).then((password_cifrado)=>{
+            //! Integrate the UUID() for the generation of the account_id
+                    return db.execute('INSERT INTO users(username, password, nombre) Values(?,?,?)',
+                        [this.username,password_cifrado,this.name]);
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    return response.redirect('/');
+        });
+    }
+
+    // Read account by email
+    static fetchByEmail(email) {
+        // TODO: Implement database query to fetch account by email
     }
 
     // Read all accounts
@@ -44,11 +54,6 @@ module.exports = class Account {
     // Read account by employee ID
     static fetchByEmployee(employee_id) {
         // TODO: Implement database query to fetch account by employee
-    }
-
-    // Read account by email
-    static fetchByEmail(email) {
-        // TODO: Implement database query to fetch account by email
     }
 
     // Read accounts by status

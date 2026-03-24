@@ -22,6 +22,26 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: false}));
 
 
+//Usage of express-session
+/*Instalacion de express-session*/
+const session = require('express-session');
+app.use(session({
+    secret: process.env.SESSION-SECRET, 
+    resave: false,        
+    saveUninitialized: false, 
+}));
+
+/*Configuracion de Environment Variables*/
+require('dotenv').config();
+
+/*Instalacion de csurf*/
+const csrf = require('csurf');
+const csrfProtection = csrf();
+app.use(csrfProtection); 
+
+//Uso de Auth middleware
+const isAuth = require('./src/middlewares/isAuth');
+
 //Routes declaration
 app.use(navigationMiddleware);
 
