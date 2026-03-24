@@ -25,6 +25,10 @@ module.exports = class Account {
         db.execute('SELECT * FROM accounts WHERE account_id = ?', [account_id])
     }
 
+    findAll(){
+        db.execute('SELECT * FROM accounts')
+    }
+
     // Create or Update account
     save() {
         // TODO: Implement database logic

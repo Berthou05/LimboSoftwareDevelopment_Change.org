@@ -8,6 +8,10 @@ module.exports = class Role {
         this.name = name;
     }
 
+    findAll(){
+        db.execute('SELECT * FROM roles')
+    }
+
     // Create or Update role
     save() {
         // TODO: Implement database logic

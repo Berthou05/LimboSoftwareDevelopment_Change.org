@@ -6,7 +6,6 @@ actor "Admin" as U
 boundary "roles.ejs" as V
 boundary "admin.routes" as RO
 control "admin.controller" as C
-control "admin.service" as SV
 entity "role.model" as X
 database "unitas_system" as DB
 
@@ -16,18 +15,14 @@ V -> RO: fetch('/admin/roles')
 activate RO
 RO -> C: getRoles(request, response)
 activate C
-C -> SV: getRoles()
-activate SV
-SV -> X: findAll()
+C -> X: findAll()
 activate X
 X -> DB: SELECT id, name, description\nFROM role\nORDER BY name ASC
 activate DB
 DB --> X: role rows
 deactivate DB
-X --> SV: roles
+X --> C: roles
 deactivate X
-SV --> C: roles data
-deactivate SV
 C --> RO: response.json({success:true,data:roles})
 deactivate C
 RO --> V: HTTP 200 application/json
