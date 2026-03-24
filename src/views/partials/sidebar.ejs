@@ -1,4 +1,4 @@
-<aside id="sidebar" class="group/sidebar fixed left-0 top-0 z-40 h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white px-4 py-6 transition-all duration-300 lg:relative lg:translate-x-0 lg:flex lg:bg-white/90 data-[collapsed]:w-20 data-[collapsed]:px-2 data-[mobile-open]:translate-x-0 data-[mobile-open]:flex">
+<aside id="sidebar" class="group/sidebar relative flex h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white px-4 py-6 transition-all duration-300 data-[collapsed]:w-20 data-[collapsed]:px-2 max-lg:fixed max-lg:left-0 max-lg:top-0 max-lg:z-40 max-lg:translate-x-[-100%] max-lg:shadow-panel data-[mobile-open]:translate-x-0">
   <div class="flex items-center justify-between px-3 group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-0">
     <div class="group-data-[collapsed]/sidebar:hidden">
       <p class="font-heading text-2xl font-extrabold text-brand-primary">Unitas</p>
@@ -20,7 +20,7 @@
   </div>
 
   <nav class="mt-8 flex-1 space-y-1 overflow-y-auto pr-1 group-data-[collapsed]/sidebar:pr-0">
-    <% sidebarNavItems.forEach((item) => { %>
+    <% navItems.forEach((item) => { %>
       <a
         href="<%= item.href %>"
         class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-2 <%= item.isActive ? 'bg-brand-primary text-white shadow-md' : 'text-brand-text/80 hover:bg-brand-secondary/30' %>"

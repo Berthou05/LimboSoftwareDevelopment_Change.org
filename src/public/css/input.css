@@ -2,6 +2,22 @@
 
 @import "flowbite";
 
+@theme {
+    --color-brand-text: #040316;
+    --color-brand-bg: #fbfbfe;
+    --color-brand-primary: #ffdb00;
+    --color-brand-secondary: #c8c6c7;
+    --color-brand-accent: #ffcc00;
+    --color-brand-base-100: #fbfbfe;
+    --color-brand-base-200: #f3f3f9;
+    --color-brand-base-300: #e7e7f2;
+
+    --font-heading: "Sora", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+    --shadow-panel: 0 14px 35px rgba(4, 3, 22, 0.08);
+}
+
 /* @plugin "daisyui";
 
 @plugin "daisyui/theme"{

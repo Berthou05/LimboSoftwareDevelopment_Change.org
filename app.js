@@ -27,13 +27,13 @@ app.use(bodyParser.urlencoded({extended: false}));
 
 app.use(navigationMiddleware);
 
-//routesHome
-const routesHome = require('./src/modules/home/home.routes');
-app.use('/', routesHome);
-
 //Auth
 const routesAuth = require('./src/modules/auth/auth.routes');
-app.use('/auth', routesAuth);
+app.use('/', routesAuth);
+
+//routesHome
+const routesHome = require('./src/modules/home/home.routes');
+app.use('/home', routesHome);
 
 //Search
 const routesSearch = require('./src/modules/search/search.routes');
