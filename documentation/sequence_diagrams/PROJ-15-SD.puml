@@ -1,0 +1,86 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "project-achievements.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+control "project.service" as SV
+entity "projectachievement.model" as X
+database "unitas_system" as DB
+
+U -> V: Click "Delete achievement"
+activate V
+V -> V: openDeleteAchievementDialog(achievementId)
+
+opt Cancel deletion
+U -> V: Click "Cancel"
+V -> V: closeDeleteAchievementDialog()
+end
+
+U -> V: Confirm delete
+V -> RO: fetch('/projects/:projectId/achievements/:achievementId',\n{method:'DELETE', headers:{'Accept':'application/json'}})
+activate RO
+RO -> C: deleteAchievement(request, response)
+activate C
+C -> SV: deleteAchievement(projectId, achievementId)
+activate SV
+SV -> X: findById(projectId, achievementId)
+activate X
+X -> DB: SELECT id, project_id, title\nFROM projectachievement\nWHERE id = ? AND project_id = ?
+activate DB
+DB --> X: achievement row / null
+deactivate DB
+X --> SV: achievement / null
+deactivate X
+
+alt Achievement not found
+SV --> C: not found error
+deactivate SV
+C --> RO: response.json({success:false,error:"Achievement not found"})
+deactivate C
+RO --> V: HTTP 404 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showAchievementDeleteError(error)
+else Achievement found
+SV -> X: deleteById(projectId, achievementId)
+activate X
+X -> DB: DELETE FROM projectachievement\nWHERE id = ? AND project_id = ?
+activate DB
+DB --> X: deleted rows / database error
+deactivate DB
+X --> SV: delete result
+deactivate X
+
+alt Delete failed
+SV --> C: delete error
+deactivate SV
+C --> RO: response.json({success:false,error:"Achievement could not be deleted"})
+deactivate C
+RO --> V: HTTP 500 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showAchievementDeleteError(error)
+else Delete succeeded
+SV -> X: listByProject(projectId)
+activate X
+X -> DB: SELECT id, title, description, achievement_date\nFROM projectachievement\nWHERE project_id = ?\nORDER BY achievement_date DESC
+activate DB
+DB --> X: remaining achievement rows
+deactivate DB
+X --> SV: achievements
+deactivate X
+SV --> C: refreshed achievements
+deactivate SV
+C --> RO: response.json({success:true,data:achievements})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: refreshAchievementsModule(data)
+end
+deactivate V
+
+@enduml

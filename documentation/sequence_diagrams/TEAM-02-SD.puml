@@ -1,0 +1,89 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "team-info.ejs" as V
+boundary "team.routes" as RO
+control "team.controller" as C
+control "team.service" as SV
+entity "employee.model" as E
+entity "team.model" as X
+database "unitas_system" as DB
+
+U -> V: Click "Edit team"
+activate V
+V -> V: enableTeamEditMode()
+
+opt Cancel team edit
+U -> V: Click "Cancel"
+V -> V: restoreTeamInfo()
+end
+
+U -> V: Click "Save"
+V -> RO: fetch('/teams/:teamId',\n{method:'PATCH', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify(teamForm)})
+activate RO
+RO -> C: updateTeam(request, response)
+activate C
+C -> SV: updateTeam(teamId, teamForm)
+activate SV
+SV -> SV: validateTeamFields(name, ownerEmployeeId, description,\nstartDate, endDate, status)
+
+alt Team fields invalid
+SV --> C: validation error
+deactivate SV
+C --> RO: response.json({success:false,error:"Invalid team data"})
+deactivate C
+RO --> V: HTTP 400 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showTeamUpdateError(error)
+else Team fields valid
+SV -> E: findById(ownerEmployeeId)
+activate E
+E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE id = ?
+activate DB
+DB --> E: owner row / null
+deactivate DB
+E --> SV: owner / null
+deactivate E
+
+alt Owner not found
+SV --> C: owner validation error
+deactivate SV
+C --> RO: response.json({success:false,error:"Owner not found"})
+deactivate C
+RO --> V: HTTP 404 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: showTeamUpdateError(error)
+else Owner found
+SV -> X: updateTeam(teamId, teamForm)
+activate X
+X -> DB: UPDATE team\nSET name = ?, owner_employee_id = ?, description = ?,\nstart_date = ?, end_date = ?, status = ?\nWHERE id = ?
+activate DB
+DB --> X: updated rows
+deactivate DB
+X --> SV: update result
+deactivate X
+SV -> X: findById(teamId)
+activate X
+X -> DB: SELECT id, name, owner_employee_id, description,\nstart_date, end_date, status\nFROM team\nWHERE id = ?
+activate DB
+DB --> X: updated team row
+deactivate DB
+X --> SV: team
+deactivate X
+SV --> C: updated team data
+deactivate SV
+C --> RO: response.json({success:true,data:team})
+deactivate C
+RO --> V: HTTP 200 application/json
+deactivate RO
+V -> V: response.json()
+V -> V: updateTeamModule(data)
+end
+end
+deactivate V
+
+@enduml

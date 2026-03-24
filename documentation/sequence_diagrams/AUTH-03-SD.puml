@@ -1,0 +1,174 @@
+@startuml
+skinparam style strictuml
+autonumber
+
+actor "User" as U
+boundary "recover-password.ejs" as V
+boundary "reset-password.ejs" as V2
+boundary "auth.routes" as RO
+control "auth.controller" as C
+control "auth.service" as SV
+entity "account.model" as X
+entity "email.service" as ES
+database "unitas_system" as DB
+
+U -> V: Submit password recovery form
+activate V
+V -> RO: POST /auth/recover
+activate RO
+RO -> C: recoverPassword(request, response)
+activate C
+C -> SV: recoverPassword(email)
+activate SV
+SV -> SV: validateEmailFormat(email)
+
+alt Email format invalid
+SV --> C: validation error
+deactivate SV
+C --> RO: response.render('recover-password', {error})
+deactivate C
+RO --> V: response.render(...)
+deactivate RO
+else Email format valid
+SV -> X: findByEmail(email)
+activate X
+X -> DB: SELECT id, email\nFROM account\nWHERE email = ?
+activate DB
+DB --> X: account row / null
+deactivate DB
+X --> SV: account / null
+deactivate X
+
+alt Email not registered
+SV --> C: account not found
+deactivate SV
+C --> RO: response.render('recover-password', {error})
+deactivate C
+RO --> V: response.render(...)
+deactivate RO
+else Email registered
+SV -> X: storeRecoveryToken(account.id, token, expiresAt)
+activate X
+X -> DB: UPDATE account\nSET recovery_token = ?, recovery_token_expires_at = ?\nWHERE id = ?
+activate DB
+DB --> X: token stored
+deactivate DB
+X --> SV: token saved
+deactivate X
+SV -> ES: sendPasswordRecoveryEmail(account.email, resetLink)
+activate ES
+ES --> SV: delivered / failed
+deactivate ES
+
+alt Email delivery failed
+SV -> X: clearRecoveryToken(account.id)
+activate X
+X -> DB: UPDATE account\nSET recovery_token = NULL, recovery_token_expires_at = NULL\nWHERE id = ?
+activate DB
+DB --> X: token cleared
+deactivate DB
+X --> SV: cleanup done
+deactivate X
+SV --> C: delivery error
+deactivate SV
+C --> RO: response.render('recover-password', {error})
+deactivate C
+RO --> V: response.render(...)
+deactivate RO
+else Email delivery succeeded
+SV --> C: recovery email sent
+deactivate SV
+C --> RO: response.render('recover-password', {message})
+deactivate C
+RO --> V: response.render(...)
+deactivate RO
+end
+end
+end
+deactivate V
+
+U -> RO: GET /auth/reset?token=...
+activate RO
+RO -> C: showResetForm(request, response)
+activate C
+C -> SV: validateRecoveryToken(token)
+activate SV
+SV -> X: findByRecoveryToken(token)
+activate X
+X -> DB: SELECT id, recovery_token_expires_at\nFROM account\nWHERE recovery_token = ?
+activate DB
+DB --> X: account row / null
+deactivate DB
+X --> SV: account / null
+deactivate X
+
+alt Token invalid or expired
+SV --> C: invalid token
+deactivate SV
+C --> RO: response.render('recover-password', {error})
+deactivate C
+RO --> V: response.render(...)
+deactivate RO
+else Token valid
+SV --> C: token accepted
+deactivate SV
+C --> RO: response.render('reset-password', {token})
+deactivate C
+RO --> V2: response.render(...)
+deactivate RO
+end
+
+U -> V2: Submit new password
+activate V2
+V2 -> RO: POST /auth/reset
+activate RO
+RO -> C: resetPassword(request, response)
+activate C
+C -> SV: resetPassword(token, newPassword)
+activate SV
+SV -> SV: validatePasswordRules(newPassword)
+
+alt Password invalid
+SV --> C: validation error
+deactivate SV
+C --> RO: response.render('reset-password', {error})
+deactivate C
+RO --> V2: response.render(...)
+deactivate RO
+else Password valid
+SV -> X: findByRecoveryToken(token)
+activate X
+X -> DB: SELECT id, recovery_token_expires_at\nFROM account\nWHERE recovery_token = ?
+activate DB
+DB --> X: account row / null
+deactivate DB
+X --> SV: account / null
+deactivate X
+
+alt Token invalid during reset
+SV --> C: invalid token
+deactivate SV
+C --> RO: response.render('reset-password', {error})
+deactivate C
+RO --> V2: response.render(...)
+deactivate RO
+else Token valid during reset
+SV -> X: updatePassword(account.id, passwordHash)
+activate X
+X -> DB: UPDATE account\nSET password_hash = ?, recovery_token = NULL,\nrecovery_token_expires_at = NULL\nWHERE id = ?
+activate DB
+DB --> X: password updated
+deactivate DB
+X --> SV: password reset complete
+deactivate X
+SV --> C: password updated
+deactivate SV
+C --> RO: response.redirect('/login?reset=success')
+deactivate C
+RO --> V2: response.redirect(...)
+deactivate RO
+end
+end
+deactivate V2
+
+@enduml
