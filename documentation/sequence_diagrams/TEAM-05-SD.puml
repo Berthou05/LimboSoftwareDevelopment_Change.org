@@ -42,29 +42,19 @@ deactivate DB
 M --> C: team_data
 deactivate M
 
-alt Is employee still active on this team? (no)
-    C -> V: response.json({success: false, type: 'inactive'})
+alt Does profile data load? (yes)
+    C -> V: response.json({success: true, body: team_data})
     activate V
-    V -> V: prepareNoLongerActiveNotification()
-    V -> V: refreshMemberList()
-    V -> U: Displays notification and updated list
+    V -> V: processDataAndPrepareView(team_data)
+    V -> V: renderActiveMembersPage()
+    V -> U: Views detailed profile and contact info
     deactivate V
-
-else Is employee still active on this team? (yes)
-    alt Does profile data load? (yes)
-        C -> V: response.json({success: true, body: team_data})
-        activate V
-        V -> V: processDataAndPrepareView(team_data)
-        V -> V: renderActiveMembersPage()
-        V -> U: Views detailed profile and contact info
-        deactivate V
-    else Does profile data load? (no)
-        C -> V: response.json({success: false, type: 'load_error'})
-        activate V
-        V -> V: generateProfileUnavailableMessage()
-        V -> U: Displays error message
-        deactivate V
-    end
+else Does profile data load? (no)
+    C -> V: response.json({success: false, type: 'load_error'})
+    activate V
+    V -> V: generateProfileUnavailableMessage()
+    V -> U: Displays error message
+    deactivate V
 end
 
 deactivate C
