@@ -1,0 +1,74 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "team_settings.ejs" as V
+boundary "routes" as RO
+control "team.controller" as C
+entity "Team.model" as M
+database "unitas_system" as BD
+
+autonumber
+
+== Delete (Deactivate) Team ==
+
+activate U
+U -> V: Selects "Delete Team"
+deactivate U
+
+activate V
+V -> V: displayWarningModal()
+V -> U: Shows warning modal (Projects will not be deleted)
+deactivate V
+
+alt Confirms permanent deletion? (no)
+    activate U
+    U -> V: Closes modal
+    deactivate U
+    activate V
+    V -> V: closeModal()
+    V -> U: Displays Team Settings (no changes)
+    deactivate V
+
+else Confirms permanent deletion? (yes)
+    activate U
+    U -> V: Confirms deletion
+    deactivate U
+    
+    activate V
+    V -> RO: fetch('/team/deactivate', {method: PATCH, body: JSON.stringify({team_id})})
+    deactivate V
+
+    activate RO
+    RO -> C: deactivateTeam(request, response)
+    deactivate RO
+
+    activate C
+    C -> M: deactivateTeam(team_id)
+    activate M
+    
+    M -> BD: execute('UPDATE team SET status = "Inactive" WHERE id = ?', [team_id])
+    activate BD
+    BD --> M: success
+    deactivate BD
+
+    M -> BD: execute('DELETE FROM team_members WHERE team_id = ?', [team_id])
+    activate BD
+    BD --> M: success
+    deactivate BD
+
+    M --> C: success
+    deactivate M
+
+    C -> V: response.json({success: true})
+    activate V
+    V -> V: removeTeamFromNavigationMenu()
+    V -> V: redirectToGlobalDashboard()
+    V -> V: displaySuccessMessage("Team successfully removed")
+    V -> U: Final updated view
+    deactivate V
+end
+
+deactivate C
+
+@enduml
