@@ -2,7 +2,7 @@
 skinparam style strictuml
 
 actor User as U
-boundary "team_settings.ejs" as V
+boundary "team.ejs" as V
 boundary "routes" as RO
 control "team.controller" as C
 entity "Team.model" as M
@@ -27,7 +27,7 @@ alt Confirms permanent deletion? (no)
     deactivate U
     activate V
     V -> V: closeModal()
-    V -> U: Displays Team Settings (no changes)
+    V -> U: Displays Team (no changes)
     deactivate V
 
 else Confirms permanent deletion? (yes)
