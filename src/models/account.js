@@ -21,6 +21,10 @@ module.exports = class Account {
         this.created_at = created_at;
     }
 
+    findById(account_id){
+        db.execute('SELECT * FROM accounts WHERE account_id = ?', [account_id])
+    }
+
     // Create or Update account
     save() {
         // TODO: Implement database logic
