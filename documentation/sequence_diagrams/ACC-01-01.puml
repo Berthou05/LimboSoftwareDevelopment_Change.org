@@ -12,10 +12,10 @@ activate U
 U -> V:Clicks profile picture
 deactivate U
     activate V
-    V -> RO:GET /account/profile
+    V -> RO:GET /account
     deactivate V
         activate RO
-        RO -> C:getProfile(request, response)
+        RO -> C:getAccount(request, response)
         deactivate RO
             activate C
             C ->> AM:findById(user_id)
