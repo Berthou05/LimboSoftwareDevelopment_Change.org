@@ -6,7 +6,6 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 //Creation of static folder
 const path = require('path');
@@ -57,6 +56,4 @@ app.use((request, response, next) => {
     response.status(404).render('pages/error404');
 });
 
-app.listen((PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-}));
+app.listen((3000));
