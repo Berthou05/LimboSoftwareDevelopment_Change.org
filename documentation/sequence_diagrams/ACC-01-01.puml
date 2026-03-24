@@ -1,0 +1,53 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista accountInfo.ejs" as V
+control "account.controller" as C
+entity "Account.model" as AM
+database "unitas_system" as BD
+
+activate U
+U -> V:Clicks profile picture
+deactivate U
+    activate V
+    V -> RO:GET /account/profile
+    deactivate V
+        activate RO
+        RO -> C:getProfile(request, response)
+        deactivate RO
+            activate C
+            C ->> AM:findById(user_id)
+                activate AM
+                AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [user_id])
+                    activate BD
+                    
+                    alt account found
+                        BD --> AM:account
+                        deactivate BD
+                        AM --> C:account
+                        deactivate AM
+                        
+                        C -> V:response.render('account/info.ejs', {account: account})
+                        deactivate C
+                            activate V
+                            V -> U:HTML + Account Information page
+                            deactivate V
+                    
+                    else account not found / error
+                        BD --> AM:null / error
+                        deactivate BD
+                        AM --> C:null / error
+                        deactivate AM
+                        
+                        C -> V:response.render('account/info.ejs', {error: "Account information could not be loaded"})
+                        deactivate C
+                            activate V
+                            V -> U:HTML + Error message
+                            deactivate V
+                    end
+
+activate U
+
+@enduml

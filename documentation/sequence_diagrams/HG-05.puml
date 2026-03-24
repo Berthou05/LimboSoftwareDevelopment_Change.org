@@ -1,0 +1,124 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "Slack" as SL
+boundary "routes" as RO
+control "highlight.controller" as C
+entity "Employee.model" as EM
+entity "Project.model" as PM
+entity "Highlight.model" as HM
+database "unitas_system" as BD
+
+activate U
+U -> SL:Types /highlight command
+deactivate U
+    activate SL
+    SL -> RO:POST /slack/highlight (command payload, slack_username, signature)
+    deactivate SL
+        activate RO
+        RO -> C:handleHighlightCommand(request, response)
+        deactivate RO
+            activate C
+            C -> C:validateSlackSignature(signature)
+            
+            alt invalid signature
+                C -> SL:response.status(401).send("Unauthorized")
+                deactivate C
+                    activate SL
+                    SL -> U:Request rejected
+                    deactivate SL
+            
+            else valid signature
+                C ->> EM:findBySlackUsername(slack_username)
+                    activate EM
+                    EM ->> BD:execute('SELECT * FROM employees WHERE slack_username=?', [slack_username])
+                        activate BD
+                        BD --> EM:employee
+                        deactivate BD
+                    EM --> C:employee
+                    deactivate EM
+                
+                C ->> PM:getActiveProjectsByEmployee(employee_id)
+                    activate PM
+                    PM ->> BD:execute('SELECT p.* FROM projects p JOIN employee_projects ep ON p.id = ep.project_id WHERE ep.employee_id=? AND p.status=?', [employee_id, 'active'])
+                        activate BD
+                        BD --> PM:projects
+                        deactivate BD
+                    PM --> C:projects
+                    deactivate PM
+                
+                alt no active projects
+                    C -> SL:response.json({response_type: "ephemeral", text: "You are not assigned to any active projects"})
+                    deactivate C
+                        activate SL
+                        SL -> U:Ephemeral message displayed
+                        deactivate SL
+                
+                else has active projects
+                    C -> C:constructModal(projects)
+                    C -> SL:response.json({trigger_id: trigger_id, view: modal})
+                    deactivate C
+                        activate SL
+                        SL -> U:Modal displayed (Project, Title, Description fields)
+                        deactivate SL
+                    
+                    activate U
+                    U -> SL:Fills Project, Title, Description
+                    U -> SL:Clicks Submit
+                    deactivate U
+                        activate SL
+                        SL -> RO:POST /slack/highlight/submit (modal submission payload)
+                        deactivate SL
+                            activate RO
+                            RO -> C:handleHighlightSubmit(request, response)
+                            deactivate RO
+                                activate C
+                                C -> C:validateRequiredFields(project_id, title, description)
+                                
+                                alt missing required fields
+                                    C -> C:constructValidationErrors(errors)
+                                    C -> SL:response.json({response_action: "errors", errors: validation_errors})
+                                    deactivate C
+                                        activate SL
+                                        SL -> U:Modal remains open with error messages
+                                        deactivate SL
+                                
+                                else valid fields
+                                    C -> C:constructHighlight(employee_id, project_id, title, description)
+                                    C ->> HM:insert(highlight_data)
+                                        activate HM
+                                        HM ->> BD:execute('INSERT INTO highlights (employee_id, project_id, title, description, created_at) VALUES (?, ?, ?, ?, ?)', [highlight_data])
+                                            activate BD
+                                            
+                                            alt database error
+                                                BD --> HM:error
+                                                deactivate BD
+                                                HM --> C:error
+                                                deactivate HM
+                                                
+                                                C -> SL:response.json({response_type: "ephemeral", text: "The highlight could not be saved. Please try again"})
+                                                deactivate C
+                                                    activate SL
+                                                    SL -> U:Ephemeral error message
+                                                    deactivate SL
+                                            
+                                            else success
+                                                BD --> HM:highlight_id
+                                                deactivate BD
+                                                HM --> C:highlight_id
+                                                deactivate HM
+                                                
+                                                C -> SL:response.json({response_action: "clear"})
+                                                deactivate C
+                                                    activate SL
+                                                    SL -> U:Modal closed + Confirmation message
+                                                    deactivate SL
+                                            end
+                                end
+                end
+            end
+
+activate U
+
+@enduml

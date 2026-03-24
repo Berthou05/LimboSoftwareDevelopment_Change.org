@@ -1,0 +1,130 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "routes" as RO
+boundary "vista projectShow.ejs" as V
+control "project.controller" as C
+entity "Project.model" as PM
+entity "Employee.model" as EM
+entity "Team.model" as TM
+entity "ProjectMember.model" as PMM
+database "unitas_system" as BD
+
+activate U
+U -> RO:GET /projects/:id
+deactivate U
+    activate RO
+    RO -> C:show(request, response)
+    deactivate RO
+        activate C
+        C ->> PM:findById(project_id)
+            activate PM
+            PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                activate BD
+                BD --> PM:project
+                deactivate BD
+            PM --> C:project
+            deactivate PM
+        
+        C ->> EM:getByProjectId(project_id)
+            activate EM
+            EM ->> BD:execute('SELECT e.* FROM employees e JOIN project_employees pe ON e.id = pe.employee_id WHERE pe.project_id=?', [project_id])
+                activate BD
+                BD --> EM:employees
+                deactivate BD
+            EM --> C:employees
+            deactivate EM
+        
+        C ->> TM:getByProjectId(project_id)
+            activate TM
+            TM ->> BD:execute('SELECT t.* FROM teams t JOIN project_teams pt ON t.id = pt.team_id WHERE pt.project_id=?', [project_id])
+                activate BD
+                BD --> TM:teams
+                deactivate BD
+            TM --> C:teams
+            deactivate TM
+        
+        C -> V:response.render('projects/show.ejs', {project: project, employees: employees, teams: teams})
+        deactivate C
+    activate V
+    V -> U:HTML + Project page with members list
+    deactivate V
+
+activate U
+U -> V:Selects a Team or Employee
+U -> V:Clicks "Remove from Project" button
+deactivate U
+    activate V
+    V -> V:showConfirmPopup(memberId, memberType)
+    V --> U:Confirmation popup displayed
+    deactivate V
+
+activate U
+U -> V:Clicks "Confirm" button
+deactivate U
+    activate V
+    V -> RO:POST /projects/:id/remove-member
+    deactivate V
+        activate RO
+        RO -> C:removeMember(request, response)
+        deactivate RO
+            activate C
+            
+            alt member type is Employee
+                C ->> PMM:removeEmployee(project_id, employee_id)
+                    activate PMM
+                    PMM ->> BD:execute('DELETE FROM project_employees WHERE project_id=? AND employee_id=?', [project_id, employee_id])
+                        activate BD
+                        BD --> PMM:Query OK
+                        deactivate BD
+                    PMM --> C:removed
+                    deactivate PMM
+            
+            else member type is Team
+                C ->> PMM:removeTeam(project_id, team_id)
+                    activate PMM
+                    PMM ->> BD:execute('DELETE FROM project_teams WHERE project_id=? AND team_id=?', [project_id, team_id])
+                        activate BD
+                        BD --> PMM:Query OK
+                        deactivate BD
+                    PMM --> C:removed
+                    deactivate PMM
+            end
+            
+            C ->> PM:findById(project_id)
+                activate PM
+                PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [project_id])
+                    activate BD
+                    BD --> PM:project
+                    deactivate BD
+                PM --> C:project
+                deactivate PM
+            
+            C ->> EM:getByProjectId(project_id)
+                activate EM
+                EM ->> BD:execute('SELECT e.* FROM employees e JOIN project_employees pe ON e.id = pe.employee_id WHERE pe.project_id=?', [project_id])
+                    activate BD
+                    BD --> EM:employees
+                    deactivate BD
+                EM --> C:employees
+                deactivate EM
+            
+            C ->> TM:getByProjectId(project_id)
+                activate TM
+                TM ->> BD:execute('SELECT t.* FROM teams t JOIN project_teams pt ON t.id = pt.team_id WHERE pt.project_id=?', [project_id])
+                    activate BD
+                    BD --> TM:teams
+                    deactivate BD
+                TM --> C:teams
+                deactivate TM
+            
+            C -> V:response.render('projects/show.ejs', {project: project, employees: employees, teams: teams, success: "Member removed from project successfully"})
+            deactivate C
+                activate V
+                V -> U:HTML + Updated project page + Success message
+                deactivate V
+
+activate U
+
+@enduml
