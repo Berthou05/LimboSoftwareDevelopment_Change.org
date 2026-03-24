@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Unitas System  
 Software Requirements & Activity Intelligence Platform  
 Limbo Software Development  
@@ -87,10 +88,32 @@ Pending:
 - PDF generation finalization
 - UI polish
 - RBAC validation
+=======
+# Unitas
+
+> **A modern web application for team management and collaboration**  
+> Developed by **Limbo Software Development**
+
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-v5.2-lightgrey.svg)](https://expressjs.com/)
+
+---
+
+## Technology Stack
+
+- **Backend**: Node.js + Express.js
+- **Frontend**: EJS + Flowbite + Tailwind CSS 
+- **Architecture**: MVC Pattern
+>>>>>>> 7929a9791226978de8a80cf6aa93f76b2c390703
 
 ---
 
 ## License
 
+<<<<<<< HEAD
 Academic project for  
 Instituto Tecnológico y de Estudios Superiores de Monterrey  
+=======
+This project is licensed under the **ISC License** - see the [LICENSE](LICENSE) file for details.
+>>>>>>> 7929a9791226978de8a80cf6aa93f76b2c390703
