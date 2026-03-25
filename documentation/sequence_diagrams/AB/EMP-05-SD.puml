@@ -1,0 +1,65 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "employee_profile.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as DB
+
+autonumber
+
+== View Employee Projects ==
+
+activate U
+U -> V: Accesses an Employee's profile
+deactivate U
+
+activate V
+U -> V: Navigates to the "Your Projects" section
+V -> V: captureEmployeeId(id)
+V -> RO: fetch('/projects/employee/:id', {method: GET})
+deactivate V
+
+activate RO
+RO -> C: getProjectsByEmployee(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchProjectsByMember(employee_id)
+activate M
+
+M -> DB: execute('SELECT * FROM project_members WHERE employee_id = ?', [employee_id])
+activate DB
+
+alt Is there a connection or data error? (yes)
+    DB --> M: connection_error
+    M --> C: error_status
+    C -> V: response.json({success: false, error: 'Database error'})
+    activate V
+    V -> U: Informs the user an error has occurred
+    deactivate V
+    
+else Is there a connection or data error? (no)
+    DB --> M: projects_list
+    deactivate DB
+    M --> C: projects_list
+    deactivate M
+    
+    C -> V: response.json({success: true, body: projects_list})
+    activate V
+    
+    alt projects_list is empty
+        V -> U: Show "no projects yet" message
+    else projects_list contains data
+        V -> V: displaySummaryList("Your Projects" widget)
+        V -> V: renderPageWithUserInfo()
+        V -> U: Views all projects linked to that Employee
+    end
+    deactivate V
+end
+
+deactivate C
+
+@enduml

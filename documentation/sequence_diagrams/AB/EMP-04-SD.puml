@@ -1,0 +1,71 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "profile.ejs" as V
+boundary "routes" as RO
+control "user.controller" as C
+control "validation.util" as UT
+entity "User.model" as M
+database "unitas_system" as BD
+
+autonumber
+
+== Edit Own Profile ==
+
+activate U
+U -> V: Modifies profile fields
+U -> V: Clicks "Save Changes" button
+deactivate U
+
+activate V
+V -> V: validateInputAndFileFormats()
+V -> RO: fetch('/profile/edit', {method: POST, body: formData})
+deactivate V
+
+activate RO
+RO -> C: updateProfile(request, response)
+deactivate RO
+
+activate C
+C -> UT: validate(request.body)
+activate UT
+
+alt Data invalid? (no)
+    UT --> C: validation_error
+    deactivate UT
+    C -> V: response.json({success: false, errors: validation_error})
+    activate V
+    V -> V: displayErrorHighlightsOnForm()
+    V -> U: Shows error highlights on form
+    deactivate V
+
+else Data valid? (yes)
+    activate UT
+    UT --> C: success
+    deactivate UT
+    
+    C -> M: updateUserDetails(user_id, data)
+    activate M
+    
+    M -> BD: execute('UPDATE user SET name=?, bio=?, profile_picture=? WHERE id=?', [data])
+    activate BD
+    BD --> M: success_status
+    deactivate BD
+    
+    M --> C: success_status
+    deactivate M
+    
+    C -> C: refreshSessionMetadata()
+    C -> V: response.json({success: true})
+    
+    activate V
+    V -> V: generateSuccessNotification()
+    V -> V: reloadProfileContent()
+    V -> U: Displays updated Profile page
+    deactivate V
+end
+
+deactivate C
+
+@enduml
