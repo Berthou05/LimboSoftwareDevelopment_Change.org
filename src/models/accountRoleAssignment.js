@@ -10,11 +10,17 @@ module.exports = class AccountRole {
         this.role_id = role_id;
     }
 
-    // Create or Update account-role assignment
+    /*save()
+    Function responsible for storing an AccountRole object into database*/
+
     save() {
         return db.execute('INSERT INTO accountrole(account_id, role_id) VALUES (?,?)',
             [this.account_id, this.role_id]);
     }
+
+    /*updateByRole(delete_role_id)
+    Function responsible for updating all AccountRole tuples that contain
+    delete_role_id by substituting it with ROLE_ID*/
 
     static updateByRole(delete_role_id){
         //* Role of the ID for which the User will be changed to.
@@ -22,6 +28,8 @@ module.exports = class AccountRole {
         return db.execute('UPDATE accountrole SET role_id=? WHERE role_id=? values(?,?)'[ROLE_ID, delete_role_id]);
     }
 
+
+    
     // Read all account-role assignments
     static fetchAll() {
         // TODO: Implement database query to fetch all assignments

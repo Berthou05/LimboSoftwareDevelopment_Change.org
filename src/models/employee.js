@@ -11,20 +11,30 @@ module.exports = class Employee {
         this.lastnames = lastnames;
     }
 
-    // Create or Update employee
+    /*save()
+    Function responsible for storing an Employee object in database*/
+
     save() {
         return db.execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',
                 [this.fullname, this.names, this.lastnames]);
     }
+
+    /* getEmployeeIdByFullname(fullname)
+    Function responsible for obtaining an employee_id from full_name*/
 
     static getEmployeeIdByFullname(fullname){
         return db.execute('SELECT employee_id FROM employee WHERE full_name=?',
             [fullname]);
     }
 
+    /*getNamesByEmployeeId(employee_id)
+    Function responsible for obtaining an Employee name(s) based on employee_id*/
+
     static getNamesByEmployeeId(employee_id){
         return db.execute('SELECT names FROM employee WHERE employee_id=?',[employee_id]);
     }
+
+
 
     // Read all employees
     static fetchAll() {

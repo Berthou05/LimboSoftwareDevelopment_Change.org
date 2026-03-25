@@ -1,6 +1,6 @@
 /*
 Title: auth.controller.js
-Last modification: March 24,2026
+Last modification: March 25,2026
 Modified by: Hurtado, R.
 */
 
@@ -9,11 +9,21 @@ const Employee = require('../../models/employee');
 const AccountRole = require('../../models/accountRoleAssignment');
 const bcrypt = require('bcrypt');
 
+
+/*getSignin
+Function that renders the sign in form.
+Only avaible with privilege ADMIN-03*/
+
 exports.getSignin=(request, response, next) => {
     response.render('signin.ejs', {
         csrfToken: request.csrfToken(),
     });
 }
+
+/*postSignin
+Function responsible for handling the employee, account creation,
+and role assignation.
+Only avaible with privilege ADMIN-03*/
 
 exports.postSignin=(request, response, next) => {
     const fullname = request.body.name+" "+request.body.lastname;
@@ -45,6 +55,10 @@ exports.postSignin=(request, response, next) => {
     })
 };
 
+/*getLogin
+Function responsible for rendering login page.
+Available without authentication*/
+
 exports.getLogin = (request, response, next)=>{
     const error = request.session.error || '';
     request.session.error='';
@@ -56,6 +70,11 @@ exports.getLogin = (request, response, next)=>{
         pageTitle: 'Login'
     });
 }
+
+/*postLogin
+Function responsible for processing the login form information
+validation: existance of account, password matching, privilege loading.
+Available without authentication*/
 
 exports.postLogin = (request, response, next)=>{
     console.log("BODY:", request.body);
@@ -108,6 +127,10 @@ exports.postLogin = (request, response, next)=>{
         return response.redirect('/');
     });
 }
+
+/*getLogout
+Function responsible for logout the current session.
+Only available for authenticated users.*/
 
 exports.getLogout = (request, response, next)=>{
     request.session.destroy(() => {
