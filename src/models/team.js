@@ -3,6 +3,46 @@
 
 const db = require('../utils/database');
 
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DIRECTORY_QUERY = `SELECT
+    T.team_id,
+    T.name,
+    T.description,
+    T.image,
+    T.status,
+    E.full_name AS lead_name,
+    CASE
+        WHEN ET.employee_id IS NULL THEN 0
+        ELSE 1
+    END AS is_member
+FROM team AS T
+INNER JOIN employee AS E
+    ON E.employee_id = T.employee_responsible_id
+LEFT JOIN employeeteam AS ET
+    ON ET.team_id = T.team_id
+    AND ET.employee_id = ?
+    AND ET.left_at IS NULL
+WHERE T.status = 'ACTIVE'
+    AND (
+        ? = ''
+        OR T.name LIKE ?
+        OR T.description LIKE ?
+        OR E.full_name LIKE ?
+    )
+ORDER BY is_member DESC, T.name ASC`;
+
+const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
+    const normalizedSearch = `%${searchTerm}%`;
+
+    return [
+        employeeId || '',
+        searchTerm,
+        normalizedSearch,
+        normalizedSearch,
+        normalizedSearch,
+    ];
+};
+
 module.exports = class Team {
     constructor(team_id, employee_responsible_id, name, description, created_at, image) {
         this.team_id = team_id;
@@ -29,36 +69,22 @@ module.exports = class Team {
     }
 
     static fetchDirectory(employee_id, searchTerm = '') {
-        const normalizedSearch = `%${searchTerm}%`;
+        const parameters = buildDirectoryQueryParameters(employee_id, searchTerm);
+
+        return db.execute(DIRECTORY_QUERY, parameters);
+    }
+
+    static fetchDirectorySuggestions(
+        employee_id,
+        searchTerm = '',
+        limit = DEFAULT_DIRECTORY_SUGGESTION_LIMIT,
+    ) {
+        const parameters = buildDirectoryQueryParameters(employee_id, searchTerm);
 
         return db.execute(
-            `SELECT
-                T.team_id,
-                T.name,
-                T.description,
-                T.image,
-                T.status,
-                E.full_name AS lead_name,
-                CASE
-                    WHEN ET.employee_id IS NULL THEN 0
-                    ELSE 1
-                END AS is_member
-            FROM team AS T
-            INNER JOIN employee AS E
-                ON E.employee_id = T.employee_responsible_id
-            LEFT JOIN employeeteam AS ET
-                ON ET.team_id = T.team_id
-                AND ET.employee_id = ?
-                AND ET.left_at IS NULL
-            WHERE T.status = 'ACTIVE'
-                AND (
-                    ? = ''
-                    OR T.name LIKE ?
-                    OR T.description LIKE ?
-                    OR E.full_name LIKE ?
-                )
-            ORDER BY is_member DESC, T.name ASC`,
-            [employee_id || '', searchTerm, normalizedSearch, normalizedSearch, normalizedSearch]
+            `${DIRECTORY_QUERY}
+LIMIT ?`,
+            [...parameters, limit],
         );
     }
 
