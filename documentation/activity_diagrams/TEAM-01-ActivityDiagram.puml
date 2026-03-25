@@ -25,10 +25,15 @@ if (Valid?) then (Yes)
     stop
   else (No)
 
+
     |System|
     :Init team (id, time);
-    :Save team;
+    :Send INSERT query to database;
 
+    |Database|
+    :Execute query and store new Team record;
+
+    |System|
     if (Saved?) then (Yes)
       |Lead|
       :Show success;

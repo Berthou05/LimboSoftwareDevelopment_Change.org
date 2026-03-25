@@ -45,7 +45,6 @@ exports.postSignin=(request, response, next) => {
     })
 };
 
-
 exports.getLogin = (request, response, next)=>{
     const error = request.session.error || '';
     request.session.error='';
@@ -109,7 +108,6 @@ exports.postLogin = (request, response, next)=>{
         return response.redirect('/');
     });
 }
-
 
 exports.getLogout = (request, response, next)=>{
     request.session.destroy(() => {
