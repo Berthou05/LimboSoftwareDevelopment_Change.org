@@ -37,7 +37,7 @@ deactivate L
             RO -> C: deleteGoal(request, response);
         deactivate RO
             activate C
-            C ->> G: deleteGoal(goal_id);
+            C ->> G: delete(goal_id);
                 activate G
                 G->>BD: execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
                     activate BD
@@ -45,7 +45,7 @@ deactivate L
                     deactivate BD
                 G-->C: Query OK
                 deactivate G
-                C->V: response.json({success:true});
+                C->V: return response.status(200).json({success:true});
             deactivate C
     activate V
     V->V: deleteGoalView(goal_id);
@@ -54,7 +54,7 @@ deactivate L
 
     alt Deletion failed
             activate C
-                C->V: response.json({success:false, error: error});        
+                C->V: return response.status(500).json({success:false, message: error.stack});        
             deactivate C
     activate V
     V->V: closePopup();

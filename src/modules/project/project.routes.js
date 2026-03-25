@@ -10,5 +10,6 @@ const isAuth = require('../../middleware/isAuthenticated');
 
 const projectController = require('./project.controller');
 router.get('/', isAuth,projectController.getProject);
+router.delete('/project/goal/:goal_id', isAuth, projectController.deleteGoal);
 
 module.exports = router;
