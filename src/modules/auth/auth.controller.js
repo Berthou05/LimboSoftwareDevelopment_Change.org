@@ -87,8 +87,9 @@ exports.postLogin = (request, response, next)=>{
             bcrypt.compare(request.body.password, rows[0].password_hash).then((doMatch)=>{
                 if(doMatch){
                     request.session.isAuth = true;
-                    Employee.getNamesByEmployeeId(rows[0].employee_id).then((names)=>{
-                        request.session.username = names;
+                    request.session.employeeId = rows[0].employee_id;
+                    Employee.getNamesByEmployeeId(rows[0].employee_id).then(([employeeRows])=>{
+                        request.session.username = employeeRows[0]?.names || '';
 
                         Account.getPrivilegesFromAccountId(rows[0].account_id).then(([privileges, fieldData])=>{
                             request.session.privileges = privileges;

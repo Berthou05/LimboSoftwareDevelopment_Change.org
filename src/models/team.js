@@ -14,11 +14,45 @@ module.exports = class Team {
     }
 
     static findAll() {
-        return db.execute('SELECT * FROM teams');
+        return db.execute('SELECT * FROM team');
     }
 
     static findById(team_id) {
-        return db.execute('SELECT * FROM teams WHERE team_id = ?', [team_id]);
+        return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
+    }
+
+    static fetchDirectory(employee_id, searchTerm = '') {
+        const normalizedSearch = `%${searchTerm}%`;
+
+        return db.execute(
+            `SELECT
+                T.team_id,
+                T.name,
+                T.description,
+                T.image,
+                T.status,
+                E.full_name AS lead_name,
+                CASE
+                    WHEN ET.employee_id IS NULL THEN 0
+                    ELSE 1
+                END AS is_member
+            FROM team AS T
+            INNER JOIN employee AS E
+                ON E.employee_id = T.employee_responsible_id
+            LEFT JOIN employeeteam AS ET
+                ON ET.team_id = T.team_id
+                AND ET.employee_id = ?
+                AND ET.left_at IS NULL
+            WHERE T.status = 'ACTIVE'
+                AND (
+                    ? = ''
+                    OR T.name LIKE ?
+                    OR T.description LIKE ?
+                    OR E.full_name LIKE ?
+                )
+            ORDER BY is_member DESC, T.name ASC`,
+            [employee_id || '', searchTerm, normalizedSearch, normalizedSearch, normalizedSearch]
+        );
     }
 
     // Create or Update team

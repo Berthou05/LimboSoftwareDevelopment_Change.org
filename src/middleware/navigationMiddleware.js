@@ -1,14 +1,10 @@
 // middleware/navigationMiddleware.js
-const buildNavigation = require('../utils/buildNavigation');
+const buildNavigation = require('../utils/buildNavigation.util');
+const { formatShortDate } = require('../utils/date.util');
 
 function navigationMiddleware(req, res, next) {
   const user = req.user || null;
-  const todayLabel = new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date());
+  const todayLabel = formatShortDate(new Date());
 
   res.locals.sidebarNavItems = buildNavigation(user, req.path);
   res.locals.layoutActiveRoute = req.path;

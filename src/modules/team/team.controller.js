@@ -6,14 +6,40 @@ Modified by: Hurtado, R.
 
 const Team = require('../../models/team');
 
+function normalizeTeam(team) {
+    return {
+        id: team.id ?? team.team_id ?? null,
+        name: team.name ?? 'Unnamed team',
+        leadName:
+            team.leadName ??
+            team.lead_name ??
+            team.lead?.fullName ??
+            'Pending assignment',
+        description: team.description ?? 'No team description has been added yet.',
+        image: team.image ?? null,
+        isMember: Boolean(team.isMember ?? team.is_member),
+    };
+}
+
 exports.getTeams = (request, response, next) => {
-    Team.findAll()
-        .then(([teams, fieldData]) => {
-            return response.render('pages/team', {
-                teams: teams,
+    const query = String(request.query.q || '').trim();
+    const employeeId = request.session.employeeId || '';
+
+    Team.fetchDirectory(employeeId, query)
+        .then(([rows]) => {
+            const teams = rows.map(normalizeTeam);
+            const myTeams = teams.filter((team) => team.isMember);
+            const otherTeams = teams.filter((team) => !team.isMember);
+
+            return response.render('pages/teamDirectory', {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
+                pageTitle: 'Team',
+                pageSubtitle: 'Intermediate selection for own and other teams.',
+                query,
+                myTeams,
+                otherTeams,
             });
         })
         .catch((error) => {
