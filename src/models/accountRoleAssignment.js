@@ -1,7 +1,7 @@
 // AccountRole Model (Junction Table)
 // AccountRole(account_id, role_id)
 
-const db = require('../util/database');
+const db = require('../utils/database.js');
 
 module.exports = class AccountRole {
 

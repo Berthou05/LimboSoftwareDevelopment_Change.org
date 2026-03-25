@@ -20,6 +20,7 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 
 //bodyParser declaration.
 const bodyParser = require('body-parser');
+app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({extended: false}));
 
 /*Configuracion de Environment Variables*/
@@ -34,22 +35,20 @@ app.use(session({
     saveUninitialized: false, 
 }));
 
-
-
 /*Instalacion de csurf*/
 const csrf = require('csurf');
 const csrfProtection = csrf();
 app.use(csrfProtection); 
 
 //Uso de Auth middleware
-const isAuth = require('./src/middlewares/isAuth');
+const isAuth = require('./src/middleware/isAuthenticated');
 
 //Routes declaration
 app.use(navigationMiddleware);
 
 //Auth
 const routesAuth = require('./src/modules/auth/auth.routes');
-app.get('/', routesAuth);
+app.use('/', routesAuth);
 
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');

@@ -6,8 +6,9 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../../middleware/isAuthenticated');
 
 const projectController = require('./project.controller');
-router.get('/', projectController.getProject);
+router.get('/', isAuth,projectController.getProject);
 
 module.exports = router;
