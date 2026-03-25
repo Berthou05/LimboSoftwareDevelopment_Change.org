@@ -1,34 +1,53 @@
 // Account Model
 // Account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at)
 
+const bcrypt = require('bcrypt');
+const db = require('../util/database');
+const { response } = require('express');
+
 const AccountStatus = {
     ACTIVE: 'ACTIVE',
     DISABLED: 'DISABLED'
 };
 
 module.exports = class Account {
-
-    constructor(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) {
-        this.account_id = account_id;
+    constructor(employee_id, email, password, slack_username, image) {
         this.employee_id = employee_id;
         this.email = email;
-        this.password_hash = password_hash;
+        this.password = password;
         this.slack_username = slack_username;
-        this.status = status; // AccountStatus ENUM
-        this.first_login = first_login;
-        this.last_login = last_login;
         this.image = image;
-        this.created_at = created_at;
     }
 
     findById(account_id){
-        db.execute('SELECT * FROM accounts WHERE account_id = ?', [account_id])
+        return db.execute('SELECT * FROM accounts WHERE account_id = ?', [account_id]);
     }
 
     // Create or Update account
     save() {
         // TODO: Implement database logic
-        // If account_id exists, update; otherwise, insert new record
+        return bcrypt.hash(this.password, 12).then((password_cifred)=>{
+            //! Integrate the UUID() for the generation of the account_id
+            return db.execute('INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())',
+                [this.employee_id, this.email,password_cifred, this.slack_username, AccountStatus.ACTIVE, 0,null, null]);
+            })
+            .catch((error)=>{
+            console.log(error);
+            return response.redirect('/');
+        });
+    }
+
+    static getAccountIdByEmailSlack(email, slack_username){
+        return db.execute('SELECT account_id FROM account WHERE email=? AND slack_username=?',[email, slack_username]);
+    }
+
+    // Read account by email
+    static fetchByEmail(email) {
+        return db.execute('SELECT * FROM account WHERE email=?',[email]);
+    }
+
+    static getPrivilegesFromAccountId(account_id){
+        return db.execute('SELECT P.privilege_id FROM privilege AS P INNER JOIN roleprivilege AS RP ON RP.privilege_id=P.privilege_id INNER JOIN role AS R ON R.role_id=RP.role_id INNER JOIN accountrole AS AR ON R.role_id= AR.role_id INNER JOIN account AS A ON AR.account_id=A.account_id WHERE A.account_id=?;',[account_id])
     }
 
     // Read all accounts
@@ -44,11 +63,6 @@ module.exports = class Account {
     // Read account by employee ID
     static fetchByEmployee(employee_id) {
         // TODO: Implement database query to fetch account by employee
-    }
-
-    // Read account by email
-    static fetchByEmail(email) {
-        // TODO: Implement database query to fetch account by email
     }
 
     // Read accounts by status

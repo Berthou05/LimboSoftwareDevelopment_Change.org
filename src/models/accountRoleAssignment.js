@@ -1,6 +1,8 @@
 // AccountRole Model (Junction Table)
 // AccountRole(account_id, role_id)
 
+const db = require('../util/database');
+
 module.exports = class AccountRole {
 
     constructor(account_id, role_id) {
@@ -10,8 +12,8 @@ module.exports = class AccountRole {
 
     // Create or Update account-role assignment
     save() {
-        // TODO: Implement database logic
-        // If relationship exists, update; otherwise, insert new record
+        return db.execute('INSERT INTO accountrole(account_id, role_id) VALUES (?,?)',
+            [this.account_id, this.role_id]);
     }
 
     // Read all account-role assignments

@@ -38,7 +38,7 @@ CREATE TABLE `account` (
   `status` enum('ACTIVE','DISABLED') NOT NULL,
   `first_login` tinyint(1) NOT NULL,
   `last_login` datetime DEFAULT NULL,
-  `image` varchar(1024) NOT NULL,
+  `image` varchar(1024) DEFAULT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -318,35 +318,34 @@ CREATE TABLE `employee` (
   `employee_id` char(36) NOT NULL,
   `full_name` varchar(150) NOT NULL,
   `names` varchar(75) NOT NULL,
-  `lastnames` varchar(75) NOT NULL,
-  `timezone` varchar(50) DEFAULT NULL
+  `lastnames` varchar(75) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `employee`
 --
 
-INSERT INTO `employee` (`employee_id`, `full_name`, `names`, `lastnames`, `timezone`) VALUES
-('emp-001', 'Juan Pérez', 'Juan', 'Pérez', 'America/Mexico_City'),
-('emp-002', 'Ana López', 'Ana', 'López', 'America/Mexico_City'),
-('emp-003', 'Carlos Ramírez', 'Carlos', 'Ramírez', 'America/Mexico_City'),
-('emp-004', 'María Torres', 'María', 'Torres', 'America/Mexico_City'),
-('emp-005', 'Luis Herrera', 'Luis', 'Herrera', 'America/Mexico_City'),
-('emp-006', 'Sofía Cruz', 'Sofía', 'Cruz', 'America/Mexico_City'),
-('emp-007', 'Diego Sánchez', 'Diego', 'Sánchez', 'America/Mexico_City'),
-('emp-008', 'Valeria Ortiz', 'Valeria', 'Ortiz', 'America/Mexico_City'),
-('emp-009', 'Fernando Morales', 'Fernando', 'Morales', 'America/Mexico_City'),
-('emp-010', 'Camila Ríos', 'Camila', 'Ríos', 'America/Mexico_City'),
-('emp-011', 'Ricardo Silva', 'Ricardo', 'Silva', 'America/Mexico_City'),
-('emp-012', 'Daniela Vega', 'Daniela', 'Vega', 'America/Mexico_City'),
-('emp-013', 'Pablo Medina', 'Pablo', 'Medina', 'America/Mexico_City'),
-('emp-014', 'Andrea Campos', 'Andrea', 'Campos', 'America/Mexico_City'),
-('emp-015', 'Jorge Navarro', 'Jorge', 'Navarro', 'America/Mexico_City'),
-('emp-016', 'Lucía Romero', 'Lucía', 'Romero', 'America/Mexico_City'),
-('emp-017', 'Miguel Flores', 'Miguel', 'Flores', 'America/Mexico_City'),
-('emp-018', 'Elena Castillo', 'Elena', 'Castillo', 'America/Mexico_City'),
-('emp-019', 'Arturo Delgado', 'Arturo', 'Delgado', 'America/Mexico_City'),
-('emp-020', 'Natalia Fuentes', 'Natalia', 'Fuentes', 'America/Mexico_City');
+INSERT INTO `employee` (`employee_id`, `full_name`, `names`, `lastnames`) VALUES
+('emp-001', 'Juan Pérez', 'Juan', 'Pérez'),
+('emp-002', 'Ana López', 'Ana', 'López'),
+('emp-003', 'Carlos Ramírez', 'Carlos', 'Ramírez'),
+('emp-004', 'María Torres', 'María', 'Torres'),
+('emp-005', 'Luis Herrera', 'Luis', 'Herrera'),
+('emp-006', 'Sofía Cruz', 'Sofía', 'Cruz'),
+('emp-007', 'Diego Sánchez', 'Diego', 'Sánchez'),
+('emp-008', 'Valeria Ortiz', 'Valeria', 'Ortiz'),
+('emp-009', 'Fernando Morales', 'Fernando', 'Morales'),
+('emp-010', 'Camila Ríos', 'Camila', 'Ríos'),
+('emp-011', 'Ricardo Silva', 'Ricardo', 'Silva'),
+('emp-012', 'Daniela Vega', 'Daniela', 'Vega'),
+('emp-013', 'Pablo Medina', 'Pablo', 'Medina'),
+('emp-014', 'Andrea Campos', 'Andrea', 'Campos'),
+('emp-015', 'Jorge Navarro', 'Jorge', 'Navarro'),
+('emp-016', 'Lucía Romero', 'Lucía', 'Romero'),
+('emp-017', 'Miguel Flores', 'Miguel', 'Flores'),
+('emp-018', 'Elena Castillo', 'Elena', 'Castillo'),
+('emp-019', 'Arturo Delgado', 'Arturo', 'Delgado'),
+('emp-020', 'Natalia Fuentes', 'Natalia', 'Fuentes');
 
 -- --------------------------------------------------------
 
@@ -517,7 +516,7 @@ INSERT INTO `highlight` (`highlight_id`, `employee_id`, `project_id`, `title`, `
 CREATE TABLE `privilege` (
   `privilege_id` char(36) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `description` varchar(1000) DEFAULT NULL,
+  `description` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -984,6 +983,7 @@ VALUES
 ('team-018', 'emp-018', 'Venado Squad', 'Recruitment tech', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/venado-squad.png', 'ACTIVE'),
 ('team-019', 'emp-019', 'Camaleón Squad', 'Content optimization', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/camaleon-squad.png', 'ACTIVE'),
 ('team-020', 'emp-020', 'Hormiga Squad', 'Support tooling and automation', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/hormiga-squad.png', 'ACTIVE');
+
 --
 -- Indexes for dumped tables
 --

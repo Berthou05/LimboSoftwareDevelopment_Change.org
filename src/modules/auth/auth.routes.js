@@ -8,6 +8,11 @@ const express = require('express');
 const router = express.Router();
 
 const authController = require('./auth.controller');
-router.get('/', authController.getAuth);
+router.get('/', authController.getLogin);
+router.post('/',authController.postLogin);
+router.get('/logout',authController.getLogout);
+router.get('/new',authController.getSignin);
+router.post('/new',authController.postSignin);
+
 
 module.exports = router;
