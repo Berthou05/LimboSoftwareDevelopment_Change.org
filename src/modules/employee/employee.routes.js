@@ -6,8 +6,9 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../../middleware/isAuthenticated');
 
 const employeeController = require('./employee.controller');
-router.get('/', employeeController.getEmployee);
+router.get('/', isAuth,employeeController.getEmployee);
 
 module.exports = router;

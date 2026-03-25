@@ -1,7 +1,7 @@
 // Employee Model
 // Employee(employee_id, full_name, names, lastnames)
 
-const db = require('../util/database');
+const db = require('../utils/database.js');
 
 module.exports = class Employee {
 

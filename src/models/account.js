@@ -2,7 +2,7 @@
 // Account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at)
 
 const bcrypt = require('bcrypt');
-const db = require('../util/database');
+const db = require('../utils/database.js');
 const { response } = require('express');
 
 const AccountStatus = {

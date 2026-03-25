@@ -6,10 +6,11 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../../middleware/isAuthenticated');
 
 const adminController = require('./admin.controller');
 
-router.get('/accounts', adminController.getAccounts);
-router.get('/roles', adminController.getRoles);
+router.get('/accounts',isAuth, adminController.getAccounts);
+router.get('/roles',isAuth, adminController.getRoles);
 
 module.exports = router;

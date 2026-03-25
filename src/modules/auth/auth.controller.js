@@ -52,16 +52,21 @@ exports.getLogin = (request, response, next)=>{
     response.render('pages/login.ejs', {
         csrfToken: request.csrfToken(),
         error:error,
+        isLoginPage: true, 
+        page: 'pages/content/login', 
+        pageTitle: 'Login'
     });
 }
 
 exports.postLogin = (request, response, next)=>{
+    console.log("BODY:", request.body);
     Account.fetchByEmail(request.body.email).then(([rows,fieldData])=>{
         if(rows.length<1){
             request.session.error = 'Email not found';
+            console.log("Email not found");
             return response.redirect('/');
         }else{
-            bcrypt.compare(request.body.password, rows[0].password).then((doMatch)=>{
+            bcrypt.compare(request.body.password, rows[0].password_hash).then((doMatch)=>{
                 if(doMatch){
                     request.session.isAuth = true;
                     Employee.getNamesByEmployeeId(rows[0].employee_id).then((names)=>{
@@ -69,6 +74,7 @@ exports.postLogin = (request, response, next)=>{
 
                         Account.getPrivilegesFromAccountId(rows[0].account_id).then(([privileges, fieldData])=>{
                             request.session.privileges = privileges;
+                            console.log(privileges);
 
                             return request.session.save((error) => {
                                 return response.redirect('/home');
@@ -88,6 +94,7 @@ exports.postLogin = (request, response, next)=>{
                         
                 } else {
                     request.session.error = 'Password does not match';
+                    console.log("Password does not match");
                     return response.redirect('/');
                 }
             })
@@ -104,9 +111,8 @@ exports.postLogin = (request, response, next)=>{
 }
 
 
-
 exports.getLogout = (request, response, next)=>{
     request.session.destroy(() => {
-        return response.redirect('/auth/login');
+        return response.redirect('/');
     });
 }

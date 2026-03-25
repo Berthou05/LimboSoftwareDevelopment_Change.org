@@ -5,5 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getTeam = (request, response, next) => {
-    response.render('pages/team');
+    response.render('pages/team',{
+        csrfToken: request.csrfToken(),
+    });
 };

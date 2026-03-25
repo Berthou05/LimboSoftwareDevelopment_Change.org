@@ -6,9 +6,10 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../../middleware/isAuthenticated');
 
 const reportController = require('./report.controller');
 
-router.get('/', reportController.getReport);
+router.get('/', isAuth, reportController.getReport);
 
 module.exports = router;

@@ -46,12 +46,12 @@
           </a>
 
           <form action="/logout" method="POST" class="mt-1">
-            <button
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>" >
+            <input
               type="submit"
               class="w-full rounded-lg border border-brand-accent px-2 py-2 text-left text-sm font-semibold text-brand-accent transition hover:bg-brand-accent hover:text-white"
-            >
-              Sign out
-            </button>
+              value="Sign out"
+            />
           </form>
         </div>
       </div>

@@ -5,5 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getProject = (request, response, next) => {
-    response.render('pages/project');
+    response.render('pages/project',{
+        csrfToken: request.csrfToken(),
+    });
 };

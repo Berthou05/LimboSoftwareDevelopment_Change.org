@@ -5,9 +5,13 @@ Modified by: Hurtado, R.
 */
 
 exports.getAccounts = (request, response, next) => {
-    response.render('pages/admin-accounts');
+    response.render('pages/admin-accounts',{
+        csrfToken: request.csrfToken(),
+    });
 };
 
 exports.getRoles = (request, response, next) => {
-    response.render('pages/admin-roles');
+    response.render('pages/admin-roles',{
+        csrfToken: request.csrfToken(),
+    });
 };

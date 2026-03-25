@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Mar 13, 2026 at 04:40 PM
+-- Generation Time: Mar 25, 2026 at 03:16 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -47,9 +47,9 @@ CREATE TABLE `account` (
 --
 
 INSERT INTO `account` (`account_id`, `employee_id`, `email`, `password_hash`, `slack_username`, `status`, `first_login`, `last_login`, `image`, `created_at`) VALUES
-('a1b2c3d4-0001-4000-8000-000000000001', 'emp-001', 'emp001@unitas.com', '$2b$12$K8sdfg8sdfg8sdfg8sdfgOeYxZp1', '@axolotl.lead', 'ACTIVE', 1, '2026-02-20 09:15:22', 'https://cdn.unitas-platform.com/profiles/emp-001.png', '2026-01-01 08:00:00'),
-('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$J7dfg9sdfg8sdfg8sdfgTQweYxZp2', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', '2026-01-01 08:05:00'),
-('a1b2c3d4-0003-4000-8000-000000000003', 'emp-003', 'emp003@unitas.com', '$2b$12$P9asdg8sdfg8sdfg8sdHJKweYxZp3', '@jaguar.dev', 'ACTIVE', 1, '2026-02-19 11:20:44', 'https://cdn.unitas-platform.com/profiles/emp-003.png', '2026-01-01 08:10:00'),
+('a1b2c3d4-0001-4000-8000-000000000001', 'emp-001', 'emp001@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@axolotl.lead', 'ACTIVE', 1, '2026-02-20 09:15:22', 'https://cdn.unitas-platform.com/profiles/emp-001.png', '2026-01-01 08:00:00'),
+('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', '2026-01-01 08:05:00'),
+('a1b2c3d4-0003-4000-8000-000000000003', 'emp-003', 'emp003@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@jaguar.dev', 'ACTIVE', 1, '2026-02-19 11:20:44', 'https://cdn.unitas-platform.com/profiles/emp-003.png', '2026-01-01 08:10:00'),
 ('a1b2c3d4-0004-4000-8000-000000000004', 'emp-004', 'emp004@unitas.com', '$2b$12$L8sdfg8sdfg8sdfg8sdFWEweYxZp4', '@colibri.design', 'ACTIVE', 1, '2026-02-17 08:44:11', 'https://cdn.unitas-platform.com/profiles/emp-004.png', '2026-01-01 08:15:00'),
 ('a1b2c3d4-0005-4000-8000-000000000005', 'emp-005', 'emp005@unitas.com', '$2b$12$Z7sdfg8sdfg8sdfg8sdQAZweYxZp5', '@tortuga.backend', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-005.png', '2026-01-01 08:20:00'),
 ('a1b2c3d4-0006-4000-8000-000000000006', 'emp-006', 'emp006@unitas.com', '$2b$12$X9sdfg8sdfg8sdfg8sdRTYweYxZp6', '@aguila.growth', 'ACTIVE', 1, '2026-02-20 13:55:09', 'https://cdn.unitas-platform.com/profiles/emp-006.png', '2026-01-01 08:25:00'),
@@ -524,54 +524,54 @@ CREATE TABLE `privilege` (
 --
 
 INSERT INTO `privilege` (`privilege_id`, `name`, `description`) VALUES
-('AL-01', 'Submit Daily Entry through Slack', NULL),
-('REP-01', 'Generate reports', NULL),
-('AL-03', 'View Activity Log entries', NULL),
-('PROJ-04', 'View Project information', NULL),
+('ACC-01', 'View account information', NULL),
+('ACC-02', 'Edit account information', NULL),
+('ADMIN-01', 'Views roles', NULL),
+('ADMIN-02', 'Register roles', NULL),
+('ADMIN-03', 'Delete roles', NULL),
+('ADMIN-04', 'Assign privileges to roles', NULL),
+('ADMIN-05', 'Assign roles to accounts', NULL),
 ('ADMIN-06', 'Register accounts', NULL),
+('AL-01', 'Submit Daily Entry through Slack', NULL),
+('AL-02', 'Edit today Daily Entry', NULL),
+('AL-03', 'View Activity Log entries', NULL),
+('AUTH-01', 'Sign in', NULL),
+('AUTH-02', 'Sign out', NULL),
+('AUTH-03', 'Recover password', NULL),
+('EMP-01', 'View Employee profile', NULL),
+('EMP-02', 'View filtered team memberships', NULL),
+('EMP-03', 'Edit Employee profile', NULL),
+('EMP-04', 'Edit own profile', NULL),
+('EMP-05', 'View Project participation', NULL),
+('HS-01', 'Global Cross-Entity Search', NULL),
 ('PROJ-01', 'Register Project', NULL),
-('TEAM-04', 'View Team information', NULL),
+('PROJ-02', 'Edit Project', NULL),
+('PROJ-03', 'Delete Project', NULL),
+('PROJ-04', 'View Project information', NULL),
 ('PROJ-05-01', 'Add Themselve to Project', NULL),
 ('PROJ-05-02', 'Add Others to Project', NULL),
+('PROJ-06', 'Remove themselve from Project', NULL),
+('PROJ-06-02', 'Remove others from Project', NULL),
+('PROJ-07', 'View Project participants', NULL),
+('PROJ-08', 'View Project Goals', NULL),
+('PROJ-09', 'Register Project Goal', NULL),
+('PROJ-10', 'Edit Project Goal', NULL),
+('PROJ-11', 'Delete Project Goal', NULL),
+('PROJ-12', 'View Project Achievements', NULL),
+('PROJ-13', 'Register Project Achievement', NULL),
+('PROJ-14', 'Edit Project Achievement', NULL),
+('PROJ-15', 'Delete Project Achievement', NULL),
+('REP-01', 'Generate reports', NULL),
+('TEAM-01', 'Register Team', NULL),
+('TEAM-02', 'Edit Team', NULL),
+('TEAM-03', 'Delete Team', NULL),
+('TEAM-04', 'View Team information', NULL),
+('TEAM-05', 'View active Team members', NULL),
 ('TEAM-06-01', 'Add Themselve to Team', NULL),
 ('TEAM-06-02', 'Add Others to Team', NULL),
 ('TEAM-07-01', 'Remove themselve from Team', NULL),
 ('TEAM-07-02', 'Remove others from Team', NULL),
-('HS-01', 'Global Cross-Entity Search', NULL),
-('EMP-05', 'View Project participation', NULL),
-('ADMIN-04', 'Assign privileges to roles', NULL),
-('ADMIN-05', 'Assign roles to accounts', NULL),
-('PROJ-07', 'View Project participants', NULL),
-('TEAM-01', 'Register Team', NULL),
-('PROJ-08', 'View Project Goals', NULL),
-('PROJ-09', 'Register Project Goal', NULL),
-('PROJ-13', 'Register Project Achievement', NULL),
-('TEAM-05', 'View active Team members', NULL),
-('TEAM-08', 'View Team projects', NULL),
-('AUTH-03', 'Recover password', NULL),
-('AUTH-01', 'Sign in', NULL),
-('PROJ-12', 'View Project Achievements', NULL),
-('EMP-01', 'View Employee profile', NULL),
-('AUTH-02', 'Sign out', NULL),
-('PROJ-02', 'Edit Project', NULL),
-('TEAM-02', 'Edit Team', NULL),
-('PROJ-03', 'Delete Project', NULL),
-('ACC-02', 'Edit account information', NULL),
-('PROJ-10', 'Edit Project Goal', NULL),
-('PROJ-14', 'Edit Project Achievement', NULL),
-('ADMIN-02', 'Register roles', NULL),
-('EMP-02', 'View filtered team memberships', NULL),
-('EMP-03', 'Edit Employee profile', NULL),
-('EMP-04', 'Edit own profile', NULL),
-('TEAM-03', 'Delete Team', NULL),
-('ADMIN-01', 'Views roles', NULL),
-('PROJ-06', 'Remove themselve from Project', NULL),
-('PROJ-06-02', 'Remove others from Project', NULL),
-('PROJ-11', 'Delete Project Goal', NULL),
-('PROJ-15', 'Delete Project Achievement', NULL),
-('ACC-01', 'View account information', NULL),
-('ADMIN-03', 'Delete roles', NULL),
-('AL-02', 'Edit today Daily Entry', NULL);
+('TEAM-08', 'View Team projects', NULL);
 
 -- --------------------------------------------------------
 
@@ -824,7 +824,6 @@ CREATE TABLE `roleprivilege` (
 --
 
 INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
--- EMPLOYEE (User)
 ('role-001', 'ACC-01'),
 ('role-001', 'ACC-02'),
 ('role-001', 'AL-01'),
@@ -850,8 +849,6 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-001', 'TEAM-06-01'),
 ('role-001', 'TEAM-07-01'),
 ('role-001', 'TEAM-08'),
-
--- LEAD (User + Lead)
 ('role-002', 'ACC-01'),
 ('role-002', 'ACC-02'),
 ('role-002', 'AL-01'),
@@ -890,10 +887,14 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-002', 'TEAM-07-01'),
 ('role-002', 'TEAM-07-02'),
 ('role-002', 'TEAM-08'),
-
--- ADMIN (User + Lead + Admin)
 ('role-003', 'ACC-01'),
 ('role-003', 'ACC-02'),
+('role-003', 'ADMIN-01'),
+('role-003', 'ADMIN-02'),
+('role-003', 'ADMIN-03'),
+('role-003', 'ADMIN-04'),
+('role-003', 'ADMIN-05'),
+('role-003', 'ADMIN-06'),
 ('role-003', 'AL-01'),
 ('role-003', 'AL-02'),
 ('role-003', 'AL-03'),
@@ -933,13 +934,8 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-003', 'TEAM-06-02'),
 ('role-003', 'TEAM-07-01'),
 ('role-003', 'TEAM-07-02'),
-('role-003', 'TEAM-08'),
-('role-003', 'ADMIN-01'),
-('role-003', 'ADMIN-02'),
-('role-003', 'ADMIN-03'),
-('role-003', 'ADMIN-04'),
-('role-003', 'ADMIN-05'),
-('role-003', 'ADMIN-06');
+('role-003', 'TEAM-08');
+
 -- --------------------------------------------------------
 
 --
@@ -960,9 +956,7 @@ CREATE TABLE `team` (
 -- Dumping data for table `team`
 --
 
-INSERT INTO `team` 
-(`team_id`, `employee_responsible_id`, `name`, `description`, `created_at`, `image`, `status`) 
-VALUES
+INSERT INTO `team` (`team_id`, `employee_responsible_id`, `name`, `description`, `created_at`, `image`, `status`) VALUES
 ('team-001', 'emp-001', 'Axolotl Squad', 'Starter Experience and onboarding flows', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/axolotl-squad.png', 'ACTIVE'),
 ('team-002', 'emp-002', 'Vaquita Squad', 'Supporter Experience and engagement tools', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/vaquita-squad.png', 'ACTIVE'),
 ('team-003', 'emp-003', 'Jaguar Squad', 'Frontend architecture and performance', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/jaguar-squad.png', 'ACTIVE'),
