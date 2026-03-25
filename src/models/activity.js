@@ -1,6 +1,8 @@
 // Activity Model
 // Activity(activity_id, project_id, employee_id, entry_id, title, description, completed_at)
 
+const db = require('../utils/database.js');
+
 module.exports = class Activity {
 
     constructor(activity_id, project_id, employee_id, entry_id, title, description, completed_at) {
@@ -11,6 +13,15 @@ module.exports = class Activity {
         this.title = title;
         this.description = description;
         this.completed_at = completed_at;
+    }
+
+    /*fetchByEmployeeBtw(employee_id, start_date, end_date)
+    Function responsible for returning all employee activities between
+    start and end date*/
+    
+    static fetchByEmployeeBtw(employee_id, start_date, end_date) {
+        return db.execute('SELECT title, description, completed_at, project_id FROM activity WHERE employee_id=? AND completed_at BETWEEN ? AND ?',
+            [employee_id, start_date, end_date]);
     }
 
     // Create or Update activity

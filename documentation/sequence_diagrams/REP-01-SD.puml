@@ -50,7 +50,7 @@ deactivate U
                 E-->C:info
                 deactivate E
 
-            C->>A: getEmployeeActivitiesBtw(employee_id, start_date, end_date)
+            C->>A: fetchByEmployeeBtw(employee_id, start_date, end_date)
                 activate A
                 A->>BD: execute('SELECT title, description, completed_at, project_id \nFROM activity \nWHERE employee_id=? AND completed_at BETWEEN ? AND ?',\n[employee_id, start_date, end_date])
                     activate BD
