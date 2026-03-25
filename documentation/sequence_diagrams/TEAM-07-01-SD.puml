@@ -14,29 +14,26 @@ U -> V: Click "Leave team"
 activate V
 
 opt Cancel leave action
-	V -> V: closeLeaveDialog
+    V -> V: closeLeaveDialog()
 end
 
-	V -> RO: fetch DELETE /teams/:teamId/members/self
-{method:'DELETE', headers:{'Accept':'application/json'}})
+V -> RO: fetch('/teams/:teamId/members/self',\n{method:'DELETE', headers:{'Accept':'application/json'}})
 activate RO
 RO -> C: leaveTeam(request, response)
 activate C
+
 C -> E: findByAccountId(session.accountId)
 activate E
-E -> DB: SELECT id, first_name, last_name
-FROM employee
-WHERE account_id = ?
+E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE account_id = ?
 activate DB
 DB --> E: employee row
 deactivate DB
 E --> C: employee
 deactivate E
+
 C -> X: findActiveMembership(teamId, employee.id)
 activate X
-X -> DB: SELECT id, joined_at
-FROM employeeteam
-WHERE team_id = ? AND employee_id = ? AND left_at IS NULL
+X -> DB: SELECT id, joined_at\nFROM employeeteam\nWHERE team_id = ?\nAND employee_id = ?\nAND left_at IS NULL
 activate DB
 DB --> X: active membership / null
 deactivate DB
@@ -44,42 +41,38 @@ X --> C: membership / null
 deactivate X
 
 alt Membership not found
-C --> RO: response.json({success:false,error:"You are not a member of this team"})
-deactivate C
-RO --> V: HTTP 404 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showMembersError(error)
+    C --> RO: response.json({success:false,\nerror:"You are not a member of this team"})
+    deactivate C
+    RO --> V: HTTP 404 application/json
+    deactivate RO
+    V -> V: response.json()
+    V -> V: showMembersError(error)
 else Membership found
-C -> X: markLeftAt(teamId, employee.id)
-activate X
-X -> DB: UPDATE employeeteam
-SET left_at = NOW()
-WHERE team_id = ? AND employee_id = ? AND left_at IS NULL
-activate DB
-DB --> X: updated rows
-deactivate DB
-X --> C: membership updated
-deactivate X
-C -> X: listActiveMembers(teamId)
-activate X
-X -> DB: SELECT et.team_id, e.id AS employee_id, e.first_name, e.last_name, et.role
-FROM employeeteam et
-JOIN employee e ON e.id = et.employee_id
-WHERE et.team_id = ? AND et.left_at IS NULL
-ORDER BY e.first_name, e.last_name
-activate DB
-DB --> X: active member rows
-deactivate DB
-X --> C: members
-deactivate X
-C --> RO: response.json({success:true,data:members})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateTeamMembersModule(data)
-end
-deactivate V
+    C -> X: markLeftAt(teamId, employee.id)
+    activate X
+    X -> DB: UPDATE employeeteam\nSET left_at = NOW()\nWHERE team_id = ?\nAND employee_id = ?\nAND left_at IS NULL
+    activate DB
+    DB --> X: updated rows
+    deactivate DB
+    X --> C: membership updated
+    deactivate X
 
+    C -> X: listActiveMembers(teamId)
+    activate X
+    X -> DB: SELECT et.team_id,\n e.id AS employee_id,\n e.first_name,\n e.last_name,\n et.role\nFROM employeeteam et\nJOIN employee e\nON e.id = et.employee_id\nWHERE et.team_id = ?\nAND et.left_at IS NULL\nORDER BY e.first_name, e.last_name
+    activate DB
+    DB --> X: active member rows
+    deactivate DB
+    X --> C: members
+    deactivate X
+
+    C --> RO: response.json({success:true,\ndata:members})
+    deactivate C
+    RO --> V: HTTP 200 application/json
+    deactivate RO
+    V -> V: response.json()
+    V -> V: updateTeamMembersModule(data)
+end
+
+deactivate V
 @enduml
