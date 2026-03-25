@@ -1,8 +1,9 @@
 // Team Model
 // Team(team_id, employee_responsible_id, name, description, created_at, image)
 
-module.exports = class Team {
+const db = require('../util/database');
 
+module.exports = class Team {
     constructor(team_id, employee_responsible_id, name, description, created_at, image) {
         this.team_id = team_id;
         this.employee_responsible_id = employee_responsible_id;
@@ -10,6 +11,14 @@ module.exports = class Team {
         this.description = description;
         this.created_at = created_at;
         this.image = image;
+    }
+
+    static findAll() {
+        return db.execute('SELECT * FROM teams');
+    }
+
+    static findById(team_id) {
+        return db.execute('SELECT * FROM teams WHERE team_id = ?', [team_id]);
     }
 
     // Create or Update team
