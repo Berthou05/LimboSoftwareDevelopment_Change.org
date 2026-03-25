@@ -13,9 +13,16 @@ module.exports = class Team {
         this.image = image;
     }
 
+    /*findAll()
+    Function responsible for returning all existent Teams*/
+
     static findAll() {
         return db.execute('SELECT * FROM team');
     }
+
+    /*findById(team_id)
+    Function responsible for returning the information of a specific tuple
+    based on team_id*/
 
     static findById(team_id) {
         return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
@@ -53,6 +60,15 @@ module.exports = class Team {
             ORDER BY is_member DESC, T.name ASC`,
             [employee_id || '', searchTerm, normalizedSearch, normalizedSearch, normalizedSearch]
         );
+    }
+
+    /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
+    Function responsible for obtaining all team information based on an
+    employee_id and a date range*/
+
+    static getEmployeeTeamsInfoBtw(employee_id, start_date, end_date){
+        return db.execute('SELECT name, description FROM team AS T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE ET.employee_id=? AND ET.joined_at >= ? AND (ET.left_at <= ? OR ET.left_at IS NULL);',
+            [employee_id, start_date, end_date]);
     }
 
     // Create or Update team

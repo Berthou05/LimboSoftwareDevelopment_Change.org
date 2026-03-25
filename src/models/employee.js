@@ -34,16 +34,19 @@ module.exports = class Employee {
         return db.execute('SELECT names FROM employee WHERE employee_id=?',[employee_id]);
     }
 
+    /*fetchById(employee_id)
+    Function responsible for returning all employee information based
+    on employee_id*/
+
+    static fetchById(employee_id) {
+        return db.execute('SELECT * FROM employee WHERE employee_id=?',[employee_id]);
+    }
+
 
 
     // Read all employees
     static fetchAll() {
         // TODO: Implement database query to fetch all employees
-    }
-
-    // Read employee by ID
-    static fetchById(employee_id) {
-        // TODO: Implement database query to fetch employee by ID
     }
 
     // Update employee
