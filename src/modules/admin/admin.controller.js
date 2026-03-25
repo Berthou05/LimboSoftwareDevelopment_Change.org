@@ -29,6 +29,7 @@ exports.getRoleAdmin = (request, response, next) => {
                     role_privileges:role_privileges,
                     privileges:privileges,
                     success: request.session.success||'',
+                    error: request.session.error || '',
                 });
             })
             .catch((error)=>{
@@ -71,5 +72,22 @@ exports.deleteRole = (request, response, next) =>{
     .catch((error)=>{
         console.log(error);
         return response.redirect('/admin/roles');
+    })
+};
+
+/*createRole
+Function responsible for the role creation and redirect to
+roleAdministration page render*/
+
+exports.createRole = (request, response, next)=>{
+    const role = new Role(request.params.name);
+    role.save().then(()=>{
+        request.session.success = `The Role  ${request.params.roleId} was created successfully`;
+        return response.redirect('/admin/roles');
+    })
+    .catch((error)=>{
+        console.log(error);
+        request.session.error = `The Role ${request.params.name} could not be created`;
+        return response.redirect('admin/roles');
     })
 };

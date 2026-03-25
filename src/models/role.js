@@ -5,9 +5,15 @@ const db = require('../utils/database.js');
 
 module.exports = class Role {
 
-    constructor(role_id, name) {
-        this.role_id = role_id;
+    constructor(name) {
         this.name = name;
+    }
+
+    /*save()
+    Function responsible for saving a Role object into database*/
+    
+    save() {
+        return db.execute('INSERT INTO role(role_id, name) VALUES(UUID(),?)',[this.name]);
     }
 
     /*fetchAll()
@@ -26,11 +32,7 @@ module.exports = class Role {
 
 
 
-    // Create or Update role
-    save() {
-        // TODO: Implement database logic
-        // If role_id exists, update; otherwise, insert new record
-    }
+    
 
     // Read role by ID
     static fetchById(role_id) {

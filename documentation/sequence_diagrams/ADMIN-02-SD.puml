@@ -36,44 +36,20 @@ deactivate A
         RO -> C: createRole(request, response);
         deactivate RO
             activate C
-            C->>R: createRole(name);
-                activate R
-                R->>BD: execute('INSERT INTO role(role_id, name) VALUES(UUID(),?)',[name]);
+            create entity newRole as Role
+            C->Role**:new Role(request.params.name);
+            C->>Role: save();
+                activate Role
+                Role->>BD: execute('INSERT INTO role(role_id, name) VALUES(UUID(),?)',[name]);
                     activate BD
-                    BD-->R: Query OK
+                    BD-->Role: Query OK
                     deactivate BD
-                R-->C: Query OK
-                deactivate R
-            == Page Render ==
-                C ->> R:getRoles()
-                    activate R
-                    R->>BD:execute('SELECT * FROM roles');
-                        activate BD
-                        BD-->R:roles
-                        deactivate BD
-                    R-->C:roles
-                    deactivate R
-                C->>RP:getRolePrivileges();
-                    activate RP
-                    RP-->BD:execute('SELECT * FROM roleprivilege');
-                        activate BD
-                        BD-->RP:role_privileges
-                        deactivate BD
-                    RP-->C:role_privileges
-                    deactivate RP
-                C->>P:getPrivileges();
-                    activate P
-                    P->>BD:execute('SELECT * FROM privilege');
-                        activate BD
-                        BD-->P:privileges
-                        deactivate BD
-                    P-->C:privileges
-                    deactivate P
-                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
-                deactivate C
-            activate V
-            V->A:HTML+Mensaje de Exito Flash
-            deactivate V
-activate A
-                
+                Role-->C: Query OK
+                deactivate Role
+            C->RO:response.redirect('admin/roles');
+            deactivate C
+            note right
+            This redirects to page render available in ADMIN-03
+            end note
+            
 @enduml

@@ -13,5 +13,6 @@ const adminController = require('./admin.controller');
 router.get('/accounts',isAuth, adminController.getAccounts);
 router.get('/roles',isAuth, adminController.getRoleAdmin);
 router.delete('/roles/:roleId',isAuth,adminController.deleteRole);
+router.get('roles/newRole/:name', isAuth, adminController.createRole);
 
 module.exports = router;
