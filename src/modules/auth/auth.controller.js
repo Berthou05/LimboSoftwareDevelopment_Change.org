@@ -52,6 +52,9 @@ exports.getLogin = (request, response, next)=>{
     response.render('pages/login.ejs', {
         csrfToken: request.csrfToken(),
         error:error,
+        isLoginPage: true, 
+        page: 'pages/content/login', 
+        pageTitle: 'Login'
     });
 }
 

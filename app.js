@@ -22,18 +22,19 @@ app.set('views', path.join(__dirname, 'src', 'views'));
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended: false}));
 
+/*Configuracion de Environment Variables*/
+require('dotenv').config();
 
 //Usage of express-session
 /*Instalacion de express-session*/
 const session = require('express-session');
 app.use(session({
-    secret: process.env.SESSION-SECRET, 
+    secret: process.env.SESSION_SECRET, 
     resave: false,        
     saveUninitialized: false, 
 }));
 
-/*Configuracion de Environment Variables*/
-require('dotenv').config();
+
 
 /*Instalacion de csurf*/
 const csrf = require('csurf');
@@ -48,15 +49,11 @@ app.use(navigationMiddleware);
 
 //Auth
 const routesAuth = require('./src/modules/auth/auth.routes');
-app.use('/auth', routesAuth);
+app.get('/', routesAuth);
 
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');
 app.use('/home', routesHome);
-
-// Render login.ejs directly at root
-app.get('/', (req, res) => res.render('pages/login', { isLoginPage: true, page: 'pages/content/login', pageTitle: 'Login' }));
-app.get('/login', (req, res) => res.render('pages/login', { isLoginPage: true, page: 'pages/content/login', pageTitle: 'Login' }));
 
 //Search
 const routesSearch = require('./src/modules/search/search.routes');
