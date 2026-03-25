@@ -24,6 +24,25 @@ module.exports = class Activity {
             [employee_id, start_date, end_date]);
     }
 
+    /*getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date)
+    Function responsible for obtaining all the team member activies 
+    from all teams of the employee with id=employee_id*/
+
+    static getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date){
+        return db.execute('SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id FROM activity as A WHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN ( SELECT ET.employee_id FROM employeeteam as ET WHERE ET.team_id IN( SELECT ET.team_id FROM employeeteam as ET WHERE ET.employee_id = ?));',
+            [start_date, end_date, employee_id]);
+    }
+
+    /*getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date)
+    Function responsible for obtainig all activities related to the
+    projects where the employee with id=employee_id has collaborated
+    between the provided date range*/
+    
+    static getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date){
+        return db.execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id FROM activity as A INNER JOIN collaboration as C ON A.project_id=C.project_id WHERE C.project_id IN( SELECT C.project_id FROM collaboration as C WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<= ? OR C.ended_at IS NULL))',
+            [employee_id, start_date, end_date]);
+    }
+
     // Create or Update activity
     save() {
         // TODO: Implement database logic

@@ -1,6 +1,8 @@
 // Project Model
 // Project(project_id, employee_responsible_id, name, description, status, start_date, end_date, created_at)
 
+const db = require('../utils/database.js');
+
 const Status = {
     PLANNED: 'PLANNED',
     IN_PROGRESS: 'IN_PROGRESS',
@@ -20,6 +22,16 @@ module.exports = class Project {
         this.start_date = start_date;
         this.end_date = end_date;
         this.created_at = created_at;
+    }
+
+    /*getEmployeeProjectsInfoBtw(employee_id, start_date, end_date)
+    Function responsible for obtaining all projects information 
+    where an employee whose id=employee_id between the provided date
+    range.*/
+
+    static getEmployeeProjectsInfoBtw(employee_id, start_date, end_date){
+        return db.execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date FROM project as P INNER JOIN collaboration as C ON C.project_id=P.project_id WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<=? OR C.ended_at IS NULL);',
+            [employee_id, start_date, end_date]);
     }
 
     // Create or Update project

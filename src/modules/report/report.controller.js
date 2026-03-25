@@ -8,9 +8,10 @@ const Employee = require('../../models/employee');
 const Project = require ('../../models/project');
 const Team = require('../../models/team');
 const Activity = require('../../models/activity');
-const Achievement = require('../../models/activity');
+const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 const Report = require('../../models/report');
+const { end } = require('../../utils/database');
 
 /*getReport
 Function responsible for returning a concrete report page*/
@@ -51,8 +52,36 @@ exports.generateReport = (request, response, next)=>{
                     Team.getEmployeeTeamsInfoBtw(id,start_date,end_date).then(([teams_info, fieldData])=>{
                         body.teams_info = teams_info;
                         
-                        //Continuation
+                        Activity.getTeamActivitiesFromEmpBtw(id, start_date, end_date).then(([team_activities, fieldData])=>{
+                            body.team_activities = team_activities;
 
+                            Project.getEmployeeProjectsInfoBtw(id,start_date, end_date).then(([employee_projects, fieldData])=>{
+                                body.employee_projects = employee_projects;
+
+                                Activity.getProjectActivitiesFromEmpBtw(id,start_date,end_date).then(([project_activities, fieldData])=>{
+                                    body.project_activities = project_activities;
+
+                                    //* To be developed.
+                                    
+                                })
+                                .catch((error)=>{
+                                    console.log(error);
+                                    request.session.error = `Report of Employee:${id} could not be generated\nEmployee Project Activities not obtained.`;
+                                    return response.redirect(`${route}`);
+                                })
+        
+                            })
+                            .catch((error)=>{
+                                console.log(error);
+                                request.session.error = `Report of Employee:${id} could not be generated\nEmployee Projects not obtained.`;
+                                return response.redirect(`${route}`);
+                            })
+                        })
+                        .catch((error)=>{
+                            console.log(error);
+                            request.session.error = `Report of Employee:${id} could not be generated\nEmployee Teams Activities not obtained.`;
+                            return response.redirect(`${route}`);
+                        })
                     })
                     .catch((error)=>{
                         console.log(error);
