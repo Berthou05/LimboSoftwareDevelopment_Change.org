@@ -1,7 +1,7 @@
 // Team Model
 // Team(team_id, employee_responsible_id, name, description, created_at, image)
 
-const db = require('../util/database');
+const db = require('../utils/database');
 
 module.exports = class Team {
     constructor(team_id, employee_responsible_id, name, description, created_at, image) {
