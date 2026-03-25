@@ -10,19 +10,26 @@ module.exports = class Role {
         this.name = name;
     }
 
-    // Create or Update role
-    save() {
-        // TODO: Implement database logic
-        // If role_id exists, update; otherwise, insert new record
-    }
+    /*fetchAll()
+    Function responsible for obtaining all available Roles in the table*/
 
-    // Read all roles
     static fetchAll() {
         return db.execute('SELECT * FROM role');
     }
 
-    static deleteByRoleId(delete_role_id){
+    /*deleteByRoleId(delete_role_id)
+    Function responsible for a Role deletion based on role_id*/
+    
+    static delete(delete_role_id){
         return db.execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
+    }
+
+
+
+    // Create or Update role
+    save() {
+        // TODO: Implement database logic
+        // If role_id exists, update; otherwise, insert new record
     }
 
     // Read role by ID
@@ -40,9 +47,5 @@ module.exports = class Role {
         // TODO: Implement database update logic
     }
 
-    // Delete role
-    static delete(role_id) {
-        // TODO: Implement database delete logic
-    }
 
 };

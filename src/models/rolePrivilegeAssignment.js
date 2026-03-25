@@ -10,19 +10,28 @@ module.exports = class RolePrivilege {
         this.privilege_id = privilege_id;
     }
 
-    // Create or Update role-privilege assignment
-    save() {
-        // TODO: Implement database logic
-        // If relationship exists, update; otherwise, insert new record
-    }
 
-    // Read all role-privilege assignments
+    /*fetchAll()
+    Function responsible for obtaining all available RolePrivilege tuples in 
+    the table*/
+
     static fetchAll() {
         return db.execute('SELECT * FROM roleprivilege');
     }
 
+    /*deleteByRoleId(delete_role_id
+    Function responsible for tuples deletion based on matching role_id*/
+    
     static deleteByRoleId(delete_role_id){
         return db.execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
+    }
+
+
+
+    // Create or Update role-privilege assignment
+    save() {
+        // TODO: Implement database logic
+        // If relationship exists, update; otherwise, insert new record
     }
 
     // Read assignments by role ID

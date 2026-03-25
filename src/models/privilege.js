@@ -11,15 +11,18 @@ module.exports = class Privilege {
         this.description = description;
     }
 
+    /*fetchAll()
+    Function responsible for obtaining all available Privilege in the table*/
+
+    static fetchAll() {
+        return db.execute('SELECT * FROM privilege');
+    }
+
+    
     // Create or Update privilege
     save() {
         // TODO: Implement database logic
         // If privilege_id exists, update; otherwise, insert new record
-    }
-
-    // Read all privileges
-    static fetchAll() {
-        return db.execute('SELECT * FROM privilege');
     }
 
     // Read privilege by ID

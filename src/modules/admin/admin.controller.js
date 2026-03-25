@@ -1,6 +1,6 @@
 /*
 Title: admin.controller.js
-Last modification: March 24,2026
+Last modification: March 25,2026
 Modified by: Hurtado, R.
 */
 
@@ -16,6 +16,8 @@ exports.getAccounts = (request, response, next) => {
     });
 };
 
+/*getRoleAdmin
+Function responsible for the page render of the Role Administration page*/
 
 exports.getRoleAdmin = (request, response, next) => {
     Role.fetchAll().then(([roles,fieldData])=>{
@@ -45,6 +47,9 @@ exports.getRoleAdmin = (request, response, next) => {
     })
 };
 
+/*deleteRole
+Function responsible for a role deletion including:
+AccountRole tuples update, RolePrivilege tuples deletion and Role deletion*/
 
 exports.deleteRole = (request, response, next) =>{
     AccountRole.updateByRole(request.params.roleId).then(()=>{

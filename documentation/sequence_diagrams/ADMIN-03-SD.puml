@@ -95,7 +95,7 @@ deactivate A
                     RP-->C:Query OK
                     deactivate RP
 
-                C ->> R:deleteByRoleId(delete_role_id)
+                C ->> R:delete(delete_role_id)
                     activate R
                     R->>BD:execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
                         activate BD
