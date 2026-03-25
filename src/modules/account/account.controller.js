@@ -5,5 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getAccount = (request, response, next) => {
-    response.render('pages/account');
+    response.render('pages/account',{
+        csrfToken: request.csrfToken(),
+    });
 };

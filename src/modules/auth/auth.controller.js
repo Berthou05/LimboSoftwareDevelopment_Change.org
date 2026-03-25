@@ -111,9 +111,8 @@ exports.postLogin = (request, response, next)=>{
 }
 
 
-
 exports.getLogout = (request, response, next)=>{
     request.session.destroy(() => {
-        return response.redirect('/auth/login');
+        return response.redirect('/');
     });
 }

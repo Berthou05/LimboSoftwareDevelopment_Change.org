@@ -5,5 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getEmployee = (request, response, next) => {
-    response.render('pages/employee');
+    response.render('pages/employee',{
+        csrfToken: request.csrfToken(),
+    });
 };
