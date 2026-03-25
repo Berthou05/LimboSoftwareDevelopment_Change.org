@@ -76,7 +76,7 @@ Unitas follows a **layered MVC (Model-View-Controller)** architecture with a mod
 ### Architecture Components
 
 - **Routes**: Define endpoints and map to controllers (`/users`, `/projects`)
-- **Middlewares**: Process requests before reaching controllers (auth, validation, logging)
+- **Middleware**: Process requests before reaching controllers (auth, validation, logging)
 - **Modules**: Business logic and controllers (user management, project handling)
 - **Models**: Database interactions and data schemas (CRUD operations)
 - **Views**: EJS templates that render dynamic HTML
@@ -435,13 +435,13 @@ Follow **Conventional Commits** standard:
 ```
 
 **Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation only
-- `style`: Formatting changes
-- `refactor`: Code restructuring
-- `test`: Test changes
-- `chore`: Maintenance tasks
+- `FEAT`: New feature
+- `FIX`: Bug fix
+- `DOCS`: Documentation only
+- `STYLE`: Formatting changes
+- `REFACTOR`: Code restructuring
+- `TEST`: Test changes
+- `CHORE`: Maintenance tasks
 
 **Rules:**
 - Lowercase type

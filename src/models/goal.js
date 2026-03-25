@@ -1,6 +1,8 @@
 // Goal Model
 // Goal(goal_id, project_id, employee_responsible_id, title, description, due_date, status, created_at)
 
+const db = require('../utils/database.js');
+
 const Status = {
     PLANNED: 'PLANNED',
     IN_PROGRESS: 'IN_PROGRESS',
@@ -20,6 +22,11 @@ module.exports = class Goal {
         this.due_date = due_date;
         this.status = status; // Status ENUM
         this.created_at = created_at;
+    }
+
+    // Delete goal
+    static delete(goal_id) {
+        return db.execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
     }
 
     // Create or Update goal
@@ -58,10 +65,7 @@ module.exports = class Goal {
         // TODO: Implement database update logic
     }
 
-    // Delete goal
-    static delete(goal_id) {
-        // TODO: Implement database delete logic
-    }
+
 
 };
 
