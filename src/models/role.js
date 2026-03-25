@@ -21,6 +21,10 @@ module.exports = class Role {
         return db.execute('SELECT * FROM role');
     }
 
+    static deleteByRoleId(delete_role_id){
+        return db.execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
+    }
+
     // Read role by ID
     static fetchById(role_id) {
         // TODO: Implement database query to fetch role by ID

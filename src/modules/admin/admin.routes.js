@@ -11,6 +11,7 @@ const isAuth = require('../../middleware/isAuthenticated');
 const adminController = require('./admin.controller');
 
 router.get('/accounts',isAuth, adminController.getAccounts);
-router.get('/roles',isAuth, adminController.getRoles);
+router.get('/roles',isAuth, adminController.getRoleAdmin);
+router.delete('/roles/:roleId',isAuth,adminController.deleteRole);
 
 module.exports = router;

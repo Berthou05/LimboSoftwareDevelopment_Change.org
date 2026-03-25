@@ -16,6 +16,12 @@ module.exports = class AccountRole {
             [this.account_id, this.role_id]);
     }
 
+    static updateByRole(delete_role_id){
+        //* Role of the ID for which the User will be changed to.
+        const ROLE_ID='role-001';
+        return db.execute('UPDATE accountrole SET role_id=? WHERE role_id=? values(?,?)'[ROLE_ID, delete_role_id]);
+    }
+
     // Read all account-role assignments
     static fetchAll() {
         // TODO: Implement database query to fetch all assignments
@@ -37,7 +43,7 @@ module.exports = class AccountRole {
     }
 
     // Update assignment
-    static update(account_id, role_id, updateData) {
+    static update(account_id, role_id) {
         // TODO: Implement database update logic
     }
 

@@ -1,6 +1,8 @@
 // RolePrivilege Model (Junction Table)
 // RolePrivilege(role_id, privilege_id)
 
+const db = require('../utils/database.js');
+
 module.exports = class RolePrivilege {
 
     constructor(role_id, privilege_id) {
@@ -16,7 +18,11 @@ module.exports = class RolePrivilege {
 
     // Read all role-privilege assignments
     static fetchAll() {
-        // TODO: Implement database query to fetch all assignments
+        return db.execute('SELECT * FROM roleprivilege');
+    }
+
+    static deleteByRoleId(delete_role_id){
+        return db.execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
     }
 
     // Read assignments by role ID

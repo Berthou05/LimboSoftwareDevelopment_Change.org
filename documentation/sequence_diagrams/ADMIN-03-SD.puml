@@ -45,7 +45,7 @@ deactivate A
                 deactivate BD
             P-->C:privileges
             deactivate P
-            C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
+            C->V: response.render('pages/admin-roles',{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
         deactivate C
     activate V
     V->A:HTML
@@ -71,22 +71,22 @@ activate A
 A->V:Clicks "Confirm" button
 deactivate A
     activate V
-    V->RO: GET /roleAdmin/:roleId
+    V->RO: DELETE /admin/roles/:roleId
     deactivate V
         activate RO
         RO->C:deleteRole(request, response);
         deactivate RO
             activate C
-                C->>AR:update(delete_role_id);
+                C->>AR:updateByRole(delete_role_id);
                 activate AR    
-                    AR->>BD:execute('UPDATE accountrole SET role_id=role WHERE role_id=deletedRole values(?,?)'[ROLE_ID, delete_role_id]);
+                    AR->>BD:execute('UPDATE accountrole SET role_id=? WHERE role_id=? values(?,?)'[ROLE_ID, delete_role_id]);
                     activate BD
                     BD-->AR:Query OK
                     deactivate BD
                 AR-->C:Query OK
                 deactivate AR
 
-                C->>RP:deleteRolePrivileges(delete_role_id);
+                C->>RP:deleteByRoleId(delete_role_id);
                     activate RP
                     RP-->BD:execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
                         activate BD
@@ -95,7 +95,7 @@ deactivate A
                     RP-->C:Query OK
                     deactivate RP
 
-                C ->> R:deleteRole(delete_role_id)
+                C ->> R:deleteByRoleId(delete_role_id)
                     activate R
                     R->>BD:execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
                         activate BD
@@ -103,7 +103,7 @@ deactivate A
                         deactivate BD
                     R-->C:Query OK
                     deactivate R
-                C->V:response.redirect('/roleAdmin')
+                C->V:response.redirect('/admin/roles')
                 deactivate C
             activate V
             == Page Render ==
@@ -135,7 +135,7 @@ deactivate A
                         deactivate BD
                     P-->C:privileges
                     deactivate P
-                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges})
+                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
                 deactivate C
             activate V
             V->A:HTML+Mensaje de Exito Flash

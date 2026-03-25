@@ -1,6 +1,8 @@
 // Privilege Model
 // Privilege(privilege_id, name, description)
 
+const db = require('../utils/database.js');
+
 module.exports = class Privilege {
 
     constructor(privilege_id, name, description) {
@@ -17,7 +19,7 @@ module.exports = class Privilege {
 
     // Read all privileges
     static fetchAll() {
-        // TODO: Implement database query to fetch all privileges
+        return db.execute('SELECT * FROM privilege');
     }
 
     // Read privilege by ID
