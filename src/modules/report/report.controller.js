@@ -5,7 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getReport = (request, response, next) => {
-    response.render('pages/report',{
+    return response.render('pages/report',{
         csrfToken: request.csrfToken(),
     });
 };

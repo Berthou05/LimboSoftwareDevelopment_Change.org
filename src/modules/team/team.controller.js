@@ -9,7 +9,7 @@ const Team = require('../../models/team');
 exports.getTeams = (request, response, next) => {
     Team.findAll()
         .then(([teams, fieldData]) => {
-            response.render('pages/team', {
+            return response.render('pages/team', {
                 teams: teams,
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
@@ -35,7 +35,7 @@ exports.getTeamDetails = (request, response, next) => {
                 });
             }
             // Aquí podrías buscar los proyectos asociados si tienes el modelo Project
-            response.render('pages/team', {
+            return response.render('pages/team', {
                 team: teamRows[0],
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',

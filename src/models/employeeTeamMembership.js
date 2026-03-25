@@ -1,6 +1,8 @@
 // EmployeeTeam Model (Junction Table)
 // EmployeeTeam(employee_id, team_id, joined_at, left_at, role)
 
+const db = require('../utils/database.js');
+
 const EmployeeRole = {
     EMPLOYEE: 'EMPLOYEE',
     LEAD: 'LEAD'
@@ -16,6 +18,15 @@ module.exports = class EmployeeTeam {
         this.role = role; // EmployeeRole ENUM
     }
 
+    /*fetchTeamInfoByEmployee(employee_id)
+    Function responsible for obtaining team and employeeteam information
+    based on employee_id*/
+
+    static fetchTeamInfoByEmployee(employee_id) {
+        return db.execute('SELECT joined_at, role, T.name, T.image FROM employeeteam as ET INNER JOIN team as T ON T.team_id=ET.team_id WHERE ET.employee_id=?',[employee_id]);
+    }
+
+
     // Create or Update employee-team membership
     save() {
         // TODO: Implement database logic
@@ -25,11 +36,6 @@ module.exports = class EmployeeTeam {
     // Read all employee-team memberships
     static fetchAll() {
         // TODO: Implement database query to fetch all memberships
-    }
-
-    // Read memberships by employee ID
-    static fetchByEmployee(employee_id) {
-        // TODO: Implement database query to fetch all teams for an employee
     }
 
     // Read memberships by team ID

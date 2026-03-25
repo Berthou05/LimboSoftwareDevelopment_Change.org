@@ -13,7 +13,7 @@ Responsible for rendering the intermediate projects page.*/
 //! views creation.
 
 exports.getProject = (request, response, next) => {
-    response.render('pages/project',{
+    return response.render('pages/project',{
         csrfToken: request.csrfToken(),
     });
 };

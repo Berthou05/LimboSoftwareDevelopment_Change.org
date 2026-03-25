@@ -11,7 +11,7 @@ const AccountRole = require('../../models/accountRoleAssignment')
 
 
 exports.getAccounts = (request, response, next) => {
-    response.render('pages/admin-accounts',{
+    return response.render('pages/admin-accounts',{
         csrfToken: request.csrfToken(),
     });
 };
@@ -23,7 +23,7 @@ exports.getRoleAdmin = (request, response, next) => {
     Role.fetchAll().then(([roles,fieldData])=>{
         RolePrivilege.fetchAll().then(([role_privileges, fieldData])=>{
             Privilege.fetchAll().then(([privileges, fieldData])=>{
-                response.render('pages/admin-roles',{
+                return response.render('pages/admin-roles',{
                     csrfToken: request.csrfToken(),
                     roles: roles, 
                     role_privileges:role_privileges,
@@ -33,17 +33,17 @@ exports.getRoleAdmin = (request, response, next) => {
             })
             .catch((error)=>{
                 console.log(error);
-                response.redirect('/admin/roles');
+                return response.redirect('/admin/roles');
             })
         })
         .catch((error)=>{
             console.log(error);
-            response.redirect('/admin/roles');
+            return response.redirect('/admin/roles');
         })
     })
     .catch((error)=>{
         console.log(error);
-        response.redirect('/admin/roles');
+        return response.redirect('/admin/roles');
     })
 };
 
@@ -56,20 +56,20 @@ exports.deleteRole = (request, response, next) =>{
         RolePrivilege.deleteByRoleId(request.params.roleId).then(()=>{
             Role.deleteByRoleId(request.params.roleId).then(()=>{
                 request.session.success = `The Role with ID ${request.params.roleId} was succesfully deleted`;
-                response.redirect('/admin/roles');
+                return response.redirect('/admin/roles');
             })
             .catch((error)=>{
                 console.log(error);
-                response.redirect('/admin/roles');
+                return response.redirect('/admin/roles');
             })
         })
         .catch((error)=>{
             console.log(error);
-            response.redirect('/admin/roles');
+            return response.redirect('/admin/roles');
         })
     })
     .catch((error)=>{
         console.log(error);
-        response.redirect('/admin/roles');
+        return response.redirect('/admin/roles');
     })
 };

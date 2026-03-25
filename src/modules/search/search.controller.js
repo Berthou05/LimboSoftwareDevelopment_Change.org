@@ -5,7 +5,7 @@ Modified by: Hurtado, R.
 */
 
 exports.getSearch = (request, response, next) => {
-    response.render('pages/search',{
+    return response.render('pages/search',{
         csrfToken: request.csrfToken(),
     });
 };

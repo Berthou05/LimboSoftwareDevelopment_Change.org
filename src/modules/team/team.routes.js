@@ -9,8 +9,6 @@ const router = express.Router();
 const isAuth = require('../../middleware/isAuthenticated');
 
 const teamController = require('./team.controller');
-
-
 router.get('/', isAuth, teamController.getTeams);
 router.get('/:team_id', isAuth, teamController.getTeamDetails);
 

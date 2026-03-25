@@ -15,7 +15,7 @@ Function that renders the sign in form.
 Only avaible with privilege ADMIN-03*/
 
 exports.getSignin=(request, response, next) => {
-    response.render('signin.ejs', {
+    return response.render('signin.ejs', {
         csrfToken: request.csrfToken(),
     });
 }
@@ -62,7 +62,7 @@ Available without authentication*/
 exports.getLogin = (request, response, next)=>{
     const error = request.session.error || '';
     request.session.error='';
-    response.render('pages/login.ejs', {
+    return response.render('pages/login.ejs', {
         csrfToken: request.csrfToken(),
         error:error,
         isLoginPage: true, 
