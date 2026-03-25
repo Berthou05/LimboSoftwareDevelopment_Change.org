@@ -6,7 +6,6 @@ actor "Admin" as U
 boundary "team-members.ejs" as V
 boundary "team.routes" as RO
 control "team.controller" as C
-control "team.service" as SV
 entity "employeeteam.model" as X
 database "unitas_system" as DB
 
@@ -14,59 +13,56 @@ U -> V: Click "Remove member"
 activate V
 
 opt Cancel removal
-V -> V: closeRemoveMemberDialog()
+V -> V: closeRemoveMemberDialog
 end
 
-V -> RO: fetch('/teams/:teamId/members/:employeeId',\n{method:'DELETE', headers:{'Accept':'application/json'}})
+V -> RO: fetch DELETE /teams/:teamId/members/:employeeId
 activate RO
-RO -> C: removeMember(request, response)
+RO -> C: removeMember
 activate C
-C -> SV: removeMember(teamId, employeeId)
-activate SV
-SV -> X: findActiveMembership(teamId, employeeId)
+
+C -> X: findActiveMembership
 activate X
 X -> DB: SELECT id, joined_at\nFROM employeeteam\nWHERE team_id = ? AND employee_id = ? AND left_at IS NULL
 activate DB
 DB --> X: active membership / null
 deactivate DB
-X --> SV: membership / null
+X --> C: membership / null
 deactivate X
 
 alt Selected employee is not an active member
-SV --> C: membership error
-deactivate SV
 C --> RO: response.json({success:false,error:"Employee is not an active member"})
 deactivate C
 RO --> V: HTTP 404 application/json
 deactivate RO
-V -> V: response.json()
-V -> V: showMembersError(error)
+V -> V: response.json
+V -> V: showMembersError
 else Selected employee is active
-SV -> X: markLeftAt(teamId, employeeId)
+C -> X: markLeftAt
 activate X
 X -> DB: UPDATE employeeteam\nSET left_at = NOW()\nWHERE team_id = ? AND employee_id = ? AND left_at IS NULL
 activate DB
 DB --> X: updated rows
 deactivate DB
-X --> SV: membership updated
+X --> C: membership updated
 deactivate X
-SV -> X: listActiveMembers(teamId)
+
+C -> X: listActiveMembers
 activate X
 X -> DB: SELECT et.team_id, e.id AS employee_id, e.first_name, e.last_name, et.role\nFROM employeeteam et\nJOIN employee e ON e.id = et.employee_id\nWHERE et.team_id = ? AND et.left_at IS NULL\nORDER BY e.first_name, e.last_name
 activate DB
 DB --> X: active member rows
 deactivate DB
-X --> SV: members
+X --> C: members
 deactivate X
-SV --> C: refreshed members
-deactivate SV
+
 C --> RO: response.json({success:true,data:members})
 deactivate C
 RO --> V: HTTP 200 application/json
 deactivate RO
-V -> V: response.json()
-V -> V: updateTeamMembersModule(data)
+V -> V: response.json
+V -> V: updateTeamMembersModule
 end
-deactivate V
 
+deactivate V
 @enduml

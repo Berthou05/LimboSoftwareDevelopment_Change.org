@@ -3,87 +3,61 @@ skinparam style strictuml
 
 actor User as U
 boundary "routes" as RO
-boundary "vista teamList.ejs" as VL
-boundary "vista teamShow.ejs" as VS
+boundary "vista team.ejs" as V
 control "team.controller" as C
 entity "Team.model" as TM
 entity "Project.model" as PM
 database "unitas_system" as BD
 
+
 activate U
-U -> RO:GET /teams
+U -> RO: fetch('/teams', {method: 'GET', headers: { 'Accept': 'text/html'}})
 deactivate U
     activate RO
-    RO -> C:index(request, response)
+    RO -> C: getTeams(request: Express.Request, response: Express.Response)
     deactivate RO
         activate C
-        C ->> TM:findAll()
+        C ->> TM: findAll()
             activate TM
-            TM ->> BD:execute('SELECT * FROM teams')
+            TM ->> BD: execute('SELECT * FROM teams')
                 activate BD
-                BD --> TM:teams
+                BD --> TM: teams: Team[]
                 deactivate BD
-            TM --> C:teams
+            TM --> C: teams: Team[]
             deactivate TM
-        
-        alt no teams available
-            C -> VL:response.render('teams/list.ejs', {teams: [], message: "No teams available"})
-            deactivate C
-                activate VL
-                VL -> U:HTML + "No teams available" message
-                deactivate VL
-        
-        else teams exist
-            C -> VL:response.render('teams/list.ejs', {teams: teams})
-            deactivate C
-                activate VL
-                VL -> U:HTML with teams list
-                deactivate VL
-        end
+        C -> V: response.render('team.ejs', {teams: teams})
+        deactivate C
+    activate V
+    V -> U: HTML response: Render teams list view
+    deactivate V
 
 activate U
-U -> VL:Clicks on a Team
+U -> V: Clicks on a Team row (team_id)
 deactivate U
-    activate VL
-    VL -> RO:GET /teams/:id
-    deactivate VL
-        activate RO
-        RO -> C:show(request, response)
-        deactivate RO
-            activate C
-            C ->> TM:findById(id)
-                activate TM
-                TM ->> BD:execute('SELECT * FROM teams WHERE id=?', [id])
-                    activate BD
-                    BD --> TM:team
-                    deactivate BD
-                TM --> C:team
-                deactivate TM
-            
-            C ->> PM:findByTeamId(team_id)
-                activate PM
-                PM ->> BD:execute('SELECT p.* FROM projects p JOIN team_projects tp ON p.id = tp.project_id WHERE tp.team_id=?', [team_id])
-                    activate BD
-                    BD --> PM:projects
-                    deactivate BD
-                PM --> C:projects
-                deactivate PM
-            
-            alt no projects associated
-                C -> VS:response.render('teams/show.ejs', {team: team, projects: [], message: "This team has no associated projects"})
-                deactivate C
-                    activate VS
-                    VS -> U:HTML + Team details + "This team has no associated projects" message
-                    deactivate VS
-            
-            else projects exist
-                C -> VS:response.render('teams/show.ejs', {team: team, projects: projects})
-                deactivate C
-                    activate VS
-                    VS -> U:HTML + Team details + Team Projects section
-                    deactivate VS
-            end
-
-activate U
+    activate V
+    V -> C: getTeamDetails(team_id: number)
+    deactivate V
+        activate C
+        C ->> TM: findById(team_id: number)
+            activate TM
+            TM ->> BD: execute('SELECT * FROM teams WHERE id=?', [team_id])
+                activate BD
+                BD --> TM: team: Team
+                deactivate BD
+            TM --> C: team: Team
+            deactivate TM
+        C ->> PM: findByTeamId(team_id: number)
+            activate PM
+            PM ->> BD: execute('SELECT p.* FROM projects p JOIN team_projects tp ON p.id = tp.project_id WHERE tp.team_id=?', [team_id])
+                activate BD
+                BD --> PM: projects: Project[]
+                deactivate BD
+            PM --> C: projects: Project[]
+            deactivate PM
+        C -> V: response.render('team.ejs', {team: team, projects: projects})
+        deactivate C
+    activate V
+    V -> U: HTML response: Render team details and associated projects
+    deactivate V
 
 @enduml
