@@ -2,8 +2,8 @@
 const { BASE_NAV_ITEMS, ADMIN_NAV_ITEMS } = require('../config/navigation');
 
 function isItemActive(currentPath, itemHref) {
-  if (itemHref === '/home') {
-    return currentPath === '/home';
+  if (itemHref === '/') {
+    return currentPath === '/';
   }
 
   return currentPath === itemHref || currentPath.startsWith(`${itemHref}/`);

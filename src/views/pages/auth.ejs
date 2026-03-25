@@ -1,0 +1,8 @@
+<%- include('../layout', {
+  page: 'pages/content/auth',
+  pageTitle: 'Authentication',
+  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/',
+  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
+}) %>
