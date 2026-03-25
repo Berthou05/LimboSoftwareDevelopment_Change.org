@@ -47,11 +47,11 @@ app.use(navigationMiddleware);
 
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');
-app.use('/', routesHome);
+app.use('/home', routesHome);
 
 //Auth
 const routesAuth = require('./src/modules/auth/auth.routes');
-app.use('/auth', routesAuth);
+app.use('/', routesAuth);
 
 //Search
 const routesSearch = require('./src/modules/search/search.routes');

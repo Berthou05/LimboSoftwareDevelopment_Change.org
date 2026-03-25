@@ -22,6 +22,10 @@ module.exports = class Employee {
             [fullname]);
     }
 
+    static getNamesByEmployeeId(employee_id){
+        return db.execute('SELECT names FROM employee WHERE employee_id=?',[employee_id]);
+    }
+
     // Read all employees
     static fetchAll() {
         // TODO: Implement database query to fetch all employees

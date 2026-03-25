@@ -38,7 +38,7 @@ CREATE TABLE `account` (
   `status` enum('ACTIVE','DISABLED') NOT NULL,
   `first_login` tinyint(1) NOT NULL,
   `last_login` datetime DEFAULT NULL,
-  `image` varchar(1024) NOT NULL,
+  `image` varchar(1024) DEFAULT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -516,7 +516,7 @@ INSERT INTO `highlight` (`highlight_id`, `employee_id`, `project_id`, `title`, `
 CREATE TABLE `privilege` (
   `privilege_id` char(36) NOT NULL,
   `name` varchar(100) NOT NULL,
-  `description` varchar(1000) DEFAULT NULL,
+  `description` varchar(1000) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -983,6 +983,7 @@ VALUES
 ('team-018', 'emp-018', 'Venado Squad', 'Recruitment tech', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/venado-squad.png', 'ACTIVE'),
 ('team-019', 'emp-019', 'Camaleón Squad', 'Content optimization', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/camaleon-squad.png', 'ACTIVE'),
 ('team-020', 'emp-020', 'Hormiga Squad', 'Support tooling and automation', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/hormiga-squad.png', 'ACTIVE');
+
 --
 -- Indexes for dumped tables
 --
