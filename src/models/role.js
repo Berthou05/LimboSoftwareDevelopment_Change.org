@@ -1,6 +1,8 @@
 // Role Model
 // Role(role_id, name)
 
+const db = require('../utils/database.js');
+
 module.exports = class Role {
 
     constructor(role_id, name) {
@@ -16,7 +18,7 @@ module.exports = class Role {
 
     // Read all roles
     static fetchAll() {
-        // TODO: Implement database query to fetch all roles
+        return db.execute('SELECT * FROM role');
     }
 
     // Read role by ID

@@ -15,21 +15,21 @@ autonumber
 activate A
 == Page Access ==
 
-A -> RO:GET/roleAdmin
+A -> RO:GET/admin/roles
 deactivate A
     activate RO
     RO -> C:getRoleAdmin(request,response)
     deactivate RO
         activate C
-        C ->> R:getRoles()
+        C ->> R:fetchAll()
             activate R
-            R->>BD:execute('SELECT * FROM roles');
+            R->>BD:execute('SELECT * FROM role');
                 activate BD
                 BD-->R:roles
                 deactivate BD
             R-->C:roles
             deactivate R
-        C->>RP:getRolePrivileges();
+        C->>RP:fetchAll();
             activate RP
             RP-->BD:execute('SELECT * FROM roleprivilege');
                 activate BD
@@ -37,7 +37,7 @@ deactivate A
                 deactivate BD
             RP-->C:role_privileges
             deactivate RP
-        C->>P:getPrivileges();
+        C->>P:fetchAll();
             activate P
             P->>BD:execute('SELECT * FROM privilege');
                 activate BD
