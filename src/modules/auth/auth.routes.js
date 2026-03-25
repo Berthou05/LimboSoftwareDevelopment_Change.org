@@ -14,5 +14,4 @@ router.post('/logout',authController.getLogout);
 router.get('/new',authController.getSignin);
 router.post('/new',authController.postSignin);
 
-
 module.exports = router;

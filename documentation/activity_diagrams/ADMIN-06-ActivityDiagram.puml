@@ -1,43 +1,42 @@
 @startuml
+
 |Admin|
 start
-:Select "Create Account";
-:Display form;
-:Enter email, password & Slack username;
-:Submit form;
+:1. Select "Create Account";
+:2. Display registration form (employee, account, role fields);
+:3. Enter names, lastnames, email, password, slack_username, role;
+:4. Submit form;
 
 |System|
-:Validate input;
-
-if (Valid?) then (Yes)
-  :Check email exists;
-  
-  if (Email exists?) then (Yes)
-    |Admin|
-    :Show duplicate message;
-    stop
+:5. Validate input (type, required, duplicates);
+if (Required fields valid?) then (Yes)
+  :6. Encrypt password into password_hash;
+  :7. Create Employee and generate employee_id;
+  if (Employee created?) then (Yes)
+    :8. Create Account linked to Employee and generate account_id;
+    if (Account created?) then (Yes)
+      :9. Assign Role to Account;
+      if (Role assigned?) then (Yes)
+        :10. Send INSERT queries to the database;
+        :11. Database executes and stores Employee, Account, Role assignment;
+        :12. Render page;
+        |Admin|
+        :13. Show success message;
+      else (No)
+        |Admin|
+        :Show "Could not assign role.";
+      endif
+    else (No)
+      |Admin|
+      :Show "Could not create account (duplicate email or slack_username).";
+    endif
   else (No)
-    |System|
+    |Admin|
+    :Show "Could not create employee.";
   endif
 else (No)
   |Admin|
   :Show validation errors;
-  stop
 endif
-
-|System|
-:Generate account_id;
-:Encrypt password;
-:Set defaults & created_at;
-:Store Account (email, password_hash, Slack username);
-
-if (Stored?) then (Yes)
-  |Admin|
-  :Show success message;
-else (No)
-  |Admin|
-  :Show error message;
-endif
-
 stop
 @enduml

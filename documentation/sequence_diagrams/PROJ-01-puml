@@ -37,10 +37,11 @@ deactivate U
                 V -> U:HTML + Error messages
                 deactivate V
         
+
         else valid
             C ->> PM:findByName(name)
                 activate PM
-                PM ->> BD:execute('SELECT * FROM projects WHERE name=?', [name])
+                PM ->> BD:SELECT * FROM project WHERE name=?
                     activate BD
                     BD --> PM:row/null
                     deactivate BD
@@ -55,51 +56,21 @@ deactivate U
                     deactivate V
             
             else new
-                C -> C:setDefaults(status, created_at)
-                
-                C ->> PM:insert(data)
+                C -> C:generate project_id
+                C -> C:set default status, created_at
+                C ->> PM:insert({project_id, name, description, start_date, end_date, status, created_at})
                     activate PM
-                    PM ->> BD:execute('INSERT INTO projects (name, start_date, end_date, ...) VALUES (?, ?, ?, ...)', [data])
+                    PM ->> BD:INSERT INTO project (project_id, name, description, start_date, end_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
                         activate BD
-                        
-                        alt success
-                            BD --> PM:project_id
-                            deactivate BD
-                            PM --> C:id
-                            deactivate PM
-                            
-                            C -> RO:response.redirect('/projects/' + id)
-                            deactivate C
-                                activate RO
-                                RO -> C:show(request, response)
-                                deactivate RO
-                                    activate C
-                                    C ->> PM:findById(id)
-                                        activate PM
-                                        PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [id])
-                                            activate BD
-                                            BD --> PM:row
-                                            deactivate BD
-                                        PM --> C:project
-                                        deactivate PM
-                                    C -> V:response.render('projects/show.ejs', {project: project, success: "Project created successfully"})
-                                    deactivate C
-                                        activate V
-                                        V -> U:HTML + Success message
-                                        deactivate V
-                        
-                        else fail
-                            BD --> PM:error
-                            deactivate BD
-                            PM --> C:error
-                            deactivate PM
-                            
-                            C -> V:response.render('projects/new.ejs', {error: "Could not save project"})
-                            deactivate C
-                                activate V
-                                V -> U:HTML + Error message
-                                deactivate V
-                        end
+                        BD --> PM:project_id
+                        deactivate BD
+                    PM --> C:project_id
+                    deactivate PM
+                C -> V:response.render('projects/show.ejs', {project_id, success: "Project created successfully"})
+                deactivate C
+                    activate V
+                    V -> U:HTML + Success message
+                    deactivate V
             end
         end
 

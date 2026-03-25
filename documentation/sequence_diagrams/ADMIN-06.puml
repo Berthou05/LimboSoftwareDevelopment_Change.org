@@ -5,87 +5,84 @@ actor User as U
 boundary "routes" as RO
 boundary "vista accountForm.ejs" as V
 control "account.controller" as C
+entity "Employee.model" as EM
 entity "Account.model" as AM
+entity "AccountRole.model" as ARM
 database "unitas_system" as BD
 
 activate U
-U -> RO:GET /accounts/new
+U -> RO: GET /accounts/new
 deactivate U
     activate RO
-    RO -> C:getNew(request, response)
+    RO -> C: getNew(request, response)
     deactivate RO
         activate C
-        C -> V:response.render('accountForm.ejs')
+        C -> V: response.render('accountForm.ejs')
         deactivate C
     activate V
-    V -> U:HTML form
+    V -> U: HTML form
     deactivate V
 
 activate U
-U -> RO:POST /accounts
+U -> RO: POST /accounts
 deactivate U
     activate RO
-    RO -> C:create(request, response)
+    RO -> C: create(request, response)
     deactivate RO
         activate C
-        C -> C:validate(data)
-        
-        alt invalid data
-            C -> V:response.render('accountForm.ejs', {errors: errors})
+        C -> C: validate(data)
+        alt Invalid data
+            C -> V: response.render('accountForm.ejs', {errors})
             deactivate C
                 activate V
-                V -> U:HTML + Error messages
+                V -> U: HTML + Error messages
                 deactivate V
-        
-        else valid data
-            C ->> AM:findByEmail(email)
+        else Valid data
+            C -> AM: findByEmail(email)
                 activate AM
-                AM ->> BD:execute('SELECT * FROM accounts WHERE email=?', [email])
+                AM -> BD: SELECT * FROM account WHERE email=?
                     activate BD
-                    BD --> AM:result
+                    BD --> AM: result
                     deactivate BD
-                AM --> C:exists / null
+                AM --> C: exists/null
                 deactivate AM
-            
-            alt email exists
-                C -> V:response.render('accountForm.ejs', {error: "Email already exists"})
+            alt Email exists
+                C -> V: response.render('accountForm.ejs', {error: "Email already exists"})
                 deactivate C
                     activate V
-                    V -> U:HTML + Error message
+                    V -> U: HTML + Error message
                     deactivate V
-            
-            else new email
-                C -> C:hash(password)
-                
-                C ->> AM:create(data)
-                    activate AM
-                    AM ->> BD:execute('INSERT INTO accounts (email, password, ...) VALUES (?, ?, ...)', [data])
+            else New email
+                C -> C: hash(password)
+                C -> EM: createEmployee(names, lastnames, ...)
+                    activate EM
+                    EM -> BD: INSERT INTO employee (...)
                         activate BD
-                        
-                        alt success
-                            BD --> AM:Query OK
-                            deactivate BD
-                            AM --> C:saved
-                            deactivate AM
-                            
-                            C -> V:response.render('success.ejs', {success: "Account created successfully"})
-                            deactivate C
-                                activate V
-                                V -> U:HTML + Success message
-                                deactivate V
-                        
-                        else fail
-                            BD --> AM:error
-                            deactivate BD
-                            AM --> C:error
-                            deactivate AM
-                            
-                            C -> V:response.render('accountForm.ejs', {error: "Could not create account. Please try again"})
-                            deactivate C
-                                activate V
-                                V -> U:HTML + Error message
-                                deactivate V
-                        end
+                        BD --> EM: employee_id
+                        deactivate BD
+                    EM --> C: employee_id
+                    deactivate EM
+                C -> AM: createAccount(employee_id, email, password_hash, ...)
+                    activate AM
+                    AM -> BD: INSERT INTO account (...)
+                        activate BD
+                        BD --> AM: account_id
+                        deactivate BD
+                    AM --> C: account_id
+                    deactivate AM
+                C -> ARM: assignRole(account_id, role_id)
+                    activate ARM
+                    ARM -> BD: INSERT INTO accountrole (...)
+                        activate BD
+                        BD --> ARM: OK
+                        deactivate BD
+                    ARM --> C: assigned
+                    deactivate ARM
+                C -> V: response.render('success.ejs', {success: "Account created successfully"})
+                deactivate C
+                    activate V
+                    V -> U: HTML + Success message
+                    deactivate V
             end
         end
 
