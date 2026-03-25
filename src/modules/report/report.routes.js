@@ -11,5 +11,6 @@ const isAuth = require('../../middleware/isAuthenticated');
 const reportController = require('./report.controller');
 
 router.get('/', isAuth, reportController.getReport);
+router.post('/generate', isAuth, reportController.);
 
 module.exports = router;

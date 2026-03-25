@@ -9,6 +9,7 @@ const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+app.use(express.json());
 
 //Creation of static folder
 const path = require('path');
