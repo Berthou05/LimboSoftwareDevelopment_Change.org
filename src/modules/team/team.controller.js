@@ -129,8 +129,9 @@ exports.getTeamPage = (request, response, next) => {
         Employee.getEmployeeByTeamId(teamId),
         Activity.getTeamMembersActivities(teamId),
         Project.getProjectsByTeamId(teamId),
+        Employee.fetchAll(),
     ])
-        .then(async ([[teamInfo], [teamMembers], [memberActivities], [teamProjects]]) => {
+        .then(async ([[teamInfo], [teamMembers], [memberActivities], [teamProjects], [allEmployees]]) => {
             const teamRow = teamInfo[0];
 
             if (!teamRow) {
@@ -183,7 +184,9 @@ exports.getTeamPage = (request, response, next) => {
                     fullName: leadName,
                 },
                 membersDetailed: teamMembers.map((member) => ({
-                    role: member.role,
+                    role: member.role || (
+                        member.employee_id === teamRow.employee_responsible_id ? 'LEAD' : 'EMPLOYEE'
+                    ),
                     joinedAt: member.joined_at,
                     employee: {
                         id: member.employee_id,
@@ -192,6 +195,17 @@ exports.getTeamPage = (request, response, next) => {
                 })),
                 projectsDetailed,
             };
+
+            const availableEmployees = allEmployees
+                .filter(
+                    (employee) => !team.membersDetailed.some(
+                        (member) => member.employee.id === employee.employee_id
+                    )
+                )
+                .map((employee) => ({
+                    id: employee.employee_id,
+                    fullName: employee.full_name,
+                }));
 
             return response.render('pages/team', {
                 csrfToken: request.csrfToken(),
@@ -204,6 +218,7 @@ exports.getTeamPage = (request, response, next) => {
                     (member) => member.employee.id === request.session.employeeId
                 ),
                 activitySections: buildActivitySections(memberActivities),
+                availableEmployees,
             });
         })
         .catch((error) => {
@@ -215,30 +230,39 @@ exports.getTeamPage = (request, response, next) => {
 
 exports.toggleTeamMembership = (request, response, next) => {
     const teamId = request.params.team_id;
-    const employeeId = request.session.employeeId;
+    const isAddMemberRequest = Object.prototype.hasOwnProperty.call(request.body, 'employeeId');
+    const targetEmployeeId = isAddMemberRequest
+        ? request.body.employeeId
+        : request.session.employeeId;
 
-    if (!employeeId) {
-        request.session.error = 'You must be logged in to update team membership.';
-        return response.redirect('/');
+    if (!targetEmployeeId) {
+        request.session.error = isAddMemberRequest
+            ? 'Select a valid employee to add to the team.'
+            : 'You must be logged in to update team membership.';
+        return response.redirect(`/teams/${teamId}`);
     }
 
-    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId)
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(targetEmployeeId, teamId)
         .then(([memberships]) => {
             const membership = memberships[0];
 
             if (!membership) {
-                return EmployeeTeamMembership.join(employeeId, teamId);
+                return EmployeeTeamMembership.join(targetEmployeeId, teamId);
             }
 
             if (membership.left_at) {
-                return EmployeeTeamMembership.update(employeeId, teamId, {
+                return EmployeeTeamMembership.update(targetEmployeeId, teamId, {
                     joined_at: new Date(),
                     left_at: null,
                     role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
                 });
             }
 
-            return EmployeeTeamMembership.leave(employeeId, teamId);
+            if (isAddMemberRequest) {
+                return Promise.resolve();
+            }
+
+            return EmployeeTeamMembership.leave(targetEmployeeId, teamId);
         })
         .then(() => response.redirect(`/teams/${teamId}`))
         .catch((error) => {

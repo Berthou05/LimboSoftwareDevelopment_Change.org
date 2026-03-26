@@ -13,7 +13,11 @@
       isMember: typeof isMember !== 'undefined' ? isMember : false,
       csrfToken
     }) %>
-    <%- include('../../partials/teamDirectory/teamParticipants', { team }) %>
+    <%- include('../../partials/teamDirectory/teamParticipants', {
+      team,
+      csrfToken,
+      availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : []
+    }) %>
     <%- include('../../partials/teamDirectory/teamActivity', {
       activitySections: typeof activitySections !== 'undefined' ? activitySections : []
     }) %>
