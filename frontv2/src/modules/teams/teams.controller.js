@@ -1,4 +1,5 @@
 ﻿const { listTeams, setTeamMembership } = require('./teams.service');
+const { listEmployees } = require('../employees/employees.service');
 const { renderModule, filterByQuery } = require('../shared/view.util');
 const { findFilteredSubjectOptions } = require('../shared/subject-options.service');
 const { buildQuickReportContext } = require('../shared/page-context.util');
@@ -43,12 +44,16 @@ const renderTeamDetail = function renderTeamDetail(req, res) {
     const { currentDateLabel, quickReport } = buildQuickReportContext('TEAM', team.id);
     const activitySections = groupActivitiesByDay(team.activityLog);
 
+    // Provide all employees for the add member form
+    const allEmployees = listEmployees();
+
     return renderModule(res, 'pages/teamDetail', {
         activeRoute: '/teams',
         pageTitle: team.name,
         pageSubtitle: 'Team page with information, participants, projects, and activity filters.',
         team,
         isMember,
+        allEmployees,
         reportSubjects: findFilteredSubjectOptions(currentUser.employeeId, currentUser.roleName),
         defaultReportType: 'TEAM',
         defaultSubjectId: team.id,
@@ -60,7 +65,9 @@ const renderTeamDetail = function renderTeamDetail(req, res) {
 };
 
 const handleTeamMembership = function handleTeamMembership(req, res) {
-    setTeamMembership(req.params.id, req.session.user.employeeId);
+    // If employeeId is provided in the body, add/remove that employee, else use current user
+    const employeeId = req.body.employeeId || req.session.user.employeeId;
+    setTeamMembership(req.params.id, employeeId);
 
     req.session.flash = {
         type: 'success',

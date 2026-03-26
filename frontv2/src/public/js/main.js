@@ -1,4 +1,158 @@
-﻿/*
+﻿// --- AJAX Remove Member for Team Participants ---
+const initAjaxRemoveMember = function initAjaxRemoveMember() {
+    document.querySelectorAll('.remove-member-form').forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const employeeId = form.querySelector('input[name="employeeId"]').value;
+            if (!employeeId) return;
+            const action = form.action;
+            const data = new URLSearchParams();
+            data.append('employeeId', employeeId);
+            try {
+                const res = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: data.toString(),
+                });
+                if (res.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to remove member.');
+                }
+            } catch (err) {
+                alert('Error removing member.');
+            }
+        });
+    });
+};
+// Initialize AJAX remove member on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    initAjaxRemoveMember();
+});
+// --- AJAX Add Member for Team Participants ---
+const initAjaxAddMember = function initAjaxAddMember() {
+    const panel = document.getElementById('addMemberPanel');
+    if (!panel) return;
+    const form = panel.querySelector('form');
+    if (!form) return;
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const employeeId = form.querySelector('.add-member-id').value;
+        if (!employeeId) return;
+        const action = form.action;
+        const data = new URLSearchParams();
+        data.append('employeeId', employeeId);
+        try {
+            const res = await fetch(action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: data.toString(),
+            });
+            if (res.ok) {
+                window.location.reload();
+            } else {
+                alert('Failed to add member.');
+            }
+        } catch (err) {
+            alert('Error adding member.');
+        }
+    });
+};
+// Initialize AJAX add member on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    initAjaxAddMember();
+});
+
+// --- Add Member Autocomplete for Team Participants ---
+const initAddMemberAutocomplete = function initAddMemberAutocomplete() {
+    const showBtn = document.getElementById('showAddMember');
+    const panel = document.getElementById('addMemberPanel');
+    if (!showBtn || !panel) return;
+
+    showBtn.addEventListener('click', () => {
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            const input = panel.querySelector('.add-member-search');
+            if (input) input.focus();
+        }
+    });
+
+    const form = panel.querySelector('form');
+    const searchInput = panel.querySelector('.add-member-search');
+    const hiddenInput = panel.querySelector('.add-member-id');
+    const resultsPanel = panel.querySelector('.add-member-results');
+    const catalogNode = panel.querySelector('.add-member-catalog');
+    if (!form || !searchInput || !hiddenInput || !resultsPanel || !catalogNode) return;
+
+    let catalog = [];
+    try {
+        catalog = JSON.parse(catalogNode.textContent || '[]');
+    } catch (e) { return; }
+
+    const normalize = v => String(v || '').trim().toLowerCase();
+    const findExact = q => catalog.find(emp => normalize(emp.label) === normalize(q));
+    const renderSuggestions = q => {
+        const normQ = normalize(q);
+        const matches = catalog.filter(emp => normalize(emp.label).includes(normQ)).slice(0, 8);
+        resultsPanel.innerHTML = '';
+        if (!matches.length) {
+            const p = document.createElement('p');
+            p.className = 'px-2 py-2 text-sm text-brand-text/60';
+            p.textContent = 'No matches found.';
+            resultsPanel.appendChild(p);
+            resultsPanel.classList.remove('hidden');
+            return;
+        }
+        for (const emp of matches) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'block w-full rounded-lg px-2 py-2 text-left text-sm font-medium text-brand-text transition hover:bg-brand-secondary/30';
+            btn.textContent = emp.label;
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                hiddenInput.value = emp.id;
+                searchInput.value = emp.label;
+                searchInput.setCustomValidity('');
+                resultsPanel.classList.add('hidden');
+            });
+            resultsPanel.appendChild(btn);
+        }
+        resultsPanel.classList.remove('hidden');
+    };
+    const syncHidden = () => {
+        const exact = findExact(searchInput.value);
+        hiddenInput.value = exact ? exact.id : '';
+    };
+    searchInput.addEventListener('input', () => {
+        syncHidden();
+        searchInput.setCustomValidity('');
+        renderSuggestions(searchInput.value);
+    });
+    searchInput.addEventListener('focus', () => {
+        renderSuggestions(searchInput.value);
+    });
+    document.addEventListener('click', (e) => {
+        if (!panel.contains(e.target) && !showBtn.contains(e.target)) {
+            resultsPanel.classList.add('hidden');
+        }
+    });
+    form.addEventListener('submit', (e) => {
+        syncHidden();
+        if (hiddenInput.value) {
+            searchInput.setCustomValidity('');
+            return;
+        }
+        e.preventDefault();
+        searchInput.setCustomValidity('Select a specific employee from the suggestions.');
+        searchInput.reportValidity();
+    });
+    resultsPanel.classList.add('hidden');
+};
+// Initialize add member autocomplete on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+    initAddMemberAutocomplete();
+});
+/*
  * Frontend behavior bootstrap for server-rendered pages.
  *
  * Strategy:
@@ -244,8 +398,11 @@ const initReportsDateRangePicker = function initReportsDateRangePicker() {
 };
 
 const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
+    const typeField = form.querySelector('.report-type') || form.querySelector('[name="contentType"]');
+    const quickRangeNode = form.querySelector('[data-range-presets]');
     const trigger = form.querySelector('[data-date-trigger]');
     const popover = form.querySelector('[data-date-popover]');
+    const shortcutsNode = form.querySelector('[data-date-shortcuts]');
     const startDisplay = form.querySelector('[data-start-display]');
     const endDisplay = form.querySelector('[data-end-display]');
     const startHidden = form.querySelector('[data-start-value]');
@@ -255,8 +412,7 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     const leftLabel = form.querySelector('[data-calendar-label="left"]');
     const rightLabel = form.querySelector('[data-calendar-label="right"]');
     const applyButton = form.querySelector('[data-date-apply]');
-    const quarterButtons = form.querySelectorAll('[data-quarter]');
-    const quarterBadge = document.querySelector('#reportsQuarterBadge');
+    const rangeBadge = document.querySelector('#reportsQuarterBadge');
 
     if (
         !trigger
@@ -275,6 +431,12 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     }
 
     const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const presetButtonClass = {
+        active: 'rounded-lg border border-brand-primary bg-brand-primary px-3 py-1 text-sm '
+            + 'font-semibold text-white transition',
+        idle: 'rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold '
+            + 'text-brand-text/80 transition hover:bg-brand-secondary/20',
+    };
 
     const parseIsoDate = function parseIsoDate(value) {
         if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -305,8 +467,42 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         return new Date(date.getFullYear(), date.getMonth(), 1);
     };
 
+    const createDayDate = function createDayDate(date) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+
     const addMonths = function addMonths(date, delta) {
         return new Date(date.getFullYear(), date.getMonth() + delta, 1);
+    };
+
+    const getToday = function getToday() {
+        return createDayDate(new Date());
+    };
+
+    const getCurrentType = function getCurrentType() {
+        return typeField ? typeField.value : 'EMPLOYEE';
+    };
+
+    const createQuarterRange = function createQuarterRange(year, quarter) {
+        return {
+            start: new Date(year, (quarter - 1) * 3, 1),
+            end: new Date(year, quarter * 3, 0),
+        };
+    };
+
+    const createTrailingDaysRange = function createTrailingDaysRange(totalDays) {
+        const end = getToday();
+        const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (totalDays - 1));
+
+        return { start, end };
+    };
+
+    const getReferenceYear = function getReferenceYear() {
+        if (selectedStart) {
+            return selectedStart.getFullYear();
+        }
+
+        return baseMonth.getFullYear();
     };
 
     let selectedStart = parseIsoDate(startHidden.value);
@@ -323,42 +519,118 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         }
     };
 
-    const getFullQuarterForRange = function getFullQuarterForRange() {
-        if (!selectedStart || !selectedEnd) {
-            return null;
+    const hasSameRange = function hasSameRange(range) {
+        if (!selectedStart || !selectedEnd || !range) {
+            return false;
         }
 
-        for (let quarter = 1; quarter <= 4; quarter += 1) {
-            const year = selectedStart.getFullYear();
-            const quarterStart = new Date(year, (quarter - 1) * 3, 1);
-            const quarterEnd = new Date(year, quarter * 3, 0);
+        return toIsoDate(selectedStart) === toIsoDate(range.start)
+            && toIsoDate(selectedEnd) === toIsoDate(range.end);
+    };
 
-            if (
-                toIsoDate(quarterStart) === toIsoDate(selectedStart)
-                && toIsoDate(quarterEnd) === toIsoDate(selectedEnd)
-            ) {
-                return quarter;
+    const getPresetDefinitions = function getPresetDefinitions() {
+        if (getCurrentType() === 'EMPLOYEE') {
+            const referenceYear = getReferenceYear();
+
+            return [1, 2, 3, 4].map((quarter) => {
+                return {
+                    key: `q${quarter}`,
+                    label: `Q${quarter}`,
+                    title: `Quarter ${quarter} ${referenceYear}`,
+                    getRange: () => createQuarterRange(referenceYear, quarter),
+                };
+            });
+        }
+
+        return [
+            {
+                key: 'last-week',
+                label: 'Last Week',
+                getRange: () => createTrailingDaysRange(7),
+            },
+            {
+                key: 'last-two-weeks',
+                label: 'Last 2 Weeks',
+                getRange: () => createTrailingDaysRange(14),
+            },
+            {
+                key: 'last-month',
+                label: 'Last Month',
+                getRange: () => createTrailingDaysRange(30),
+            },
+        ];
+    };
+
+    const getActivePreset = function getActivePreset() {
+        for (const preset of getPresetDefinitions()) {
+            if (hasSameRange(preset.getRange())) {
+                return preset;
             }
         }
 
         return null;
     };
 
-    const updateQuarterButtonStyles = function updateQuarterButtonStyles() {
-        const activeQuarter = getFullQuarterForRange();
+    const applyPreset = function applyPreset(preset) {
+        const range = preset.getRange();
 
-        quarterButtons.forEach((button) => {
-            const isActive = Number(button.dataset.quarter) === activeQuarter;
+        selectedStart = range.start;
+        selectedEnd = range.end;
+        baseMonth = createMonthStart(selectedStart);
 
-            button.className = isActive
-                ? 'rounded-lg border border-brand-primary bg-brand-primary px-3 py-1 text-sm '
-                    + 'font-semibold text-white transition'
-                : 'rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold '
-                    + 'text-brand-text/80 transition hover:bg-brand-secondary/20';
+        syncDateInputs();
+        renderCalendars();
+    };
+
+    const applyDefaultPresetForCurrentType = function applyDefaultPresetForCurrentType() {
+        if (getCurrentType() === 'EMPLOYEE') {
+            const today = getToday();
+            const quarter = Math.floor(today.getMonth() / 3) + 1;
+
+            applyPreset({
+                getRange: () => createQuarterRange(today.getFullYear(), quarter),
+            });
+            return;
+        }
+
+        applyPreset({
+            getRange: () => createTrailingDaysRange(7),
         });
+    };
 
-        if (quarterBadge) {
-            quarterBadge.textContent = activeQuarter ? `Q${activeQuarter}` : 'Custom';
+    const renderPresetButtons = function renderPresetButtons(targetNode) {
+        if (!targetNode) {
+            return;
+        }
+
+        const activePreset = getActivePreset();
+
+        targetNode.innerHTML = '';
+
+        getPresetDefinitions().forEach((preset) => {
+            const button = document.createElement('button');
+            const isActive = activePreset && activePreset.key === preset.key;
+
+            button.type = 'button';
+            button.textContent = preset.label;
+            button.title = preset.title || preset.label;
+            button.className = isActive ? presetButtonClass.active : presetButtonClass.idle;
+            button.addEventListener('click', () => {
+                applyPreset(preset);
+            });
+
+            targetNode.appendChild(button);
+        });
+    };
+
+    const updatePresetStyles = function updatePresetStyles() {
+        const activePreset = getActivePreset();
+
+        renderPresetButtons(quickRangeNode);
+        renderPresetButtons(shortcutsNode);
+
+        if (rangeBadge) {
+            rangeBadge.textContent = activePreset ? activePreset.label : 'Custom';
         }
     };
 
@@ -371,7 +643,7 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         startDisplay.value = selectedStart ? formatDisplayDate(selectedStart) : '';
         endDisplay.value = selectedEnd ? formatDisplayDate(selectedEnd) : '';
 
-        updateQuarterButtonStyles();
+        updatePresetStyles();
     };
 
     const renderMonth = function renderMonth(targetNode, monthDate) {
@@ -490,20 +762,6 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         });
     });
 
-    quarterButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const quarter = Number(button.dataset.quarter);
-            const referenceYear = baseMonth.getFullYear();
-
-            selectedStart = new Date(referenceYear, (quarter - 1) * 3, 1);
-            selectedEnd = new Date(referenceYear, quarter * 3, 0);
-            baseMonth = createMonthStart(selectedStart);
-
-            syncDateInputs();
-            renderCalendars();
-        });
-    });
-
     applyButton.addEventListener('click', () => {
         if (!selectedStart && !selectedEnd) {
             startDisplay.setCustomValidity('Select a date range.');
@@ -526,6 +784,12 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
             closePopover();
         }
     });
+
+    if (typeField && typeField.tagName === 'SELECT') {
+        typeField.addEventListener('change', () => {
+            applyDefaultPresetForCurrentType();
+        });
+    }
 
     form.addEventListener('submit', (event) => {
         if (!startHidden.value || !endHidden.value) {

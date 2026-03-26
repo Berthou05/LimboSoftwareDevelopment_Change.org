@@ -54,7 +54,7 @@ const employees = [
         timezone: 'America/Mexico_City',
         title: 'Software Engineer',
         bio: 'Builds reporting workflows and keeps team delivery healthy.',
-        teams: ['team-1'],
+        teams: ['team-1', 'team-3', 'team-5'],
         projects: ['proj-1', 'proj-2', 'proj-3', 'proj-6', 'proj-7', 'proj-9', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Rodrigo',
     },
@@ -64,7 +64,7 @@ const employees = [
         timezone: 'America/Mexico_City',
         title: 'Frontend Lead',
         bio: 'Owns UI consistency and accessibility across modules.',
-        teams: ['team-1'],
+        teams: ['team-2', 'team-3', 'team-4'],
         projects: ['proj-1', 'proj-3', 'proj-5', 'proj-8', 'proj-9', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Camila',
     },
@@ -74,7 +74,7 @@ const employees = [
         timezone: 'America/Mexico_City',
         title: 'Data Engineer',
         bio: 'Designs data pipelines for report generation.',
-        teams: ['team-2'],
+        teams: ['team-1', 'team-5', 'team-6'],
         projects: ['proj-2', 'proj-4', 'proj-6', 'proj-7'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Alexis',
     },
@@ -84,7 +84,7 @@ const employees = [
         timezone: 'America/Mexico_City',
         title: 'Product Engineer',
         bio: 'Connects employee workflows and business goals.',
-        teams: ['team-2'],
+        teams: ['team-2', 'team-4', 'team-6'],
         projects: ['proj-2', 'proj-4', 'proj-5', 'proj-7', 'proj-8', 'proj-10'],
         avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Alejandro_BlackHair',
     },
@@ -115,6 +115,54 @@ const teams = [
         ],
         projectIds: ['proj-2', 'proj-4', 'proj-5', 'proj-7', 'proj-8'],
     },
+    {
+        id: 'team-3',
+        name: 'Team Fox',
+        description: 'Drives product polish, responsiveness, and release-readiness work.',
+        image: '/images/fox.jpg',
+        responsibleEmployeeId: 'emp-1',
+        members: [
+            { employeeId: 'emp-1', role: 'Lead', startDate: '2025-09-02' },
+            { employeeId: 'emp-2', role: 'Employee', startDate: '2025-09-09' },
+        ],
+        projectIds: ['proj-1', 'proj-3', 'proj-9'],
+    },
+    {
+        id: 'team-4',
+        name: 'Team Panda',
+        description: 'Focuses on onboarding experiences, feedback loops, and localization.',
+        image: '/images/panda.webp',
+        responsibleEmployeeId: 'emp-2',
+        members: [
+            { employeeId: 'emp-2', role: 'Lead', startDate: '2025-10-01' },
+            { employeeId: 'emp-4', role: 'Employee', startDate: '2025-10-05' },
+        ],
+        projectIds: ['proj-5', 'proj-8', 'proj-10'],
+    },
+    {
+        id: 'team-5',
+        name: 'Team Dinosaur',
+        description: 'Owns infrastructure hardening, automation, and backend reliability.',
+        image: '/images/dinosaur.webp',
+        responsibleEmployeeId: 'emp-3',
+        members: [
+            { employeeId: 'emp-3', role: 'Lead', startDate: '2025-11-03' },
+            { employeeId: 'emp-1', role: 'Employee', startDate: '2025-11-07' },
+        ],
+        projectIds: ['proj-2', 'proj-6'],
+    },
+    {
+        id: 'team-6',
+        name: 'Team Sheep',
+        description: 'Supports analytics delivery, dashboards, and gateway readiness.',
+        image: '/images/sheep.jpg',
+        responsibleEmployeeId: 'emp-4',
+        members: [
+            { employeeId: 'emp-4', role: 'Lead', startDate: '2025-12-01' },
+            { employeeId: 'emp-3', role: 'Employee', startDate: '2025-12-04' },
+        ],
+        projectIds: ['proj-4', 'proj-7'],
+    },
 ];
 
 const projects = [
@@ -126,7 +174,7 @@ const projects = [
         startDate: '2025-11-01',
         endDate: '2026-06-30',
         responsibleEmployeeId: 'emp-2',
-        teamIds: ['team-1'],
+        teamIds: ['team-1', 'team-3'],
         participantIds: ['emp-1', 'emp-2'],
         goals: [
             {
@@ -163,7 +211,7 @@ const projects = [
         startDate: '2025-10-15',
         endDate: '2026-08-01',
         responsibleEmployeeId: 'emp-3',
-        teamIds: ['team-2'],
+        teamIds: ['team-2', 'team-5'],
         participantIds: ['emp-1', 'emp-3', 'emp-4'],
         goals: [
             {
@@ -200,7 +248,7 @@ const projects = [
         startDate: '2026-01-10',
         endDate: '2026-09-30',
         responsibleEmployeeId: 'emp-2',
-        teamIds: ['team-1'],
+        teamIds: ['team-1', 'team-3'],
         participantIds: ['emp-1', 'emp-2'],
         goals: [
             {
@@ -237,7 +285,7 @@ const projects = [
         startDate: '2025-12-01',
         endDate: '2026-07-15',
         responsibleEmployeeId: 'emp-3',
-        teamIds: ['team-2'],
+        teamIds: ['team-2', 'team-6'],
         participantIds: ['emp-3', 'emp-4'],
         goals: [
             {
@@ -274,7 +322,7 @@ const projects = [
         startDate: '2025-08-01',
         endDate: '2026-01-31',
         responsibleEmployeeId: 'emp-4',
-        teamIds: ['team-2'],
+        teamIds: ['team-2', 'team-4'],
         participantIds: ['emp-2', 'emp-4'],
         goals: [
             {
@@ -311,7 +359,7 @@ const projects = [
         startDate: '2026-02-01',
         endDate: '2026-12-31',
         responsibleEmployeeId: 'emp-1',
-        teamIds: ['team-1'],
+        teamIds: ['team-1', 'team-5'],
         participantIds: ['emp-1', 'emp-3'],
         goals: [
             {
@@ -348,7 +396,7 @@ const projects = [
         startDate: '2026-04-01',
         endDate: '2026-10-31',
         responsibleEmployeeId: 'emp-3',
-        teamIds: ['team-1', 'team-2'],
+        teamIds: ['team-1', 'team-2', 'team-6'],
         participantIds: ['emp-1', 'emp-3', 'emp-4'],
         goals: [
             {
@@ -377,7 +425,7 @@ const projects = [
         startDate: '2025-11-15',
         endDate: '2026-05-31',
         responsibleEmployeeId: 'emp-4',
-        teamIds: ['team-2'],
+        teamIds: ['team-2', 'team-4'],
         participantIds: ['emp-2', 'emp-4'],
         goals: [
             {
@@ -414,7 +462,7 @@ const projects = [
         startDate: '2025-09-01',
         endDate: '2025-11-30',
         responsibleEmployeeId: 'emp-2',
-        teamIds: ['team-1'],
+        teamIds: ['team-1', 'team-3'],
         participantIds: ['emp-1', 'emp-2'],
         goals: [
             {
@@ -451,7 +499,7 @@ const projects = [
         startDate: '2026-01-15',
         endDate: '2026-08-31',
         responsibleEmployeeId: 'emp-1',
-        teamIds: ['team-1'],
+        teamIds: ['team-1', 'team-4'],
         participantIds: ['emp-1', 'emp-2', 'emp-4'],
         goals: [
             {
@@ -701,7 +749,7 @@ const buildEmployeeContext = function buildEmployeeContext(employee) {
     activityLog.sort((leftActivity, rightActivity) => {
         return sortByDateDesc(leftActivity, rightActivity, 'completedAt');
     });
-
+    
     return {
         ...employee,
         teamObjects,

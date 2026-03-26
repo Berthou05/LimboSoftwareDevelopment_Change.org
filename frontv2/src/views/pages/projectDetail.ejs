@@ -6,32 +6,25 @@
 %>
 
 <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
-    <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-        <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= project.name %></h1></h1>
-        <p class="mt-3 text-sm text-brand-text/80">Owned by: <%= project.responsible?.fullName || 'Unknown' %></p>
-        
-        <div class="mt-8 grid gap-4 md:grid-cols-2">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Description</p>
-                <p class="mt-2 text-sm text-brand-text/80"><%= project.description %></p>
-            </div>
-            <div class="space-y-3 text-sm">
-                <p><span class="font-semibold text-brand-text/70">Creation Date:</span> <%= creationDate ? new Date(creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
-                <p><span class="font-semibold text-brand-text/70">Start Date:</span> <%= project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
-                <p><span class="font-semibold text-brand-text/70">End Date:</span> <%= project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
-                <p><span class="font-semibold text-brand-text/70">Status:</span> <%= project.status || 'N/A' %></p>
-            </div>
-        </div>
-    </section>
-
-    <section>
-        <%# Report generator replaces the date display and quick report button. %>
-        <%- include('../partials/reportGenerator', { redirectTo: '/projects/' + project.id, defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport }) %>
-    </section>
-</div>
-
-<div class="mt-4 grid gap-6 lg:grid-cols-[2fr_1fr]">
     <section class="space-y-6">
+        <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+            <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= project.name %></h1>
+            <p class="mt-3 text-sm text-brand-text/80">Owned by: <%= project.responsible?.fullName || 'Unknown' %></p>
+            
+            <div class="mt-8 grid gap-4 md:grid-cols-2">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Description</p>
+                    <p class="mt-2 text-sm text-brand-text/80"><%= project.description %></p>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <p><span class="font-semibold text-brand-text/70">Creation Date:</span> <%= creationDate ? new Date(creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
+                    <p><span class="font-semibold text-brand-text/70">Start Date:</span> <%= project.startDate ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
+                    <p><span class="font-semibold text-brand-text/70">End Date:</span> <%= project.endDate ? new Date(project.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A' %></p>
+                    <p><span class="font-semibold text-brand-text/70">Status:</span> <%= project.status || 'N/A' %></p>
+                </div>
+            </div>
+        </section>
+
         <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h2 class="font-heading text-2xl font-bold text-brand-text">Project Activity</h2>
@@ -123,18 +116,21 @@
     </section>
 
     <section class="space-y-4">
+        
         <%# Leave/Join Project button %>
         <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <form action="/projects/<%= project.id %>/toggle-membership" method="POST">
                 <button
-                    type="submit"
-                    class="w-full rounded-xl border px-4 py-2 text-sm font-semibold transition <%= isParticipant ? 'border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/30' %>"
+                type="submit"
+                class="w-full rounded-xl border px-4 py-2 text-sm font-semibold transition <%= isParticipant ? 'border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/30' %>"
                 >
-                    <%= isParticipant ? 'Leave Project' : 'Join Project' %>
+                <%= isParticipant ? 'Leave Project' : 'Join Project' %>
                 </button>
             </form>
         </div>
-
+        <%# Report generator replaces the date display and quick report button. %>
+        <%- include('../partials/reportGenerator', { redirectTo: '/projects/' + project.id, defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport }) %>
+    
         <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <h2 class="font-heading text-2xl font-bold text-brand-text">Project Highlights</h2>
             <div class="mt-4 space-y-3">
