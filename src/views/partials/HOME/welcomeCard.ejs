@@ -1,0 +1,17 @@
+<section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel sm:p-5">
+    <div class="flex items-center gap-3 sm:gap-4">
+        <div class="h-10 w-10 shrink-0 rounded-full border border-brand-secondary bg-brand-bg sm:h-12 sm:w-12"></div>
+        <h1 class="font-heading text-xl font-bold text-brand-text sm:text-2xl lg:text-4xl">
+            Welcome, <%= employee.fullName.split(' ')[0] %>
+        </h1>
+    </div>
+</section>
+
+<section class="rounded-2xl border border-brand-secondary bg-white p-3 shadow-panel sm:p-4">
+    <div class="flex items-start justify-between gap-2 sm:gap-4">
+        <p class="font-heading text-base font-bold leading-6 text-brand-text sm:text-lg"><%= currentDateLabel %></p>
+        <span class="rounded-lg border border-brand-secondary px-2 py-1 text-xs font-bold text-brand-text sm:px-3 sm:py-2 sm:text-sm">
+            <%= currentQuarterLabel %>
+        </span>
+    </div>
+</section>

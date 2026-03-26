@@ -1,7 +1,18 @@
-<section class="rounded-3xl bg-white p-6 shadow-panel">
-  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Dashboard</p>
-  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Home</h1>
-  <p class="mt-3 max-w-2xl text-brand-text/70">
-    The shared layout is active on this page, so the topbar and sidebar render around the main content.
-  </p>
-</section>
+<div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
+  <%- include('../partials/HOME/welcomeCard', { employee }) %>
+
+  <section class="space-y-4 sm:space-y-6">
+    <%# Report generator section for quick report access from home - full layout with type selector and search. %>
+    <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/home', defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport, layout: 'full' }) %>
+
+    <%- include('../partials/HOME/yourActivity', { latestActivitySections }) %>        
+  </section>
+
+  <section class="space-y-6">
+    <%# Team Activity - contributions style feed %>
+    <%- include('../partials/HOME/teamActivity', { teamActivitySections }) %>
+            
+    <%# Your Projects with nested highlights and achievements per project %>
+    <%- include('../partials/HOME/yourProjects', { projectSections }) %>    
+  </section>
+</div>
