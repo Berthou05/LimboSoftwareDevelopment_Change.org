@@ -1,0 +1,34 @@
+<%# Team Activity - Compact sidebar view %>
+<div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+    <div class="flex items-center justify-between gap-2">
+        <h2 class="font-heading text-xl font-bold text-brand-text">Activity</h2>
+        <select class="rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold text-brand-text/70 outline-none" id="activityDateFilter">
+            <option value="today">Today</option>
+            <option value="3days">Last 3 days</option>
+            <option value="week">This week</option>
+            <option value="all" selected>All</option>
+        </select>
+    </div>
+    
+    <div class="mt-4 max-h-72 overflow-y-auto space-y-1">
+        <% if (!(activitySections || []).length) { %>
+            <p class="py-4 text-center text-sm text-brand-text/50">No activity yet.</p>
+        <% } %>
+        <% (activitySections || []).forEach((section, sectionIndex) => { %>
+            <p class="sticky top-0 bg-white py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text/40"><%= section.dayLabel %></p>
+            <% section.items.forEach((item) => { %>
+                <div class="flex items-start gap-2 rounded-lg px-2 py-2 transition hover:bg-brand-bg/50" data-activity-section="<%= sectionIndex %>">
+                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[9px] font-bold text-brand-primary">
+                        <%= item.authorInitials || '?' %>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-[10px] text-brand-text/50"><%= item.authorName || 'Unknown' %></p>
+                        <p class="text-xs font-medium text-brand-text truncate"><%= item.title %></p>
+                        <p class="text-[10px] text-brand-text/50 truncate"><%= item.description || '' %></p>
+                    </div>
+                    <span class="shrink-0 text-[10px] text-brand-text/40"><%= item.activityTimeLabel || '' %></span>
+                </div>
+            <% }) %>
+        <% }) %>
+    </div>
+</div>

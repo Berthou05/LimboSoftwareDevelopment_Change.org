@@ -1,7 +1,24 @@
-<section class="rounded-3xl bg-white p-6 shadow-panel">
-  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Workspace</p>
-  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Team</h1>
-  <p class="mt-3 max-w-2xl text-brand-text/70">
-    Team modules now render inside the shared shell, so navigation remains visible while moving across sections.
-  </p>
-</section>
+<div class="grid gap-6 md:grid-cols-[2fr_1fr]">
+  <section class="space-y-6">
+    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+      <%- include('../../partials/teamDirectory/teamDetailsCard', { team }) %>
+    </div>
+
+    <%- include('../../partials/teamDirectory/teamprojects', { team }) %>
+  </section>
+
+  <section class="space-y-4">
+    <%- include('../../partials/teamDirectory/joinButton', {
+      team,
+      isMember: typeof isMember !== 'undefined' ? isMember : false,
+      csrfToken
+    }) %>
+    <%- include('../../partials/teamDirectory/teamParticipants', { team }) %>
+    <%- include('../../partials/teamDirectory/teamActivity', {
+      activitySections: typeof activitySections !== 'undefined' ? activitySections : []
+    }) %>
+    <a href="/teams" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
+      Back to teams
+    </a>
+  </section>
+</div>
