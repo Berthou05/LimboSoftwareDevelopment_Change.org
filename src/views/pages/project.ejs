@@ -1,11 +1,23 @@
 <%- include('../layout', {
   page: 'pages/content/project',
   pageTitle: 'Project',
+  project: typeof project !== 'undefined' ? project : null,
   projectName: typeof projectName !== 'undefined' ? projectName : 'Project',
   projectDescription:
     typeof projectDescription !== 'undefined'
       ? projectDescription
       : 'Project modules now render inside the shared shell, so navigation remains visible while moving across sections.',
+  projectMembership:
+    typeof projectMembership !== 'undefined'
+      ? projectMembership
+      : { isMember: false, canToggle: false, buttonLabel: 'Join Project' },
+  activitySections: typeof activitySections !== 'undefined' ? activitySections : [],
+  activityFilter:
+    typeof activityFilter !== 'undefined'
+      ? activityFilter
+      : { preset: '', startDate: '', endDate: '', hasManualRange: false, isFiltered: false },
+  currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
+  csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '',
   sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
   layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
   layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,

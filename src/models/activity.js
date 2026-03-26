@@ -78,7 +78,56 @@ module.exports = class Activity {
 
     // Read activities by project
     static fetchByProject(project_id) {
-        // TODO: Implement database query to fetch activities by project
+        return db.execute(
+            `SELECT
+                A.activity_id,
+                A.project_id,
+                A.employee_id,
+                A.entry_id,
+                A.title,
+                A.description,
+                A.completed_at,
+                E.full_name
+            FROM activity AS A
+            LEFT JOIN employee AS E
+                ON E.employee_id = A.employee_id
+            WHERE A.project_id = ?
+            ORDER BY A.completed_at DESC, A.title ASC`,
+            [project_id],
+        );
+    }
+
+    static fetchByProjectBetween(project_id, start_date, end_date) {
+        const conditions = ['A.project_id = ?'];
+        const parameters = [project_id];
+
+        if (start_date) {
+            conditions.push('A.completed_at >= ?');
+            parameters.push(start_date);
+        }
+
+        if (end_date) {
+            conditions.push('A.completed_at <= ?');
+            parameters.push(end_date);
+        }
+
+        return db.execute(
+            `SELECT
+                A.activity_id,
+                A.project_id,
+                A.employee_id,
+                A.entry_id,
+                A.title,
+                A.description,
+                A.completed_at,
+                E.full_name
+            FROM activity AS A
+            LEFT JOIN employee AS E
+                ON E.employee_id = A.employee_id
+            WHERE ${conditions.join(' AND ')}
+            ORDER BY A.completed_at DESC, A.title ASC`,
+            parameters,
+        );
     }
 
     // Read activities by employee

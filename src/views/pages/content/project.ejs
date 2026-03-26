@@ -1,11 +1,46 @@
-<section class="rounded-3xl bg-white p-6 shadow-panel">
-  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Workspace</p>
-  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">
-    <%= typeof projectName !== 'undefined' ? projectName : 'Project' %>
-  </h1>
-  <p class="mt-3 max-w-2xl text-brand-text/70">
-    <%= typeof projectDescription !== 'undefined'
-      ? projectDescription
-      : 'Project modules now render inside the shared shell, so navigation remains visible while moving across sections.' %>
-  </p>
-</section>
+<div class="grid gap-6 md:grid-cols-[2fr_1fr]">
+  <section class="space-y-6">
+    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+      <%- include('../../partials/projectDirectory/projectDetailsCard', { project }) %>
+    </div>
+
+    <%- include('../../partials/projectDirectory/projectActivity', {
+      project,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: '', startDate: '', endDate: '', hasManualRange: false, isFiltered: false },
+      activitySections: typeof activitySections !== 'undefined' ? activitySections : []
+    }) %>
+
+    <%- include('../../partials/projectDirectory/projectAchievements', {
+      project
+    }) %>
+  </section>
+
+  <section class="space-y-4">
+    <%- include('../../partials/projectDirectory/joinButton', {
+      project,
+      projectMembership: typeof projectMembership !== 'undefined'
+        ? projectMembership
+        : { isMember: false, canToggle: false, buttonLabel: 'Join Project' },
+      csrfToken
+    }) %>
+
+    <%- include('../../partials/projectDirectory/projectHighlights', {
+      project
+    }) %>
+
+    <%- include('../../partials/projectDirectory/projectTeams', {
+      project
+    }) %>
+
+    <%- include('../../partials/projectDirectory/projectMembers', {
+      project,
+      currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null
+    }) %>
+
+    <a href="/projects" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
+      Back to projects
+    </a>
+  </section>
+</div>

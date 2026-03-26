@@ -1,6 +1,8 @@
 // Highlight Model
 // Highlight(highlight_id, employee_id, project_id, title, content, created_at)
 
+const db = require('../utils/database.js');
+
 module.exports = class Highlight {
 
     constructor(highlight_id, employee_id, project_id, title, content, created_at) {
@@ -35,7 +37,22 @@ module.exports = class Highlight {
 
     // Read highlights by project
     static fetchByProject(project_id) {
-        // TODO: Implement database query to fetch highlights by project
+        return db.execute(
+            `SELECT
+                H.highlight_id,
+                H.employee_id,
+                H.project_id,
+                H.title,
+                H.content,
+                H.created_at,
+                E.full_name
+            FROM highlight AS H
+            LEFT JOIN employee AS E
+                ON E.employee_id = H.employee_id
+            WHERE H.project_id = ?
+            ORDER BY H.created_at DESC, H.title ASC`,
+            [project_id],
+        );
     }
 
     // Update highlight

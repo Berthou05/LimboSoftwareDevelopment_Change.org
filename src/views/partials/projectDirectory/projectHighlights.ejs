@@ -1,0 +1,17 @@
+<article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+    <h2 class="font-heading text-xl font-bold text-brand-text">Project Highlights</h2>
+    <div class="mt-4 space-y-3">
+        <% const highlightsDetailed = project?.highlightsDetailed || []; %>
+        <% if (!highlightsDetailed.length) { %>
+            <p class="text-sm text-brand-text/70">No highlights registered for this project.</p>
+        <% } %>
+        <% highlightsDetailed.forEach((highlight) => { %>
+            <div class="rounded-lg border border-brand-secondary p-3">
+                <p class="text-xs text-brand-text/50"><%= highlight.createdAtLabel || 'Date unavailable' %></p>
+                <p class="mt-1 text-sm font-semibold text-brand-text"><%= highlight.title %></p>
+                <p class="mt-1 text-xs text-brand-text/60"><%= highlight.content %></p>
+                <p class="mt-2 text-[11px] text-brand-text/50">By: <%= highlight.authorName || 'Unknown' %></p>
+            </div>
+        <% }) %>
+    </div>
+</article>

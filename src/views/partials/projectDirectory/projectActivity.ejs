@@ -1,0 +1,63 @@
+<div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+    <% const projectPath = `/projects/${project?.id || project?.project_id || ''}`; %>
+    <div class="flex items-center justify-between gap-2">
+        <h2 class="font-heading text-xl font-bold text-brand-text">Project Activity</h2>
+    </div>
+
+    <div class="mt-4 rounded-xl border border-brand-secondary/70 bg-brand-bg/40 p-3">
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="<%= `${projectPath}?activityPreset=today` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'today' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                Today
+            </a>
+            <a href="<%= `${projectPath}?activityPreset=3days` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === '3days' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                3 days
+            </a>
+            <a href="<%= `${projectPath}?activityPreset=5days` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === '5days' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                5 days
+            </a>
+            <a href="<%= projectPath %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.isFiltered ? 'border-brand-secondary text-brand-text/70 hover:bg-white' : 'border-brand-primary bg-brand-primary text-white' %>">
+                Clear
+            </a>
+        </div>
+
+        <form action="<%= projectPath %>" method="GET" class="mt-3 flex flex-col gap-2 rounded-xl border p-3 <%= activityFilter?.hasManualRange && !activityFilter?.preset ? 'border-brand-primary bg-white' : 'border-transparent' %> md:flex-row md:items-end">
+            <label class="flex-1 text-xs font-semibold uppercase tracking-wide text-brand-text/50">
+                Start date
+                <input type="date" name="startDate" value="<%= activityFilter?.startDate || '' %>" class="mt-1 w-full rounded-lg border <%= activityFilter?.hasManualRange && !activityFilter?.preset ? 'border-brand-primary' : 'border-brand-secondary' %> bg-white px-3 py-2 text-sm font-normal text-brand-text outline-none" />
+            </label>
+            <label class="flex-1 text-xs font-semibold uppercase tracking-wide text-brand-text/50">
+                End date
+                <input type="date" name="endDate" value="<%= activityFilter?.endDate || '' %>" class="mt-1 w-full rounded-lg border <%= activityFilter?.hasManualRange && !activityFilter?.preset ? 'border-brand-primary' : 'border-brand-secondary' %> bg-white px-3 py-2 text-sm font-normal text-brand-text outline-none" />
+            </label>
+            <button type="submit" class="rounded-xl border <%= activityFilter?.hasManualRange && !activityFilter?.preset ? 'border-brand-primary text-brand-primary' : 'border-brand-secondary text-brand-text/80' %> px-4 py-2 text-sm font-semibold transition hover:bg-white">
+                Apply
+            </button>
+        </form>
+    </div>
+
+    <div class="mt-4 max-h-72 space-y-1 overflow-y-auto">
+        <% if (!(activitySections || []).length) { %>
+            <p class="py-4 text-center text-sm text-brand-text/50">
+                <%= activityFilter?.isFiltered
+                    ? 'No activity found for the selected date range.'
+                    : 'No activity registered for this project yet.' %>
+            </p>
+        <% } %>
+        <% (activitySections || []).forEach((section) => { %>
+            <p class="sticky top-0 bg-white py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text/40"><%= section.dayLabel %></p>
+            <% section.items.forEach((item) => { %>
+                <div class="flex items-start gap-2 rounded-lg px-2 py-2 transition hover:bg-brand-bg/50">
+                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[9px] font-bold text-brand-primary">
+                        <%= item.authorInitials || '?' %>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[10px] text-brand-text/50"><%= item.authorName || 'Unknown' %></p>
+                        <p class="truncate text-xs font-medium text-brand-text"><%= item.title %></p>
+                        <p class="truncate text-[10px] text-brand-text/50"><%= item.description || '' %></p>
+                    </div>
+                    <span class="shrink-0 text-[10px] text-brand-text/40"><%= item.activityTimeLabel || '' %></span>
+                </div>
+            <% }) %>
+        <% }) %>
+    </div>
+</div>

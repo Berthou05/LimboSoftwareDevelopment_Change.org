@@ -23,6 +23,62 @@ module.exports = class Collaboration {
         return db.execute('SELECT * FROM collaboration WHERE project_id = ? AND ended_at IS NULL', [project_id]);
     }
 
+    static fetchDetailedByProject(project_id) {
+        return db.execute(
+            `SELECT
+                C.collaboration_id,
+                C.project_id,
+                C.employee_id,
+                C.description,
+                C.started_at,
+                C.ended_at,
+                E.full_name
+            FROM collaboration AS C
+            LEFT JOIN employee AS E
+                ON E.employee_id = C.employee_id
+            WHERE C.project_id = ?
+                AND C.ended_at IS NULL
+            ORDER BY E.full_name ASC`,
+            [project_id],
+        );
+    }
+
+    static findActiveByProjectAndEmployee(project_id, employee_id) {
+        return db.execute(
+            `SELECT *
+            FROM collaboration
+            WHERE project_id = ?
+                AND employee_id = ?
+                AND ended_at IS NULL`,
+            [project_id, employee_id],
+        );
+    }
+
+    static joinProject(project_id, employee_id, description = 'Joined from project detail page.') {
+        return db.execute(
+            `INSERT INTO collaboration (
+                collaboration_id,
+                project_id,
+                employee_id,
+                description,
+                started_at,
+                ended_at
+            ) VALUES (UUID(), ?, ?, ?, NOW(), NULL)`,
+            [project_id, employee_id, description],
+        );
+    }
+
+    static leaveProject(project_id, employee_id, ended_at = new Date()) {
+        return db.execute(
+            `UPDATE collaboration
+            SET ended_at = ?
+            WHERE project_id = ?
+                AND employee_id = ?
+                AND ended_at IS NULL`,
+            [ended_at, project_id, employee_id],
+        );
+    }
+
 
     // Create or Update collaboration
     save() {

@@ -35,6 +35,26 @@ module.exports = class ProjectTeam {
         return db.execute('SELECT * FROM projectteam WHERE project_id = ?', [project_id]);
     }
 
+    static fetchDetailedByProject(project_id) {
+        return db.execute(
+            `SELECT
+                PT.team_id,
+                PT.project_id,
+                PT.team_role,
+                PT.joined_at,
+                T.name,
+                T.description,
+                T.image,
+                T.status
+            FROM projectteam AS PT
+            LEFT JOIN team AS T
+                ON T.team_id = PT.team_id
+            WHERE PT.project_id = ?
+            ORDER BY T.name ASC`,
+            [project_id],
+        );
+    }
+
     // Read specific assignment
     static fetchByTeamAndProject(team_id, project_id) {
         return db.execute('SELECT * FROM projectteam WHERE team_id = ? AND project_id = ?', [team_id, project_id]);

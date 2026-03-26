@@ -28,7 +28,23 @@ module.exports = class Achievement {
     /*fetchByProject(project_id)
     Function responsible for returning all achievements of a project*/
     static fetchByProject(project_id) {
-        return db.execute('SELECT * FROM achievement as A WHERE A.project_id=?;',[project_id]);
+        return db.execute(
+            `SELECT
+                A.achievement_id,
+                A.project_id,
+                A.employee_responsible_id,
+                A.title,
+                A.description,
+                A.achievement_date,
+                A.evidence_link,
+                E.full_name
+            FROM achievement AS A
+            LEFT JOIN employee AS E
+                ON E.employee_id = A.employee_responsible_id
+            WHERE A.project_id = ?
+            ORDER BY A.achievement_date DESC, A.title ASC;`,
+            [project_id],
+        );
     }
 
     // Create or Update achievement
