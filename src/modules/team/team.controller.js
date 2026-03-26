@@ -5,9 +5,13 @@ Modified by: Hurtado, R.
 */
 
 const Team = require('../../models/team');
+const Employee = require('../../models/employee');
+const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
+const Activity = require('../../models/activity');
+const Project = require('../../models/project');
+const Achievement = require('../../models/achievement');
+const Goal = require('../../models/goal');
 
-const PAGE_TITLE = 'Team';
-const PAGE_SUBTITLE = 'Intermediate selection for own and other teams.';
 
 const normalizeTeam = function normalizeTeam(team) {
     return {
@@ -20,7 +24,74 @@ const normalizeTeam = function normalizeTeam(team) {
         image: team.image ?? null,
         isMember: Boolean(team.isMember ?? team.is_member),
     };
-}
+};
+
+const formatDayLabel = function formatDayLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+const buildActivitySections = function buildActivitySections(activities) {
+    const grouped = new Map();
+
+    activities.forEach((activity) => {
+        const rawDate = activity.completed_at || activity.completedAt;
+        const key = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : 'unknown';
+        const items = grouped.get(key) || [];
+        const authorName = activity.full_name || activity.authorName || 'Unknown';
+
+        items.push({
+            title: activity.title || 'Untitled activity',
+            description: activity.description || '',
+            authorName,
+            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            activityTimeLabel: rawDate
+                ? new Date(rawDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                })
+                : '',
+        });
+
+        grouped.set(key, items);
+    });
+
+    return [...grouped.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([key, items]) => ({
+            dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
+            items,
+        }));
+};
+
+const respondMembershipRequest = function respondMembershipRequest(
+    request,
+    response,
+    teamId,
+    statusCode,
+    payload,
+) {
+    const acceptHeader = request.get('Accept') || '';
+
+    if (acceptHeader.includes('application/json')) {
+        return response.status(statusCode).json(payload);
+    }
+
+    if (payload && payload.error) {
+        request.session.error = payload.error;
+    }
+
+    return response.redirect(`/teams/${teamId}`);
+};
+
 
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate
@@ -36,10 +107,10 @@ exports.getTeams = (request, response, next) => {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
-                pageTitle: PAGE_TITLE,
-                pageSubtitle: PAGE_SUBTITLE,
-                myTeams:teams,
-                otherTeams:notTeams,
+                pageTitle: 'Team',
+                pageSubtitle: 'Intermediate selection for own and other teams.',
+                myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true })),
+                otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false })),
                 query:'',
             });
         })
@@ -54,31 +125,263 @@ exports.getTeams = (request, response, next) => {
     })
 };
 
+
+/*getTeamPage
+Function responsible for handling the indivual Page render:
+team_info: team_info: Toda la informacion de Team que viene de la tabla Team
+members: Todos los empleados dentro de su relacion con EmployeeTeam
+
+csrfToken: request.csrfToken(),
+isLoggedIn: request.session.isLoggedIn || '',
+username: request.session.username || '',
+pageTitle: `Team ${team_info[0].name}`,
+pageSubtitle: '',
+info: team_info,
+members:team_members,
+activities: members_activies,
+projects: projects,
+
+*/
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
-    Team.findById(teamId)
-        .then(([teamRows]) => {
-            if (!teamRows || teamRows.length === 0) {
-                return response.status(404).render('pages/team', {
-                    error: 'Team not found',
-                    csrfToken: request.csrfToken(),
-                    isLoggedIn: request.session.isLoggedIn || '',
-                    username: request.session.username || '',
-                });
+    Promise.all([
+        Team.findById(teamId),
+        Employee.getEmployeeByTeamId(teamId),
+        Activity.getTeamMembersActivities(teamId),
+        Project.getProjectsByTeamId(teamId),
+        Employee.fetchAll(),
+    ])
+        .then(async ([[teamInfo], [teamMembers], [memberActivities], [teamProjects], [allEmployees]]) => {
+            const teamRow = teamInfo[0];
+
+            if (!teamRow) {
+                request.session.error = `Error loading team ${teamId}. Team information not found.`;
+                return response.redirect('/team');
             }
-            // Aquí podrías buscar los proyectos asociados si tienes el modelo Project
+
+            const leadName = teamMembers.find(
+                (member) => member.employee_id === teamRow.employee_responsible_id
+            )?.full_name || 'Unknown';
+
+            const projectsDetailed = await Promise.all(
+                teamProjects.map(async (project) => {
+                    const [[achievements], [goals]] = await Promise.all([
+                        Achievement.fetchByProject(project.project_id),
+                        Goal.fetchByProject(project.project_id),
+                    ]);
+
+                    return {
+                        id: project.project_id,
+                        name: project.name,
+                        description: project.description,
+                        status: project.status,
+                        startDate: project.start_date,
+                        endDate: project.end_date,
+                        leadName: project.full_name,
+                        teamRole: project.team_role,
+                        activityLog: memberActivities.filter((activity) => activity.project_id === project.project_id),
+                        highlights: goals.map((goal) => ({
+                            title: goal.title,
+                            content: goal.description,
+                            createdAt: goal.created_at,
+                        })),
+                        achievements: achievements.map((achievement) => ({
+                            title: achievement.title,
+                            description: achievement.description,
+                            achievementDate: achievement.achievement_date,
+                        })),
+                    };
+                })
+            );
+
+            const team = {
+                id: teamRow.team_id,
+                name: teamRow.name,
+                description: teamRow.description,
+                image: teamRow.image,
+                lead: {
+                    id: teamRow.employee_responsible_id,
+                    fullName: leadName,
+                },
+                membersDetailed: teamMembers.map((member) => ({
+                    role: member.role || (
+                        member.employee_id === teamRow.employee_responsible_id ? 'LEAD' : 'EMPLOYEE'
+                    ),
+                    joinedAt: member.joined_at,
+                    employee: {
+                        id: member.employee_id,
+                        fullName: member.full_name,
+                    },
+                })),
+                projectsDetailed,
+            };
+
+            const availableEmployees = allEmployees
+                .filter(
+                    (employee) => !team.membersDetailed.some(
+                        (member) => member.employee.id === employee.employee_id
+                    )
+                )
+                .map((employee) => ({
+                    id: employee.employee_id,
+                    fullName: employee.full_name,
+                }));
+
             return response.render('pages/team', {
-                team: teamRows[0],
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
+                pageTitle: `Team ${team.name}`,
+                pageSubtitle: '',
+                team,
+                currentEmployeeId: request.session.employeeId || null,
+                isMember: team.membersDetailed.some(
+                    (member) => member.employee.id === request.session.employeeId
+                ),
+                activitySections: buildActivitySections(memberActivities),
+                availableEmployees,
             });
         })
         .catch((error) => {
             console.log(error);
-            next(error);
+            request.session.error = `Error loading team ${teamId}.`;
+            return response.redirect('/team');
         });
 };
+
+exports.toggleTeamMembership = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const isAddMemberRequest = Object.prototype.hasOwnProperty.call(request.body, 'employeeId');
+    const targetEmployeeId = isAddMemberRequest
+        ? request.body.employeeId
+        : request.session.employeeId;
+
+    if (!targetEmployeeId) {
+        request.session.error = isAddMemberRequest
+            ? 'Select a valid employee to add to the team.'
+            : 'You must be logged in to update team membership.';
+        return response.redirect(`/teams/${teamId}`);
+    }
+
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(targetEmployeeId, teamId)
+        .then(([memberships]) => {
+            const membership = memberships[0];
+
+            if (!membership) {
+                return EmployeeTeamMembership.join(targetEmployeeId, teamId);
+            }
+
+            if (membership.left_at) {
+                return EmployeeTeamMembership.update(targetEmployeeId, teamId, {
+                    joined_at: new Date(),
+                    left_at: null,
+                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                });
+            }
+
+            if (isAddMemberRequest) {
+                return Promise.resolve();
+            }
+
+            return EmployeeTeamMembership.leave(targetEmployeeId, teamId);
+        })
+        .then(() => response.redirect(`/teams/${teamId}`))
+        .catch((error) => {
+            console.log(error);
+            request.session.error = `Error updating membership for team ${teamId}.`;
+            return response.redirect(`/teams/${teamId}`);
+        });
+};
+
+exports.addTeamMember = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = String(request.body.employeeId || '').trim();
+
+    if (!employeeId) {
+        return respondMembershipRequest(request, response, teamId, 400, {
+            error: 'Select a valid employee to add to the team.',
+        });
+    }
+
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId)
+        .then(([memberships]) => {
+            const membership = memberships[0];
+
+            if (!membership) {
+                return EmployeeTeamMembership.join(employeeId, teamId);
+            }
+
+            if (membership.left_at) {
+                return EmployeeTeamMembership.update(employeeId, teamId, {
+                    joined_at: new Date(),
+                    left_at: null,
+                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                });
+            }
+
+            return Promise.resolve();
+        })
+        .then(() => respondMembershipRequest(request, response, teamId, 200, {
+            success: true,
+        }))
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, teamId, 500, {
+                error: `Error adding a member to team ${teamId}.`,
+            });
+        });
+};
+
+exports.removeTeamMember = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.params.employee_id;
+
+    Promise.all([
+        Team.findById(teamId),
+        EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId),
+    ])
+        .then(([[teamRows], [memberships]]) => {
+            const teamRow = teamRows[0];
+            const membership = memberships[0];
+
+            if (!teamRow) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: `Team ${teamId} was not found.`,
+                });
+            }
+
+            if (teamRow.employee_responsible_id === employeeId) {
+                return respondMembershipRequest(request, response, teamId, 400, {
+                    error: 'The team lead cannot be removed from the team.',
+                });
+            }
+
+            if (employeeId === request.session.employeeId) {
+                return respondMembershipRequest(request, response, teamId, 400, {
+                    error: 'Use the Leave Team action to remove yourself.',
+                });
+            }
+
+            if (!membership || membership.left_at) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: 'That employee is not an active member of the team.',
+                });
+            }
+
+            return EmployeeTeamMembership.leave(employeeId, teamId)
+                .then(() => respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                }));
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, teamId, 500, {
+                error: `Error removing a member from team ${teamId}.`,
+            });
+        });
+};
+
+//! Provisional function to load Team Intermediate
 
 exports.searchTeams = (request, response, next) => {
     return response.json({

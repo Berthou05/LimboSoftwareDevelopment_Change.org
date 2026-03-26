@@ -25,6 +25,12 @@ module.exports = class Achievement {
             [employee_id, start_date, end_date]);
     }
 
+    /*fetchByProject(project_id)
+    Function responsible for returning all achievements of a project*/
+    static fetchByProject(project_id) {
+        return db.execute('SELECT * FROM achievement as A WHERE A.project_id=?;',[project_id]);
+    }
+
     // Create or Update achievement
     save() {
         // TODO: Implement database logic
@@ -41,10 +47,7 @@ module.exports = class Achievement {
         // TODO: Implement database query to fetch achievement by ID
     }
 
-    // Read achievements by project
-    static fetchByProject(project_id) {
-        // TODO: Implement database query to fetch achievements by project
-    }
+
 
     // Read achievements by responsible employee
     static fetchByResponsible(employee_responsible_id) {

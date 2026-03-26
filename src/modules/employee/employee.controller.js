@@ -5,6 +5,12 @@ Modified by: Hurtado, R.
 */
 
 const EmployeeTeam = require('../../models/employeeTeamMembership');
+const Team = require('../../models/team');
+const Employee = require('../../models/employee');
+const Activity = require('../../models/activity');
+const Project = require('../../models/project');
+const Achievement = require('../../models/achievement');
+const Goal = require('../../models/goal');
 
 /*getEmployee()
 Function responsible accesing the intermediate employee page
@@ -21,23 +27,92 @@ exports.getEmployee = (request, response, next) => {
 };
 
 /*getEmployeePage
-Function responsible for rendering a concrete employee page*/
+Function responsible for rendering a concrete employee page
+Render of:
+csrfToken: request.csrfToken(),
+isLoggedIn: request.session.isLoggedIn || '',
+username: request.session.username || '',
+pageTitle: `Employee ${info[0].full_name}`,
+pageSubtitle: '',
+info:info,
+activities:activities,
+teams:teams,
+projects:projects,*/
 
-exports.getEmployeePage= (request, response, next)=>{
-    
-    // TODO: It is necessary to integrate the additional
-    // TODO - models and data obtention in order to perform
-    // TODO - the complete render.
+exports.getEmployeePage = (request, response, next)=>{
+    const employeeId = request.params.employee_id;
+    const projects = [];
+    EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([teams, fieldData])=>{
+        Employee.fetchById(employeeId).then(([info,fieldData])=>{
+            Activity.fetchByEmployee(employeeId).then(([activities,fieldData])=>{
+                Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
 
-    EmployeeTeam.fetchTeamInfoByEmployee(request.params.employee_id).then(([teams, fieldData])=>{
-        return response.render('pages/employee',{
-            csrfToken: request.csrfToken(),
-            teams:teams,
-            //! Additional information is missing here.
+                    let sequence = Promise.resolve();
+                    employee_projects.forEach(proj => {
+                        sequence = sequence.then(() => {
+                            const project = {
+                                info: proj,
+                                goals: [],
+                                achievements: []
+                            };
+
+                            return Achievement.fetchByProject(proj.project_id).then(([achievements,fieldData]) => {
+                                    project.achievements = achievements;
+                                    return Goal.fetchByProject(proj.project_id);
+                            })
+                            .then(([goals,fieldData]) => {
+                                project.goals = goals;
+                                projects.push(project);
+                            })
+                            .catch(error => {
+                                console.log(error);
+                                throw error;
+                            });
+                        });
+                    });
+
+                    sequence.then(() => {
+                        return response.render('pages/team', {
+                            csrfToken: request.csrfToken(),
+                            isLoggedIn: request.session.isLoggedIn || '',
+                            username: request.session.username || '',
+                            pageTitle: `Employee ${info[0].full_name}`,
+                            pageSubtitle: '',
+                            info:info,
+                            activities:activities,
+                            teams:teams,
+                            projects:projects,
+                            
+                        });
+                    })
+                    .catch(error => {
+                        console.log(error);
+                        request.session.error = `Error loading employee ${employeeId}`;
+                        return response.redirect('/employee');
+                    });
+
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    request.session.error = `Error loading Employee ${employeeId}. Employee Projects not found.`;
+                    return response.redirect(`/employee`);
+                })
+            })
+            .catch((error)=>{
+                console.log(error);
+                request.session.error = `Error loading Employee ${employeeId}. Employee Activies not found.`;
+                return response.redirect(`/employee`);
+            })
+        })
+        .catch((error)=>{
+            console.log(error);
+            request.session.error = `Error loading Employee ${employeeId}. Employee Information not found.`;
+            return response.redirect(`/employee`);
         })
     })
     .catch((error)=>{
         console.log(error);
+        request.session.error = `Error loading Employee ${employeeId}. Employee Teams not found.`;
         return response.redirect(`/employee`);
     })
 }

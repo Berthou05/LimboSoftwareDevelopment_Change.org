@@ -29,6 +29,13 @@ module.exports = class Goal {
         return db.execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
     }
 
+    /*fetchByProject(project_id)
+    Function responsible for returning all Goals related to a project_id*/
+
+    static fetchByProject(project_id) {
+        return db.execute('SELECT * FROM goal as G WHERE G.project_id=?;',[project_id]);
+    }
+
     // Create or Update goal
     save() {
         // TODO: Implement database logic
@@ -45,10 +52,7 @@ module.exports = class Goal {
         // TODO: Implement database query to fetch goal by ID
     }
 
-    // Read goals by project
-    static fetchByProject(project_id) {
-        // TODO: Implement database query to fetch goals by project
-    }
+    
 
     // Read goals by responsible employee
     static fetchByResponsible(employee_responsible_id) {

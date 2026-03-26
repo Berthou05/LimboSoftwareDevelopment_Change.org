@@ -3,46 +3,6 @@
 
 const db = require('../utils/database');
 
-const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
-const DIRECTORY_QUERY = `SELECT
-    T.team_id,
-    T.name,
-    T.description,
-    T.image,
-    T.status,
-    E.full_name AS lead_name,
-    CASE
-        WHEN ET.employee_id IS NULL THEN 0
-        ELSE 1
-    END AS is_member
-FROM team AS T
-INNER JOIN employee AS E
-    ON E.employee_id = T.employee_responsible_id
-LEFT JOIN employeeteam AS ET
-    ON ET.team_id = T.team_id
-    AND ET.employee_id = ?
-    AND ET.left_at IS NULL
-WHERE T.status = 'ACTIVE'
-    AND (
-        ? = ''
-        OR T.name LIKE ?
-        OR T.description LIKE ?
-        OR E.full_name LIKE ?
-    )
-ORDER BY is_member DESC, T.name ASC`;
-
-const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
-    const normalizedSearch = `%${searchTerm}%`;
-
-    return [
-        employeeId || '',
-        searchTerm,
-        normalizedSearch,
-        normalizedSearch,
-        normalizedSearch,
-    ];
-};
-
 module.exports = class Team {
     constructor(team_id, employee_responsible_id, name, description, created_at, image) {
         this.team_id = team_id;
@@ -72,7 +32,7 @@ module.exports = class Team {
     Function responsible for returning all teams an employee is part of*/
 
     static fetchByEmployeeId(employee_id){
-        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=?;',
+        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL;',
             [employee_id]);
     }
 
@@ -80,7 +40,7 @@ module.exports = class Team {
     Function responsible for returning all teams an employee is not part of*/
 
     static fetchNotByEmployeeId(employee_id){
-        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=?)',
+        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL)',
             [employee_id]);
     }
 
@@ -103,11 +63,6 @@ module.exports = class Team {
     // Read all teams
     static fetchAll() {
         // TODO: Implement database query to fetch all teams
-    }
-
-    // Read team by ID
-    static fetchById(team_id) {
-        // TODO: Implement database query to fetch team by ID
     }
 
     // Read teams by responsible employee

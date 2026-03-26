@@ -93,8 +93,6 @@ exports.postLogin = (request, response, next)=>{
 
                         Account.getPrivilegesFromAccountId(rows[0].account_id).then(([privileges, fieldData])=>{
                             request.session.privileges = privileges;
-                            console.log(privileges);
-
                             return request.session.save((error) => {
                                 return response.redirect('/home');
                             });
