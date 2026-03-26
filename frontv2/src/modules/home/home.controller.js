@@ -1,6 +1,6 @@
 ﻿const { getHomeByEmployeeId } = require('./home.service');
 const { renderModule } = require('../shared/view.util');
-const { buildDateAndQuarterContext, buildReportPeriodContext } = require('../shared/page-context.util');
+const { buildReportPeriodContext } = require('../shared/page-context.util');
 const { groupActivitiesByDay } = require('../shared/activity-sections.util');
 const { findFilteredSubjectOptions } = require('../shared/subject-options.service');
 const { getLatestReportsByType } = require('../reports/reports.service');
@@ -8,8 +8,7 @@ const { getLatestReportsByType } = require('../reports/reports.service');
 /*
  * Home page flow:
  * 1) Load employee-scoped home data from service.
- * 2) Build date/quarter labels used by top cards.
- * 3) Pre-group activity so view can render without data manipulation.
+ * 2) Pre-group activity so view can render without data manipulation.
  */
 const renderHome = function renderHome(req, res) {
     const employeeId = req.session.user.employeeId;
@@ -25,7 +24,6 @@ const renderHome = function renderHome(req, res) {
         return res.redirect('/login');
     }
 
-    const { currentDateLabel, currentQuarterLabel } = buildDateAndQuarterContext();
     const { quickReport } = buildReportPeriodContext();
 
     const latestActivitySections = groupActivitiesByDay(homeData.latestActivity);
@@ -38,8 +36,6 @@ const renderHome = function renderHome(req, res) {
         activeRoute: '/home',
         pageTitle: 'Home',
         pageSubtitle: 'Latest activity, team activity, and project highlights.',
-        currentDateLabel,
-        currentQuarterLabel,
         latestActivitySections,
         teamActivitySections,
         primaryProject,
