@@ -1,33 +1,62 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "projects.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as DB
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Data Base" as DB
+== Visualize Project Details ==
 
-User -> Sys: Select a project from the list
-activate Sys
+activate U
+U -> V: Select a project from the list
+deactivate U
 
-Sys -> Sys: Capture selected project's ID
-Sys -> DB: Send project's details consult
+activate V
+V -> V: captureProjectId(id)
+V -> RO: fetch('/projects/details/:id', {method: GET})
+deactivate V
+
+activate RO
+RO -> C: getProjectDetails(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchProjectById(project_id)
+activate M
+
+M -> DB: execute('SELECT name, description, team FROM project WHERE id = ?', [project_id])
 activate DB
 
-DB -> DB: Search project's information\n(Name, Desc, Team, etc.)
-
 alt Register exists? (yes)
-    DB --> Sys: Return project's details
-    deactivate DB
-    Sys -> Sys: Process and format data for visualization
-    Sys -> Sys: Render details' interface
-    Sys --> User: Visualize project's information
+    DB --> M: project_data
+    M --> C: project_data
+    
+    C -> V: response.json({success: true, body: project_data})
+    activate V
+    V -> V: processFormatData(project_data)
+    V -> V: renderDetailsInterface()
+    V -> U: Visualize project's information
+    deactivate V
+    
 else Register exists? (no)
-    activate DB
-    DB --> Sys: Return error (Register not found)
+    DB --> M: null
     deactivate DB
-    Sys -> User: Show error message on the interface
-    Sys -> User: Return to list of projects
+    M --> C: error (not found)
+    deactivate M
+    
+    C -> V: response.json({success: false, error: 'Register not found'})
+    activate V
+    V -> V: showErrorMessage()
+    V -> V: returnToListOfProjects()
+    V -> U: Redirected to project list
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

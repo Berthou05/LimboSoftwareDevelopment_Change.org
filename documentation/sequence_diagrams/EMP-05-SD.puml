@@ -1,35 +1,65 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "employee_profile.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as DB
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== View Employee Projects ==
 
-User -> Sys: Accesses Employee profile
-activate Sys
+activate U
+U -> V: Accesses an Employee's profile
+deactivate U
 
-User -> Sys: Navigates to "Your Projects" section
-Sys -> Sys: Captures Employee ID
+activate V
+U -> V: Navigates to the "Your Projects" section
+V -> V: captureEmployeeId(id)
+V -> RO: fetch('/projects/employee/:id', {method: GET})
+deactivate V
 
-Sys -> DB: Request project list associated with Employee
+activate RO
+RO -> C: getProjectsByEmployee(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchProjectsByMember(employee_id)
+activate M
+
+M -> DB: execute('SELECT * FROM project_members WHERE employee_id = ?', [employee_id])
 activate DB
 
-DB -> DB: Queries Projects where Employee is a member
-
-alt Connection or Data Error? (yes)
-    DB --> Sys: Return error status
+alt Is there a connection or data error? (yes)
+    DB --> M: connection_error
+    M --> C: error_status
+    C -> V: response.json({success: false, error: 'Database error'})
+    activate V
+    V -> U: Informs the user an error has occurred
+    deactivate V
+    
+else Is there a connection or data error? (no)
+    DB --> M: projects_list
     deactivate DB
-    Sys -> User: Informs the user an error has occurred
-    Sys -> User: Show "no projects yet message"
-else Connection or Data Error? (no)
-    activate DB
-    DB --> Sys: Return list of associated projects
-    deactivate DB
-    Sys -> Sys: Displays summary list in "Your Projects" widget
-    Sys -> Sys: Render Page with user's information
-    Sys --> User: Views all projects linked to that Employee
+    M --> C: projects_list
+    deactivate M
+    
+    C -> V: response.json({success: true, body: projects_list})
+    activate V
+    
+    alt projects_list is empty
+        V -> U: Show "no projects yet" message
+    else projects_list contains data
+        V -> V: displaySummaryList("Your Projects" widget)
+        V -> V: renderPageWithUserInfo()
+        V -> U: Views all projects linked to that Employee
+    end
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

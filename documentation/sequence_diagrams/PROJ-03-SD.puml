@@ -1,37 +1,77 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "project_details.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== Delete Project ==
 
-User -> Sys: Clicks "Delete Project" button
-activate Sys
+activate U
+U -> V: Clicks "Delete Project" button
+deactivate U
 
-Sys --> User: Displays confirmation modal
+activate V
+V -> V: displayConfirmationModal()
+V -> U: Show confirmation modal
+deactivate V
 
-alt Confirms deletion? (yes)
-    User -> Sys: Selects "yes"
-    Sys -> DB: Sends deletion request (project_id)
-    activate DB
-    DB -> DB: Executes DELETE/ARCHIVE query
-    DB --> Sys: Returns success/failure status
-    deactivate DB
+alt Confirms deletion? (no)
+    activate U
+    U -> V: Clicks "Cancel" / Closes modal
+    deactivate U
+    activate V
+    V -> V: closeConfirmationModal()
+    V -> U: Displays Project Details page (no changes)
+    deactivate V
+
+else Confirms deletion? (yes)
+    activate U
+    U -> V: Clicks "Confirm" button
+    deactivate U
+    activate V
+    V -> V: captureProjectId(id)
+    V -> RO: fetch('/project/delete/:id', {method: DELETE})
+    deactivate V
+
+    activate RO
+    RO -> C: deleteProject(request, response)
+    deactivate RO
+
+    activate C
+    C -> M: deleteProjectById(project_id)
+    activate M
+    M -> BD: execute('DELETE FROM project WHERE id = ?', [project_id])
+    activate BD
     
-    alt Success? (yes)
-        Sys -> Sys: Redirects to Projects Dashboard
-        Sys --> User: Displays "Project Deleted Successfully" notification
-    else Success? (no)
-        Sys -> Sys: Generates error log
-        Sys --> User: Displays "Error: Could not delete project" message
+    alt Database Success? (yes)
+        BD --> M: success_status
+        M --> C: success_status
+        C -> V: response.json({success: true})
+        activate V
+        V -> V: redirectToDashboard()
+        V -> V: displaySuccessNotification("Project Deleted Successfully")
+        V -> U: Redirects and shows success message
+        deactivate V
+        
+    else Database Success? (no)
+        BD --> M: error_log
+        deactivate BD
+        M --> C: error_log
+        deactivate M
+        C -> V: response.json({success: false, error: 'Could not delete project'})
+        activate V
+        V -> V: displayErrorMessage("Error: Could not delete project")
+        V -> U: Displays error notification
+        deactivate V
     end
-    
-else Confirms deletion? (no)
-    User -> Sys: Selects "no"
-    Sys -> Sys: Closes modal
-    Sys --> User: Displays Project Details page (no changes)
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

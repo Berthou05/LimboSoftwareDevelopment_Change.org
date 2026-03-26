@@ -1,36 +1,89 @@
 @startuml
+skinparam style strictuml
+
+actor "Admin" as U
+boundary "roles.ejs" as V
+boundary "routes" as RO
+control "role.controller" as C
+entity "Privilege.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor "User (Admin)" as Admin
-participant "System" as Sys
-database "Database" as DB
+== Initialization ==
 
-Admin -> Sys: Navigates to Roles section
-activate Sys
-Sys -> Sys: Renders Roles Administration table
-Sys -> Sys: Displays toggle switches for each privilege
-Sys --> Admin: Show Roles UI
+activate U
+U -> V: Navigates to the Roles section
+deactivate U
+activate V
+V -> RO: fetch('/roles/administration', {method: GET})
+deactivate V
 
-Admin -> Sys: Toggles a specific Privilege switch
-Sys -> Sys: Captures change (Privilege ID + New State)
-Sys -> DB: Sends update request to server
-activate DB
+activate RO
+RO -> C: getRolesTable(request, response)
+deactivate RO
 
-DB -> DB: Updates relationship between Role and Privilege
+activate C
+C -> M: fetchAllPrivileges()
+activate M
+M -> BD: execute('SELECT * FROM privilege')
+activate BD
+BD --> M: privileges_data
+deactivate BD
+M --> C: privileges_data
+deactivate M
+
+C -> V: render('roles.ejs', {data: privileges_data})
+activate V
+V -> V: renderRolesTable()
+V -> V: displayToggleSwitches()
+V -> U: Show Roles Administration table
+deactivate V
+
+== Assign/Toggle Privilege ==
+
+activate U
+U -> V: Toggles a specific Privilege switch
+deactivate U
+activate V
+V -> V: captureChange(privilege_id, newState)
+V -> RO: fetch('/roles/update-privilege', {method: POST, body: JSON.stringify(data)})
+deactivate V
+
+activate RO
+RO -> C: updateRolePrivilege(request, response)
+deactivate RO
+
+activate C
+C -> M: updatePrivilegeRelationship(role_id, privilege_id, newState)
+activate M
+M -> BD: execute('REPLACE INTO role_privilege (role_id, privilege_id) VALUES (?, ?)', [r_id, p_id])
+activate BD
 
 alt Update Successful? (yes)
-    DB --> Sys: Confirms record update
-    Sys -> Sys: Displays success notification
-    Sys -> Sys: Refreshes toggle state in the UI
-    Sys --> Admin: UI updated (Success)
+    BD --> M: success
+    M --> C: success
+    C -> V: response.json({success: true})
+    activate V
+    V -> V: confirmRecordUpdate()
+    V -> V: displaySuccessNotification()
+    V -> V: refreshToggleState()
+    V -> U: Privilege updated successfully
+    deactivate V
+    
 else Update Successful? (no)
-    DB --> Sys: Returns error (Conflict/Connection)
-    deactivate DB
-    Sys -> Sys: Displays error message
-    Sys -> Sys: Reverts toggle switch to previous state
-    Sys --> Admin: UI reverted (Error)
+    BD --> M: error (Conflict/Connection)
+    deactivate BD
+    M --> C: error
+    deactivate M
+    C -> V: response.json({success: false, error: error})
+    activate V
+    V -> V: displayErrorMessage(error)
+    V -> V: revertToggleSwitch()
+    V -> U: Shows error and reverts switch
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

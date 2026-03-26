@@ -1,31 +1,64 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "project_details.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== View Project Participants ==
 
-User -> Sys: Selects specific Project from dashboard
-activate Sys
+activate U
+U -> V: Click "View Participants" button
+deactivate U
 
-Sys -> Sys: Retrieves project_id from selection
-Sys -> DB: Sends query for employees by project_id
-activate DB
+activate V
+V -> V: captureProjectId(id)
+V -> RO: fetch('/project/participants/:id', {method: GET})
+deactivate V
 
-DB --> Sys: Returns list of participants and roles
-deactivate DB
+activate RO
+RO -> C: getProjectParticipants(request, response)
+deactivate RO
 
-alt Are participants assigned? (yes)
-    Sys -> DB: Retrieves profile metadata and images
-    activate DB
-    DB --> Sys: Returns metadata
-    deactivate DB
-    Sys -> Sys: Renders "Project Participants" module
-    Sys --> User: Displays participant list and contact info
-else Are participants assigned? (no)
-    Sys --> User: Displays "No participants assigned" message
+activate C
+C -> M: fetchParticipantsByProjectId(project_id)
+activate M
+
+M -> BD: execute('SELECT e.name, e.role FROM employee e JOIN project_members pm ON e.id = pm.employee_id WHERE pm.project_id = ?', [project_id])
+activate BD
+
+alt Connection or Data Error? (yes)
+    BD --> M: connection_error
+    M --> C: error_status
+    C -> V: response.json({success: false, error: 'Database error'})
+    activate V
+    V -> U: Inform the user an error occurred
+    deactivate V
+    
+else Connection or Data Error? (no)
+    BD --> M: participants_list
+    deactivate BD
+    M --> C: participants_list
+    deactivate M
+    
+    C -> V: response.json({success: true, body: participants_list})
+    activate V
+    
+    alt Is the list empty?
+        V -> U: Show "No participants assigned" message
+    else List contains data
+        V -> V: formatParticipantsData(participants_list)
+        V -> V: renderParticipantsModal()
+        V -> U: Displays the list of all project participants
+    end
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml
