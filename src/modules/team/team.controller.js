@@ -11,12 +11,10 @@ const PAGE_SUBTITLE = 'Intermediate selection for own and other teams.';
 
 const normalizeTeam = function normalizeTeam(team) {
     return {
-        id: team.id ?? team.team_id ?? null,
+        id: team.team_id ?? null,
         name: team.name ?? 'Unnamed team',
         leadName:
-            team.leadName ??
-            team.lead_name ??
-            team.lead?.fullName ??
+            team.full_name ??
             'Pending assignment',
         description: team.description ?? 'No team description has been added yet.',
         image: team.image ?? null,
@@ -39,8 +37,8 @@ exports.getTeams = (request, response, next) => {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
-                pageTitle: 'Team',
-                pageSubtitle: 'Intermediate selection for own and other teams.',
+                pageTitle: PAGE_TITLE,
+                pageSubtitle: PAGE_SUBTITLE,
                 myTeams:teams,
                 otherTeams:notTeams,
                 query:'',
@@ -82,4 +80,13 @@ exports.getTeamPage = (request, response, next) => {
             console.log(error);
             next(error);
         });
+};
+
+exports.searchTeams = (request, response, next) => {
+    return response.json({
+                        query: '',
+                        resultsHtml: '',
+                        suggestions: '',
+                        totalTeams: '',
+                    });
 };
