@@ -14,21 +14,49 @@ const Goal = require('../../models/goal');
 
 /*getEmployee()
 Function responsible accesing the intermediate employee page
-only available for Lead and Admin.*/
+only available for Lead and Admin.
+Rendering the following information:
 
-//! This function is under developmemt as it is currently used
-//! for view testing.
-//! Correct later for intermediate page.
+csrfToken: request.csrfToken(),
+isLoggedIn: request.session.isLoggedIn || '',
+username: request.session.username || '',
+pageTitle: `Employee`,
+pageSubtitle: 'Intermediate selection for self and other employees.',
+me:me,
+employees:near_employees,
+*/
 
 exports.getEmployee = (request, response, next) => {
-    return response.render('pages/employee',{
-        csrfToken: request.csrfToken(),
-    });
+    const employeeId = request.session.employeeId;
+    Employee.fetchById(employeeId).then(([me,fieldData])=>{
+        Employee.getNearEmployees(employeeId).then(([near_employees,fieldData])=>{
+            return response.render('pages/employeeDirectory',{
+                csrfToken: request.csrfToken(),
+                isLoggedIn: request.session.isLoggedIn || '',
+                username: request.session.username || '',
+                pageTitle: `Employee`,
+                pageSubtitle: 'Intermediate selection for self and other employees.',
+                me:me,
+                employees:near_employees,
+            })
+        })
+        .catch((error)=>{
+            console.log(error);
+            request.session.error = `Error loading Intermediate. Near Employees Not Found`;
+            return response.redirect('/home');
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        request.session.error = `Error loading Intermediate. Your Employee Not Found`;
+        return response.redirect('/home');
+    })
 };
 
 /*getEmployeePage
 Function responsible for rendering a concrete employee page
 Render of:
+
 csrfToken: request.csrfToken(),
 isLoggedIn: request.session.isLoggedIn || '',
 username: request.session.username || '',

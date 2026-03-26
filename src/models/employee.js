@@ -53,6 +53,21 @@ module.exports = class Employee {
         );
     };
 
+    /*getNearEmployees(employee_id)
+    Function responsible for returning all close employees to a LEAD or ADMIN*/
+
+    static getNearEmployees(employee_id){
+        return db.execute('SELECT E.full_name, E.employee_id FROM employee as E INNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id INNER JOIN team as T ON ET.team_id=T.team_id WHERE ET.team_id IN(SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE ET.employee_id=? AND ET.role=?) UNION SELECT E.full_name, E.employee_id FROM employee as E INNER JOIN collaboration as C ON C.employee_id=E.employee_id INNER JOIN project as P on C.project_id=P.project_id WHERE C.project_id IN(SELECT P.project_id FROM project as P WHERE P.employee_responsible_id=?);',
+            [employee_id,'LEAD',employee_id]);
+    }
+
+    /*getNotNearEmployees(employee_id)
+    Function responsible for returning all not close employees to a LEAD or ADMIN*/
+
+    static getNotNearEmployees(employee_id){
+        return db.execute('SELECT E.full_name, E.employee_id FROM employee as E WHERE E.employee_id NOT IN(SELECT E.employee_id FROM employee as E INNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id INNER JOIN team as T ON ET.team_id=T.team_id WHERE ET.team_id IN(SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE ET.employee_id=? AND ET.role=?) UNION SELECT E.employee_id FROM employee as E INNER JOIN collaboration as C ON C.employee_id=E.employee_id INNER JOIN project as P on C.project_id=P.project_id WHERE C.project_id IN(SELECT P.project_id FROM project as P WHERE P.employee_responsible_id=?));',
+            [employee_id,'LEAD',employee_id])
+    }
 
 
     // Read all employees
