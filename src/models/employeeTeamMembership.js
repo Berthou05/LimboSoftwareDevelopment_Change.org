@@ -23,8 +23,10 @@ module.exports = class EmployeeTeam {
     based on employee_id*/
 
     static fetchTeamInfoByEmployee(employee_id) {
-        return db.execute('SELECT joined_at, role, T.name, T.description, T.image,T.employee_responsible_id, E.full_name  FROM employeeteam as ET INNER JOIN team as T ON T.team_id=ET.team_id INNER JOIN employee as E ON E.employee_id=T.employee_responsible_id WHERE ET.employee_id=?'
-            ,[employee_id]);
+        return db.execute(
+            'SELECT ET.team_id, ET.joined_at, ET.role, T.name, T.description, T.image, T.employee_responsible_id, E.full_name FROM employeeteam as ET INNER JOIN team as T ON T.team_id=ET.team_id INNER JOIN employee as E ON E.employee_id=T.employee_responsible_id WHERE ET.employee_id=? AND ET.left_at IS NULL ORDER BY ET.joined_at DESC',
+            [employee_id]
+        );
     }
 
     // Create or Update employee-team membership
