@@ -194,7 +194,17 @@ exports.createProject = (request, response, next) => {
         endDate: typeof request.body.endDate === 'string' ? request.body.endDate.trim() : '',
     };
 
+    const formErrors = [];
+
     if (!projectForm.name) {
+        formErrors.push('Project name is required.');
+    }
+
+    if (!projectForm.startDate) {
+        formErrors.push('Start date is required.');
+    }
+
+    if (formErrors.length > 0) {
         return response.status(422).render('pages/projectNew', {
             csrfToken: request.csrfToken(),
             isLoggedIn: request.session.isLoggedIn || '',
@@ -202,7 +212,7 @@ exports.createProject = (request, response, next) => {
             pageTitle: PROJECT_CREATE_PAGE_TITLE,
             pageSubtitle: PROJECT_CREATE_PAGE_SUBTITLE,
             projectForm,
-            formErrors: ['Project name is required.'],
+            formErrors,
             formError: '',
             formSuccess: '',
         });
@@ -223,15 +233,18 @@ exports.createProject = (request, response, next) => {
             });
         }
 
-        return Project.create({
-            employee_responsible_id: employeeId,
-            name: projectForm.name,
-            description: projectForm.description || null,
-            status: Project.Status.IN_PROGRESS,
-            start_date: projectForm.startDate || null,
-            end_date: projectForm.endDate || null,
-            created_at: new Date(),
-        }).then(() => {
+        const project = new Project(
+            '',
+            employeeId,
+            projectForm.name,
+            projectForm.description || null,
+            Project.Status.IN_PROGRESS,
+            projectForm.startDate || null,
+            projectForm.endDate || null,
+            new Date(),
+        );
+
+        return project.save().then(() => {
             return response.redirect('/projects');
         });
     }).catch((error) => {
