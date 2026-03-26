@@ -249,6 +249,7 @@ exports.getTeamPage = (request, response, next) => {
         });
 };
 
+
 exports.toggleTeamMembership = (request, response, next) => {
     const teamId = request.params.team_id;
     const isAddMemberRequest = Object.prototype.hasOwnProperty.call(request.body, 'employeeId');
@@ -318,7 +319,6 @@ exports.addTeamMember = (request, response, next) => {
                     role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
                 });
             }
-
             return Promise.resolve();
         })
         .then(() => respondMembershipRequest(request, response, teamId, 200, {
@@ -362,6 +362,9 @@ exports.removeTeamMember = (request, response, next) => {
                 });
             }
 
+            // TODO: Is it neccesary?
+            // TODO: As no members that are not part of the team should be shown here.
+            
             if (!membership || membership.left_at) {
                 return respondMembershipRequest(request, response, teamId, 404, {
                     error: 'That employee is not an active member of the team.',
