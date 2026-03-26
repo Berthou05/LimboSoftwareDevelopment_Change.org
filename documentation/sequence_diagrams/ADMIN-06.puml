@@ -9,7 +9,7 @@ entity "Employee.model" as EM
 entity "Account.model" as AM
 entity "AccountRole.model" as ARM
 database "unitas_system" as BD
-
+autonumber
 activate U
 U -> RO: GET /accounts/new
 deactivate U
