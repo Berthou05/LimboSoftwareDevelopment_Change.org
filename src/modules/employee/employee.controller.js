@@ -21,9 +21,8 @@ only available for Lead and Admin.*/
 //! Correct later for intermediate page.
 
 exports.getEmployee = (request, response, next) => {
-    return response.render('pages/employee',{
-        csrfToken: request.csrfToken(),
-    });
+    const employeeId = request.session.employeeId;
+    
 };
 
 /*getEmployeePage
