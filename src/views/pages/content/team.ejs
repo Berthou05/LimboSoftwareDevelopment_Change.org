@@ -1,6 +1,11 @@
-<div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
-  <%- include('../../partials/teamDirectory/teamDetailsCard', { team }) %>
-  <%- include('../../partials/teamDirectory/teamprojects', { team }) %>
+<div class="grid gap-6 md:grid-cols-[2fr_1fr]">
+  <section class="space-y-6">
+    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+      <%- include('../../partials/teamDirectory/teamDetailsCard', { team }) %>
+    </div>
+
+    <%- include('../../partials/teamDirectory/teamprojects', { team }) %>
+  </section>
 
   <section class="space-y-4">
     <%- include('../../partials/teamDirectory/joinButton', {
@@ -8,7 +13,6 @@
       isMember: typeof isMember !== 'undefined' ? isMember : false,
       csrfToken
     }) %>
-    <%# include('../../partials/reportGenerator', { team, isMember }) %>
     <%- include('../../partials/teamDirectory/teamParticipants', { team }) %>
     <%- include('../../partials/teamDirectory/teamActivity', {
       activitySections: typeof activitySections !== 'undefined' ? activitySections : []
