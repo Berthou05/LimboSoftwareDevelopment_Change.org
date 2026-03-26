@@ -6,7 +6,10 @@ Modified by: Hurtado, R.
 
 const Team = require('../../models/team');
 
-function normalizeTeam(team) {
+const PAGE_TITLE = 'Team';
+const PAGE_SUBTITLE = 'Intermediate selection for own and other teams.';
+
+const normalizeTeam = function normalizeTeam(team) {
     return {
         id: team.id ?? team.team_id ?? null,
         name: team.name ?? 'Unnamed team',
@@ -58,7 +61,7 @@ exports.getTeams = (request, response, next) => {
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
     Team.findById(teamId)
-        .then(([teamRows, fieldData]) => {
+        .then(([teamRows]) => {
             if (!teamRows || teamRows.length === 0) {
                 return response.status(404).render('pages/team', {
                     error: 'Team not found',

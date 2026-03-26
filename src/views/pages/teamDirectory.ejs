@@ -1,8 +1,10 @@
 <%- include('../layout', {
-  page: 'pages/content/teamDirectory',
-  pageTitle: 'Team',
-  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/teams',
-  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
+    page: 'pages/content/teamDirectory',
+    pageTitle: 'Team',
+    pageSubtitle: typeof pageSubtitle !== 'undefined' ? pageSubtitle : '',
+    pageScriptPaths: ['/js/teamDirectorySearch.js'],
+    sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+    layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/teams',
+    layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+    layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : '',
 }) %>
