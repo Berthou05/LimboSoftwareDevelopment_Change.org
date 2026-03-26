@@ -28,39 +28,22 @@ module.exports = class Team {
         return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
     }
 
-    static fetchDirectory(employee_id, searchTerm = '') {
-        const normalizedSearch = `%${searchTerm}%`;
+    /*fetchByEmployeeId(employee_id)
+    Function responsible for returning all teams an employee is part of*/
 
-        return db.execute(
-            `SELECT
-                T.team_id,
-                T.name,
-                T.description,
-                T.image,
-                T.status,
-                E.full_name AS lead_name,
-                CASE
-                    WHEN ET.employee_id IS NULL THEN 0
-                    ELSE 1
-                END AS is_member
-            FROM team AS T
-            INNER JOIN employee AS E
-                ON E.employee_id = T.employee_responsible_id
-            LEFT JOIN employeeteam AS ET
-                ON ET.team_id = T.team_id
-                AND ET.employee_id = ?
-                AND ET.left_at IS NULL
-            WHERE T.status = 'ACTIVE'
-                AND (
-                    ? = ''
-                    OR T.name LIKE ?
-                    OR T.description LIKE ?
-                    OR E.full_name LIKE ?
-                )
-            ORDER BY is_member DESC, T.name ASC`,
-            [employee_id || '', searchTerm, normalizedSearch, normalizedSearch, normalizedSearch]
-        );
+    static fetchByEmployeeId(employee_id){
+        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=?;',
+            [employee_id]);
     }
+
+    /*fetchNotByEmployeeId(employee_id)
+    Function responsible for returning all teams an employee is not part of*/
+
+    static fetchNotByEmployeeId(employee_id){
+        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=?)',
+            [employee_id]);
+    }
+
 
     /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
     Function responsible for obtaining all team information based on an

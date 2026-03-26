@@ -7,15 +7,11 @@
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-START TRANSACTION;
-SET time_zone = "+00:00";
-
-
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
+
 
 --
 -- Database: `unitas_system`
@@ -367,60 +363,60 @@ CREATE TABLE `employeeteam` (
 
 INSERT INTO `employeeteam` (`employee_id`, `team_id`, `joined_at`, `left_at`, `role`) VALUES
 ('emp-001', 'team-001', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-001', 'team-014', '2026-01-21 00:00:00', NULL, ''),
-('emp-002', 'team-001', '2026-01-02 00:00:00', NULL, ''),
+('emp-001', 'team-014', '2026-01-21 00:00:00', NULL, 'EMPLOYEE'),
+('emp-002', 'team-001', '2026-01-02 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-002', 'team-002', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-002', 'team-015', '2026-01-22 00:00:00', NULL, ''),
-('emp-003', 'team-001', '2026-01-03 00:00:00', NULL, ''),
+('emp-002', 'team-015', '2026-01-22 00:00:00', NULL, 'EMPLOYEE'),
+('emp-003', 'team-001', '2026-01-03 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-003', 'team-003', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-003', 'team-016', '2026-01-23 00:00:00', NULL, ''),
-('emp-004', 'team-002', '2026-01-04 00:00:00', NULL, ''),
+('emp-003', 'team-016', '2026-01-23 00:00:00', NULL, 'EMPLOYEE'),
+('emp-004', 'team-002', '2026-01-04 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-004', 'team-004', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-004', 'team-017', '2026-01-24 00:00:00', '2026-02-28 00:00:00', ''),
-('emp-005', 'team-002', '2026-01-05 00:00:00', NULL, ''),
+('emp-004', 'team-017', '2026-01-24 00:00:00', '2026-02-28 00:00:00', 'EMPLOYEE'),
+('emp-005', 'team-002', '2026-01-05 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-005', 'team-005', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-005', 'team-018', '2026-01-25 00:00:00', NULL, ''),
-('emp-006', 'team-003', '2026-01-06 00:00:00', NULL, ''),
+('emp-005', 'team-018', '2026-01-25 00:00:00', NULL, 'EMPLOYEE'),
+('emp-006', 'team-003', '2026-01-06 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-006', 'team-006', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-006', 'team-019', '2026-01-26 00:00:00', NULL, ''),
-('emp-007', 'team-004', '2026-01-07 00:00:00', NULL, ''),
+('emp-006', 'team-019', '2026-01-26 00:00:00', NULL, 'EMPLOYEE'),
+('emp-007', 'team-004', '2026-01-07 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-007', 'team-007', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-007', 'team-020', '2026-01-27 00:00:00', '2026-02-15 00:00:00', ''),
-('emp-008', 'team-001', '2026-02-01 00:00:00', NULL, ''),
-('emp-008', 'team-004', '2026-01-08 00:00:00', NULL, ''),
+('emp-007', 'team-020', '2026-01-27 00:00:00', '2026-02-15 00:00:00', 'EMPLOYEE'),
+('emp-008', 'team-001', '2026-02-01 00:00:00', NULL, 'EMPLOYEE'),
+('emp-008', 'team-004', '2026-01-08 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-008', 'team-008', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-009', 'team-003', '2026-02-02 00:00:00', NULL, ''),
-('emp-009', 'team-005', '2026-01-09 00:00:00', NULL, ''),
+('emp-009', 'team-003', '2026-02-02 00:00:00', NULL, 'EMPLOYEE'),
+('emp-009', 'team-005', '2026-01-09 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-009', 'team-009', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-010', 'team-004', '2026-02-03 00:00:00', NULL, ''),
-('emp-010', 'team-006', '2026-01-10 00:00:00', NULL, ''),
+('emp-010', 'team-004', '2026-02-03 00:00:00', NULL, 'EMPLOYEE'),
+('emp-010', 'team-006', '2026-01-10 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-010', 'team-010', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-011', 'team-005', '2026-02-04 00:00:00', NULL, ''),
-('emp-011', 'team-006', '2026-01-11 00:00:00', '2026-02-20 00:00:00', ''),
+('emp-011', 'team-005', '2026-02-04 00:00:00', NULL, 'EMPLOYEE'),
+('emp-011', 'team-006', '2026-01-11 00:00:00', '2026-02-20 00:00:00', 'EMPLOYEE'),
 ('emp-011', 'team-011', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-012', 'team-006', '2026-02-05 00:00:00', NULL, ''),
-('emp-012', 'team-007', '2026-01-12 00:00:00', NULL, ''),
+('emp-012', 'team-006', '2026-02-05 00:00:00', NULL, 'EMPLOYEE'),
+('emp-012', 'team-007', '2026-01-12 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-012', 'team-012', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-013', 'team-007', '2026-02-06 00:00:00', NULL, ''),
-('emp-013', 'team-008', '2026-01-13 00:00:00', NULL, ''),
+('emp-013', 'team-007', '2026-02-06 00:00:00', NULL, 'EMPLOYEE'),
+('emp-013', 'team-008', '2026-01-13 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-013', 'team-013', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-014', 'team-008', '2026-01-14 00:00:00', NULL, ''),
-('emp-014', 'team-009', '2026-02-07 00:00:00', NULL, ''),
+('emp-014', 'team-008', '2026-01-14 00:00:00', NULL, 'EMPLOYEE'),
+('emp-014', 'team-009', '2026-02-07 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-014', 'team-014', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-015', 'team-009', '2026-01-15 00:00:00', NULL, ''),
-('emp-015', 'team-011', '2026-02-08 00:00:00', NULL, ''),
+('emp-015', 'team-009', '2026-01-15 00:00:00', NULL, 'EMPLOYEE'),
+('emp-015', 'team-011', '2026-02-08 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-015', 'team-015', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-016', 'team-010', '2026-01-16 00:00:00', NULL, ''),
-('emp-016', 'team-013', '2026-02-09 00:00:00', NULL, ''),
+('emp-016', 'team-010', '2026-01-16 00:00:00', NULL, 'EMPLOYEE'),
+('emp-016', 'team-013', '2026-02-09 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-016', 'team-016', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-017', 'team-010', '2026-01-17 00:00:00', '2026-02-25 00:00:00', ''),
+('emp-017', 'team-010', '2026-01-17 00:00:00', '2026-02-25 00:00:00', 'EMPLOYEE'),
 ('emp-017', 'team-017', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-017', 'team-018', '2026-02-10 00:00:00', NULL, ''),
-('emp-018', 'team-011', '2026-01-18 00:00:00', NULL, ''),
+('emp-017', 'team-018', '2026-02-10 00:00:00', NULL, 'EMPLOYEE'),
+('emp-018', 'team-011', '2026-01-18 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-018', 'team-018', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-019', 'team-012', '2026-01-19 00:00:00', NULL, ''),
+('emp-019', 'team-012', '2026-01-19 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-019', 'team-019', '2026-01-01 00:00:00', NULL, 'LEAD'),
-('emp-020', 'team-013', '2026-01-20 00:00:00', NULL, ''),
+('emp-020', 'team-013', '2026-01-20 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-020', 'team-020', '2026-01-01 00:00:00', NULL, 'LEAD');
 
 -- --------------------------------------------------------
@@ -595,7 +591,7 @@ CREATE TABLE `project` (
 --
 
 INSERT INTO `project` (`project_id`, `employee_responsible_id`, `name`, `description`, `status`, `start_date`, `end_date`, `created_at`) VALUES
-('proj-000', 'emp-020', 'Unassigned', 'General operational tasks not associated with a specific project.', '', '2026-01-01', NULL, '2026-01-01 00:00:00'),
+('proj-000', 'emp-020', 'Unassigned', 'General operational tasks not associated with a specific project.', 'IN PROGRESS', '2026-01-01', NULL, '2026-01-01 00:00:00'),
 ('proj-001', 'emp-001', 'Starter Share Optimization', 'Improve share experience and increase starter shares by 15%.', 'IN PROGRESS', '2026-01-01', NULL, '2026-01-01 00:00:00'),
 ('proj-002', 'emp-006', 'Recruit Share Growth', 'Increase recruit shares per petition through growth experiments.', 'IN PROGRESS', '2026-01-01', NULL, '2026-01-01 00:00:00'),
 ('proj-003', 'emp-004', 'Quality Petition Improvement', 'Improve petition validation and quality scoring system.', 'IN PROGRESS', '2026-01-01', NULL, '2026-01-01 00:00:00'),

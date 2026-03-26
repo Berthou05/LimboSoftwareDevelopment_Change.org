@@ -21,34 +21,41 @@ function normalizeTeam(team) {
     };
 }
 
+
+/*getTeams
+Function responsible for the obtention of the Teams in the Intermediate
+Teams page.
+This is only the initial render, returning no search results.
+*/
+
 exports.getTeams = (request, response, next) => {
-    const query = String(request.query.q || '').trim();
     const employeeId = request.session.employeeId || '';
-
-    Team.fetchDirectory(employeeId, query)
-        .then(([rows]) => {
-            const teams = rows.map(normalizeTeam);
-            const myTeams = teams.filter((team) => team.isMember);
-            const otherTeams = teams.filter((team) => !team.isMember);
-
+    Team.fetchByEmployeeId(employeeId).then(([teams, fieldData])=>{
+        Team.fetchNotByEmployeeId(employeeId).then(([notTeams, fieldData])=>{
             return response.render('pages/teamDirectory', {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
                 pageTitle: 'Team',
                 pageSubtitle: 'Intermediate selection for own and other teams.',
-                query,
-                myTeams,
-                otherTeams,
+                myTeams:teams,
+                otherTeams:notTeams,
+                query:'',
             });
         })
-        .catch((error) => {
+        .catch((error)=>{
             console.log(error);
-            next(error);
-        });
+            return response.redirect('/home');
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return response.redirect('/home');
+    })
 };
 
-exports.getTeamDetails = (request, response, next) => {
+
+exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
     Team.findById(teamId)
         .then(([teamRows, fieldData]) => {
