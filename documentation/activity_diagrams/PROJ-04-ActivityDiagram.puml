@@ -1,31 +1,30 @@
 @startuml
-skinparam conditionStyle diamond
-|Usuario|
+|User|
 start
-:Select a proyect from the list;
+:Hovers or makes a click over the project Information button;
 
-|Sistema|
-:Capture selected proyect's ID;
-:Send proyect's details consult;
+|System|
+:Obtains project_id from the project page;
+:Sends a query to obtain description, name, status, start_date, end_date and created_at to the database;
 
-|Base de Datos|
-:Search proyect's information\n(Name, Desc, Team, etc.);
+|Database|
+:Returns the query;
 
-if (¿Register exist?) then (yes)
-    :Return proyect's details;
-    |Sistema|
-    :Process and format data for visualization;
-    :Render details' interface;
-    |Usuario|
-    :Visualize proyect's information;
-    stop
-else (no)
-    |Base de Datos|
-    :Return error (Register not found);
-    |Sistema|
-    :Show error message on teh interface;
-    |Usuario|
-    :Return to list of proyects;
+|System|
+:Verifies none of the information is null;
+if(Is any of the information null?) then (no)
+else(yes)
+    |User|
+    :Is informed an error has ocurred;
     stop
 endif
+
+|System|
+:Creates a popover with the project information;
+:Shows the popover;
+
+|User|
+:Passes the mouse or clicks outside the area of the project Information button;
+stop
+
 @enduml
