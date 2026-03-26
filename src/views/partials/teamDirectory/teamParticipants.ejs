@@ -13,19 +13,29 @@
             <p class="text-sm text-brand-text/70">No participants assigned.</p>
         <% } %>
         <% membersDetailed.forEach((member) => { %>
-            <a href="/employees/<%= member.employee?.id %>" class="flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50">
-                <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
-                    <%= member.employee?.fullName ? member.employee.fullName.split(' ').map(n => n[0]).join('') : '?' %>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold text-brand-text truncate"><%= member.employee?.fullName || 'Unknown' %></p>
-                    <p class="text-[10px] text-brand-text/50 truncate"><%= member.role %></p>
-                </div>
-            </a>
+            <div class="flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50 group">
+                <a href="/employees/<%= member.employee?.id %>" class="flex items-center gap-2 flex-1 min-w-0">
+                    <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
+                        <%= member.employee?.fullName ? member.employee.fullName.split(' ').map(n => n[0]).join('') : '?' %>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs font-semibold text-brand-text truncate"><%= member.employee?.fullName || 'Unknown' %></p>
+                        <p class="text-[10px] text-brand-text/50 truncate"><%= member.role %></p>
+                    </div>
+                </a>
+                <% if (member.employee?.id !== currentEmployeeId && member.role !== 'LEAD') { %>
+                    <form class="remove-member-form ml-2" action="/teams/<%= team.id %>/members/<%= member.employee?.id %>/remove" method="POST">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from team">
+                            Remove
+                        </button>
+                    </form>
+                <% } %>
+            </div>
         <% }) %>
     </div>
     <div id="addMemberPanel" class="hidden mt-2">
-        <form action="/teams/<%= team.id %>/toggle-membership" method="POST" autocomplete="off" class="relative">
+        <form class="add-member-form relative" action="/teams/<%= team.id %>/members" method="POST" autocomplete="off">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <label for="addMemberSearch" class="block mb-2 text-sm font-semibold text-brand-text">Add member to team:</label>
             <div class="flex items-center rounded-xl border border-brand-secondary bg-white px-3">

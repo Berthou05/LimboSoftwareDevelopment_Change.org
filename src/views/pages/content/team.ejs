@@ -16,6 +16,7 @@
     <%- include('../../partials/teamDirectory/teamParticipants', {
       team,
       csrfToken,
+      currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
       availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : []
     }) %>
     <%- include('../../partials/teamDirectory/teamActivity', {

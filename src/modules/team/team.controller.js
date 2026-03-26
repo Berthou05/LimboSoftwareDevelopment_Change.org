@@ -72,6 +72,26 @@ const buildActivitySections = function buildActivitySections(activities) {
         }));
 };
 
+const respondMembershipRequest = function respondMembershipRequest(
+    request,
+    response,
+    teamId,
+    statusCode,
+    payload,
+) {
+    const acceptHeader = request.get('Accept') || '';
+
+    if (acceptHeader.includes('application/json')) {
+        return response.status(statusCode).json(payload);
+    }
+
+    if (payload && payload.error) {
+        request.session.error = payload.error;
+    }
+
+    return response.redirect(`/teams/${teamId}`);
+};
+
 
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate
@@ -214,6 +234,7 @@ exports.getTeamPage = (request, response, next) => {
                 pageTitle: `Team ${team.name}`,
                 pageSubtitle: '',
                 team,
+                currentEmployeeId: request.session.employeeId || null,
                 isMember: team.membersDetailed.some(
                     (member) => member.employee.id === request.session.employeeId
                 ),
@@ -269,6 +290,94 @@ exports.toggleTeamMembership = (request, response, next) => {
             console.log(error);
             request.session.error = `Error updating membership for team ${teamId}.`;
             return response.redirect(`/teams/${teamId}`);
+        });
+};
+
+exports.addTeamMember = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = String(request.body.employeeId || '').trim();
+
+    if (!employeeId) {
+        return respondMembershipRequest(request, response, teamId, 400, {
+            error: 'Select a valid employee to add to the team.',
+        });
+    }
+
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId)
+        .then(([memberships]) => {
+            const membership = memberships[0];
+
+            if (!membership) {
+                return EmployeeTeamMembership.join(employeeId, teamId);
+            }
+
+            if (membership.left_at) {
+                return EmployeeTeamMembership.update(employeeId, teamId, {
+                    joined_at: new Date(),
+                    left_at: null,
+                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                });
+            }
+
+            return Promise.resolve();
+        })
+        .then(() => respondMembershipRequest(request, response, teamId, 200, {
+            success: true,
+        }))
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, teamId, 500, {
+                error: `Error adding a member to team ${teamId}.`,
+            });
+        });
+};
+
+exports.removeTeamMember = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.params.employee_id;
+
+    Promise.all([
+        Team.findById(teamId),
+        EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId),
+    ])
+        .then(([[teamRows], [memberships]]) => {
+            const teamRow = teamRows[0];
+            const membership = memberships[0];
+
+            if (!teamRow) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: `Team ${teamId} was not found.`,
+                });
+            }
+
+            if (teamRow.employee_responsible_id === employeeId) {
+                return respondMembershipRequest(request, response, teamId, 400, {
+                    error: 'The team lead cannot be removed from the team.',
+                });
+            }
+
+            if (employeeId === request.session.employeeId) {
+                return respondMembershipRequest(request, response, teamId, 400, {
+                    error: 'Use the Leave Team action to remove yourself.',
+                });
+            }
+
+            if (!membership || membership.left_at) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: 'That employee is not an active member of the team.',
+                });
+            }
+
+            return EmployeeTeamMembership.leave(employeeId, teamId)
+                .then(() => respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                }));
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, teamId, 500, {
+                error: `Error removing a member from team ${teamId}.`,
+            });
         });
 };
 
