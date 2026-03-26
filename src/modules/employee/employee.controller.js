@@ -28,29 +28,37 @@ employees:near_employees,
 
 exports.getEmployee = (request, response, next) => {
     const employeeId = request.session.employeeId;
-    Employee.fetchById(employeeId).then(([me,fieldData])=>{
-        Employee.getNearEmployees(employeeId).then(([near_employees,fieldData])=>{
-            return response.render('pages/employeeDirectory',{
-                csrfToken: request.csrfToken(),
-                isLoggedIn: request.session.isLoggedIn || '',
-                username: request.session.username || '',
-                pageTitle: `Employee`,
-                pageSubtitle: 'Intermediate selection for self and other employees.',
-                me:me,
-                employees:near_employees,
+    const privileges = request.session.privileges;
+    for(let priv in privileges){
+        if(priv == 'TEAM-01'){
+            Employee.fetchById(employeeId).then(([me,fieldData])=>{
+            Employee.getNearEmployees(employeeId).then(([near_employees,fieldData])=>{
+                return response.render('pages/employeeDirectory',{
+                    csrfToken: request.csrfToken(),
+                    isLoggedIn: request.session.isLoggedIn || '',
+                    username: request.session.username || '',
+                    pageTitle: `Employee`,
+                    pageSubtitle: 'Intermediate selection for self and other employees.',
+                    me:me,
+                    employees:near_employees,
+                })
+            })
+            .catch((error)=>{
+                console.log(error);
+                request.session.error = `Error loading Intermediate. Near Employees Not Found`;
+                return response.redirect('/home');
             })
         })
         .catch((error)=>{
             console.log(error);
-            request.session.error = `Error loading Intermediate. Near Employees Not Found`;
+            request.session.error = `Error loading Intermediate. Your Employee Not Found`;
             return response.redirect('/home');
         })
-    })
-    .catch((error)=>{
-        console.log(error);
-        request.session.error = `Error loading Intermediate. Your Employee Not Found`;
-        return response.redirect('/home');
-    })
+        }
+    }
+    return response.redirect(`/employee/${employeeId}`);
+
+    
 };
 
 /*getEmployeePage
