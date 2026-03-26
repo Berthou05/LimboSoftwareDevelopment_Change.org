@@ -1,6 +1,6 @@
 /*
 Title: employee.controller.js
-Last modification: March 24,2026
+Last modification: March 26,2026
 Modified by: Hurtado, R.
 */
 
@@ -12,9 +12,70 @@ const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 
+//--------------------------- Auxiliar Functions ---------------------------
+
+/*buildAvatarUrl(fullName)
+Auxiliar function responsible for creating a random avatar based on an employee fullName*/
+
 const buildAvatarUrl = function buildAvatarUrl(fullName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=fbfbfe&color=1f2937`;
 };
+
+/*formatDayLabel(value)
+Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
+month, day, year*/
+
+const formatDayLabel = function formatDayLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+/*buildActivitySections(activities)
+Auxiliar function responsible for creating the format of activities
+required for the activity visualization modal.*/
+
+const buildActivitySections = function buildActivitySections(activities) {
+    const grouped = new Map();
+
+    activities.forEach((activity) => {
+        const rawDate = activity.completed_at;
+        const key = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : 'unknown';
+        const items = grouped.get(key) || [];
+        const authorName = activity.full_name || 'Unknown';
+
+        items.push({
+            title: activity.title || 'Untitled activity',
+            description: activity.description || '',
+            authorName,
+            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            activityTimeLabel: rawDate
+                ? new Date(rawDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                })
+                : '',
+        });
+
+        grouped.set(key, items);
+    });
+
+    return [...grouped.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([key, items]) => ({
+            dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
+            items,
+        }));
+};
+
+//--------------------------- Main Functions ---------------------------
 
 /*getEmployee()
 Function responsible accesing the intermediate employee page
@@ -42,26 +103,31 @@ exports.getEmployee = (request, response, next) => {
         return response.redirect(`/employee/${employeeId}`);
     }
 
-    Employee.fetchById(employeeId).then(([me]) => {
-        return Employee.getNearEmployees(employeeId)
-            .then(([near_employees]) => {
-                return response.render('pages/employeeDirectory', {
-                    csrfToken: request.csrfToken(),
-                    isLoggedIn: request.session.isLoggedIn || '',
-                    username: request.session.username || '',
-                    pageTitle: `Employee`,
-                    pageSubtitle: 'Intermediate selection for self and other employees.',
-                    me: me[0],
-                    employees: near_employees,
-                    query: '',
-                });
-            });
-        })
-        .catch((error) => {
-            console.log(error);
-            request.session.error = `Error loading Intermediate`;
-            return response.redirect('/home');
+    Employee.getNearEmployees(employeeId).then(([near_employees]) => {
+
+        const employees = near_employees.map((employee) => ({
+            employee_id:employee.employee_id,
+            full_name: employee.full_name,
+            slack_username: employee.slack_username,
+            email:employee.email,
+            image: buildAvatarUrl(employee.full_name),
+        }));
+
+        return response.render('pages/employeeDirectory', {
+            csrfToken: request.csrfToken(),
+            isLoggedIn: request.session.isLoggedIn || '',
+            username: request.session.username || '',
+            pageTitle: `Employee`,
+            pageSubtitle: 'Intermediate selection for self and other employees.',
+            employees: employees,
+            query: '',
         });
+    })
+    .catch((error) => {
+        console.log(error);
+        request.session.error = `Error loading Intermediate`;
+        return response.redirect('/home');
+    });
 };
 
 /*getEmployeePage
@@ -80,16 +146,11 @@ projects:projects,*/
 
 exports.getEmployeePage = (request, response, next)=>{
     const employeeId = request.params.employee_id;
-    console.log(employeeId);
     const projects = [];
     EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([team, fieldData])=>{
-        console.log('team_info');
         Employee.fetchById(employeeId).then(([info,fieldData])=>{
-            console.log('employee_info');
             Activity.fetchByEmployee(employeeId).then(([activities,fieldData])=>{
-                console.log('activities');
                 Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
-                    console.log('projects');
 
                     const projectRows = employee_projects.map(proj => ({
                         project: {
@@ -110,9 +171,9 @@ exports.getEmployeePage = (request, response, next)=>{
                     }));
 
                     const employee = {
-                        employee_id: info.employee_id,
-                        full_name: info.full_name,
-                        image: buildAvatarUrl(info.full_name),
+                        employee_id: info[0].employee_id,
+                        full_name: info[0].full_name,
+                        image: buildAvatarUrl(info[0].full_name),
                     };
 
                     //Analizar como se declara projectRows. Su estructura
@@ -169,49 +230,4 @@ exports.getEmployeePage = (request, response, next)=>{
     })
 }
 
-const formatDayLabel = function formatDayLabel(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return 'Unknown date';
-    }
-
-    return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
-};
-
-const buildActivitySections = function buildActivitySections(activities) {
-    const grouped = new Map();
-
-    activities.forEach((activity) => {
-        const rawDate = activity.completed_at || activity.completedAt;
-        const key = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : 'unknown';
-        const items = grouped.get(key) || [];
-        const authorName = activity.full_name || activity.authorName || 'Unknown';
-
-        items.push({
-            title: activity.title || 'Untitled activity',
-            description: activity.description || '',
-            authorName,
-            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
-            activityTimeLabel: rawDate
-                ? new Date(rawDate).toLocaleTimeString('en-US', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                })
-                : '',
-        });
-
-        grouped.set(key, items);
-    });
-
-    return [...grouped.entries()]
-        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-        .map(([key, items]) => ({
-            dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
-            items,
-        }));
-};
 

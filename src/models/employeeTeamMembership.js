@@ -24,12 +24,78 @@ module.exports = class EmployeeTeam {
 
     static fetchTeamInfoByEmployee(employee_id) {
         return db.execute(
-            'SELECT ET.team_id, ET.joined_at, ET.role, T.name, T.description, T.image, T.employee_responsible_id, E.full_name FROM employeeteam as ET INNER JOIN team as T ON T.team_id=ET.team_id INNER JOIN employee as E ON E.employee_id=T.employee_responsible_id WHERE ET.employee_id=? AND ET.left_at IS NULL ORDER BY ET.joined_at DESC',
+            `SELECT ET.team_id, ET.joined_at, ET.role, T.name, T.description, T.image, T.employee_responsible_id, E.full_name 
+            FROM employeeteam as ET 
+            INNER JOIN team as T ON T.team_id=ET.team_id 
+            INNER JOIN employee as E ON E.employee_id=T.employee_responsible_id 
+            WHERE ET.employee_id=? AND ET.left_at IS NULL 
+            ORDER BY ET.joined_at DESC`,
             [employee_id]
         );
     }
 
-    // Create or Update employee-team membership
+    /*fetchByEmployeeAndTeam(employee_id, team_id)
+    Function responsible for providing the tuple if existent
+    between employee_id and team_id*/
+
+    static fetchByEmployeeAndTeam(employee_id, team_id) {
+        return db.execute(
+            `SELECT * 
+            FROM employeeteam 
+            WHERE employee_id=? AND team_id=?`,
+            [employee_id, team_id]
+        );
+    }
+
+    /*update(employee_id, team_id, updateData)
+    Function responsible for updating all data
+    related to a tuple of employeeTeam*/
+
+    static update(employee_id, team_id, updateData) {
+        return db.execute(
+            `UPDATE employeeteam 
+            SET joined_at=?, left_at=?, role=? 
+            WHERE employee_id=? AND team_id=?`,
+            [
+                updateData.joined_at,
+                updateData.left_at,
+                updateData.role,
+                employee_id,
+                team_id,
+            ]
+        );
+    }
+
+    /*join(employee_id, team_id, joined_at = new Date(), role = EmployeeRole.EMPLOYEE)
+    Function responsible for creating a tuple in the employeeTeam table*/
+
+    static join(employee_id, team_id, joined_at = new Date(), role = EmployeeRole.EMPLOYEE) {
+        return db.execute(
+            `INSERT INTO employeeteam(employee_id, team_id, joined_at, left_at, role) 
+            VALUES(?,?,?,?,?)`,
+            [employee_id, team_id, joined_at, null, role]
+        );
+    }
+
+    /*leave(employee_id, team_id, left_at = new Date())
+    Function responsible for ending a membership into team
+    at current date*/
+
+    static leave(employee_id, team_id, left_at = new Date()) {
+        return db.execute(
+            `UPDATE employeeteam 
+            SET left_at=? 
+            WHERE employee_id=? AND team_id=?`,
+            [left_at, employee_id, team_id]
+        );
+    }
+
+    // Delete membership
+    static delete(employee_id, team_id) {
+        // TODO: Implement database delete logic
+    }
+
+        // Create or Update employee-team membership
     save() {
         // TODO: Implement database logic
         // If relationship exists, update; otherwise, insert new record
@@ -43,47 +109,6 @@ module.exports = class EmployeeTeam {
     // Read memberships by team ID
     static fetchByTeam(team_id) {
         // TODO: Implement database query to fetch all employees in a team
-    }
-
-    // Read specific membership
-    static fetchByEmployeeAndTeam(employee_id, team_id) {
-        return db.execute(
-            'SELECT * FROM employeeteam WHERE employee_id=? AND team_id=?',
-            [employee_id, team_id]
-        );
-    }
-
-    // Update membership
-    static update(employee_id, team_id, updateData) {
-        return db.execute(
-            'UPDATE employeeteam SET joined_at=?, left_at=?, role=? WHERE employee_id=? AND team_id=?',
-            [
-                updateData.joined_at,
-                updateData.left_at,
-                updateData.role,
-                employee_id,
-                team_id,
-            ]
-        );
-    }
-
-    // Delete membership
-    static delete(employee_id, team_id) {
-        // TODO: Implement database delete logic
-    }
-
-    static join(employee_id, team_id, joined_at = new Date(), role = EmployeeRole.EMPLOYEE) {
-        return db.execute(
-            'INSERT INTO employeeteam(employee_id, team_id, joined_at, left_at, role) VALUES(?,?,?,?,?)',
-            [employee_id, team_id, joined_at, null, role]
-        );
-    }
-
-    static leave(employee_id, team_id, left_at = new Date()) {
-        return db.execute(
-            'UPDATE employeeteam SET left_at=? WHERE employee_id=? AND team_id=?',
-            [left_at, employee_id, team_id]
-        );
     }
 
 };
