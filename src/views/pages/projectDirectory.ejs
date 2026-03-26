@@ -1,0 +1,10 @@
+<%- include('../layout', {
+    page: 'pages/content/projectDirectory',
+    pageTitle: 'Project',
+    pageSubtitle: typeof pageSubtitle !== 'undefined' ? pageSubtitle : '',
+    pageScriptPaths: ['/js/projectDirectorySearch.js'],
+    sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+    layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
+    layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+    layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : '',
+}) %>

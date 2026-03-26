@@ -1,8 +1,9 @@
 // Collaboration Model
 // Collaboration(collaboration_id, project_id, employee_id, description, started_at, ended_at)
 
-module.exports = class Collaboration {
+const db = require('../utils/database');
 
+module.exports = class Collaboration {
     constructor(collaboration_id, project_id, employee_id, description, started_at, ended_at) {
         this.collaboration_id = collaboration_id;
         this.project_id = project_id;
@@ -12,40 +13,81 @@ module.exports = class Collaboration {
         this.ended_at = ended_at;
     }
 
+    // Read active collaborations by employee (ended_at IS NULL)
+    static fetchActiveByEmployee(employee_id) {
+        return db.execute('SELECT * FROM collaboration WHERE employee_id = ? AND ended_at IS NULL', [employee_id]);
+    }
+
+    // Read active collaborations by project (ended_at IS NULL)
+    static fetchActiveByProject(project_id) {
+        return db.execute('SELECT * FROM collaboration WHERE project_id = ? AND ended_at IS NULL', [project_id]);
+    }
+
+
     // Create or Update collaboration
     save() {
-        // TODO: Implement database logic
         // If collaboration_id exists, update; otherwise, insert new record
+        if (this.collaboration_id) {
+            // Update existing
+            return db.execute(
+                'UPDATE collaboration SET project_id=?, employee_id=?, description=?, started_at=?, ended_at=? WHERE collaboration_id=?',
+                [this.project_id, this.employee_id, this.description, this.started_at, this.ended_at, this.collaboration_id]
+            );
+        } else {
+            // Insert new
+            return db.execute(
+                'INSERT INTO collaboration (project_id, employee_id, description, started_at, ended_at) VALUES (?, ?, ?, ?, ?)',
+                [this.project_id, this.employee_id, this.description, this.started_at, this.ended_at]
+            );
+        }
     }
+
 
     // Read all collaborations
     static fetchAll() {
-        // TODO: Implement database query to fetch all collaborations
+        return db.execute('SELECT * FROM collaboration');
     }
+
 
     // Read collaboration by ID
     static fetchById(collaboration_id) {
-        // TODO: Implement database query to fetch collaboration by ID
+        return db.execute('SELECT * FROM collaboration WHERE collaboration_id = ?', [collaboration_id]);
     }
+
 
     // Read collaborations by project
     static fetchByProject(project_id) {
-        // TODO: Implement database query to fetch collaborations by project
+        return db.execute('SELECT * FROM collaboration WHERE project_id = ?', [project_id]);
     }
+
 
     // Read collaborations by employee
     static fetchByEmployee(employee_id) {
-        // TODO: Implement database query to fetch collaborations by employee
+        return db.execute('SELECT * FROM collaboration WHERE employee_id = ?', [employee_id]);
     }
+
 
     // Update collaboration
     static update(collaboration_id, updateData) {
-        // TODO: Implement database update logic
+        // Only updates fields provided in updateData
+        const fields = [];
+        const values = [];
+        for (const key in updateData) {
+            fields.push(`${key} = ?`);
+            values.push(updateData[key]);
+        }
+        if (!fields.length) return Promise.resolve();
+        values.push(collaboration_id);
+        return db.execute(
+            `UPDATE collaboration SET ${fields.join(', ')} WHERE collaboration_id = ?`,
+            values
+        );
     }
+
 
     // Delete collaboration
     static delete(collaboration_id) {
-        // TODO: Implement database delete logic
+        return db.execute('DELETE FROM collaboration WHERE collaboration_id = ?', [collaboration_id]);
     }
 
 };

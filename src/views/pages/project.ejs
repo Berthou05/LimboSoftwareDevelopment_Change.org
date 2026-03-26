@@ -1,6 +1,11 @@
 <%- include('../layout', {
   page: 'pages/content/project',
   pageTitle: 'Project',
+  projectName: typeof projectName !== 'undefined' ? projectName : 'Project',
+  projectDescription:
+    typeof projectDescription !== 'undefined'
+      ? projectDescription
+      : 'Project modules now render inside the shared shell, so navigation remains visible while moving across sections.',
   sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
   layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
   layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,

@@ -22,7 +22,6 @@ const normalizeTeam = function normalizeTeam(team) {
     };
 }
 
-
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate
 Teams page.
@@ -54,7 +53,6 @@ exports.getTeams = (request, response, next) => {
         return response.redirect('/home');
     })
 };
-
 
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;

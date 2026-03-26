@@ -9,7 +9,9 @@ const router = express.Router();
 const isAuth = require('../../middleware/isAuthenticated');
 
 const projectController = require('./project.controller');
-router.get('/', isAuth,projectController.getProject);
-router.delete('/project/goal/:goal_id', isAuth, projectController.deleteGoal);
+
+router.get('/search', isAuth, projectController.searchProjects);
+router.get('/', isAuth, projectController.getProjects);
+router.get('/:project_id', isAuth, projectController.getProjectPage);
 
 module.exports = router;

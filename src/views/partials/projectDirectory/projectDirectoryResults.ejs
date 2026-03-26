@@ -1,0 +1,21 @@
+<% if (myProjects?.length) { %>
+    <h2 class="mb-3 font-heading text-xl font-bold text-brand-text">My Projects</h2>
+    <div class="mb-8 grid gap-4 lg:grid-cols-2">
+        <% for (const project of myProjects) { %>
+            <%- include('./projectCard', { project }) %>
+        <% } %>
+    </div>
+<% } %>
+
+<% if (otherProjects?.length) { %>
+    <h2 class="mb-3 font-heading text-xl font-bold text-brand-text/70">Other Projects</h2>
+    <div class="grid gap-4 lg:grid-cols-2">
+        <% for (const project of otherProjects) { %>
+            <%- include('./projectCard', { project }) %>
+        <% } %>
+    </div>
+<% } %>
+
+<% if (!myProjects?.length && !otherProjects?.length) { %>
+    <p class="text-sm text-brand-text/60">No projects found.</p>
+<% } %>
