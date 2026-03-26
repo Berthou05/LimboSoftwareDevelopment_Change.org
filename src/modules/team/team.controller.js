@@ -6,6 +6,7 @@ Modified by: Hurtado, R.
 
 const Team = require('../../models/team');
 const Employee = require('../../models/employee');
+const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
 const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
@@ -23,7 +24,53 @@ const normalizeTeam = function normalizeTeam(team) {
         image: team.image ?? null,
         isMember: Boolean(team.isMember ?? team.is_member),
     };
-}
+};
+
+const formatDayLabel = function formatDayLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+const buildActivitySections = function buildActivitySections(activities) {
+    const grouped = new Map();
+
+    activities.forEach((activity) => {
+        const rawDate = activity.completed_at || activity.completedAt;
+        const key = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : 'unknown';
+        const items = grouped.get(key) || [];
+        const authorName = activity.full_name || activity.authorName || 'Unknown';
+
+        items.push({
+            title: activity.title || 'Untitled activity',
+            description: activity.description || '',
+            authorName,
+            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            activityTimeLabel: rawDate
+                ? new Date(rawDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                })
+                : '',
+        });
+
+        grouped.set(key, items);
+    });
+
+    return [...grouped.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([key, items]) => ({
+            dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
+            items,
+        }));
+};
 
 
 /*getTeams
@@ -42,8 +89,8 @@ exports.getTeams = (request, response, next) => {
                 username: request.session.username || '',
                 pageTitle: 'Team',
                 pageSubtitle: 'Intermediate selection for own and other teams.',
-                myTeams:teams,
-                otherTeams:notTeams,
+                myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true })),
+                otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false })),
                 query:'',
             });
         })
@@ -77,80 +124,128 @@ projects: projects,
 */
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
-    const projects = [];
-    Team.findById(teamId).then(([team_info,fieldData])=>{
-        Employee.getEmployeeByTeamId(teamId).then(([team_members, fieldData])=>{
-            Activity.getTeamMembersActivities(teamId).then(([members_activies,fieldData])=>{
-                Project.getProjectsByTeamId(teamId).then(([team_projects,fieldData])=>{
-                    let sequence = Promise.resolve();
-                    team_projects.forEach(proj => {
-                        sequence = sequence.then(() => {
-                            const project = {
-                                info: proj,
-                                goals: [],
-                                achievements: []
-                            };
+    Promise.all([
+        Team.findById(teamId),
+        Employee.getEmployeeByTeamId(teamId),
+        Activity.getTeamMembersActivities(teamId),
+        Project.getProjectsByTeamId(teamId),
+    ])
+        .then(async ([[teamInfo], [teamMembers], [memberActivities], [teamProjects]]) => {
+            const teamRow = teamInfo[0];
 
-                            return Achievement.fetchByProject(proj.project_id).then(([achievements,fieldData]) => {
-                                    project.achievements = achievements;
-                                    return Goal.fetchByProject(proj.project_id);
-                            })
-                            .then(([goals,fieldData]) => {
-                                project.goals = goals;
-                                projects.push(project);
-                            })
-                            .catch(error => {
-                                console.log(error);
-                                throw error;
-                            });
-                        });
-                    });
-
-                    sequence.then(() => {
-                        return response.render('pages/team', {
-                            csrfToken: request.csrfToken(),
-                            isLoggedIn: request.session.isLoggedIn || '',
-                            username: request.session.username || '',
-                            pageTitle: `Team ${team_info[0].name}`,
-                            pageSubtitle: '',
-                            info: team_info,
-                            members:team_members,
-                            activities: members_activies,
-                            projects: projects,
-                        });
-                    })
-                    .catch(error => {
-                        console.log(error);
-                        request.session.error = `Error loading team ${teamId}`;
-                        return response.redirect('/team');
-                    });
-
-                })
-                .catch((error)=>{
-                    console.log(error);
-                    request.session.error=`Error loading team ${teamId}. Team projects not found.`;
-                    return response.redirect('/team');
-                })
-
-            })
-            .catch((error)=>{
-                console.log(error);
-                request.session.error=`Error loading team ${teamId}. Team members activies not found.`;
+            if (!teamRow) {
+                request.session.error = `Error loading team ${teamId}. Team information not found.`;
                 return response.redirect('/team');
-            })
+            }
 
+            const leadName = teamMembers.find(
+                (member) => member.employee_id === teamRow.employee_responsible_id
+            )?.full_name || 'Unknown';
+
+            const projectsDetailed = await Promise.all(
+                teamProjects.map(async (project) => {
+                    const [[achievements], [goals]] = await Promise.all([
+                        Achievement.fetchByProject(project.project_id),
+                        Goal.fetchByProject(project.project_id),
+                    ]);
+
+                    return {
+                        id: project.project_id,
+                        name: project.name,
+                        description: project.description,
+                        status: project.status,
+                        startDate: project.start_date,
+                        endDate: project.end_date,
+                        leadName: project.full_name,
+                        teamRole: project.team_role,
+                        activityLog: memberActivities.filter((activity) => activity.project_id === project.project_id),
+                        highlights: goals.map((goal) => ({
+                            title: goal.title,
+                            content: goal.description,
+                            createdAt: goal.created_at,
+                        })),
+                        achievements: achievements.map((achievement) => ({
+                            title: achievement.title,
+                            description: achievement.description,
+                            achievementDate: achievement.achievement_date,
+                        })),
+                    };
+                })
+            );
+
+            const team = {
+                id: teamRow.team_id,
+                name: teamRow.name,
+                description: teamRow.description,
+                image: teamRow.image,
+                lead: {
+                    id: teamRow.employee_responsible_id,
+                    fullName: leadName,
+                },
+                membersDetailed: teamMembers.map((member) => ({
+                    role: member.role,
+                    joinedAt: member.joined_at,
+                    employee: {
+                        id: member.employee_id,
+                        fullName: member.full_name,
+                    },
+                })),
+                projectsDetailed,
+            };
+
+            return response.render('pages/team', {
+                csrfToken: request.csrfToken(),
+                isLoggedIn: request.session.isLoggedIn || '',
+                username: request.session.username || '',
+                pageTitle: `Team ${team.name}`,
+                pageSubtitle: '',
+                team,
+                isMember: team.membersDetailed.some(
+                    (member) => member.employee.id === request.session.employeeId
+                ),
+                activitySections: buildActivitySections(memberActivities),
+            });
         })
-        .catch((error)=>{
+        .catch((error) => {
             console.log(error);
-            request.session.error=`Error loading team ${teamId}. Team members not found.`;
+            request.session.error = `Error loading team ${teamId}.`;
             return response.redirect('/team');
+        });
+};
+
+exports.toggleTeamMembership = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.session.employeeId;
+
+    if (!employeeId) {
+        request.session.error = 'You must be logged in to update team membership.';
+        return response.redirect('/');
+    }
+
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId)
+        .then(([memberships]) => {
+            const membership = memberships[0];
+
+            if (!membership) {
+                return EmployeeTeamMembership.join(employeeId, teamId);
+            }
+
+            if (membership.left_at) {
+                return EmployeeTeamMembership.update(employeeId, teamId, {
+                    joined_at: new Date(),
+                    left_at: null,
+                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                });
+            }
+
+            return EmployeeTeamMembership.leave(employeeId, teamId);
         })
-    })
-    .catch((error)=>{
-        console.log(error);
-        request.session.error=`Error loading team ${teamId}. Team Information not found.`;
-        return response.redirect('/team');
-    });
+        .then(() => response.redirect(`/teams/${teamId}`))
+        .catch((error) => {
+            console.log(error);
+            request.session.error = `Error updating membership for team ${teamId}.`;
+            return response.redirect(`/teams/${teamId}`);
+        });
 };
 
 //! Provisional function to load Team Intermediate

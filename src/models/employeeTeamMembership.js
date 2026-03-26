@@ -45,17 +45,43 @@ module.exports = class EmployeeTeam {
 
     // Read specific membership
     static fetchByEmployeeAndTeam(employee_id, team_id) {
-        // TODO: Implement database query to fetch specific membership
+        return db.execute(
+            'SELECT * FROM employeeteam WHERE employee_id=? AND team_id=?',
+            [employee_id, team_id]
+        );
     }
 
     // Update membership
     static update(employee_id, team_id, updateData) {
-        // TODO: Implement database update logic
+        return db.execute(
+            'UPDATE employeeteam SET joined_at=?, left_at=?, role=? WHERE employee_id=? AND team_id=?',
+            [
+                updateData.joined_at,
+                updateData.left_at,
+                updateData.role,
+                employee_id,
+                team_id,
+            ]
+        );
     }
 
     // Delete membership
     static delete(employee_id, team_id) {
         // TODO: Implement database delete logic
+    }
+
+    static join(employee_id, team_id, joined_at = new Date(), role = EmployeeRole.EMPLOYEE) {
+        return db.execute(
+            'INSERT INTO employeeteam(employee_id, team_id, joined_at, left_at, role) VALUES(?,?,?,?,?)',
+            [employee_id, team_id, joined_at, null, role]
+        );
+    }
+
+    static leave(employee_id, team_id, left_at = new Date()) {
+        return db.execute(
+            'UPDATE employeeteam SET left_at=? WHERE employee_id=? AND team_id=?',
+            [left_at, employee_id, team_id]
+        );
     }
 
 };
