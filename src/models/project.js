@@ -176,6 +176,15 @@ module.exports = class Project {
             [team_id]);
     }
 
+    /*getProjectsByEmployeeId(employee_id)
+    Function responsible for returning all projects related to an employee
+    whose id=employee_id*/
+
+    static getProjectByEmployeeId(employee_id){
+        return db.execute('SELECT P.project_id, P.name, P.description, P.status, p.start_date, p.end_date, p.employee_responsible_id,E.full_name,C.description,C.started_at,C.ended_at FROM project as P INNER JOIN collaboration as C on P.project_id=C.project_id INNER JOIN employee as E ON P.employee_responsible_id=E.employee_id WHERE C.employee_id=?;',
+            [employee_id]);
+    };
+
     // (Removed duplicate fetchByEmployeeId)
 
     // Create or Update project

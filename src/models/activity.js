@@ -130,11 +130,6 @@ module.exports = class Activity {
         );
     }
 
-    // Read activities by employee
-    static fetchByEmployee(employee_id) {
-        // TODO: Implement database query to fetch activities by employee
-    }
-
     // Read activities by daily entry
     static fetchByEntry(entry_id) {
         // TODO: Implement database query to fetch activities by daily entry
