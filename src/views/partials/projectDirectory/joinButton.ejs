@@ -1,5 +1,5 @@
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <form action="/projects/<%= project?.id || project?.project_id %>/toggle-membership" method="POST">
+    <form action="/projects/<%= project?.id || project?.project_id %>/<%= projectMembership?.isMember ? 'leave' : 'join' %>" method="POST">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button
             type="submit"

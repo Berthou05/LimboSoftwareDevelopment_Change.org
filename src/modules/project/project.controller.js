@@ -458,20 +458,89 @@ exports.getProjectPage = (request, response, next) => {
     });
 };
 
+exports.joinProject = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+
+    Project.findById(projectId).then(([projectRows]) => {
+        if (!projectRows.length) {
+            return response.redirect('/projects');
+        }
+
+        if (projectRows[0].employee_responsible_id === employeeId) {
+            return response.redirect(`/projects/${projectId}`);
+        }
+
+        return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+            .then(([membershipRows]) => {
+                if (membershipRows.length > 0) {
+                    return response.redirect(`/projects/${projectId}`);
+                }
+
+                return Collaboration.joinProject(projectId, employeeId).then(() => {
+                    return response.redirect(`/projects/${projectId}`);
+                });
+            });
+    }).catch((error) => {
+        console.log(error);
+        return response.redirect(`/projects/${projectId}`);
+    });
+};
+
+exports.leaveProject = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+
+    Project.findById(projectId).then(([projectRows]) => {
+        if (!projectRows.length) {
+            return response.redirect('/projects');
+        }
+
+        if (projectRows[0].employee_responsible_id === employeeId) {
+            return response.redirect(`/projects/${projectId}`);
+        }
+
+        return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+            .then(([membershipRows]) => {
+                if (!membershipRows.length) {
+                    return response.redirect(`/projects/${projectId}`);
+                }
+
+                return Collaboration.leaveProject(projectId, employeeId).then(() => {
+                    return response.redirect(`/projects/${projectId}`);
+                });
+            });
+    }).catch((error) => {
+        console.log(error);
+        return response.redirect(`/projects/${projectId}`);
+    });
+};
+
 exports.toggleProjectMembership = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
 
-    Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
-        .then(([membershipRows]) => {
-            if (membershipRows.length > 0) {
-                return Collaboration.leaveProject(projectId, employeeId);
+    Project.findById(projectId)
+        .then(([projectRows]) => {
+            if (!projectRows.length) {
+                return response.redirect('/projects');
             }
 
-            return Collaboration.joinProject(projectId, employeeId);
-        })
-        .then(() => {
-            return response.redirect(`/projects/${projectId}`);
+            if (projectRows[0].employee_responsible_id === employeeId) {
+                return response.redirect(`/projects/${projectId}`);
+            }
+
+            return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+                .then(([membershipRows]) => {
+                    if (membershipRows.length > 0) {
+                        return Collaboration.leaveProject(projectId, employeeId);
+                    }
+
+                    return Collaboration.joinProject(projectId, employeeId);
+                })
+                .then(() => {
+                    return response.redirect(`/projects/${projectId}`);
+                });
         })
         .catch((error) => {
             console.log(error);
