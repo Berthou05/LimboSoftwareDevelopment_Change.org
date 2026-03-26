@@ -1,6 +1,8 @@
 // Report Model
 // Report(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text)
 
+const db = require('../utils/database.js');
+
 module.exports = class Report {
 
     constructor(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
@@ -39,6 +41,29 @@ module.exports = class Report {
     // Read reports by employee
     static fetchByEmployee(generated_by_employee_id) {
         // TODO: Implement database query to fetch reports by employee
+    }
+
+    static fetchLatestByProjectAndEmployee(project_id, employee_id, limit = 5) {
+        return db.execute(
+            `SELECT
+                report_id,
+                generated_by_employee_id,
+                content_id,
+                content_type,
+                period_start,
+                period_end,
+                created_at,
+                model_name,
+                model_version,
+                ai_output_text
+            FROM report
+            WHERE generated_by_employee_id = ?
+                AND content_type = 'PROJECT'
+                AND content_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?`,
+            [employee_id, project_id, Number(limit)],
+        );
     }
 
     // Read reports by prompt

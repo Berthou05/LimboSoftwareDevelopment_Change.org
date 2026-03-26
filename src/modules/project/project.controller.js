@@ -11,6 +11,7 @@ const Highlight = require('../../models/highlight');
 const Activity = require('../../models/activity');
 const Collaboration = require('../../models/collaboration');
 const ProjectTeam = require('../../models/projectTeamAssignment');
+const Report = require('../../models/report');
 
 const PAGE_TITLE = 'Project';
 const PAGE_SUBTITLE = 'Intermediate selection for own and other projects.';
@@ -277,6 +278,8 @@ exports.getProjectPage = (request, response, next) => {
     Promise.all([
         Project.findById(projectId),
         Achievement.fetchByProject(projectId),
+        Goal.fetchByProject(projectId),
+        Report.fetchLatestByProjectAndEmployee(projectId, employeeId),
         Highlight.fetchByProject(projectId),
         activityPromise,
         ProjectTeam.fetchDetailedByProject(projectId),
@@ -285,6 +288,8 @@ exports.getProjectPage = (request, response, next) => {
     ]).then(([
         [projectRows],
         [achievementRows],
+        [goalRows],
+        [reportRows],
         [highlightRows],
         [activityRows],
         [teamRows],
@@ -301,7 +306,9 @@ exports.getProjectPage = (request, response, next) => {
                     id: null,
                     name: 'Project not found',
                     description: 'No project information is available for the selected project.',
-                    achievementsDetailed: [],
+                achievementsDetailed: [],
+                    goalsDetailed: [],
+                    latestReportsDetailed: [],
                     highlightsDetailed: [],
                     teamsDetailed: [],
                     membersDetailed: [],
@@ -366,6 +373,25 @@ exports.getProjectPage = (request, response, next) => {
                     achievementDateLabel: formatDateLabel(achievement.achievement_date, 'Date unavailable'),
                     evidenceLink: achievement.evidence_link || '',
                 })),
+                goalsDetailed: goalRows.map((goal) => ({
+                    id: goal.goal_id || null,
+                    title: goal.title || 'Untitled goal',
+                    description: goal.description || 'No goal description available.',
+                    status: goal.status || 'Unknown',
+                    dueDateLabel: formatDateLabel(goal.due_date, 'No due date'),
+                    createdAtLabel: formatDateLabel(goal.created_at, 'Date unavailable'),
+                    authorName: goal.full_name || 'Unknown',
+                })),
+                latestReportsDetailed: reportRows.map((report) => ({
+                    id: report.report_id || null,
+                    createdAtLabel: formatDateLabel(report.created_at, 'Date unavailable'),
+                    periodStartLabel: formatDateLabel(report.period_start, 'Unknown'),
+                    periodEndLabel: formatDateLabel(report.period_end, 'Unknown'),
+                    modelLabel: [report.model_name, report.model_version].filter(Boolean).join(' ') || 'AI model unavailable',
+                    preview: report.ai_output_text
+                        ? `${String(report.ai_output_text).slice(0, 180)}${String(report.ai_output_text).length > 180 ? '...' : ''}`
+                        : 'No report preview available.',
+                })),
                 highlightsDetailed: highlightRows.map((highlight) => ({
                     id: highlight.highlight_id || null,
                     title: highlight.title || 'Untitled highlight',
@@ -400,6 +426,30 @@ exports.getProjectPage = (request, response, next) => {
                 hasManualRange: activityFilter.hasManualRange,
                 isFiltered: activityFilter.isFiltered,
             },
+            defaultReportType: 'PROJECT',
+            defaultSubjectId: project.project_id,
+            reportSubjects: {
+                employees: [],
+                teams: [],
+                projects: [
+                    {
+                        id: project.project_id,
+                        name: project.name || 'Project',
+                        label: project.name || 'Project',
+                    },
+                ],
+            },
+            latestReports: {
+                PROJECT: reportRows.length > 0
+                    ? {
+                        subjectLabel: project.name || 'Project',
+                        createdAt: reportRows[0].created_at,
+                        periodStart: reportRows[0].period_start,
+                        periodEnd: reportRows[0].period_end,
+                    }
+                    : null,
+            },
+            quickReport: '',
             currentEmployeeId: employeeId,
         });
     }).catch((error) => {

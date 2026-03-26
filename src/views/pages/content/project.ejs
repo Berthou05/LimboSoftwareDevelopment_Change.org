@@ -15,6 +15,14 @@
     <%- include('../../partials/projectDirectory/projectAchievements', {
       project
     }) %>
+
+    <%- include('../../partials/projectDirectory/projectGoals', {
+      project
+    }) %>
+
+    <%- include('../../partials/projectDirectory/projectLatestReports', {
+      project
+    }) %>
   </section>
 
   <section class="space-y-4">
@@ -24,6 +32,15 @@
         ? projectMembership
         : { isMember: false, canToggle: false, buttonLabel: 'Join Project' },
       csrfToken
+    }) %>
+
+    <%- include('../../partials/reportGenerator/reportGenerator', {
+      redirectTo: '/projects/' + (project?.id || project?.project_id || ''),
+      defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'PROJECT',
+      defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (project?.id || project?.project_id || ''),
+      reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
+      latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+      quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
     }) %>
 
     <%- include('../../partials/projectDirectory/projectHighlights', {

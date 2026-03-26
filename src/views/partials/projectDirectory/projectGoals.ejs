@@ -1,0 +1,31 @@
+<article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+    <h2 class="font-heading text-2xl font-bold text-brand-text">Goals</h2>
+    <p class="mt-1 text-sm text-brand-text/60">Current goals and milestones tracked for this project</p>
+
+    <% const goalsDetailed = project?.goalsDetailed || []; %>
+    <div class="mt-5 space-y-3">
+        <% if (!goalsDetailed.length) { %>
+            <p class="text-sm text-brand-text/70">No goals registered for this project.</p>
+        <% } %>
+        <% goalsDetailed.forEach((goal) => { %>
+            <div class="rounded-xl border border-brand-secondary p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="font-semibold text-brand-text"><%= goal.title %></h3>
+                    <span class="text-xs text-brand-text/50"><%= goal.dueDateLabel || 'No due date' %></span>
+                </div>
+                <p class="mt-2 text-sm text-brand-text/70"><%= goal.description %></p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="inline-flex rounded-full border border-brand-secondary px-2 py-0.5 text-[10px] font-semibold text-brand-text/60">
+                        <%= goal.status || 'Unknown' %>
+                    </span>
+                    <span class="inline-flex rounded-full border border-brand-secondary px-2 py-0.5 text-[10px] font-semibold text-brand-text/60">
+                        Created: <%= goal.createdAtLabel || 'Date unavailable' %>
+                    </span>
+                    <span class="inline-flex rounded-full border border-brand-secondary px-2 py-0.5 text-[10px] font-semibold text-brand-text/60">
+                        Responsible: <%= goal.authorName || 'Unknown' %>
+                    </span>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+</article>

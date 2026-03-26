@@ -33,7 +33,27 @@ module.exports = class Goal {
     Function responsible for returning all Goals related to a project_id*/
 
     static fetchByProject(project_id) {
-        return db.execute('SELECT * FROM goal as G WHERE G.project_id=?;',[project_id]);
+        return db.execute(
+            `SELECT
+                G.goal_id,
+                G.project_id,
+                G.employee_responsible_id,
+                G.title,
+                G.description,
+                G.due_date,
+                G.status,
+                G.created_at,
+                E.full_name
+            FROM goal AS G
+            LEFT JOIN employee AS E
+                ON E.employee_id = G.employee_responsible_id
+            WHERE G.project_id = ?
+            ORDER BY
+                CASE WHEN G.due_date IS NULL THEN 1 ELSE 0 END,
+                G.due_date ASC,
+                G.created_at DESC;`,
+            [project_id],
+        );
     }
 
     // Create or Update goal
