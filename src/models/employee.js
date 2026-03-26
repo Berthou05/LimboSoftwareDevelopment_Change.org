@@ -42,6 +42,14 @@ module.exports = class Employee {
         return db.execute('SELECT * FROM employee WHERE employee_id=?',[employee_id]);
     }
 
+    /*getEmployeeByTeamId(team_id)
+    Function responsible for returning all employee information of the selected team
+    whose id=team_id*/
+
+    static getEmployeeByTeamId(team_id){
+        return db.execute('SELECT E.employee_id, E.full_name, ET.joined_at, ET.role FROM employee as E INNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id WHERE ET.team_id=? AND ET.left_at IS NULL;',[team_id]);
+    };
+
 
 
     // Read all employees

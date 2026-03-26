@@ -34,6 +34,15 @@ module.exports = class Project {
             [employee_id, start_date, end_date]);
     }
 
+    /*getProjectsByTeamId(team_id)
+    Function responsible for returning all projects related to a team
+    whose id=team_id*/
+
+    static getProjectsByTeamId(team_id){
+        return db.execute('SELECT P.project_id, P.name, P.description, P.status, P.start_date, p.end_date, p.employee_responsible_id, E.full_name, PT.team_role FROM project as P INNER JOIN projectteam as PT ON PT.project_id=P.project_id INNER JOIN employee as E ON E.employee_id=P.employee_responsible_id WHERE PT.team_id=?;',
+            [team_id]);
+    }
+
     // Create or Update project
     save() {
         // TODO: Implement database logic

@@ -43,6 +43,15 @@ module.exports = class Activity {
             [employee_id, start_date, end_date]);
     }
 
+    /*getTeamMembersActivities(team_id)
+    Function responsible for returning all activies from Team members
+    whose id=team_id*/
+
+    static getTeamMembersActivities(team_id){
+        return db.execute('SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, A.employee_id, E.full_name, ET.role FROM activity as A INNER JOIN employee as E ON A.employee_id=E.employee_id INNER JOIN employeeteam as ET ON ET.employee_id=E.employee_id WHERE ET.team_id=?;',
+            [team_id]);
+    }
+
     // Create or Update activity
     save() {
         // TODO: Implement database logic
