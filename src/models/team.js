@@ -44,7 +44,6 @@ module.exports = class Team {
             [employee_id]);
     }
 
-
     /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
     Function responsible for obtaining all team information based on an
     employee_id and a date range*/

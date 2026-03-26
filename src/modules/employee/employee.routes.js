@@ -10,6 +10,5 @@ const isAuth = require('../../middleware/isAuthenticated');
 
 const employeeController = require('./employee.controller');
 router.get('/', isAuth,employeeController.getEmployee);
-router.get('/:employee_id',isAuth,employeeController.getEmployeePage);
-
+router.get('/:employee_id', isAuth, employeeController.getEmployeePage);
 module.exports = router;

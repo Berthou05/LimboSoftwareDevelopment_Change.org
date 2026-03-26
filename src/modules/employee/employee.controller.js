@@ -1,81 +1,131 @@
 /*
 Title: employee.controller.js
 Last modification: March 26,2026
-Modified by: Alexis Berthou
+Modified by: Hurtado, R.
 */
 
 const EmployeeTeam = require('../../models/employeeTeamMembership');
+const Team = require('../../models/team');
 const Employee = require('../../models/employee');
+const Activity = require('../../models/activity');
+const Project = require('../../models/project');
+const Achievement = require('../../models/achievement');
+const Goal = require('../../models/goal');
+
+//--------------------------- Auxiliar Functions ---------------------------
 
 /*buildAvatarUrl(fullName)
-Function responsible for returning a default avatar URL for the employee.*/
+Auxiliar function responsible for creating a random avatar based on an employee fullName*/
 
 const buildAvatarUrl = function buildAvatarUrl(fullName) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=fbfbfe&color=1f2937`;
 };
 
-/*formatDateLabel(value)
-Function responsible for returning a valid start date label.*/
+/*formatDayLabel(value)
+Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
+month, day, year*/
 
-const formatDateLabel = function formatDateLabel(value) {
-    if (!value) {
-        return 'Start date unavailable';
+const formatDayLabel = function formatDayLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
     }
 
-    const parsedDate = new Date(value);
-
-    if (Number.isNaN(parsedDate.getTime())) {
-        return 'Start date unavailable';
-    }
-
-    return parsedDate.toLocaleDateString('en-US', {
+    return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
     });
 };
 
+/*buildActivitySections(activities)
+Auxiliar function responsible for creating the format of activities
+required for the activity visualization modal.*/
+
+const buildActivitySections = function buildActivitySections(activities) {
+    const grouped = new Map();
+
+    activities.forEach((activity) => {
+        const rawDate = activity.completed_at;
+        const key = rawDate ? new Date(rawDate).toISOString().slice(0, 10) : 'unknown';
+        const items = grouped.get(key) || [];
+        const authorName = activity.full_name || 'Unknown';
+
+        items.push({
+            title: activity.title || 'Untitled activity',
+            description: activity.description || '',
+            authorName,
+            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            activityTimeLabel: rawDate
+                ? new Date(rawDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                })
+                : '',
+        });
+
+        grouped.set(key, items);
+    });
+
+    return [...grouped.entries()]
+        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+        .map(([key, items]) => ({
+            dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
+            items,
+        }));
+};
+
+//--------------------------- Main Functions ---------------------------
+
 /*getEmployee()
 Function responsible accesing the intermediate employee page
-only available for Lead and Admin.*/
+only available for Lead and Admin.
+Rendering the following information:
+
+csrfToken: request.csrfToken(),
+isLoggedIn: request.session.isLoggedIn || '',
+username: request.session.username || '',
+pageTitle: `Employee`,
+pageSubtitle: 'Intermediate selection for self and other employees.',
+me:me,
+employees:near_employees,
+*/
 
 exports.getEmployee = (request, response, next) => {
-    const query = `${request.query.q || ''}`.trim().toLowerCase();
+    const employeeId = request.session.employeeId;
+    const privileges = request.session.privileges;
 
-    Employee.fetchAll().then(([employees, fieldData]) => {
-        const employeeCards = employees
-            .map((employee) => {
-                const fullName = employee.full_name || 'Employee';
+    const intermediate = privileges.some(
+        priv => priv.privilege_id === 'TEAM-01'
+    );
 
-                return {
-                    id: employee.employee_id,
-                    fullName,
-                    title: 'Employee',
-                    bio: 'Profile details are still being connected.',
-                    avatar: buildAvatarUrl(fullName),
-                };
-            })
-            .filter((employee) => {
-                if (!query) {
-                    return true;
-                }
+    if (!intermediate) {
+        return response.redirect(`/employee/${employeeId}`);
+    }
 
-                return employee.fullName.toLowerCase().includes(query);
-            });
+    Employee.getNearEmployees(employeeId).then(([near_employees]) => {
 
-        return response.render('pages/employee', {
+        const employees = near_employees.map((employee) => ({
+            employee_id:employee.employee_id,
+            full_name: employee.full_name,
+            slack_username: employee.slack_username,
+            email:employee.email,
+            image: buildAvatarUrl(employee.full_name),
+        }));
+
+        return response.render('pages/employeeDirectory', {
             csrfToken: request.csrfToken(),
             isLoggedIn: request.session.isLoggedIn || '',
             username: request.session.username || '',
-            pageTitle: 'Employee',
-            pageSubtitle: 'Intermediate selection for employees.',
-            employees: employeeCards,
-            query: request.query.q || '',
+            pageTitle: `Employee`,
+            pageSubtitle: 'Intermediate selection for self and other employees.',
+            employees: employees,
+            query: '',
         });
     })
     .catch((error) => {
         console.log(error);
-        request.session.error = 'Error loading employee directory.';
+        request.session.error = `Error loading Intermediate`;
         return response.redirect('/home');
     });
 };
@@ -83,6 +133,7 @@ exports.getEmployee = (request, response, next) => {
 /*getEmployeePage
 Function responsible for rendering a concrete employee page
 Render of:
+
 csrfToken: request.csrfToken(),
 isLoggedIn: request.session.isLoggedIn || '',
 username: request.session.username || '',
@@ -93,74 +144,90 @@ activities:activities,
 teams:teams,
 projects:projects,*/
 
-exports.getEmployeePage = (request, response, next) => {
+exports.getEmployeePage = (request, response, next)=>{
     const employeeId = request.params.employee_id;
+    const projects = [];
+    EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([team, fieldData])=>{
+        Employee.fetchById(employeeId).then(([info,fieldData])=>{
+            Activity.fetchByEmployee(employeeId).then(([activities,fieldData])=>{
+                Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
 
-    EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([teams, fieldData]) => {
-        Employee.fetchById(employeeId).then(([info, fieldData]) => {
-            if (!info.length) {
-                request.session.error = `Error loading Employee ${employeeId}. Employee Information not found.`;
-                return response.redirect('/employees');
-            }
+                    const projectRows = employee_projects.map(proj => ({
+                        project: {
+                            id: proj.project_id,
+                            name: proj.name // make sure your query returns this
+                        },
+                        roleName: proj.coll_description || 'MEMBER', // adjust to your column
+                        startDateLabel: formatDayLabel(proj.started_at) // or correct field
+                    }));
 
-            const employeeInfo = info[0];
-            const employeeName = employeeInfo.full_name || 'Employee';
-            const employee = {
-                id: employeeInfo.employee_id,
-                fullName: employeeName,
-                title: 'Employee',
-                timezone: 'UTC-06:00',
-                bio: 'Detailed employee data is still under construction.',
-                avatar: buildAvatarUrl(employeeName),
-            };
+                    const teamRows = team.map((team) => ({
+                        team: {
+                            id: team.team_id,
+                            name: team.name,
+                        },
+                        roleName: team.role || 'EMPLOYEE',
+                        startDateLabel: formatDayLabel(team.joined_at),
+                    }));
 
-            const teamRows = teams.map((team) => ({
-                team: {
-                    id: team.team_id,
-                    name: team.name,
-                },
-                roleName: team.role || 'EMPLOYEE',
-                startDateLabel: formatDateLabel(team.joined_at),
-            }));
+                    const employee = {
+                        employee_id: info[0].employee_id,
+                        full_name: info[0].full_name,
+                        image: buildAvatarUrl(info[0].full_name),
+                    };
 
-            return response.render('pages/employeeDetails', {
-                csrfToken: request.csrfToken(),
-                isLoggedIn: request.session.isLoggedIn || '',
-                username: request.session.username || '',
-                pageTitle: `Employee ${employeeName}`,
-                pageSubtitle: '',
-                info,
-                teams,
-                activities: [],
-                projects: [],
-                employee,
-                isOwnProfile: request.session.employeeId === employeeInfo.employee_id,
-                activitySections: [],
-                defaultReportType: 'EMPLOYEE',
-                defaultSubjectId: employeeInfo.employee_id,
-                reportSubjects: {
-                    employees: [{
-                        id: employeeInfo.employee_id,
-                        label: employeeName,
-                    }],
-                    teams: [],
-                    projects: [],
-                },
-                latestReports: {},
-                quickReport: undefined,
-                teamRows,
-                projectRows: [],
-            });
+                    //Analizar como se declara projectRows. Su estructura
+
+                    const reportSubjects = {
+                        employees: [
+                            { id: employeeId, name: employee.full_name},
+                        ],
+                        teams: [],
+                        projects: []
+                    };
+
+                    
+                    return response.render('pages/employeeDetails', {
+                        csrfToken: request.csrfToken(),
+                        isLoggedIn: request.session.isLoggedIn || '',
+                        username: request.session.username || '',
+                        pageTitle: `Employee ${info[0].full_name}`,
+                        pageSubtitle: '',
+                        employee:employee,
+                        isOwnProfile: request.session.employeeId === info.employee_id,
+                        activitySections: buildActivitySections(activities),
+                        teamRows:teamRows,
+                        projectRows:projectRows,
+                        defaultReportType:'EMPLOYEE',
+                        defaultSubjectId:employeeId,
+                        reportSubjects:reportSubjects,
+                        latestReports:'',
+                        quickReport:'',
+                    });
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    request.session.error = `Error loading Employee ${employeeId}. Employee Projects not found.`;
+                    return response.redirect(`/employee`);
+                })
+            })
+            .catch((error)=>{
+                console.log(error);
+                request.session.error = `Error loading Employee ${employeeId}. Employee Activies not found.`;
+                return response.redirect(`/employee`);
+            })
         })
-        .catch((error) => {
+        .catch((error)=>{
             console.log(error);
             request.session.error = `Error loading Employee ${employeeId}. Employee Information not found.`;
-            return response.redirect('/employees');
-        });
+            return response.redirect(`/employee`);
+        })
     })
-    .catch((error) => {
+    .catch((error)=>{
         console.log(error);
         request.session.error = `Error loading Employee ${employeeId}. Employee Teams not found.`;
-        return response.redirect('/employees');
-    });
-};
+        return response.redirect(`/employee`);
+    })
+}
+
+

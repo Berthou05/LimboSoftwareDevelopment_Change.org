@@ -13,6 +13,11 @@ const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 
 
+//--------------------------- Auxiliar Functions ---------------------------
+
+/*normalizeTeam(team)
+Function responsible for the normalization of a team given as a parameter*/
+
 const normalizeTeam = function normalizeTeam(team) {
     return {
         id: team.team_id ?? null,
@@ -26,6 +31,10 @@ const normalizeTeam = function normalizeTeam(team) {
     };
 };
 
+/*formatDayLabel(value)
+Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
+month, day, year*/
+
 const formatDayLabel = function formatDayLabel(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
@@ -38,6 +47,10 @@ const formatDayLabel = function formatDayLabel(value) {
         year: 'numeric',
     });
 };
+
+/*buildActivitySections(activities)
+Auxiliar function responsible for creating the format of activities
+required for the activity visualization modal.*/
 
 const buildActivitySections = function buildActivitySections(activities) {
     const grouped = new Map();
@@ -72,6 +85,9 @@ const buildActivitySections = function buildActivitySections(activities) {
         }));
 };
 
+/* respondMembershipRequest(request,response,teamId,statusCode,payload)
+Function responsible for regulating and controlling error handling*/
+
 const respondMembershipRequest = function respondMembershipRequest(
     request,
     response,
@@ -88,10 +104,10 @@ const respondMembershipRequest = function respondMembershipRequest(
     if (payload && payload.error) {
         request.session.error = payload.error;
     }
-
     return response.redirect(`/teams/${teamId}`);
 };
 
+//--------------------------- Main Functions ---------------------------
 
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate
@@ -249,6 +265,11 @@ exports.getTeamPage = (request, response, next) => {
         });
 };
 
+
+//!Function to modify as approval is considered on Roles instead of Privilege
+/*toggleTeamMembership
+*/
+
 exports.toggleTeamMembership = (request, response, next) => {
     const teamId = request.params.team_id;
     const isAddMemberRequest = Object.prototype.hasOwnProperty.call(request.body, 'employeeId');
@@ -293,6 +314,10 @@ exports.toggleTeamMembership = (request, response, next) => {
         });
 };
 
+/*addTeamMember
+Function responsible for adding a new member to the team
+by creating a relationship between EmployeeTeam*/
+
 exports.addTeamMember = (request, response, next) => {
     const teamId = request.params.team_id;
     const employeeId = String(request.body.employeeId || '').trim();
@@ -303,34 +328,35 @@ exports.addTeamMember = (request, response, next) => {
         });
     }
 
-    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId)
-        .then(([memberships]) => {
-            const membership = memberships[0];
+    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId).then(([memberships]) => {
+        const membership = memberships[0];
 
-            if (!membership) {
-                return EmployeeTeamMembership.join(employeeId, teamId);
-            }
+        if (!membership) {
+            return EmployeeTeamMembership.join(employeeId, teamId);
+        }
 
-            if (membership.left_at) {
-                return EmployeeTeamMembership.update(employeeId, teamId, {
-                    joined_at: new Date(),
-                    left_at: null,
-                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
-                });
-            }
-
-            return Promise.resolve();
-        })
-        .then(() => respondMembershipRequest(request, response, teamId, 200, {
-            success: true,
-        }))
-        .catch((error) => {
-            console.log(error);
-            return respondMembershipRequest(request, response, teamId, 500, {
-                error: `Error adding a member to team ${teamId}.`,
+        if (membership.left_at) {
+            return EmployeeTeamMembership.update(employeeId, teamId, {
+                joined_at: new Date(),
+                left_at: null,
+                role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
             });
+        }
+        return Promise.resolve();
+    })
+    .then(() => respondMembershipRequest(request, response, teamId, 200, {
+        success: true,
+    }))
+    .catch((error) => {
+        console.log(error);
+        return respondMembershipRequest(request, response, teamId, 500, {
+            error: `Error adding a member to team ${teamId}.`,
         });
+    });
 };
+
+/*removeTeamMember
+Function responsible for eliminating en employee from a team membership*/
 
 exports.removeTeamMember = (request, response, next) => {
     const teamId = request.params.team_id;
@@ -356,15 +382,11 @@ exports.removeTeamMember = (request, response, next) => {
                 });
             }
 
+            //? Es posible que alguien se elimine a si mismo a traves de este metodo?
+
             if (employeeId === request.session.employeeId) {
                 return respondMembershipRequest(request, response, teamId, 400, {
                     error: 'Use the Leave Team action to remove yourself.',
-                });
-            }
-
-            if (!membership || membership.left_at) {
-                return respondMembershipRequest(request, response, teamId, 404, {
-                    error: 'That employee is not an active member of the team.',
                 });
             }
 

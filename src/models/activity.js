@@ -20,7 +20,10 @@ module.exports = class Activity {
     start and end date*/
     
     static fetchByEmployeeBtw(employee_id, start_date, end_date) {
-        return db.execute('SELECT title, description, completed_at, project_id FROM activity WHERE employee_id=? AND completed_at BETWEEN ? AND ?',
+        return db.execute(`
+            SELECT title, description, completed_at, project_id 
+            FROM activity 
+            WHERE employee_id=? AND completed_at BETWEEN ? AND ?`,
             [employee_id, start_date, end_date]);
     }
 
@@ -29,7 +32,17 @@ module.exports = class Activity {
     from all teams of the employee with id=employee_id*/
 
     static getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date){
-        return db.execute('SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id FROM activity as A WHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN ( SELECT ET.employee_id FROM employeeteam as ET WHERE ET.team_id IN( SELECT ET.team_id FROM employeeteam as ET WHERE ET.employee_id = ?));',
+        return db.execute(`
+            SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id 
+            FROM activity as A 
+            WHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN (
+                SELECT ET.employee_id 
+                FROM employeeteam as ET 
+                WHERE ET.team_id IN( 
+                    SELECT ET.team_id 
+                    FROM employeeteam as ET 
+                    WHERE ET.employee_id = ?));`,
+
             [start_date, end_date, employee_id]);
     }
 
@@ -39,7 +52,14 @@ module.exports = class Activity {
     between the provided date range*/
     
     static getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date){
-        return db.execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id FROM activity as A INNER JOIN collaboration as C ON A.project_id=C.project_id WHERE C.project_id IN( SELECT C.project_id FROM collaboration as C WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<= ? OR C.ended_at IS NULL))',
+        return db.execute(`
+            SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id 
+            FROM activity as A 
+            INNER JOIN collaboration as C ON A.project_id=C.project_id 
+            WHERE C.project_id IN(
+                SELECT C.project_id 
+                FROM collaboration as C 
+                WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<= ? OR C.ended_at IS NULL))`,
             [employee_id, start_date, end_date]);
     }
 
@@ -48,7 +68,12 @@ module.exports = class Activity {
     whose id=team_id*/
 
     static getTeamMembersActivities(team_id){
-        return db.execute('SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, A.employee_id, E.full_name, ET.role FROM activity as A INNER JOIN employee as E ON A.employee_id=E.employee_id INNER JOIN employeeteam as ET ON ET.employee_id=E.employee_id WHERE ET.team_id=?;',
+        return db.execute(`
+            SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, A.employee_id, E.full_name, ET.role 
+            FROM activity as A 
+            INNER JOIN employee as E ON A.employee_id=E.employee_id 
+            INNER JOIN employeeteam as ET ON ET.employee_id=E.employee_id 
+            WHERE ET.team_id=?;`,
             [team_id]);
     }
 
@@ -56,27 +81,17 @@ module.exports = class Activity {
     Function responsible for returning all activities from an employee.*/
 
     static fetchByEmployee(employee_id){
-        return db.execute('SELECT * FROM activity as A WHERE A.employee_id=?;'
+        return db.execute(`
+            SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, E.full_name 
+            FROM activity as A 
+            INNER JOIN employee AS E ON E.employee_id=A.employee_id 
+            WHERE A.employee_id=?;`
             ,[employee_id]);
     }
 
-    // Create or Update activity
-    save() {
-        // TODO: Implement database logic
-        // If activity_id exists, update; otherwise, insert new record
-    }
+    /*fetchByProject(project_id)
+    Function responsible for returning all activities related to a Project.*/
 
-    // Read all activities
-    static fetchAll() {
-        // TODO: Implement database query to fetch all activities
-    }
-
-    // Read activity by ID
-    static fetchById(activity_id) {
-        // TODO: Implement database query to fetch activity by ID
-    }
-
-    // Read activities by project
     static fetchByProject(project_id) {
         return db.execute(
             `SELECT
@@ -96,6 +111,10 @@ module.exports = class Activity {
             [project_id],
         );
     }
+
+    /*fetchByProjectBetween(project_id, start_date, end_date)
+    Function responsible for returning all activities related to a project
+    possibly between certain date range.*/
 
     static fetchByProjectBetween(project_id, start_date, end_date) {
         const conditions = ['A.project_id = ?'];
@@ -130,9 +149,20 @@ module.exports = class Activity {
         );
     }
 
-    // Read activities by employee
-    static fetchByEmployee(employee_id) {
-        // TODO: Implement database query to fetch activities by employee
+    // Create or Update activity
+    save() {
+        // TODO: Implement database logic
+        // If activity_id exists, update; otherwise, insert new record
+    }
+
+    // Read all activities
+    static fetchAll() {
+        // TODO: Implement database query to fetch all activities
+    }
+
+    // Read activity by ID
+    static fetchById(activity_id) {
+        // TODO: Implement database query to fetch activity by ID
     }
 
     // Read activities by daily entry
