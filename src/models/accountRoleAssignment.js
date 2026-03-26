@@ -40,6 +40,26 @@ module.exports = class AccountRole {
         // TODO: Implement database query to fetch all roles for an account
     }
 
+    /*hasRoleByEmployeeId(employee_id, role_name)
+    Function responsible for validating if an employee has a specific role.*/
+
+    static hasRoleByEmployeeId(employee_id, role_name) {
+        return db.execute(
+            `SELECT
+                AR.account_id,
+                AR.role_id
+            FROM accountrole AS AR
+            INNER JOIN account AS A
+                ON A.account_id = AR.account_id
+            INNER JOIN role AS R
+                ON R.role_id = AR.role_id
+            WHERE A.employee_id = ?
+                AND R.name = ?
+            LIMIT 1`,
+            [employee_id, role_name],
+        ).then(([rows]) => rows.length > 0);
+    }
+
     // Read assignments by role ID
     static fetchByRole(role_id) {
         // TODO: Implement database query to fetch all accounts with a role
