@@ -52,6 +52,14 @@ module.exports = class Activity {
             [team_id]);
     }
 
+    /*fetchByEmployee(employee_id)
+    Function responsible for returning all activities from an employee.*/
+
+    static fetchByEmployee(employee_id){
+        return db.execute('SELECT * FROM activity as A WHERE A.employee_id=?;'
+            ,[employee_id]);
+    }
+
     // Create or Update activity
     save() {
         // TODO: Implement database logic
