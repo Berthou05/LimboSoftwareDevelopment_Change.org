@@ -14,11 +14,7 @@ const DIRECTORY_QUERY = `SELECT DISTINCT
     P.end_date,
     E.full_name AS lead_name,
     CASE
-        WHEN (
-            C.employee_id IS NOT NULL
-            OR P.employee_responsible_id = ?
-            OR ET.employee_id IS NOT NULL
-        ) THEN 1
+        WHEN C.employee_id IS NOT NULL THEN 1
         ELSE 0
     END AS is_member
 FROM project AS P
@@ -28,12 +24,6 @@ LEFT JOIN collaboration AS C
     ON C.project_id = P.project_id
     AND C.employee_id = ?
     AND C.ended_at IS NULL
-LEFT JOIN projectteam AS PT
-    ON PT.project_id = P.project_id
-LEFT JOIN employeeteam AS ET
-    ON ET.team_id = PT.team_id
-    AND ET.employee_id = ?
-    AND ET.left_at IS NULL
 WHERE P.status = 'IN PROGRESS'
     AND (
         ? = ''
@@ -46,8 +36,6 @@ ORDER BY is_member DESC, P.name ASC`;
 const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
     const normalizedSearch = `%${searchTerm}%`;
     return [
-        employeeId || '',
-        employeeId || '',
         employeeId || '',
         searchTerm,
         normalizedSearch,
@@ -77,7 +65,7 @@ module.exports = class Project {
         this.created_at = created_at;
     }
     
-    // Projects where the employee participates (direct, responsible, or via team)
+    // Projects where the employee participates through collaboration
     static fetchByEmployeeId(employee_id) {
         return db.execute(
             `SELECT DISTINCT
@@ -92,24 +80,17 @@ module.exports = class Project {
                 1 AS is_member
             FROM project AS P
             INNER JOIN employee AS E ON P.employee_responsible_id = E.employee_id
-            LEFT JOIN collaboration AS C
+            INNER JOIN collaboration AS C
                 ON C.project_id = P.project_id
                 AND C.employee_id = ?
                 AND C.ended_at IS NULL
-            LEFT JOIN projectteam AS PT ON PT.project_id = P.project_id
-            LEFT JOIN employeeteam AS ET ON ET.team_id = PT.team_id AND ET.employee_id = ? AND (ET.left_at IS NULL)
-            WHERE (
-                C.employee_id IS NOT NULL
-                OR P.employee_responsible_id = ?
-                OR ET.employee_id IS NOT NULL
-            )
-            AND P.status = 'IN PROGRESS'
+            WHERE P.status = 'IN PROGRESS'
             ORDER BY P.name ASC;`,
-            [employee_id, employee_id, employee_id]
+            [employee_id]
         );
     }
 
-    // Projects where the employee does NOT participate (not direct, not responsible, not via team)
+    // Projects where the employee does NOT participate through collaboration
     static fetchNotByEmployeeId(employee_id) {
         return db.execute(
             `SELECT DISTINCT
@@ -124,19 +105,12 @@ module.exports = class Project {
                 0 AS is_member
             FROM project AS P
             INNER JOIN employee AS E ON P.employee_responsible_id = E.employee_id
-            LEFT JOIN projectteam AS PT ON PT.project_id = P.project_id
-            LEFT JOIN employeeteam AS ET ON ET.team_id = PT.team_id AND ET.employee_id = ? AND (ET.left_at IS NULL)
             WHERE P.project_id NOT IN (
                 SELECT project_id FROM collaboration WHERE employee_id = ? AND ended_at IS NULL
-                UNION
-                SELECT project_id FROM project AS P2 WHERE P2.employee_responsible_id = ?
-                UNION
-                SELECT PT2.project_id FROM projectteam AS PT2
-                INNER JOIN employeeteam AS ET2 ON ET2.team_id = PT2.team_id AND ET2.employee_id = ? AND (ET2.left_at IS NULL)
             )
             AND P.status = 'IN PROGRESS'
             ORDER BY P.name ASC;`,
-            [employee_id, employee_id, employee_id, employee_id]
+            [employee_id]
         );
     }
 
@@ -176,17 +150,34 @@ module.exports = class Project {
             [team_id]);
     }
 
-    // (Removed duplicate fetchByEmployeeId)
-
-    // Create or Update project
-    save() {
-        // TODO: Implement database logic
-        // If project_id exists, update; otherwise, insert new record
+    static create(projectData) {
+        return db.execute(
+            `INSERT INTO project(
+                employee_responsible_id,
+                name,
+                description,
+                status,
+                start_date,
+                end_date,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                projectData.employee_responsible_id,
+                projectData.name,
+                projectData.description,
+                projectData.status,
+                projectData.start_date,
+                projectData.end_date,
+                projectData.created_at,
+            ],
+        );
     }
 
-    // Read all projects
-    static fetchAll() {
-        // TODO: Implement database query to fetch all projects
+    static findByName(name) {
+        return db.execute(
+            'SELECT project_id, name FROM project WHERE name = ?',
+            [name],
+        );
     }
 
     // Read project by ID
@@ -209,26 +200,6 @@ module.exports = class Project {
             WHERE P.project_id = ?`,
             [project_id],
         );
-    }
-
-    // Read projects by responsible employee
-    static fetchByResponsible(employee_responsible_id) {
-        // TODO: Implement database query to fetch projects by responsible employee
-    }
-
-    // Read projects by status
-    static fetchByStatus(status) {
-        // TODO: Implement database query to fetch projects by status
-    }
-
-    // Update project
-    static update(project_id, updateData) {
-        // TODO: Implement database update logic
-    }
-
-    // Delete project
-    static delete(project_id) {
-        // TODO: Implement database delete logic
     }
 
 };

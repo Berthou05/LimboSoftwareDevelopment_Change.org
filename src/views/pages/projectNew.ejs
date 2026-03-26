@@ -1,0 +1,20 @@
+<%
+  const defaultProjectForm = { name: '', description: '', startDate: '', endDate: '' };
+%>
+
+<%- include('../layout', {
+  page: 'pages/content/projectNew',
+  pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : 'New Project',
+  pageSubtitle: typeof pageSubtitle !== 'undefined' ? pageSubtitle : '',
+  projectForm: typeof projectForm !== 'undefined'
+    ? projectForm
+    : defaultProjectForm,
+  formErrors: typeof formErrors !== 'undefined' ? formErrors : [],
+  formError: typeof formError !== 'undefined' ? formError : '',
+  formSuccess: typeof formSuccess !== 'undefined' ? formSuccess : '',
+  csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '',
+  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
+  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
+}) %>
