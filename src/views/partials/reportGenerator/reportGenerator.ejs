@@ -185,7 +185,7 @@
               <span data-latest-report-period><%= new Date(latestReport.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(latestReport.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
             </p>
           </div>
-          <a href="#" class="rounded-lg border border-brand-secondary px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white">View</a>
+          <a href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="rounded-lg border border-brand-secondary px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white">View</a>
         </div>
       </div>
     <% } %>
@@ -286,7 +286,7 @@
               <span data-latest-report-period><%= new Date(latestReport.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(latestReport.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
             </p>
           </div>
-          <a href="#" class="text-xs font-semibold text-brand-primary hover:text-brand-accent">View</a>
+          <a href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="text-xs font-semibold text-brand-primary hover:text-brand-accent">View</a>
         </div>
       </div>
     <% } %>
