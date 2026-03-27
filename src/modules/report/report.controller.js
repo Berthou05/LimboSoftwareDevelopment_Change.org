@@ -13,6 +13,36 @@ const Goal = require('../../models/goal');
 const Report = require('../../models/report');
 const { end } = require('../../utils/database');
 
+/*normalizeReportRequest(body)
+Function responsible for normalizing report generator payloads coming from
+legacy and current views.*/
+
+const normalizeReportRequest = function normalizeReportRequest(body = {}) {
+    const contentType = typeof body.contentType === 'string'
+        ? body.contentType
+        : body.type;
+    const subjectId = typeof body.subjectId === 'string'
+        ? body.subjectId
+        : body.id;
+    const periodStart = typeof body.periodStart === 'string'
+        ? body.periodStart
+        : body.start_date;
+    const periodEnd = typeof body.periodEnd === 'string'
+        ? body.periodEnd
+        : body.end_date;
+    const redirectTo = typeof body.redirectTo === 'string'
+        ? body.redirectTo
+        : body.route;
+
+    return {
+        type: String(contentType || '').trim().toUpperCase(),
+        id: String(subjectId || '').trim(),
+        start_date: String(periodStart || '').trim(),
+        end_date: String(periodEnd || '').trim(),
+        route: String(redirectTo || '/home').trim() || '/home',
+    };
+};
+
 /*getReport
 Function responsible for returning a concrete report page*/
 
@@ -37,90 +67,26 @@ Information obtained through body:
 */
 
 exports.generateReport = (request, response, next)=>{
-    //For testing purposes
-    console.log(request.body);
-    const {type = '', id='', start_date='', end_date='', route='/home'} = request.body;
-    const body={};
-    switch (type){
-        case 'EMPLOYEE':
-            Employee.fetchById(id).then(([info, fieldData])=>{
-                body.info = info;
-                
-                Activity.fetchByEmployeeBtw(id,start_date,end_date).then(([employee_activities, fieldData])=>{
-                    body.employee_activities = employee_activities;
-                    
-                    Team.getEmployeeTeamsInfoBtw(id,start_date,end_date).then(([teams_info, fieldData])=>{
-                        body.teams_info = teams_info;
-                        
-                        Activity.getTeamActivitiesFromEmpBtw(id, start_date, end_date).then(([team_activities, fieldData])=>{
-                            body.team_activities = team_activities;
+    const { type, id, start_date, end_date, route } = normalizeReportRequest(request.body);
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
 
-                            Project.getEmployeeProjectsInfoBtw(id,start_date, end_date).then(([employee_projects, fieldData])=>{
-                                body.employee_projects = employee_projects;
-
-                                Activity.getProjectActivitiesFromEmpBtw(id,start_date,end_date).then(([project_activities, fieldData])=>{
-                                    body.project_activities = project_activities;
-
-                                    //* To be developed.
-                                    
-                                })
-                                .catch((error)=>{
-                                    console.log(error);
-                                    request.session.error = `Report of Employee:${id} could not be generated\nEmployee Project Activities not obtained.`;
-                                    return response.redirect(`${route}`);
-                                })
-        
-                            })
-                            .catch((error)=>{
-                                console.log(error);
-                                request.session.error = `Report of Employee:${id} could not be generated\nEmployee Projects not obtained.`;
-                                return response.redirect(`${route}`);
-                            })
-                        })
-                        .catch((error)=>{
-                            console.log(error);
-                            request.session.error = `Report of Employee:${id} could not be generated\nEmployee Teams Activities not obtained.`;
-                            return response.redirect(`${route}`);
-                        })
-                    })
-                    .catch((error)=>{
-                        console.log(error);
-                        request.session.error = `Report of Employee:${id} could not be generated\nEmployee Teams not obtained.`;
-                        return response.redirect(`${route}`);
-                    })
-                })
-                .catch((error)=>{
-                    console.log(error);
-                    request.session.error = `Report of Employee:${id} could not be generated\nEmployee Activities not obtained.`;
-                    return response.redirect(`${route}`);
-                })
-            })
-            .catch((error)=>{
-                console.log(error);
-                request.session.error = `Report of Employee:${id} could not be generated\nEmployee Information not obtained.`;
-                return response.redirect(`${route}`);
-            })
-            break;
-
-        case 'TEAM':
-            break;
-
-        case 'PROJECT':
-            break;
-
-        default:
-            request.session.error = `Report of ${type}:${id} could not be generated`;
-            return response.redirect(`${route}`);
-            break;
+    if (!type || !id || !start_date || !end_date) {
+        request.session.error = 'Complete the report type, subject, and date range before generating a report.';
+        return response.redirect(route);
     }
 
-    //Here continues the report generation.
-    //Follows the prompt obtention.
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+        request.session.error = 'Select a valid report date range.';
+        return response.redirect(route);
+    }
 
-    //API call
+    if (startDate.getTime() > endDate.getTime()) {
+        request.session.error = 'The start date must be before the end date.';
+        return response.redirect(route);
+    }
 
-    //Obtention and storage
-
-    //Returning the text output.
-
+    //TODO: Review code
+    request.session.error = `Report generation for ${type}:${id} is still under development.`;
+    return response.redirect(route);
 };

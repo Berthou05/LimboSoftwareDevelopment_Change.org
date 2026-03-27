@@ -13,6 +13,14 @@
       isMember: typeof isMember !== 'undefined' ? isMember : false,
       csrfToken
     }) %>
+    <%- include('../../partials/reportGenerator/reportGenerator', {
+      redirectTo: '/teams/' + (team?.id || ''),
+      defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'TEAM',
+      defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (team?.id || ''),
+      reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
+      latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+      quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
+    }) %>
     <%- include('../../partials/teamDirectory/teamParticipants', {
       team,
       csrfToken,

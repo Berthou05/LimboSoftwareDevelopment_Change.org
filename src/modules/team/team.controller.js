@@ -261,6 +261,22 @@ exports.getTeamPage = (request, response, next) => {
                 pageTitle: `Team ${team.name}`,
                 pageSubtitle: '',
                 team,
+                //TODO: Review code
+                defaultReportType: 'TEAM',
+                defaultSubjectId: team.id,
+                reportSubjects: {
+                    employees: [],
+                    teams: [
+                        {
+                            id: team.id,
+                            name: team.name,
+                            label: team.name,
+                        },
+                    ],
+                    projects: [],
+                },
+                latestReports: {},
+                quickReport: '',
                 currentEmployeeId: request.session.employeeId || null,
                 isMember: team.membersDetailed.some(
                     (member) => member.employee.id === request.session.employeeId
