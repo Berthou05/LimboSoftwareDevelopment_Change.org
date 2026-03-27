@@ -1,5 +1,15 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <h2 class="font-heading text-xl font-bold text-brand-text">Project Members</h2>
+    <div class="flex items-center justify-between gap-3">
+        <h2 class="font-heading text-xl font-bold text-brand-text">Project Members</h2>
+        <button
+            type="button"
+            data-popup-open="project-add-member"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
+            aria-label="Add project member"
+        >
+            +
+        </button>
+    </div>
     <div class="mt-4 max-h-64 space-y-2 overflow-y-auto">
         <% const membersDetailed = project?.membersDetailed || []; %>
         <% if (!membersDetailed.length) { %>
@@ -19,3 +29,14 @@
         <% }) %>
     </div>
 </article>
+
+<%- include('./actionPopup', {
+    popupId: 'project-add-member',
+    popupTitle: 'Add Project Member',
+    popupDescription: 'Assign a collaborator directly to this project.',
+    popupFields: [
+        { name: 'memberName', label: 'Employee', value: '', placeholder: 'Camila Hurtado' },
+        { name: 'description', label: 'Collaboration description', type: 'textarea', rows: 3, value: '', placeholder: 'Describe how this collaborator contributes.' },
+        { name: 'startedAt', label: 'Start date', type: 'date', value: '' },
+    ],
+}) %>

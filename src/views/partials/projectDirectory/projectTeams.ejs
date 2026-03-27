@@ -1,5 +1,15 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <h2 class="font-heading text-xl font-bold text-brand-text">Teams Involved</h2>
+    <div class="flex items-center justify-between gap-3">
+        <h2 class="font-heading text-xl font-bold text-brand-text">Teams Involved</h2>
+        <button
+            type="button"
+            data-popup-open="project-add-team"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
+            aria-label="Add team"
+        >
+            +
+        </button>
+    </div>
     <div class="mt-4 space-y-2">
         <% const teamsDetailed = project?.teamsDetailed || []; %>
         <% if (!teamsDetailed.length) { %>
@@ -29,3 +39,18 @@
         <% }) %>
     </div>
 </article>
+
+<%- include('./actionPopup', {
+    popupId: 'project-add-team',
+    popupTitle: 'Add Team',
+    popupDescription: 'Attach a team to this project and define its role.',
+    popupFields: [
+        { name: 'teamName', label: 'Team', value: '', placeholder: 'Vaquita Squad' },
+        { name: 'teamRole', label: 'Role', type: 'select', value: 'CONTRIBUTOR', options: [
+            { value: 'CONTRIBUTOR', label: 'CONTRIBUTOR' },
+            { value: 'OWNER', label: 'OWNER' },
+            { value: 'SUPPORT', label: 'SUPPORT' },
+        ] },
+        { name: 'joinedAt', label: 'Joined date', type: 'date', value: '' },
+    ],
+}) %>

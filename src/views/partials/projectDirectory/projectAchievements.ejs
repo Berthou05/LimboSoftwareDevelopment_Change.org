@@ -1,6 +1,18 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <h2 class="font-heading text-2xl font-bold text-brand-text">Achievements</h2>
-    <p class="mt-1 text-sm text-brand-text/60">Key achievements delivered by this project</p>
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <h2 class="font-heading text-2xl font-bold text-brand-text">Achievements</h2>
+            <p class="mt-1 text-sm text-brand-text/60">Key achievements delivered by this project</p>
+        </div>
+        <button
+            type="button"
+            data-popup-open="project-add-achievement"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
+            aria-label="Add achievement"
+        >
+            +
+        </button>
+    </div>
 
     <% const achievementsDetailed = project?.achievementsDetailed || []; %>
     <div class="mt-5 space-y-3">
@@ -10,8 +22,30 @@
         <% achievementsDetailed.forEach((achievement) => { %>
             <div class="rounded-xl border border-brand-secondary p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="font-semibold text-brand-text"><%= achievement.title %></h3>
-                    <span class="text-xs text-brand-text/50"><%= achievement.achievementDateLabel || 'Date unavailable' %></span>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-semibold text-brand-text"><%= achievement.title %></h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-brand-text/50"><%= achievement.achievementDateLabel || 'Date unavailable' %></span>
+                        <button
+                            type="button"
+                            data-popup-open="edit-achievement-<%= achievement.id %>"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/20"
+                            aria-label="Edit achievement"
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            data-popup-open="delete-achievement-<%= achievement.id %>"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
+                            aria-label="Delete achievement"
+                        >
+                            x
+                        </button>
+                    </div>
                 </div>
                 <p class="mt-2 text-sm text-brand-text/70"><%= achievement.description %></p>
                 <p class="mt-2 text-xs text-brand-text/50">By: <%= achievement.authorName || 'Unknown' %></p>
@@ -21,6 +55,39 @@
                     </a>
                 <% } %>
             </div>
+
+            <%- include('./actionPopup', {
+                popupId: 'edit-achievement-' + achievement.id,
+                popupTitle: 'Edit Achievement',
+                popupDescription: 'Update the achievement details shown in this card.',
+                popupFields: [
+                    { name: 'title', label: 'Title', value: achievement.title || '', placeholder: 'Achievement title' },
+                    { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: achievement.description || '', placeholder: 'Describe the achievement.' },
+                    { name: 'achievementDate', label: 'Achievement date', type: 'date', value: '' },
+                    { name: 'evidenceLink', label: 'Evidence link', value: achievement.evidenceLink || '', placeholder: 'https://...' },
+                ],
+            }) %>
+
+            <%- include('./actionPopup', {
+                popupId: 'delete-achievement-' + achievement.id,
+                popupTitle: 'Delete Achievement',
+                popupDescription: 'Confirm if you want to remove this achievement from the project.',
+                popupFields: [],
+                popupSubmitLabel: 'Delete',
+                popupSubmitTone: 'danger',
+            }) %>
         <% }) %>
     </div>
 </article>
+
+<%- include('./actionPopup', {
+    popupId: 'project-add-achievement',
+    popupTitle: 'Add Achievement',
+    popupDescription: 'Register a new achievement for this project.',
+    popupFields: [
+        { name: 'title', label: 'Title', value: '', placeholder: 'Delivered MVP' },
+        { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the outcome delivered by the team.' },
+        { name: 'achievementDate', label: 'Achievement date', type: 'date', value: '' },
+        { name: 'evidenceLink', label: 'Evidence link', value: '', placeholder: 'https://...' },
+    ],
+}) %>

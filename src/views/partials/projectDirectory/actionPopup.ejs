@@ -1,0 +1,70 @@
+<div data-popup="<%= popupId %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
+    <div class="mx-auto max-w-lg">
+        <div class="rounded-3xl border border-brand-secondary bg-white p-6 shadow-panel">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h3 class="font-heading text-2xl font-bold text-brand-text"><%= popupTitle %></h3>
+                    <% if (popupDescription) { %>
+                        <p class="mt-1 text-sm text-brand-text/60"><%= popupDescription %></p>
+                    <% } %>
+                </div>
+                <button
+                    type="button"
+                    data-popup-close
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
+                >
+                    x
+                </button>
+            </div>
+
+            <form data-popup-form class="mt-5 space-y-4">
+                <% (popupFields || []).forEach((field) => { %>
+                    <label class="block text-sm">
+                        <span class="mb-2 block font-semibold text-brand-text/70"><%= field.label %></span>
+                        <% if (field.type === 'textarea') { %>
+                            <textarea
+                                name="<%= field.name %>"
+                                rows="<%= field.rows || 4 %>"
+                                class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                                placeholder="<%= field.placeholder || '' %>"
+                            ><%= field.value || '' %></textarea>
+                        <% } else if (field.type === 'select') { %>
+                            <select
+                                name="<%= field.name %>"
+                                class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                            >
+                                <% (field.options || []).forEach((option) => { %>
+                                    <option value="<%= option.value %>" <%= option.value === field.value ? 'selected' : '' %>><%= option.label %></option>
+                                <% }) %>
+                            </select>
+                        <% } else { %>
+                            <input
+                                type="<%= field.type || 'text' %>"
+                                name="<%= field.name %>"
+                                value="<%= field.value || '' %>"
+                                class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                                placeholder="<%= field.placeholder || '' %>"
+                            />
+                        <% } %>
+                    </label>
+                <% }) %>
+
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
+                    <button
+                        type="button"
+                        data-popup-close
+                        class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        class="rounded-xl border <%= popupSubmitTone === 'danger' ? 'border-brand-accent bg-brand-accent hover:bg-brand-accent/90' : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
+                    >
+                        <%= popupSubmitLabel || 'Save' %>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

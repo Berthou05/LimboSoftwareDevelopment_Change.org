@@ -1,6 +1,18 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <h2 class="font-heading text-2xl font-bold text-brand-text">Goals</h2>
-    <p class="mt-1 text-sm text-brand-text/60">Current goals and milestones tracked for this project</p>
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <h2 class="font-heading text-2xl font-bold text-brand-text">Goals</h2>
+            <p class="mt-1 text-sm text-brand-text/60">Current goals and milestones tracked for this project</p>
+        </div>
+        <button
+            type="button"
+            data-popup-open="project-add-goal"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
+            aria-label="Add goal"
+        >
+            +
+        </button>
+    </div>
 
     <% const goalsDetailed = project?.goalsDetailed || []; %>
     <div class="mt-5 space-y-3">
@@ -10,8 +22,30 @@
         <% goalsDetailed.forEach((goal) => { %>
             <div class="rounded-xl border border-brand-secondary p-4">
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="font-semibold text-brand-text"><%= goal.title %></h3>
-                    <span class="text-xs text-brand-text/50"><%= goal.dueDateLabel || 'No due date' %></span>
+                    <div class="min-w-0 flex-1">
+                        <h3 class="font-semibold text-brand-text"><%= goal.title %></h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-brand-text/50"><%= goal.dueDateLabel || 'No due date' %></span>
+                        <button
+                            type="button"
+                            data-popup-open="edit-goal-<%= goal.id %>"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/20"
+                            aria-label="Edit goal"
+                        >
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            data-popup-open="delete-goal-<%= goal.id %>"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
+                            aria-label="Delete goal"
+                        >
+                            x
+                        </button>
+                    </div>
                 </div>
                 <p class="mt-2 text-sm text-brand-text/70"><%= goal.description %></p>
                 <div class="mt-3 flex flex-wrap gap-2">
@@ -26,6 +60,51 @@
                     </span>
                 </div>
             </div>
+
+            <%- include('./actionPopup', {
+                popupId: 'edit-goal-' + goal.id,
+                popupTitle: 'Edit Goal',
+                popupDescription: 'Update the goal details for this project.',
+                popupFields: [
+                    { name: 'title', label: 'Title', value: goal.title || '', placeholder: 'New goal' },
+                    { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: goal.description || '', placeholder: 'Describe the goal.' },
+                    { name: 'status', label: 'Status', type: 'select', value: goal.status || 'IN PROGRESS', options: [
+                        { value: 'PLANNED', label: 'PLANNED' },
+                        { value: 'IN PROGRESS', label: 'IN PROGRESS' },
+                        { value: 'ON HOLD', label: 'ON HOLD' },
+                        { value: 'COMPLETED', label: 'COMPLETED' },
+                        { value: 'CANCELLED', label: 'CANCELLED' },
+                    ] },
+                    { name: 'dueDate', label: 'Due date', type: 'date', value: '' },
+                ],
+            }) %>
+
+            <%- include('./actionPopup', {
+                popupId: 'delete-goal-' + goal.id,
+                popupTitle: 'Delete Goal',
+                popupDescription: 'Confirm if you want to remove this goal from the project.',
+                popupFields: [],
+                popupSubmitLabel: 'Delete',
+                popupSubmitTone: 'danger',
+            }) %>
         <% }) %>
     </div>
 </article>
+
+<%- include('./actionPopup', {
+    popupId: 'project-add-goal',
+    popupTitle: 'Add Goal',
+    popupDescription: 'Create a new goal for this project.',
+    popupFields: [
+        { name: 'title', label: 'Title', value: '', placeholder: 'Increase classification accuracy' },
+        { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the goal and expected impact.' },
+        { name: 'status', label: 'Status', type: 'select', value: 'IN PROGRESS', options: [
+            { value: 'PLANNED', label: 'PLANNED' },
+            { value: 'IN PROGRESS', label: 'IN PROGRESS' },
+            { value: 'ON HOLD', label: 'ON HOLD' },
+            { value: 'COMPLETED', label: 'COMPLETED' },
+            { value: 'CANCELLED', label: 'CANCELLED' },
+        ] },
+        { name: 'dueDate', label: 'Due date', type: 'date', value: '' },
+    ],
+}) %>
