@@ -3,84 +3,134 @@ skinparam style strictuml
 autonumber
 
 actor "User" as U
-boundary "activity-log.ejs" as V
-boundary "activity.routes" as RO
-control "activity.controller" as C
-control "activity.service" as SV
-entity "activity.model" as X
+
+boundary "home.ejs" as HV
+boundary "home.routes" as HRO
+control "home.controller" as HC
+
+boundary "team.ejs" as TV
+boundary "team.routes" as TRO
+control "team.controller" as TC
+
+boundary "project.ejs" as PV
+boundary "project.routes" as PRO
+control "project.controller" as PC
+
+boundary "employeeDetails.ejs" as EV
+boundary "employee.routes" as ERO
+control "employee.controller" as EC
+
+entity "activity.model" as A
 database "unitas_system" as DB
 
-U -> V: Open Activity Log and apply filters
-activate V
-V -> RO: fetch('/activities?scope=employee&from=2026-03-01&to=2026-03-23&type=all')
-activate RO
-RO -> C: getActivityLog(request, response)
-activate C
-C -> SV: getActivityLog(filters)
-activate SV
-SV -> SV: validateFilters(scope, from, to, type)
+alt User opens Home
+    U -> HRO: GET /home
+    activate HRO
+    HRO -> HC: getHome(request, response)
+    activate HC
 
-alt Filters invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid filters"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showActivityLogError(error)
-else Filters valid
-SV -> X: findByFilters(filters)
-activate X
-X -> DB: SELECT id, occurred_at, actor_name, action, scope_type, scope_id\nFROM activity\nWHERE scope_type = ? AND occurred_at BETWEEN ? AND ?\nORDER BY occurred_at DESC
-activate DB
-DB --> X: matching activity rows
-deactivate DB
-X --> SV: activities
-deactivate X
-SV --> C: activity log data
-deactivate SV
-C --> RO: response.json({success:true,data:activities})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
+    HC -> A: fetchByEmployeeBtw(session.employeeId, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT employee activity rows
+    activate DB
+    DB --> A: latest self activity rows
+    deactivate DB
+    A --> HC: latest self activity rows
+    deactivate A
 
-alt No activities found
-V -> V: renderEmptyActivityLogState(data)
-else Activities found
-V -> V: updateActivityLogModule(data)
-end
-end
-deactivate V
+    HC -> A: getTeamActivitiesFromEmpBtw(session.employeeId, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT team activity rows\nfor the employee teams
+    activate DB
+    DB --> A: team activity rows
+    deactivate DB
+    A --> HC: team activity rows
+    deactivate A
 
-opt Re-filter Activity Log
-U -> V: Change date range or type
-activate V
-V -> RO: fetch('/activities?scope=employee&from=2026-03-10&to=2026-03-23&type=comment')
-activate RO
-RO -> C: getActivityLog(request, response)
-activate C
-C -> SV: getActivityLog(updatedFilters)
-activate SV
-SV -> SV: validateFilters(updatedFilters)
-SV -> X: findByFilters(updatedFilters)
-activate X
-X -> DB: SELECT id, occurred_at, actor_name, action, scope_type, scope_id\nFROM activity\nWHERE scope_type = ? AND occurred_at BETWEEN ? AND ?\nORDER BY occurred_at DESC
-activate DB
-DB --> X: filtered activity rows
-deactivate DB
-X --> SV: filtered activities
-deactivate X
-SV --> C: filtered data
-deactivate SV
-C --> RO: response.json({success:true,data:activities})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateActivityLogModule(data)
-deactivate V
+    HC -> HC: build latestActivitySections\nbuild teamActivitySections
+    HC --> HRO: render('pages/home', {latestActivitySections, teamActivitySections})
+    deactivate HC
+    HRO --> HV: HTML response
+    deactivate HRO
+    HV -> HV: Render "Your Latest Activity"\nRender "Team Activity"
+
+else User opens Team
+    U -> TRO: GET /teams/:team_id
+    activate TRO
+    TRO -> TC: getTeamPage(request, response)
+    activate TC
+
+    TC -> A: getTeamMembersActivities(team_id)
+    activate A
+    A -> DB: SELECT team member activity rows
+    activate DB
+    DB --> A: team activity rows
+    deactivate DB
+    A --> TC: team activity rows
+    deactivate A
+
+    TC -> TC: build activitySections
+    TC --> TRO: render('pages/team', {activitySections})
+    deactivate TC
+    TRO --> TV: HTML response
+    deactivate TRO
+    TV -> TV: Render "Team Activity"
+
+else User opens Project
+    U -> PRO: GET /projects/:project_id[?activityPreset|startDate|endDate]
+    activate PRO
+    PRO -> PC: getProjectPage(request, response)
+    activate PC
+    PC -> PC: resolveActivityFilter(request.query)
+
+    alt Project activity filter applied
+        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
+        activate A
+        A -> DB: SELECT project activity rows\nwithin selected range
+        activate DB
+        DB --> A: filtered project activity rows
+        deactivate DB
+        A --> PC: filtered project activity rows
+        deactivate A
+    else Default project activity
+        PC -> A: fetchByProject(project_id)
+        activate A
+        A -> DB: SELECT all project activity rows
+        activate DB
+        DB --> A: project activity rows
+        deactivate DB
+        A --> PC: project activity rows
+        deactivate A
+    end
+
+    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
+    PC --> PRO: render('pages/project', {activitySections, activityFilter})
+    deactivate PC
+    PRO --> PV: HTML response
+    deactivate PRO
+    PV -> PV: Render "Project Activity"
+
+else User opens Employee details
+    U -> ERO: GET /employees/:employee_id
+    activate ERO
+    ERO -> EC: getEmployeePage(request, response)
+    activate EC
+
+    EC -> A: fetchByEmployeeBtw(employee_id, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT employee activity rows
+    activate DB
+    DB --> A: latest self activity rows
+    deactivate DB
+    A --> EC: latest self activity rows
+    deactivate A
+
+    EC -> EC: build activitySections
+    EC --> ERO: render('pages/employeeDetails', {activitySections})
+    deactivate EC
+    ERO --> EV: HTML response
+    deactivate ERO
+    EV -> EV: Render self "Latest Activity"
 end
 
 @enduml
