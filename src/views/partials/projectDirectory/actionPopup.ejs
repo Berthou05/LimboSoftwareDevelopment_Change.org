@@ -1,6 +1,8 @@
 <%
     const submitTone = typeof popupSubmitTone !== 'undefined' ? popupSubmitTone : '';
     const submitLabel = typeof popupSubmitLabel !== 'undefined' ? popupSubmitLabel : 'Save';
+    const popupDescriptionText = typeof popupDescription !== 'undefined' ? popupDescription : '';
+    const popupFieldsList = Array.isArray(popupFields) ? popupFields : [];
 %>
 
 <div data-popup="<%= popupId %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
@@ -9,8 +11,8 @@
             <div class="flex items-start justify-between gap-4">
                 <div>
                     <h3 class="font-heading text-2xl font-bold text-brand-text"><%= popupTitle %></h3>
-                    <% if (popupDescriptionValue) { %>
-                        <p class="mt-1 text-sm text-brand-text/60"><%= popupDescriptionValue %></p>
+                    <% if (popupDescriptionText) { %>
+                        <p class="mt-1 text-sm text-brand-text/60"><%= popupDescriptionText %></p>
                     <% } %>
                 </div>
                 <button
@@ -23,7 +25,7 @@
             </div>
 
             <form data-popup-form class="mt-5 space-y-4">
-                <% popupFieldsValue.forEach((field) => { %>
+                <% popupFieldsList.forEach((field) => { %>
                     <label class="block text-sm">
                         <span class="mb-2 block font-semibold text-brand-text/70"><%= field.label %></span>
                         <% if (field.type === 'textarea') { %>
