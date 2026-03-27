@@ -1,0 +1,42 @@
+@startuml
+
+|User|
+start
+:Clicks the “Edit” button in the Account module;
+
+|System|
+:Prepares the editable inputs of the Account Information module;
+
+|User|
+:Modifies any input;
+:Clicks the "Save Changes" button;
+
+|System|
+if (Are the Employee names input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Employee lastnames;
+
+if (Are the Employee lastnames input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+|System|
+:Verifies the Employee timezone;
+
+if (Is the Employee timezone input empty?) then (yes)
+    |User|
+    :Sees an error message on the Employee Page;
+    stop
+else (no)
+endif
+
+@enduml

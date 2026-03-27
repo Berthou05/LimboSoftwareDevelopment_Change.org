@@ -7,7 +7,6 @@ start
 :Prepares the editable inputs of the Employee Information module;
 
 |User|
-:Sees the editable Employee profile fields on the Employee Page;
 :Modifies any input;
 :Clicks the "Save" button;
 
@@ -65,5 +64,6 @@ endif
 
 |User|
 :Sees the Employee Page with updated information;
+:Display a success message;
 stop
 @enduml

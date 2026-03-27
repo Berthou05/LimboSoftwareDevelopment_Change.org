@@ -3,35 +3,44 @@ skinparam activityFlowDirection Down
 
 |User|
 start
-:Open project;
-
+:Clicks the “Leave Project” button over an Employee/Team;
 |System|
-:Retrieve members;
-
+:Displays a confirmation pop-up;
 |User|
-:Show members;
-:Select member;
-:Select Remove;
-
+:Click a button;
 |System|
-:Check permissions;
+if(Did the User click the ‘Confirm’ button?)id(yes)then
 
-if (Authorized?) then (Yes)
-
-  :Remove member;
-
-  if (Removed?) then (Yes)
-    |User|
-    :Show confirmation;
-  else
-    |User|
-    :Show removal error;
-  endif
-
-else
-  |User|
-  :Show permission error;
+else(no)
+  |System|
+  :Close pop-up;
+  stop
 endif
 
-stop
+|System|
+:Sends a request to remove content from the project;
+|Database|
+:Updates the collaboration or teamProject entry;
+|System|
+if(Was the user successfully removed?)is(no)then
+  |User|
+  :Displays "Unable to leave the project";
+  stop
+
+else(yes)
+  |System|
+  :Retrieves the updated Project information;
+  if(Did the database return an error?)is(yes)then
+    |User|
+    :Show error message “Team deletion has failed”;
+    stop
+  else(no)
+  endif
+endif
+
+|System|
+:Renders the Project page;
+|User|
+:Shows the success message;
+
 @enduml

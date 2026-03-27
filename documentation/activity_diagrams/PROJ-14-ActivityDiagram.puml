@@ -60,7 +60,7 @@ endif
 :Returns the Project information;
 
 |System|
-:Renders the Project Page with updated information;
+:Updates the Project Page with updated information;
 
 |User|
 :Sees the Project Page with the updated Achievement;

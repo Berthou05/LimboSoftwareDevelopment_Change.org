@@ -4,38 +4,33 @@ skinparam Padding 5
 
 |User|
 start
-:Navigates to the "Team" section;
-:Clicks to view the active members;
+:Accesses a Team page;
 
 |System|
 :Captures the current team_id;
-:Sends query for profile details and team history;
+:Sends query fetch the member Employee details;
 
 |Database|
-:Fetches employee data and active status;
-:Returns data to System;
+:Returns the employee's full_name, role, and started_at;
 
 |System|
-if (Is employee still active on this team?) then (yes)
-    if (Does profile data load?) then (yes)
-        :Processes data and prepares View;
-        :Renders the Active Members page;
-        |User|
-        :Views detailed profile and contact info;
+if(Did the system receive an error from the database?)is(yes)then
+    |User|
+    :Show error message 'Error while obtaining team members';
+    stop
+    |System|
+else(no)
+    if (Did the System receive more than one employee information?) is (yes) then
+
     else (no)
         |System|
-        :Generates "Profile temporarily unavailable" message;
-        |User|
-        :Displays error message;
+        :Store text “There are no members in the current team”;
     endif
-else (no)
-    |System|
-    :Prepares "No longer active" notification;
-    :Refreshes the member list;
-    |User|
-    :Displays notification and updated list;
 endif
-
+|System|
+:Processes the data;
+:Renders the Team page;
 |User|
+:Displays Team page;
 stop
 @enduml
