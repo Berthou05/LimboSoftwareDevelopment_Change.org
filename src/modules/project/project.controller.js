@@ -81,14 +81,61 @@ const buildActivitySections = function buildActivitySections(activityRows) {
     }));
 };
 
+const isValidDateInput = function isValidDateInput(value) {
+    if (!value) {
+        return true;
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
+};
+
 const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     const preset = typeof query.activityPreset === 'string' ? query.activityPreset.trim() : '';
     const startDate = typeof query.startDate === 'string' ? query.startDate.trim() : '';
     const endDate = typeof query.endDate === 'string' ? query.endDate.trim() : '';
     const today = new Date();
 
-    if (preset === 'today' || preset === '3days' || preset === '5days') {
-        const days = preset === 'today' ? 1 : preset === '3days' ? 3 : 5;
+    if (!preset && !startDate && !endDate) {
+        const rangeStart = new Date(today);
+        const rangeEnd = new Date(today);
+
+        rangeStart.setHours(0, 0, 0, 0);
+        rangeEnd.setHours(23, 59, 59, 999);
+        rangeStart.setDate(rangeStart.getDate() - 29);
+
+        return {
+            preset: 'month',
+            startDate: '',
+            endDate: '',
+            hasManualRange: false,
+            isFiltered: true,
+            rangeStart,
+            rangeEnd,
+            error: '',
+        };
+    }
+
+    if (preset === 'all') {
+        return {
+            preset,
+            startDate: '',
+            endDate: '',
+            hasManualRange: false,
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: '',
+        };
+    }
+
+    if (preset === 'today' || preset === 'week' || preset === 'month' || preset === 'quarter') {
+        const days = preset === 'today'
+            ? 1
+            : preset === 'week'
+                ? 7
+                : preset === 'month'
+                    ? 30
+                    : 90;
         const rangeStart = new Date(today);
         const rangeEnd = new Date(today);
 
@@ -107,6 +154,32 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
         };
     }
 
+    if (!isValidDateInput(startDate) || !isValidDateInput(endDate)) {
+        return {
+            preset: '',
+            startDate,
+            endDate,
+            hasManualRange: Boolean(startDate || endDate),
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: 'Correct the activity dates and try again.',
+        };
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+        return {
+            preset: '',
+            startDate,
+            endDate,
+            hasManualRange: true,
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: 'The activity start date must be before the end date.',
+        };
+    }
+
     return {
         preset: '',
         startDate,
@@ -115,6 +188,7 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
         isFiltered: Boolean(startDate || endDate),
         rangeStart: startDate ? new Date(`${startDate}T00:00:00`) : null,
         rangeEnd: endDate ? new Date(`${endDate}T23:59:59.999`) : null,
+        error: '',
     };
 };
 
@@ -271,9 +345,25 @@ exports.getProjectPage = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
     const activityFilter = resolveActivityFilter(request.query);
-    const activityPromise = activityFilter.isFiltered
-        ? Activity.fetchByProjectBetween(projectId, activityFilter.rangeStart, activityFilter.rangeEnd)
-        : Activity.fetchByProject(projectId);
+    const activityPromise = activityFilter.error
+        ? Promise.resolve({
+            rows: [],
+            error: '',
+        })
+        : (activityFilter.isFiltered
+            ? Activity.fetchByProjectBetween(projectId, activityFilter.rangeStart, activityFilter.rangeEnd)
+            : Activity.fetchByProject(projectId))
+            .then(([rows]) => ({
+                rows,
+                error: '',
+            }))
+            .catch((error) => {
+                console.log(error);
+                return {
+                    rows: [],
+                    error: 'The activity log could not be loaded. Please try again.',
+                };
+            });
 
     Promise.all([
         Project.findById(projectId),
@@ -291,11 +381,14 @@ exports.getProjectPage = (request, response, next) => {
         [goalRows],
         [reportRows],
         [highlightRows],
-        [activityRows],
+        activityResponse,
         [teamRows],
         [memberRows],
         [activeCollaborationRows],
     ]) => {
+        const activityRows = activityResponse.rows || [];
+        const activityError = activityResponse.error || '';
+
         if (!projectRows || projectRows.length === 0) {
             return response.status(404).render('pages/project', {
                 csrfToken: request.csrfToken(),
@@ -325,6 +418,7 @@ exports.getProjectPage = (request, response, next) => {
                 },
                 activitySections: [],
                 activityFilter,
+                activityError: activityFilter.error || activityError || '',
             });
         }
 
@@ -426,6 +520,7 @@ exports.getProjectPage = (request, response, next) => {
                 hasManualRange: activityFilter.hasManualRange,
                 isFiltered: activityFilter.isFiltered,
             },
+            activityError: activityFilter.error || activityError || '',
             defaultReportType: 'PROJECT',
             defaultSubjectId: project.project_id,
             reportSubjects: {

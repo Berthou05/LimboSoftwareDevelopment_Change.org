@@ -1,0 +1,12 @@
+<%- include('../layout', {
+  page: 'pages/content/report',
+  pageTitle: typeof pageTitle !== 'undefined' ? pageTitle : 'Report',
+  pageScriptPaths: [],
+  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
+  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/reports',
+  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
+  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : '',
+  reportType: typeof reportType !== 'undefined' ? reportType : 'EMPLOYEE',
+  reportFormat: typeof reportFormat !== 'undefined' ? reportFormat : null,
+  redirectTo: typeof redirectTo !== 'undefined' ? redirectTo : '/home',
+}) %>

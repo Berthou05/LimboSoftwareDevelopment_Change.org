@@ -1,8 +1,6 @@
 <%
-    const popupDescriptionValue = typeof popupDescription !== 'undefined' ? popupDescription : '';
-    const popupFieldsValue = typeof popupFields !== 'undefined' ? popupFields : [];
-    const popupSubmitLabelValue = typeof popupSubmitLabel !== 'undefined' ? popupSubmitLabel : 'Save';
-    const popupSubmitToneValue = typeof popupSubmitTone !== 'undefined' ? popupSubmitTone : 'primary';
+    const submitTone = typeof popupSubmitTone !== 'undefined' ? popupSubmitTone : '';
+    const submitLabel = typeof popupSubmitLabel !== 'undefined' ? popupSubmitLabel : 'Save';
 %>
 
 <div data-popup="<%= popupId %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
@@ -66,9 +64,9 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl border <%= popupSubmitToneValue === 'danger' ? 'border-brand-accent bg-brand-accent hover:bg-brand-accent/90' : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
+                        class="rounded-xl border <%= submitTone === 'danger' ? 'border-brand-accent bg-brand-accent hover:bg-brand-accent/90' : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
                     >
-                        <%= popupSubmitLabelValue %>
+                        <%= submitLabel %>
                     </button>
                 </div>
             </form>

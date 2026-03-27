@@ -1,6 +1,12 @@
 <%- include('../layout', {
   page: 'pages/content/employeeDetails',
   pageTitle: 'Employee Details',
+  pageScriptPaths: ['/js/dateRangePicker.js'],
+  activityFilter:
+    typeof activityFilter !== 'undefined'
+      ? activityFilter
+      : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+  activityError: typeof activityError !== 'undefined' ? activityError : '',
   sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
   layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/employees',
   layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,

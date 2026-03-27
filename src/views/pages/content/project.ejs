@@ -8,7 +8,8 @@
       project,
       activityFilter: typeof activityFilter !== 'undefined'
         ? activityFilter
-        : { preset: '', startDate: '', endDate: '', hasManualRange: false, isFiltered: false },
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      activityError: typeof activityError !== 'undefined' ? activityError : '',
       activitySections: typeof activitySections !== 'undefined' ? activitySections : []
     }) %>
 

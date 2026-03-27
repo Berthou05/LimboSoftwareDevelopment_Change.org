@@ -67,26 +67,54 @@ module.exports = class Activity {
     Function responsible for returning all activies from Team members
     whose id=team_id*/
 
-    static getTeamMembersActivities(team_id){
+    static getTeamMembersActivities(team_id, start_date = null, end_date = null){
+        const conditions = ['ET.team_id=?'];
+        const parameters = [team_id];
+
+        if (start_date) {
+            conditions.push('A.completed_at >= ?');
+            parameters.push(start_date);
+        }
+
+        if (end_date) {
+            conditions.push('A.completed_at <= ?');
+            parameters.push(end_date);
+        }
+
         return db.execute(`
             SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, A.employee_id, E.full_name, ET.role 
             FROM activity as A 
             INNER JOIN employee as E ON A.employee_id=E.employee_id 
             INNER JOIN employeeteam as ET ON ET.employee_id=E.employee_id 
-            WHERE ET.team_id=?;`,
-            [team_id]);
+            WHERE ${conditions.join(' AND ')}
+            ORDER BY A.completed_at DESC, A.title ASC;`,
+            parameters);
     }
 
     /*fetchByEmployee(employee_id)
     Function responsible for returning all activities from an employee.*/
 
-    static fetchByEmployee(employee_id){
+    static fetchByEmployee(employee_id, start_date = null, end_date = null){
+        const conditions = ['A.employee_id=?'];
+        const parameters = [employee_id];
+
+        if (start_date) {
+            conditions.push('A.completed_at >= ?');
+            parameters.push(start_date);
+        }
+
+        if (end_date) {
+            conditions.push('A.completed_at <= ?');
+            parameters.push(end_date);
+        }
+
         return db.execute(`
             SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, E.full_name 
             FROM activity as A 
             INNER JOIN employee AS E ON E.employee_id=A.employee_id 
-            WHERE A.employee_id=?;`
-            ,[employee_id]);
+            WHERE ${conditions.join(' AND ')}
+            ORDER BY A.completed_at DESC, A.title ASC;`
+            ,parameters);
     }
 
     /*fetchByProject(project_id)

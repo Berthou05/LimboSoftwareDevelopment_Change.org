@@ -13,6 +13,14 @@
       isMember: typeof isMember !== 'undefined' ? isMember : false,
       csrfToken
     }) %>
+    <%- include('../../partials/reportGenerator/reportGenerator', {
+      redirectTo: '/teams/' + (team?.id || ''),
+      defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'TEAM',
+      defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (team?.id || ''),
+      reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
+      latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+      quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
+    }) %>
     <%- include('../../partials/teamDirectory/teamParticipants', {
       team,
       csrfToken,
@@ -20,6 +28,11 @@
       availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : []
     }) %>
     <%- include('../../partials/teamDirectory/teamActivity', {
+      team,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      activityError: typeof activityError !== 'undefined' ? activityError : '',
       activitySections: typeof activitySections !== 'undefined' ? activitySections : []
     }) %>
     <a href="/teams" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
