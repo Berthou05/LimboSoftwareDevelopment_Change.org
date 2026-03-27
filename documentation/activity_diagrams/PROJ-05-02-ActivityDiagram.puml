@@ -31,6 +31,7 @@ if (Is the selected Employee already registered in the selected Project?) then (
     :Sees an error message on the Project Page indicating that the selected Employee is already part of the Project;
     stop
 else (no)
+    |System|
     :Accepts the User input;
     :Creates a new Collaboration object;
 endif
@@ -51,7 +52,7 @@ endif
 :Returns the Project information;
 
 |System|
-:Renders the Project Page with updated information;
+:Updates the Project Page information;
 
 |User|
 :Sees a success message on the Project Page;

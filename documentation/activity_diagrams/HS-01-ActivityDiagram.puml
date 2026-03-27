@@ -20,6 +20,7 @@ if(Are the results of the query > 0?) is (yes) then
         :Display as many elements as the query returned;    
     end if
 else(no)
+|User|
 :Display message "No matching result found";
 stop
 end if

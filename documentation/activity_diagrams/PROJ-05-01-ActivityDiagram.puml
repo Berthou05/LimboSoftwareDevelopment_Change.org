@@ -38,7 +38,11 @@ endif
 |Database|
 :Returns queries response;
 
+|System|
+:Updates Project Page information;
+
 |User|
 :Views the Project Page with updated information;
+:Display success message;
 stop
 @enduml

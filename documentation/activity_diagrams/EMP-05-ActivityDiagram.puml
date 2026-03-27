@@ -4,7 +4,6 @@ skinparam conditionStyle diamond
 |User|
 start
 :Accesses an Employee's profile;
-:Navigates to the **"Your Projects"** section;
 
 |System|
 :Captures Employee ID;
@@ -12,6 +11,7 @@ start
 
 |Database|
 :Queries Projects where Employee is a member;
+|System|
 if (Is there a connection or data error?) then (yes)
     |System|
     :Informs the user an error has occurred;
