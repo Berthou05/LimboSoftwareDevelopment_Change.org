@@ -75,6 +75,118 @@ const buildActivitySections = function buildActivitySections(activities) {
         }));
 };
 
+const isValidDateInput = function isValidDateInput(value) {
+    if (!value) {
+        return true;
+    }
+
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
+};
+
+const resolveActivityFilter = function resolveActivityFilter(query = {}) {
+    const preset = typeof query.activityPreset === 'string' ? query.activityPreset.trim() : '';
+    const startDate = typeof query.startDate === 'string' ? query.startDate.trim() : '';
+    const endDate = typeof query.endDate === 'string' ? query.endDate.trim() : '';
+    const today = new Date();
+
+    if (!preset && !startDate && !endDate) {
+        const rangeStart = new Date(today);
+        const rangeEnd = new Date(today);
+
+        rangeStart.setHours(0, 0, 0, 0);
+        rangeEnd.setHours(23, 59, 59, 999);
+        rangeStart.setDate(rangeStart.getDate() - 29);
+
+        return {
+            preset: 'month',
+            startDate: '',
+            endDate: '',
+            hasManualRange: false,
+            isFiltered: true,
+            rangeStart,
+            rangeEnd,
+            error: '',
+        };
+    }
+
+    if (preset === 'all') {
+        return {
+            preset,
+            startDate: '',
+            endDate: '',
+            hasManualRange: false,
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: '',
+        };
+    }
+
+    if (preset === 'today' || preset === 'week' || preset === 'month' || preset === 'quarter') {
+        const days = preset === 'today'
+            ? 1
+            : preset === 'week'
+                ? 7
+                : preset === 'month'
+                    ? 30
+                    : 90;
+        const rangeStart = new Date(today);
+        const rangeEnd = new Date(today);
+
+        rangeStart.setHours(0, 0, 0, 0);
+        rangeEnd.setHours(23, 59, 59, 999);
+        rangeStart.setDate(rangeStart.getDate() - (days - 1));
+
+        return {
+            preset,
+            startDate: '',
+            endDate: '',
+            hasManualRange: false,
+            isFiltered: true,
+            rangeStart,
+            rangeEnd,
+            error: '',
+        };
+    }
+
+    if (!isValidDateInput(startDate) || !isValidDateInput(endDate)) {
+        return {
+            preset: '',
+            startDate,
+            endDate,
+            hasManualRange: Boolean(startDate || endDate),
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: 'Correct the activity dates and try again.',
+        };
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+        return {
+            preset: '',
+            startDate,
+            endDate,
+            hasManualRange: true,
+            isFiltered: false,
+            rangeStart: null,
+            rangeEnd: null,
+            error: 'The activity start date must be before the end date.',
+        };
+    }
+
+    return {
+        preset: '',
+        startDate,
+        endDate,
+        hasManualRange: Boolean(startDate || endDate),
+        isFiltered: Boolean(startDate || endDate),
+        rangeStart: startDate ? new Date(`${startDate}T00:00:00`) : null,
+        rangeEnd: endDate ? new Date(`${endDate}T23:59:59.999`) : null,
+        error: '',
+    };
+};
+
 //--------------------------- Main Functions ---------------------------
 
 /*getEmployee()
@@ -147,9 +259,18 @@ projects:projects,*/
 exports.getEmployeePage = (request, response, next)=>{
     const employeeId = request.params.employee_id;
     const projects = [];
+    const activityFilter = resolveActivityFilter(request.query);
+    const activityPromise = activityFilter.error
+        ? Promise.resolve([[]])
+        : Activity.fetchByEmployee(
+            employeeId,
+            activityFilter.rangeStart,
+            activityFilter.rangeEnd
+        );
+
     EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([team, fieldData])=>{
         Employee.fetchById(employeeId).then(([info,fieldData])=>{
-            Activity.fetchByEmployee(employeeId).then(([activities,fieldData])=>{
+            activityPromise.then(([activities,fieldData])=>{
                 Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
 
                     const projectRows = employee_projects.map(proj => ({
@@ -196,6 +317,8 @@ exports.getEmployeePage = (request, response, next)=>{
                         employee:employee,
                         isOwnProfile: request.session.employeeId === info.employee_id,
                         activitySections: buildActivitySections(activities),
+                        activityFilter: activityFilter,
+                        activityError: activityFilter.error || '',
                         teamRows:teamRows,
                         projectRows:projectRows,
                         defaultReportType:'EMPLOYEE',
@@ -210,13 +333,13 @@ exports.getEmployeePage = (request, response, next)=>{
                     request.session.error = `Error loading Employee ${employeeId}. Employee Projects not found.`;
                     return response.redirect(`/employee`);
                 })
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    request.session.error = `Error loading Employee ${employeeId}. Employee Activies not found.`;
+                    return response.redirect(`/employee`);
+                })
             })
-            .catch((error)=>{
-                console.log(error);
-                request.session.error = `Error loading Employee ${employeeId}. Employee Activies not found.`;
-                return response.redirect(`/employee`);
-            })
-        })
         .catch((error)=>{
             console.log(error);
             request.session.error = `Error loading Employee ${employeeId}. Employee Information not found.`;

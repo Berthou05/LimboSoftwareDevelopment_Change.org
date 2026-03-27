@@ -2,6 +2,11 @@
   page: 'pages/content/team',
   pageTitle: 'Team',
   pageScriptPaths: ['/js/teamDetails.js', '/js/dateRangePicker.js'],
+  activityFilter:
+    typeof activityFilter !== 'undefined'
+      ? activityFilter
+      : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+  activityError: typeof activityError !== 'undefined' ? activityError : '',
   sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
   layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/teams',
   layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,

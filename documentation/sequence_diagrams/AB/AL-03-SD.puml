@@ -3,84 +3,123 @@ skinparam style strictuml
 autonumber
 
 actor "User" as U
-boundary "activity-log.ejs" as V
-boundary "activity.routes" as RO
-control "activity.controller" as C
-control "activity.service" as SV
-entity "activity.model" as X
+
+boundary "team.ejs" as TV
+boundary "team.routes" as TRO
+control "team.controller" as TC
+
+boundary "project.ejs" as PV
+boundary "project.routes" as PRO
+control "project.controller" as PC
+
+boundary "employeeDetails.ejs" as EV
+boundary "employee.routes" as ERO
+control "employee.controller" as EC
+
+entity "activity.model" as A
 database "unitas_system" as DB
 
-U -> V: Open Activity Log and apply filters
-activate V
-V -> RO: fetch('/activities?scope=employee&from=2026-03-01&to=2026-03-23&type=all')
-activate RO
-RO -> C: getActivityLog(request, response)
-activate C
-C -> SV: getActivityLog(filters)
-activate SV
-SV -> SV: validateFilters(scope, from, to, type)
+alt User opens Team
+    U -> TRO: GET /teams/:team_id[?activityPreset]
+    activate TRO
+    TRO -> TC: getTeamPage(request, response)
+    activate TC
+    TC -> TC: resolveActivityFilter(request.query)
 
-alt Filters invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid filters"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showActivityLogError(error)
-else Filters valid
-SV -> X: findByFilters(filters)
-activate X
-X -> DB: SELECT id, occurred_at, actor_name, action, scope_type, scope_id\nFROM activity\nWHERE scope_type = ? AND occurred_at BETWEEN ? AND ?\nORDER BY occurred_at DESC
-activate DB
-DB --> X: matching activity rows
-deactivate DB
-X --> SV: activities
-deactivate X
-SV --> C: activity log data
-deactivate SV
-C --> RO: response.json({success:true,data:activities})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
+    alt Team preset uses bounded range\n(today|week|month|quarter)
+        TC -> A: getTeamMembersActivities(team_id, rangeStart, rangeEnd)
+        activate A
+        A -> DB: SELECT team member activity rows\nwithin selected range
+        activate DB
+        DB --> A: filtered team activity rows
+        deactivate DB
+        A --> TC: filtered team activity rows
+        deactivate A
+    else Team preset is "all"
+        TC -> A: getTeamMembersActivities(team_id)
+        activate A
+        A -> DB: SELECT all team member activity rows
+        activate DB
+        DB --> A: team activity rows
+        deactivate DB
+        A --> TC: team activity rows
+        deactivate A
+    end
 
-alt No activities found
-V -> V: renderEmptyActivityLogState(data)
-else Activities found
-V -> V: updateActivityLogModule(data)
-end
-end
-deactivate V
+    TC -> TC: build activitySections
+    TC --> TRO: render('pages/team', {activitySections, activityFilter})
+    deactivate TC
+    TRO --> TV: HTML response
+    deactivate TRO
+    TV -> TV: Render "Activity"\nRender preset buttons\n(today, week, month, quarter, all)
 
-opt Re-filter Activity Log
-U -> V: Change date range or type
-activate V
-V -> RO: fetch('/activities?scope=employee&from=2026-03-10&to=2026-03-23&type=comment')
-activate RO
-RO -> C: getActivityLog(request, response)
-activate C
-C -> SV: getActivityLog(updatedFilters)
-activate SV
-SV -> SV: validateFilters(updatedFilters)
-SV -> X: findByFilters(updatedFilters)
-activate X
-X -> DB: SELECT id, occurred_at, actor_name, action, scope_type, scope_id\nFROM activity\nWHERE scope_type = ? AND occurred_at BETWEEN ? AND ?\nORDER BY occurred_at DESC
-activate DB
-DB --> X: filtered activity rows
-deactivate DB
-X --> SV: filtered activities
-deactivate X
-SV --> C: filtered data
-deactivate SV
-C --> RO: response.json({success:true,data:activities})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateActivityLogModule(data)
-deactivate V
+else User opens Project
+    U -> PRO: GET /projects/:project_id[?activityPreset]
+    activate PRO
+    PRO -> PC: getProjectPage(request, response)
+    activate PC
+    PC -> PC: resolveActivityFilter(request.query)
+
+    alt Project preset uses bounded range\n(today|week|month|quarter)
+        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
+        activate A
+        A -> DB: SELECT project activity rows\nwithin selected range
+        activate DB
+        DB --> A: filtered project activity rows
+        deactivate DB
+        A --> PC: filtered project activity rows
+        deactivate A
+    else Project preset is "all"
+        PC -> A: fetchByProject(project_id)
+        activate A
+        A -> DB: SELECT all project activity rows
+        activate DB
+        DB --> A: project activity rows
+        deactivate DB
+        A --> PC: project activity rows
+        deactivate A
+    end
+
+    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
+    PC --> PRO: render('pages/project', {activitySections, activityFilter})
+    deactivate PC
+    PRO --> PV: HTML response
+    deactivate PRO
+    PV -> PV: Render "Project Activity"\nRender preset buttons\n(today, week, month, quarter, all)
+
+else User opens Employee details
+    U -> ERO: GET /employees/:employee_id[?activityPreset]
+    activate ERO
+    ERO -> EC: getEmployeePage(request, response)
+    activate EC
+    EC -> EC: resolveActivityFilter(request.query)
+
+    alt Employee preset uses bounded range\n(today|week|month|quarter)\nor default latest month
+        EC -> A: fetchByEmployee(employee_id, rangeStart, rangeEnd)
+        activate A
+        A -> DB: SELECT employee activity rows\nwithin selected range
+        activate DB
+        DB --> A: filtered employee activity rows
+        deactivate DB
+        A --> EC: filtered employee activity rows
+        deactivate A
+    else Employee preset is "all"
+        EC -> A: fetchByEmployee(employee_id)
+        activate A
+        A -> DB: SELECT all employee activity rows
+        activate DB
+        DB --> A: employee activity rows
+        deactivate DB
+        A --> EC: employee activity rows
+        deactivate A
+    end
+
+    EC -> EC: build activitySections
+    EC --> ERO: render('pages/employeeDetails', {activitySections, activityFilter})
+    deactivate EC
+    ERO --> EV: HTML response
+    deactivate ERO
+    EV -> EV: Render "Your Activity"\nRender preset buttons\n(today, week, month, quarter, all)
 end
 
 @enduml

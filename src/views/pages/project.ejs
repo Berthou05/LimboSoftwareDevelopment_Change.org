@@ -16,7 +16,8 @@
   activityFilter:
     typeof activityFilter !== 'undefined'
       ? activityFilter
-      : { preset: '', startDate: '', endDate: '', hasManualRange: false, isFiltered: false },
+      : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+  activityError: typeof activityError !== 'undefined' ? activityError : '',
   currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
   csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '',
   sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
