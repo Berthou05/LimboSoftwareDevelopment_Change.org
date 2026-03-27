@@ -1,0 +1,23 @@
+@startuml
+|User|
+:Selects to view a specific project;
+
+|System|
+:Retrieves the project_id from the selection;
+:Sends a query to fetch all employees associated with the project_id;
+
+|Database|
+:Returns the list of participants and their project-specific roles and metadata;
+
+|System|
+if(Did query returned any participant?)is(yes)then
+    :Renders the "Project Participants" module within the UI;
+else(no)
+    |User|
+    :Displays a message stating "No participants assigned to this project";
+    stop
+endif
+:Views the display of participants;
+stop
+
+@enduml
