@@ -15,9 +15,17 @@
         <% membersDetailed.forEach((member) => { %>
             <div class="flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50 group">
                 <a href="/employees/<%= member.employee?.id %>" class="flex items-center gap-2 flex-1 min-w-0">
-                    <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
-                        <%= member.employee?.fullName ? member.employee.fullName.split(' ').map(n => n[0]).join('') : '?' %>
-                    </div>
+                    <% if (member.employee?.image) { %>
+                        <img
+                            src="<%= member.employee.image %>"
+                            alt="<%= member.employee?.fullName || 'Unknown' %>"
+                            class="h-7 w-7 shrink-0 rounded-full border border-brand-secondary object-cover"
+                        />
+                    <% } else { %>
+                        <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
+                            <%= member.employee?.fullName ? member.employee.fullName.split(' ').map(n => n[0]).join('') : '?' %>
+                        </div>
+                    <% } %>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-semibold text-brand-text truncate"><%= member.employee?.fullName || 'Unknown' %></p>
                         <p class="text-[10px] text-brand-text/50 truncate"><%= member.role %></p>

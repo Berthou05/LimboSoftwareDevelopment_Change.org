@@ -15,6 +15,14 @@ const Goal = require('../../models/goal');
 
 //--------------------------- Auxiliar Functions ---------------------------
 
+/*buildAvatarUrl(label)
+Auxiliar function responsible for creating a fallback avatar based on a label.*/
+
+const buildAvatarUrl = function buildAvatarUrl(label) {
+    const normalizedLabel = String(label || 'Unknown').trim() || 'Unknown';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(normalizedLabel)}&background=fbfbfe&color=1f2937`;
+};
+
 /*normalizeTeam(team)
 Function responsible for the normalization of a team given as a parameter*/
 
@@ -26,7 +34,7 @@ const normalizeTeam = function normalizeTeam(team) {
             team.full_name ??
             'Pending assignment',
         description: team.description ?? 'No team description has been added yet.',
-        image: team.image ?? null,
+        image: buildAvatarUrl(team.name),
         isMember: Boolean(team.isMember ?? team.is_member),
     };
 };
@@ -190,6 +198,7 @@ exports.getTeamPage = (request, response, next) => {
                         id: project.project_id,
                         name: project.name,
                         description: project.description,
+                        image: project.image || null,
                         status: project.status,
                         startDate: project.start_date,
                         endDate: project.end_date,
@@ -214,7 +223,7 @@ exports.getTeamPage = (request, response, next) => {
                 id: teamRow.team_id,
                 name: teamRow.name,
                 description: teamRow.description,
-                image: teamRow.image,
+                image: teamRow.image || null,
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,
@@ -227,6 +236,7 @@ exports.getTeamPage = (request, response, next) => {
                     employee: {
                         id: member.employee_id,
                         fullName: member.full_name,
+                        image: buildAvatarUrl(member.full_name),
                     },
                 })),
                 projectsDetailed,
@@ -241,6 +251,7 @@ exports.getTeamPage = (request, response, next) => {
                 .map((employee) => ({
                     id: employee.employee_id,
                     fullName: employee.full_name,
+                    image: buildAvatarUrl(employee.full_name),
                 }));
 
             return response.render('pages/team', {

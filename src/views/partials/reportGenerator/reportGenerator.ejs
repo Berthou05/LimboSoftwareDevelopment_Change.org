@@ -99,44 +99,49 @@
       <%# Embed subject catalog as JSON for client-side search %>
       <script type="application/json" class="report-subject-catalog"><%-JSON.stringify(subjectCatalog)%></script>
 
-      <%# Row 2: Date Range %>
-      <div class="relative">
-        <span class="mb-2 block text-sm font-semibold text-brand-text/70">Date Range</span>
-        <div data-date-trigger class="grid cursor-pointer gap-3 sm:grid-cols-2">
-          <div class="rounded-xl border border-brand-secondary bg-brand-bg/30 px-4 py-3 transition hover:border-brand-primary/50">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">Start Date</p>
-            <input data-start-display type="text" readonly class="mt-1 w-full bg-transparent text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
+      <%# Row 2: Quick Range + Date Range %>
+      <div class="space-y-3">
+        <div>
+          <div class="mb-2 flex items-center justify-between gap-3">
+            <span class="block text-sm font-semibold text-brand-text/70">Quick Range</span>
+            <span class="text-xs text-brand-text/50">Changes by report type</span>
           </div>
-          <div class="rounded-xl border border-brand-secondary bg-brand-bg/30 px-4 py-3 transition hover:border-brand-primary/50">
-            <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">End Date</p>
-            <input data-end-display type="text" readonly class="mt-1 w-full bg-transparent text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
-          </div>
+          <div data-range-presets class="flex flex-wrap gap-2"></div>
         </div>
 
-        <input data-start-value type="hidden" name="periodStart" value="<%= defaultPeriodStart %>" required />
-        <input data-end-value type="hidden" name="periodEnd" value="<%= defaultPeriodEnd %>" required />
+        <div class="relative">
+          <span class="mb-2 block text-sm font-semibold text-brand-text/70">Date Range</span>
+          <div data-date-trigger class="grid cursor-pointer gap-3 sm:grid-cols-2">
+            <div class="rounded-xl border border-brand-secondary bg-brand-bg/30 px-4 py-3 transition hover:border-brand-primary/50">
+              <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">Start Date</p>
+              <input data-start-display type="text" readonly class="mt-1 w-full bg-transparent text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
+            </div>
+            <div class="rounded-xl border border-brand-secondary bg-brand-bg/30 px-4 py-3 transition hover:border-brand-primary/50">
+              <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">End Date</p>
+              <input data-end-display type="text" readonly class="mt-1 w-full bg-transparent text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
+            </div>
+          </div>
 
-        <div data-date-popover class="absolute left-0 z-40 mt-2 hidden w-[min(44rem,95vw)] rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-          <div class="flex items-center justify-between gap-2">
-            <button type="button" data-calendar-nav="prev" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&lt;</button>
-            <div class="grid flex-1 grid-cols-2 gap-2 text-center">
-              <p data-calendar-label="left" class="font-heading text-sm font-bold text-brand-text"></p>
-              <p data-calendar-label="right" class="font-heading text-sm font-bold text-brand-text"></p>
+          <input data-start-value type="hidden" name="periodStart" value="<%= defaultPeriodStart %>" required />
+          <input data-end-value type="hidden" name="periodEnd" value="<%= defaultPeriodEnd %>" required />
+
+          <div data-date-popover class="absolute left-0 z-40 mt-2 hidden w-[min(44rem,95vw)] rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+            <div class="flex items-center justify-between gap-2">
+              <button type="button" data-calendar-nav="prev" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&lt;</button>
+              <div class="grid flex-1 grid-cols-2 gap-2 text-center">
+                <p data-calendar-label="left" class="font-heading text-sm font-bold text-brand-text"></p>
+                <p data-calendar-label="right" class="font-heading text-sm font-bold text-brand-text"></p>
+              </div>
+              <button type="button" data-calendar-nav="next" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&gt;</button>
             </div>
-            <button type="button" data-calendar-nav="next" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&gt;</button>
-          </div>
-          <div class="mt-3 grid gap-3 md:grid-cols-2">
-            <div data-calendar-month="left" class="rounded-xl border border-brand-secondary p-2"></div>
-            <div data-calendar-month="right" class="rounded-xl border border-brand-secondary p-2"></div>
-          </div>
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-brand-secondary pt-3">
-            <div class="flex gap-2">
-              <button type="button" data-quarter="1" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q1</button>
-              <button type="button" data-quarter="2" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q2</button>
-              <button type="button" data-quarter="3" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q3</button>
-              <button type="button" data-quarter="4" class="rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20">Q4</button>
+            <div class="mt-3 grid gap-3 md:grid-cols-2">
+              <div data-calendar-month="left" class="rounded-xl border border-brand-secondary p-2"></div>
+              <div data-calendar-month="right" class="rounded-xl border border-brand-secondary p-2"></div>
             </div>
-            <button type="button" data-date-apply class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-accent">Apply</button>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-brand-secondary pt-3">
+              <div data-date-shortcuts class="flex flex-wrap gap-2"></div>
+              <button type="button" data-date-apply class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-accent">Apply</button>
+            </div>
           </div>
         </div>
       </div>
@@ -167,15 +172,15 @@
     <%# ===================== COMPACT LAYOUT (Detail pages with stacked dates + button) ===================== %>
     <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Report Generator</p>
 
-    <form action="/reports/generate" method="POST" class="mt-4">
-      <input type="hidden" name="route" value="<%= redirectTo || '/reports' %>" />
-      <input type="hidden" name="type" value="<%= currentType %>" />
+    <form action="/reports/generate" method="POST" class="mt-4" data-report-generator="enhanced" data-current-year="<%= currentYear %>">
+      <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
+      <input type="hidden" name="contentType" value="<%= currentType %>" />
       
       <% if (defaultSubjectId) { %>
         <%# On detail pages, always use the page's subject %>
-        <input type="hidden" name="id" value="<%= defaultSubjectId %>" />
+        <input type="hidden" name="subjectId" value="<%= defaultSubjectId %>" />
       <% } else if (!showSubjectSelector && singleSubjectId) { %>
-        <input type="hidden" name="id" value="<%= singleSubjectId %>" />
+        <input type="hidden" name="subjectId" value="<%= singleSubjectId %>" />
       <% } %>
       
       <div class="space-y-4">
@@ -183,7 +188,7 @@
           <label class="block text-sm">
             <span class="mb-2 block font-semibold text-brand-text/70">Select <%= currentTypeLabel.toLowerCase() %>:</span>
             <select
-              name="id"
+              name="subjectId"
               required
               class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
             >
@@ -195,29 +200,49 @@
           </label>
         <% } %>
 
-        <div class="rounded-xl border border-brand-secondary/70 bg-brand-bg/40 p-3">
-          <span class="mb-2 block font-semibold text-brand-text/70">Date Range</span>
-          <div class="grid gap-2 sm:grid-cols-2">
-            <label class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
-              Start date
-              <input
-                type="date"
-                name="start_date"
-                value="<%= defaultPeriodStart %>"
-                required
-                class="mt-1 w-full rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-normal text-brand-text outline-none"
-              />
-            </label>
-            <label class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
-              End date
-              <input
-                type="date"
-                name="end_date"
-                value="<%= defaultPeriodEnd %>"
-                required
-                class="mt-1 w-full rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-normal text-brand-text outline-none"
-              />
-            </label>
+        <div class="space-y-3">
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <span class="block font-semibold text-brand-text/70">Quick Range</span>
+              <span class="text-xs text-brand-text/50">Changes by report type</span>
+            </div>
+            <div data-range-presets class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="relative block text-sm">
+            <span class="mb-2 block font-semibold text-brand-text/70">Date Range</span>
+            <div data-date-trigger class="grid cursor-pointer gap-2 sm:grid-cols-2">
+              <div class="rounded-xl border border-brand-secondary bg-white px-3 py-2">
+                <p class="text-xs font-semibold text-brand-text/60">Start Date</p>
+                <input data-start-display type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none cursor-pointer" value="" />
+              </div>
+              <div class="rounded-xl border border-brand-secondary bg-white px-3 py-2">
+                <p class="text-xs font-semibold text-brand-text/60">End Date</p>
+                <input data-end-display type="text" readonly class="mt-1 w-full bg-transparent text-sm font-semibold outline-none cursor-pointer" value="" />
+              </div>
+            </div>
+
+            <input data-start-value type="hidden" name="periodStart" value="<%= defaultPeriodStart %>" required />
+            <input data-end-value type="hidden" name="periodEnd" value="<%= defaultPeriodEnd %>" required />
+
+            <div data-date-popover class="absolute right-0 z-40 mt-2 hidden w-[min(44rem,95vw)] rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+              <div class="flex items-center justify-between gap-2">
+                <button type="button" data-calendar-nav="prev" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&lt;</button>
+                <div class="grid flex-1 grid-cols-2 gap-2 text-center">
+                  <p data-calendar-label="left" class="font-heading text-sm font-bold text-brand-text"></p>
+                  <p data-calendar-label="right" class="font-heading text-sm font-bold text-brand-text"></p>
+                </div>
+                <button type="button" data-calendar-nav="next" class="rounded-lg border border-brand-secondary px-2 py-1 text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20">&gt;</button>
+              </div>
+              <div class="mt-3 grid gap-3 md:grid-cols-2">
+                <div data-calendar-month="left" class="rounded-xl border border-brand-secondary p-2"></div>
+                <div data-calendar-month="right" class="rounded-xl border border-brand-secondary p-2"></div>
+              </div>
+              <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-brand-secondary pt-3">
+                <div data-date-shortcuts class="flex flex-wrap gap-2"></div>
+                <button type="button" data-date-apply class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-1.5 text-sm font-semibold text-white transition hover:bg-brand-accent">Apply</button>
+              </div>
+            </div>
           </div>
         </div>
 
