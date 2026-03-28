@@ -43,7 +43,7 @@ module.exports = class Report {
         // TODO: Implement database query to fetch reports by employee
     }
 
-    static fetchLatestByProjectAndEmployee(project_id, employee_id, limit = 5) {
+    static fetchLatestByProjectAndEmployee(project_id, employee_id, limit = '5') {
         return db.execute(
             `SELECT
                 report_id,
@@ -61,8 +61,8 @@ module.exports = class Report {
                 AND content_type = 'PROJECT'
                 AND content_id = ?
             ORDER BY created_at DESC
-            LIMIT ?`,
-            [employee_id, project_id, Number(limit)],
+            LIMIT ?;`,
+            [project_id, employee_id, limit],
         );
     }
 
