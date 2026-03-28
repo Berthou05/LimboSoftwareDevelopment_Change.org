@@ -31,7 +31,7 @@ require('dotenv').config();
 /*Instalacion de express-session*/
 const session = require('express-session');
 app.use(session({
-    secret: process.env.SESSION_SECRET, 
+    secret: process.env.SESSION_SECRET,
     resave: false,        
     saveUninitialized: false, 
 }));
