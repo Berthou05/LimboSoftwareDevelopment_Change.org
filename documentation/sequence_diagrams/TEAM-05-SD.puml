@@ -2,35 +2,49 @@
 autonumber
 skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+actor User as U
+boundary "team.ejs" as V
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "team.model" as T
+database "unitas_system" as BD
 
-User -> Sys: Navigates to the "Team" section
-activate Sys
-User -> Sys: Clicks to view the active members
+autonumber
 
-Sys -> Sys: Captures the current team_id
-Sys -> DB: Sends query for profile details and team history
-activate DB
-DB -> DB: Fetches employee data and active status
-DB --> Sys: Returns data to System
-deactivate DB
 
-alt Is employee still active on this team? (yes)
-    alt Does profile data load? (yes)
-        Sys -> Sys: Processes data and prepares View
-        Sys -> Sys: Renders the Active Members page
-        Sys --> User: Views detailed profile and contact info
-    else Does profile data load? (no)
-        Sys -> Sys: Generates "Profile temporarily unavailable" message
-        Sys --> User: Displays error message
-    end
-else Is employee still active on this team? (no)
-    Sys -> Sys: Prepares "No longer active" notification
-    Sys -> Sys: Refreshes the member list
-    Sys --> User: Displays notification and updated list
-end
+activate U
+U->PV:Clicks on a team over the team directory page.
+deactivate U
+    activate PV
+    PV->RO: GET team/:team_id
+    deactivate PV
+        activate RO
+        RO->C: getTeamPage(request,response);
+        deactivate RO
+            activate C
+            note right
+            The information for the 
+            initial page render is 
+            obtained.
+            end note
+            C->V:response.render('pages/team.ejs',{...});
+            deactivate C
+    activate V
+    V->RO:fetch('/team/:team_id/members',{method: GET, headers:{body:'application/json'}})
+    deactivate V
+        activate C
+        P->C:getProjectsByTeamId(teamId)
+            activate P
+            P->BD: execute('SELECT P.project_id, P.name, P.description, P.status, P.start_date, p.end_date, p.employee_responsible_id, E.full_name, PT.team_role \nFROM project as P \nINNER JOIN projectteam as PT ON PT.project_id=P.project_id \nINNER JOIN employee as E ON E.employee_id=P.employee_responsible_id \nWHERE PT.team_id=?;',[team_id]);
+                activate BD
+                
+                deactivate BD
+            deactivate P
+        deactivate C
 
-deactivate Sys
+
+
+
+
+
 @enduml

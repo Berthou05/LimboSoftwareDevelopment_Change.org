@@ -2,34 +2,78 @@
 autonumber
 skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+actor Lead as L
+boundary "team.ejs" as V
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "team.model" as T
+database "unitas_system" as BD
 
-User -> Sys: Selects "Delete Team"
-activate Sys
+autonumber
 
-Sys --> User: Displays warning modal\n(Note: Projects will not be deleted)
+activate L
+L->V:Click on the "Delete Team" button
+deactivate L
+    activate V
+    V->V:data-popup-open="delete-team-<%= team_id %>"
+    V->L:Updated view
+    deactivate V
 
-alt Confirms permanent deletion? (yes)
-    User -> Sys: Selects "yes"
-    Sys -> DB: Sends deactivation request (team_id)
-    activate DB
-    
-    DB -> DB: Sets Team status to 'Inactive'
-    DB -> DB: Unlinks active member associations
-    DB --> Sys: Returns success status
-    deactivate DB
-    
-    Sys -> Sys: Removes Team from navigation menu
-    Sys -> Sys: Redirects to Global Dashboard
-    Sys --> User: Displays "Team successfully removed" message
-    
-else Confirms permanent deletion? (no)
-    User -> Sys: Selects "no"
-    Sys -> Sys: Closes modal
-    Sys --> User: Displays Team Settings (no changes)
+alt Cancel deletion
+activate L
+L->V:Click on the "Cancel" button
+deactivate L
+    activate V
+    V->V:data-popup-close
+    V->L:Updated view
+    deactivate V
+activate L
 end
+L->V:Click on the "Delete" button
+deactivate L
+    activate V
+    V->V:submit
+    V->RO:fetch('/team/:team_id/delete',{method: DELETE, headers:{'Accept': 'application/json'}})
+    deactivate V
+        activate RO
+        RO->C: deleteTeam(request, response);
+        deactivate RO
+            activate C
+            C->>T:disableTeam(team_id);
+                activate T
+                T->>BD:execute('UPDATE team SET team.status='DISABLED' WHERE team.team_id=?;',[team_id])
+                    activate BD
+                    BD-->T: Query OK
+                    deactivate BD
+                T-->C: Query OK
+                deactivate T
 
-deactivate Sys
+alt Deletion Failed
+            C->V:response.json({success:false})
+            deactivate C
+    activate V
+    V->V:data-popup-close
+    V->L:Show unchanged view
+    deactivate V
+    activate C
+end
+            
+            note right
+            Store here a success message 
+            rendered by the teamDirectory.ejs
+            end note
+            C->RO: redirect('/team')
+            deactivate C
+    activate RO
+    note right
+        Render responsible under the 
+        controller function getTeams.
+    end note
+    deactivate RO
+            
+
+
+            
+    
+
 @enduml

@@ -530,41 +530,41 @@ exports.removeTeamMember = (request, response, next) => {
         Team.findById(teamId),
         EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId),
     ])
-        .then(([[teamRows], [memberships]]) => {
-            const teamRow = teamRows[0];
-            const membership = memberships[0];
+    .then(([[teamRows], [memberships]]) => {
+        const teamRow = teamRows[0];
+        const membership = memberships[0];
 
-            if (!teamRow) {
-                return respondMembershipRequest(request, response, teamId, 404, {
-                    error: `Team ${teamId} was not found.`,
-                });
-            }
-
-            if (teamRow.employee_responsible_id === employeeId) {
-                return respondMembershipRequest(request, response, teamId, 400, {
-                    error: 'The team lead cannot be removed from the team.',
-                });
-            }
-
-            //? Es posible que alguien se elimine a si mismo a traves de este metodo?
-
-            if (employeeId === request.session.employeeId) {
-                return respondMembershipRequest(request, response, teamId, 400, {
-                    error: 'Use the Leave Team action to remove yourself.',
-                });
-            }
-
-            return EmployeeTeamMembership.leave(employeeId, teamId)
-                .then(() => respondMembershipRequest(request, response, teamId, 200, {
-                    success: true,
-                }));
-        })
-        .catch((error) => {
-            console.log(error);
-            return respondMembershipRequest(request, response, teamId, 500, {
-                error: `Error removing a member from team ${teamId}.`,
+        if (!teamRow) {
+            return respondMembershipRequest(request, response, teamId, 404, {
+                error: `Team ${teamId} was not found.`,
             });
+        }
+
+        if (teamRow.employee_responsible_id === employeeId) {
+            return respondMembershipRequest(request, response, teamId, 400, {
+                error: 'The team lead cannot be removed from the team.',
+            });
+        }
+
+        //? Es posible que alguien se elimine a si mismo a traves de este metodo?
+
+        if (employeeId === request.session.employeeId) {
+            return respondMembershipRequest(request, response, teamId, 400, {
+                error: 'Use the Leave Team action to remove yourself.',
+            });
+        }
+
+        return EmployeeTeamMembership.leave(employeeId, teamId)
+            .then(() => respondMembershipRequest(request, response, teamId, 200, {
+                success: true,
+            }));
+    })
+    .catch((error) => {
+        console.log(error);
+        return respondMembershipRequest(request, response, teamId, 500, {
+            error: `Error removing a member from team ${teamId}.`,
         });
+    });
 };
 
 //! Provisional function to load Team Intermediate
@@ -577,3 +577,11 @@ exports.searchTeams = (request, response, next) => {
                         totalTeams: '',
                     });
 };
+
+/*getTeamMembers
+Function responsible for returning all the information of the Employees
+related to a Team*/
+
+exports.getTeamMembers = (request,response,next)=>{
+    
+}
