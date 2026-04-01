@@ -3,14 +3,14 @@ autonumber
 skinparam Style strictuml
 
 actor User as U
+boundary "teamDirectory.ejs" as PV
 boundary "team.ejs" as V
 boundary "team.routes" as RO
 control "team.controller" as C
-entity "team.model" as T
+entity "employee.model" as P
 database "unitas_system" as BD
 
 autonumber
-
 
 activate U
 U->PV:Clicks on a team over the team directory page.
@@ -30,17 +30,40 @@ deactivate U
             C->V:response.render('pages/team.ejs',{...});
             deactivate C
     activate V
+    V->V:loadContent();
+    group TEAM-05
     V->RO:fetch('/team/:team_id/members',{method: GET, headers:{body:'application/json'}})
     deactivate V
+        activate RO
+        RO->C:getTeamMembers(request,response)
+        deactivate RO
         activate C
-        P->C:getProjectsByTeamId(teamId)
+        C->>P:getEmployeeByTeamId(team_id)
             activate P
-            P->BD: execute('SELECT P.project_id, P.name, P.description, P.status, P.start_date, p.end_date, p.employee_responsible_id, E.full_name, PT.team_role \nFROM project as P \nINNER JOIN projectteam as PT ON PT.project_id=P.project_id \nINNER JOIN employee as E ON E.employee_id=P.employee_responsible_id \nWHERE PT.team_id=?;',[team_id]);
+            P->>BD: execute('SELECT E.employee_id, E.full_name, ET.joined_at, ET.role \nFROM employee as E \nINNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id \nWHERE ET.team_id=? AND ET.left_at IS NULL ORDER BY E.full_name ASC;',[team_id]);
                 activate BD
-                
+                BD-->P:members
                 deactivate BD
+            P-->C:members
             deactivate P
+        C->V:response.status(200).json({success:true, body:members});
         deactivate C
+        end group
+    activate V
+    V->V:generateMembers(members);
+    V->U:Updated view
+    deactivate V
+
+alt Team Members Obtention Failed
+    group TEAM-05 alt
+        C->V:response.status(500).json({success:false, message:error});     
+        deactivate C
+    end group
+    activate V
+    V->V:showErrorPopup(error);
+    V->U:Updated view
+    deactivate V
+end
 
 
 

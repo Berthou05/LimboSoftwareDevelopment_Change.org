@@ -35,8 +35,10 @@ module.exports = class EmployeeTeam {
     }
 
     /*fetchByEmployeeAndTeam(employee_id, team_id)
-    Function responsible for providing the tuple if existent
+    Function responsible for providing the active tuple if existent
     between employee_id and team_id*/
+
+    //!Required modification based on TEAM-06
 
     static fetchByEmployeeAndTeam(employee_id, team_id) {
         return db.execute(

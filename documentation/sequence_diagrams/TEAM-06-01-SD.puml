@@ -37,6 +37,25 @@ deactivate U
         RO->C: addEmployeeTeam(request, response);
         deactivate RO
             activate C
+            C->>ET:fetchByEmployeeAndTeam(employee_id, team_id)
+                activate ET
+                ET->>BD:execute(`SELECT * \nFROM employeeteam \nWHERE employee_id=? AND team_id=? AND left_at IS NULL;`,\n[employee_id, team_id]);
+                    activate BD
+                    BD-->ET: member
+                    deactivate BD
+                ET-->C:member
+                deactivate ET
+            
+alt member>0
+            C->V: response.json({success:false, body:error});
+            deactivate C
+    activate V
+    V->V: showFailingJoinMessage(team_id, employee_id, role, error);
+    V->U: Error message
+    deactivate V
+            activate C
+end
+            
             C->>ET: addEmployeeTeam(team_id, employee_id, role);
                 activate ET
                 ET->>BD: execute('INSERT INTO employeeteam(employee_id,team_id,joined_at,role) VALUES(?,?,NOW(),?)',[employee_id, team_id,role]);
@@ -45,18 +64,24 @@ deactivate U
                     deactivate BD
                 ET-->C: Query OK
                 deactivate ET
-            C->>ET:getEmployeesTo(team_id);
-                activate ET
-                ET->>BD: execute('SELECT * FROM employeeteam WHERE team_id=? AND left_at IS NULL',[team_id]);
-                    activate BD
-                    BD-->ET: employees
-                    deactivate BD
-                ET-->C: employees
-                deactivate ET
-            C->V: response.json({success:true, body: employees});
+
+            C->RO: response.redirect('/team/:team_id/members');
+            deactivate C
+        
+        activate RO
+        group 'TEAM-05'
+        RO->C: getTeamMembers(request,response)
+        deactivate RO
+            activate C
+            note right
+            TEAM-05. 
+            Consult Sequence Diagram
+            end note
+            C->V: response.status(200).json({success:true, body:members});
             deactivate C
     activate V
-    V->V: showTeamMembers(employees);
+        end group
+    V->V: showTeamMembers(members);
     V->V: showSuccessJoinMessage(team_id, employee_id, role);
     V->U: Updated view + success message
     deactivate V
