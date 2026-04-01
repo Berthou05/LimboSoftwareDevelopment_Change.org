@@ -3,7 +3,7 @@ skinparam style strictuml
 
 actor Lead as L   
 boundary "vista project.ejs" as V
-boundary "routes" as RO
+boundary "project.routes" as RO
 control "project.controller" as C
 entity "Project.model" as P
 database "unitas_system" as BD
@@ -50,6 +50,8 @@ deactivate L
             deactivate C
     activate V
     V->V: lockInputs(project_id);
+    V->V: showSuccessPopup("Project updated successfully");
+    V->L: View updated
     deactivate V
 
     alt Edition failed
@@ -59,10 +61,11 @@ deactivate L
     activate V
     V->V: lockInputs(project_id);
     V->V: showErrorPopup(error);
-    end
-    
     V->L: View updated
     deactivate V
+    end
+    
+
 
 
 

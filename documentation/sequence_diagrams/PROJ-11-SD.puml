@@ -49,7 +49,9 @@ deactivate L
             deactivate C
     activate V
     V->V: deleteGoalView(goal_id);
+    V->V: showSuccessPopup("Goal deleted successfully");
     V->V: closePopup();
+    V->L: View updated
     deactivate V
 
     alt Deletion failed
@@ -58,11 +60,12 @@ deactivate L
             deactivate C
     activate V
     V->V: closePopup();
-    V->V: showErrorPopup(error);
-    end
-    
+    V->V: showErrorPopup(error);    
     V->L: View updated
     deactivate V
+    end
+    
+
 
 
 

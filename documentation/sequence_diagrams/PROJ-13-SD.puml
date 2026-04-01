@@ -58,6 +58,8 @@ deactivate L
     activate V
     V->V:closePopup();
     V->V:createAchievementModal(data);
+    V->V:showSuccessPopup("Achievement created successfully");
+    V->L:Updated view
     deactivate V
 
     alt Creation failed
@@ -67,9 +69,10 @@ deactivate L
     activate V
     V->V:closePopup();
     V->V:showErrorPopoup(error);
-    end
-
     V->L: Updated view
     deactivate V
+    end
+
+
 
 @enduml
