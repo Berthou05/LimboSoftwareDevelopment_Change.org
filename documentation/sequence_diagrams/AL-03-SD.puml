@@ -1,125 +1,52 @@
 @startuml
 skinparam style strictuml
+
+actor User as U
+boundary "team.ejs" as V
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "team.model" as T
+database "unitas_system" as BD
+
 autonumber
 
-actor "User" as U
+activate U
 
-boundary "team.ejs" as TV
-boundary "team.routes" as TRO
-control "team.controller" as TC
+U -> V: Hover/Click over "Team Information" button
+activate V
+V -> V: showTeamInfo()
+V ->> RO: fetch('/team/info/${team_id}', {\n method:'GET',\n headers:{'Accept':'application/json'}\n})
+deactivate V
 
-boundary "project.ejs" as PV
-boundary "project.routes" as PRO
-control "project.controller" as PC
+activate RO
+RO -> C: getTeamInfo(request, response)
+deactivate RO
 
-boundary "employeeDetails.ejs" as EV
-boundary "employee.routes" as ERO
-control "employee.controller" as EC
+activate C
+C -> T: getTeamInfo(team_id)
+activate T
+T -> BD: execute("SELECT * FROM team WHERE team_id = ?", [team_id])
+activate BD
+BD --> T: info
+deactivate BD
+T --> C: info
+deactivate T
+C --> V: response.json({ body: info })
+deactivate C
 
-entity "activity.model" as A
-database "unitas_system" as DB
+activate V
+V -> V: createInfoPopover(info)
+V --> U: Updated view
+deactivate V
 
-alt User opens Team
-    U -> TRO: GET /teams/:team_id[?activityPreset]
-    activate TRO
-    TRO -> TC: getTeamPage(request, response)
-    activate TC
-    TC -> TC: resolveActivityFilter(request.query)
-
-    alt Team preset uses bounded range\n(today|week|month|quarter)
-        TC -> A: getTeamMembersActivities(team_id, rangeStart, rangeEnd)
-        activate A
-        A -> DB: SELECT team member activity rows\nwithin selected range
-        activate DB
-        DB --> A: filtered team activity rows
-        deactivate DB
-        A --> TC: filtered team activity rows
-        deactivate A
-    else Team preset is "all"
-        TC -> A: getTeamMembersActivities(team_id)
-        activate A
-        A -> DB: SELECT all team member activity rows
-        activate DB
-        DB --> A: team activity rows
-        deactivate DB
-        A --> TC: team activity rows
-        deactivate A
-    end
-
-    TC -> TC: build activitySections
-    TC --> TRO: render('pages/team', {activitySections, activityFilter})
-    deactivate TC
-    TRO --> TV: HTML response
-    deactivate TRO
-    TV -> TV: Render "Activity"\nRender preset buttons\n(today, week, month, quarter, all)
-
-else User opens Project
-    U -> PRO: GET /projects/:project_id[?activityPreset]
-    activate PRO
-    PRO -> PC: getProjectPage(request, response)
-    activate PC
-    PC -> PC: resolveActivityFilter(request.query)
-
-    alt Project preset uses bounded range\n(today|week|month|quarter)
-        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
-        activate A
-        A -> DB: SELECT project activity rows\nwithin selected range
-        activate DB
-        DB --> A: filtered project activity rows
-        deactivate DB
-        A --> PC: filtered project activity rows
-        deactivate A
-    else Project preset is "all"
-        PC -> A: fetchByProject(project_id)
-        activate A
-        A -> DB: SELECT all project activity rows
-        activate DB
-        DB --> A: project activity rows
-        deactivate DB
-        A --> PC: project activity rows
-        deactivate A
-    end
-
-    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
-    PC --> PRO: render('pages/project', {activitySections, activityFilter})
-    deactivate PC
-    PRO --> PV: HTML response
-    deactivate PRO
-    PV -> PV: Render "Project Activity"\nRender preset buttons\n(today, week, month, quarter, all)
-
-else User opens Employee details
-    U -> ERO: GET /employees/:employee_id[?activityPreset]
-    activate ERO
-    ERO -> EC: getEmployeePage(request, response)
-    activate EC
-    EC -> EC: resolveActivityFilter(request.query)
-
-    alt Employee preset uses bounded range\n(today|week|month|quarter)\nor default latest month
-        EC -> A: fetchByEmployee(employee_id, rangeStart, rangeEnd)
-        activate A
-        A -> DB: SELECT employee activity rows\nwithin selected range
-        activate DB
-        DB --> A: filtered employee activity rows
-        deactivate DB
-        A --> EC: filtered employee activity rows
-        deactivate A
-    else Employee preset is "all"
-        EC -> A: fetchByEmployee(employee_id)
-        activate A
-        A -> DB: SELECT all employee activity rows
-        activate DB
-        DB --> A: employee activity rows
-        deactivate DB
-        A --> EC: employee activity rows
-        deactivate A
-    end
-
-    EC -> EC: build activitySections
-    EC --> ERO: render('pages/employeeDetails', {activitySections, activityFilter})
-    deactivate EC
-    ERO --> EV: HTML response
-    deactivate ERO
-    EV -> EV: Render "Your Activity"\nRender preset buttons\n(today, week, month, quarter, all)
+opt Close Information
+    U -> V: Clicks or hovers outside "Team Information"
+    activate V
+    V -> V: closePopover()
+    V --> U: Updated view
+    deactivate V
 end
+
+deactivate U
 
 @enduml
