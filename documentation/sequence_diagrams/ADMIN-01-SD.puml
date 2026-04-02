@@ -1,44 +1,61 @@
 @startuml
 skinparam style strictuml
+
+actor Admin as A   
+boundary "routes" as RO
+boundary "vista roleAdmin.ejs" as V
+control "roleAdmin.controller" as C
+entity "Role.model" as R
+entity "RolePrivilege.model" as RP
+entity "Privilege.model" as P
+entity "AccountRole.model" as AR
+database "unitas_system" as BD
 autonumber
 
-actor "Admin" as U
-boundary "roles.ejs" as V
-boundary "admin.routes" as RO
-control "admin.controller" as C
-control "admin.service" as SV
-entity "role.model" as X
-database "unitas_system" as DB
+activate A
+A -> RO:GET/admin/roles
+deactivate A
+    activate RO
+    RO -> C:getRoleAdmin(request,response)
+    deactivate RO
+        activate C
+        C ->> R:fetchAll()
+            activate R
+            R->>BD:execute('SELECT * FROM role');
+                activate BD
+                BD-->R:roles
+                deactivate BD
+            R-->C:roles
+            deactivate R
+        C->>RP:fetchAll();
+            activate RP
+            RP-->BD:execute('SELECT * FROM roleprivilege');
+                activate BD
+                BD-->RP:role_privileges
+                deactivate BD
+            RP-->C:role_privileges
+            deactivate RP
+        C->>P:fetchAll();
+            activate P
+            P->>BD:execute('SELECT * FROM privilege');
+                activate BD
+                BD-->P:privileges
+                deactivate BD
+            P-->C:privileges
+            deactivate P
+            C->V: response.render('pages/admin-roles',\n{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
+        deactivate C
+    activate V
+    V->A:HTML
+    deactivate V
 
-U -> V: Open Roles module
-activate V
-V -> RO: fetch('/admin/roles')
-activate RO
-RO -> C: getRoles(request, response)
-activate C
-C -> SV: getRoles()
-activate SV
-SV -> X: findAll()
-activate X
-X -> DB: SELECT id, name, description\nFROM role\nORDER BY name ASC
-activate DB
-DB --> X: role rows
-deactivate DB
-X --> SV: roles
-deactivate X
-SV --> C: roles data
-deactivate SV
-C --> RO: response.json({success:true,data:roles})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
 
-alt No roles returned
-V -> V: renderRolesModule({items:[],empty:true})
-else Roles returned
-V -> V: renderRolesModule(data)
-end
-deactivate V
+alt Any Query Failed
+    activate C
+    C->RO: response.render('/home',{error:error})
+    deactivate C
+
+
+end 
 
 @enduml

@@ -13,45 +13,6 @@ database "unitas_system" as BD
 autonumber
 
 activate A
-== Page Access ==
-
-A -> RO:GET/admin/roles
-deactivate A
-    activate RO
-    RO -> C:getRoleAdmin(request,response)
-    deactivate RO
-        activate C
-        C ->> R:fetchAll()
-            activate R
-            R->>BD:execute('SELECT * FROM role');
-                activate BD
-                BD-->R:roles
-                deactivate BD
-            R-->C:roles
-            deactivate R
-        C->>RP:fetchAll();
-            activate RP
-            RP-->BD:execute('SELECT * FROM roleprivilege');
-                activate BD
-                BD-->RP:role_privileges
-                deactivate BD
-            RP-->C:role_privileges
-            deactivate RP
-        C->>P:fetchAll();
-            activate P
-            P->>BD:execute('SELECT * FROM privilege');
-                activate BD
-                BD-->P:privileges
-                deactivate BD
-            P-->C:privileges
-            deactivate P
-            C->V: response.render('pages/admin-roles',{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
-        deactivate C
-    activate V
-    V->A:HTML
-    deactivate V
-activate A
-== ADMIN-03 ==
 A->V:Clicks "Delete" on a role
 deactivate A
     activate V
@@ -106,40 +67,25 @@ deactivate A
                 C->V:response.redirect('/admin/roles')
                 deactivate C
             activate V
-            == Page Render ==
-            V->C: GET/roleAdmin/:roleId
-            deactivate V 
-                activate C 
-                
-                C ->> R:getRoles()
-                    activate R
-                    R->>BD:execute('SELECT * FROM roles');
-                        activate BD
-                        BD-->R:roles
-                        deactivate BD
-                    R-->C:roles
-                    deactivate R
-                C->>RP:getRolePrivileges();
-                    activate RP
-                    RP-->BD:execute('SELECT * FROM roleprivilege');
-                        activate BD
-                        BD-->RP:role_privileges
-                        deactivate BD
-                    RP-->C:role_privileges
-                    deactivate RP
-                C->>P:getPrivileges();
-                    activate P
-                    P->>BD:execute('SELECT * FROM privilege');
-                        activate BD
-                        BD-->P:privileges
-                        deactivate BD
-                    P-->C:privileges
-                    deactivate P
-                C->V: response.render('roleAdmin.ejs',{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
-                deactivate C
-            activate V
-            V->A:HTML+Mensaje de Exito Flash
+            
+            group TEAM-01
+            V->RO: GET/roleAdmin/:roleId
             deactivate V
+                activate RO
+                RO->C:getRoleAdmin(request,response)
+                deactivate RO
+                    activate C
+                    note right
+                    Role Administration Team Render
+                    managed by the User Case TEAM-01
+                    end note
+                    C->V:response.render('pages/admin-roles',\n{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
+                    deactivate C
+                activate V
+                V->A: HTML updated
+                deactivate V
+
+            end group
 activate A
 
 @enduml

@@ -1,33 +1,50 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "project.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+entity "project.model" as T
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Data Base" as DB
+activate U
+U->V: Hover/Click over the "Project Information" button
+deactivate U
+    activate V
+    V->V: showProjectInfo();
+    V->RO: fetch('/project/info/`${team_id}`', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    deactivate V
+        activate RO
+        RO->C:getProjectInfo(request, response);
+        deactivate RO
+            activate C
+            C->>T: getProjectInfo(project_id);
+                activate T
+                T->>BD: execute('SELECT * FROM project WHERE project_id=?',[project_id]);
+                    activate BD
+                    BD-->T:info
+                    deactivate BD
+                T-->C:info
+                deactivate T
+            C->V: response.json({body:info});
+            deactivate C
+    activate V
+    V->V: createInfoPopover(info);
+    V->U: Updated view
+    deactivate V
 
-User -> Sys: Select a project from the list
-activate Sys
-
-Sys -> Sys: Capture selected project's ID
-Sys -> DB: Send project's details consult
-activate DB
-
-DB -> DB: Search project's information\n(Name, Desc, Team, etc.)
-
-alt Register exists? (yes)
-    DB --> Sys: Return project's details
-    deactivate DB
-    Sys -> Sys: Process and format data for visualization
-    Sys -> Sys: Render details' interface
-    Sys --> User: Visualize project's information
-else Register exists? (no)
-    activate DB
-    DB --> Sys: Return error (Register not found)
-    deactivate DB
-    Sys -> User: Show error message on the interface
-    Sys -> User: Return to list of projects
+activate U
+opt Close Information
+U->V: Clicks or hovers outside the "Project Information" button
+deactivate U
+    activate V
+    V->V: closePopover();
+    U->V: Updated view
+    deactivate V
 end
+    
 
-deactivate Sys
 @enduml

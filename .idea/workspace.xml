@@ -5,18 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="84193b8b-9417-4216-8b90-3c7dd416884e" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/01d16c99-5473-43b8-98cf-a13274916247.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/01d16c99-5473-43b8-98cf-a13274916247/storage_v2/_src_/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/01d16c99-5473-43b8-98cf-a13274916247/storage_v2/_src_/schema/mysql.osA4Bg.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/01d16c99-5473-43b8-98cf-a13274916247/storage_v2/_src_/schema/performance_schema.kIw0nw.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/01d16c99-5473-43b8-98cf-a13274916247/storage_v2/_src_/schema/sys.zb4BAA.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/data_sources_history.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/path-to-regexp/Readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/path-to-regexp/Readme.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/path-to-regexp/dist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/path-to-regexp/dist/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/path-to-regexp/dist/index.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/path-to-regexp/dist/index.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/path-to-regexp/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/path-to-regexp/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-01-SD.puml" beforeDir="false" afterPath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-01-SD.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-02-SD.puml" beforeDir="false" afterPath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-02-SD.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-03-SD.puml" beforeDir="false" afterPath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-03-SD.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-04-SD.puml" beforeDir="false" afterPath="$PROJECT_DIR$/documentation/sequence_diagrams/ADMIN-04-SD.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/documentation/sequence_diagrams/PROJ-04-SD.puml" beforeDir="false" afterPath="$PROJECT_DIR$/documentation/sequence_diagrams/PROJ-04-SD.puml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,10 +20,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 5,
-  "fromUser": false
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
   <component name="ProjectId" id="3Blcd5Em3siOzM9rzRGCYSczMGC" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -40,7 +34,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "develop",
+    "git-widget-placeholder": "docs/seq/revision",
     "last_opened_file_path": "/home/rodrigoh/Desktop/LimboSoftwareDevelopment_Change.org"
   },
   "keyToStringList": {

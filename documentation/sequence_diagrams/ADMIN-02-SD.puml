@@ -49,7 +49,8 @@ deactivate A
             C->RO:response.redirect('admin/roles');
             deactivate C
             note right
-            This redirects to page render available in ADMIN-03
+            This redirects to page render 
+            available in ADMIN-01
             end note
             
 @enduml
