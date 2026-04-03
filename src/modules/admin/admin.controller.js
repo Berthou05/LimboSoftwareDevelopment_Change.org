@@ -13,6 +13,7 @@ const AccountRole = require('../../models/accountRoleAssignment')
 exports.getAccounts = (request, response, next) => {
     return response.render('pages/admin-accounts',{
         csrfToken: request.csrfToken(),
+        pageTitle: 'Accounts Administration',
     });
 };
 

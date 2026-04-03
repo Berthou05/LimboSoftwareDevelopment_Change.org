@@ -1,27 +1,66 @@
-<%- include('../layout', {
-  page: 'pages/content/project',
-  pageTitle: 'Project',
-  pageScriptPaths: ['/js/dateRangePicker.js'],
-  project: typeof project !== 'undefined' ? project : null,
-  projectName: typeof projectName !== 'undefined' ? projectName : 'Project',
-  projectDescription:
-    typeof projectDescription !== 'undefined'
-      ? projectDescription
-      : 'Project modules now render inside the shared shell, so navigation remains visible while moving across sections.',
-  projectMembership:
-    typeof projectMembership !== 'undefined'
-      ? projectMembership
-      : { isMember: false, canToggle: false, buttonLabel: 'Join Project' },
-  activitySections: typeof activitySections !== 'undefined' ? activitySections : [],
-  activityFilter:
-    typeof activityFilter !== 'undefined'
-      ? activityFilter
-      : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
-  activityError: typeof activityError !== 'undefined' ? activityError : '',
-  currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
-  csrfToken: typeof csrfToken !== 'undefined' ? csrfToken : '',
-  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
-  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
-}) %>
+<div class="grid gap-6 md:grid-cols-[2fr_1fr]">
+  <section class="space-y-6">
+    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+      <%- include('../partials/projectDirectory/projectDetailsCard', { project }) %>
+    </div>
+
+    <%- include('../partials/projectDirectory/projectActivity', {
+      project,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      activityError: typeof activityError !== 'undefined' ? activityError : '',
+      activitySections: typeof activitySections !== 'undefined' ? activitySections : []
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectAchievements', {
+      project
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectGoals', {
+      project
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectLatestReports', {
+      project
+    }) %>
+  </section>
+
+  <section class="space-y-4">
+    <%- include('../partials/projectDirectory/joinButton', {
+      project,
+      projectMembership: typeof projectMembership !== 'undefined'
+        ? projectMembership
+        : { isMember: false, canToggle: false, buttonLabel: 'Join Project' },
+      csrfToken
+    }) %>
+
+    <%- include('../partials/reportGenerator/reportGenerator', {
+      redirectTo: '/projects/' + (project?.id || project?.project_id || ''),
+      defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'PROJECT',
+      defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (project?.id || project?.project_id || ''),
+      reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
+      latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+      quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectHighlights', {
+      project
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectTeams', {
+      project
+    }) %>
+
+    <%- include('../partials/projectDirectory/projectMembers', {
+      project,
+      currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null
+    }) %>
+
+    <a href="/projects" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
+      Back to projects
+    </a>
+  </section>
+</div>
+
+<script src="/js/dateRangePicker.js"></script>

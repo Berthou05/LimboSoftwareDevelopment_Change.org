@@ -1,8 +1,7 @@
-<%- include('../layout', {
-  page: 'pages/content/account',
-  pageTitle: 'Account',
-  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/account',
-  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
-}) %>
+<section class="rounded-3xl bg-white p-6 shadow-panel">
+  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Profile</p>
+  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Account</h1>
+  <p class="mt-3 max-w-2xl text-brand-text/70">
+    Account details and user-specific actions can live here while the topbar menu handles fast access.
+  </p>
+</section>

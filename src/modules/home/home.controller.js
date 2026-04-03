@@ -7,5 +7,6 @@ Modified by: Hurtado, R.
 exports.getHome = (request, response, next) => {
     return response.render('pages/home',{
         csrfToken: request.csrfToken(),
+        pageTitle: 'Home',
     });
 };

@@ -1,8 +1,7 @@
-<%- include('../layout', {
-  page: 'pages/content/auth',
-  pageTitle: 'Authentication',
-  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/',
-  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : ''
-}) %>
+<section class="rounded-3xl bg-white p-6 shadow-panel">
+  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Access</p>
+  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Authentication</h1>
+  <p class="mt-3 max-w-2xl text-brand-text/70">
+    This route now uses the same layout shell as the rest of the application instead of trying to include a missing header partial.
+  </p>
+</section>

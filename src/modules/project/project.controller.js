@@ -394,6 +394,7 @@ exports.getProjectPage = (request, response, next) => {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
+                pageTitle: PAGE_TITLE,
                 error: 'Project not found',
                 project: {
                     id: null,
@@ -447,6 +448,7 @@ exports.getProjectPage = (request, response, next) => {
             csrfToken: request.csrfToken(),
             isLoggedIn: request.session.isLoggedIn || '',
             username: request.session.username || '',
+            pageTitle: PAGE_TITLE,
             error: '',
             project: {
                 ...project,
@@ -644,11 +646,67 @@ exports.toggleProjectMembership = (request, response, next) => {
 };
 
 exports.searchProjects = (request, response, next) => {
-    return response.json({
-        query: '',
-        resultsHtml: '',
-        suggestions: '',
-        totalTeams: '',
+    const employeeId = request.session.employeeId || '';
+    const query = typeof request.query.q === 'string' ? request.query.q.trim() : '';
+
+    return Promise.all([
+        Project.searchDirectory(employeeId, query),
+        Project.getDirectorySuggestions(employeeId, query),
+    ]).then(([
+        [directoryProjects],
+        [suggestionProjects],
+    ]) => {
+        const myProjects = [];
+        const otherProjects = [];
+        const suggestions = suggestionProjects.map((project) => ({
+            id: project.project_id,
+            name: project.name,
+            leadName: project.lead_name || 'Pending assignment',
+            isMember: Boolean(project.is_member || project.isMember),
+        }));
+
+        directoryProjects.forEach((project) => {
+            const normalizedProject = {
+                id: project.project_id,
+                name: project.name,
+                leadName: project.lead_name || 'Pending assignment',
+                description: project.description,
+                image: project.image || null,
+                isMember: Boolean(project.is_member || project.isMember),
+            };
+
+            if (normalizedProject.isMember) {
+                myProjects.push(normalizedProject);
+                return;
+            }
+
+            otherProjects.push(normalizedProject);
+        });
+
+        return response.render('partials/projectDirectory/projectDirectoryResults', {
+            layout: false,
+            myProjects,
+            otherProjects,
+        }, (renderError, resultsHtml) => {
+            if (renderError) {
+                console.log(renderError);
+                return response.status(500).json({
+                    error: 'Unable to search projects right now.',
+                });
+            }
+
+            return response.json({
+                query,
+                resultsHtml,
+                suggestions,
+                totalProjects: directoryProjects.length,
+            });
+        });
+    }).catch((error) => {
+        console.log(error);
+        return response.status(500).json({
+            error: 'Unable to search projects right now.',
+        });
     });
 };
 

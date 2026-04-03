@@ -1,10 +1,74 @@
-<%- include('../layout', {
-    page: 'pages/content/projectDirectory',
-    pageTitle: 'Project',
-    pageSubtitle: typeof pageSubtitle !== 'undefined' ? pageSubtitle : '',
-    pageScriptPaths: ['/js/projectDirectorySearch.js'],
-    sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-    layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/projects',
-    layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-    layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : '',
-}) %>
+<%# Template: pages/projectDirectory.ejs
+   Purpose: Project directory/list screen.
+   Expected locals: pageTitle, pageSubtitle, myProjects, otherProjects, query.
+   Data source: projects.controller filters in backend and re-renders with the same `query`.
+%>
+
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: typeof pageSubtitle !== 'undefined' ? pageSubtitle : '' }) %>
+
+<section
+    data-project-directory
+    data-search-endpoint="/projects/search"
+    data-search-debounce-ms="250"
+>
+    <form
+        action="/projects"
+        method="GET"
+        class="mb-3 flex flex-wrap items-start gap-2"
+        data-project-directory-form
+    >
+        <div class="relative w-full max-w-xl">
+            <input
+                type="text"
+                name="q"
+                value="<%= query || '' %>"
+                placeholder="Search projects..."
+                autocomplete="off"
+                aria-autocomplete="list"
+                aria-controls="projectDirectorySuggestions"
+                aria-expanded="false"
+                class="w-full rounded-xl border border-brand-secondary bg-white px-4 py-3 text-sm
+                    text-brand-text outline-none ring-brand-primary/30 focus:ring"
+                data-project-directory-input
+            />
+            <div
+                id="projectDirectorySuggestions"
+                role="listbox"
+                class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 hidden overflow-hidden
+                    rounded-2xl border border-brand-secondary bg-white shadow-panel"
+                data-project-directory-suggestions
+            ></div>
+        </div>
+        <button
+            type="submit"
+            class="rounded-xl bg-brand-primary px-5 py-3 text-sm font-semibold text-white
+                transition hover:bg-brand-accent"
+        >
+            Search
+        </button>
+        <a
+            href="/projects/new"
+            class="ml-auto rounded-xl border border-brand-secondary bg-white px-5 py-3 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+        >
+            Create project
+        </a>
+    </form>
+
+    <p
+        class="mb-6 hidden text-sm text-brand-text/60"
+        data-project-directory-status
+        aria-live="polite"
+    ></p>
+
+    <div
+        data-project-directory-results
+        data-total-projects="<%= (myProjects?.length || 0) + (otherProjects?.length || 0) %>"
+    >
+        <%- include('../partials/projectDirectory/projectDirectoryResults', {
+            myProjects,
+            otherProjects,
+        }) %>
+    </div>
+</section>
+
+<script src="/js/projectDirectorySearch.js"></script>

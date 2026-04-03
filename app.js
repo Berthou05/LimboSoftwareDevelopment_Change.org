@@ -5,6 +5,7 @@ Modified by: Hurtado, R.
 */
 
 const express = require('express');
+const expressLayouts = require('express-ejs-layouts');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const PORT = process.env.PORT || 3000;
 
@@ -18,6 +19,8 @@ app.use(express.static(path.join(__dirname, 'src', 'public')));
 //Web application graphic engine declaration
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src', 'views'));
+app.set('layout', 'layout');
+app.use(expressLayouts);
 
 //bodyParser declaration.
 const bodyParser = require('body-parser');

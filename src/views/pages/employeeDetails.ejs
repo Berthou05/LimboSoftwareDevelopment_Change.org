@@ -1,14 +1,132 @@
-<%- include('../layout', {
-  page: 'pages/content/employeeDetails',
-  pageTitle: 'Employee Details',
-  pageScriptPaths: ['/js/dateRangePicker.js'],
-  activityFilter:
-    typeof activityFilter !== 'undefined'
-      ? activityFilter
-      : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
-  activityError: typeof activityError !== 'undefined' ? activityError : '',
-  sidebarNavItems: typeof sidebarNavItems !== 'undefined' ? sidebarNavItems : [],
-  layoutActiveRoute: typeof layoutActiveRoute !== 'undefined' ? layoutActiveRoute : '/employees',
-  layoutCurrentUser: typeof layoutCurrentUser !== 'undefined' ? layoutCurrentUser : null,
-  layoutTodayLabel: typeof layoutTodayLabel !== 'undefined' ? layoutTodayLabel : '',
-}) %>
+<div class="grid gap-6 md:grid-cols-[2fr_1fr]">
+    <section class="space-y-6">
+        <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+            <div class="flex flex-wrap items-center gap-4">
+                <img
+                src="<%= employee.image %>"
+                alt="<%= employee.full_name %>"
+                class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover"
+                />
+                <div class="flex-1 min-w-0">
+                    <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= employee.full_name %></h1>
+                </div>
+                <% if (isOwnProfile) { %>
+                    <span class="rounded-full bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary">Own Profile</span>
+                    <% } %>
+            </div>
+            <p class="mt-4 inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
+                Employee Information
+            </p>
+        </div>
+
+        <article class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h2 class="font-heading text-2xl font-bold text-brand-text">Your Activity</h2>
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <a href="/employees/<%= employee.employee_id %>?activityPreset=today" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'today' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                        Today
+                    </a>
+                    <a href="/employees/<%= employee.employee_id %>?activityPreset=week" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'week' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                        Week
+                    </a>
+                    <a href="/employees/<%= employee.employee_id %>?activityPreset=month" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'month' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                        Month
+                    </a>
+                    <a href="/employees/<%= employee.employee_id %>?activityPreset=quarter" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'quarter' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                        Quarter
+                    </a>
+                    <a href="/employees/<%= employee.employee_id %>?activityPreset=all" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'all' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+                        All
+                    </a>
+                </div>
+            </div>
+
+            <% if (activityError) { %>
+                <p class="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    <%= activityError %>
+                </p>
+            <% } %>
+
+            <div class="mt-5 space-y-4">
+                <% if (!(activitySections || []).length) { %>
+                    <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
+                        <%= activityFilter?.isFiltered
+                            ? 'No activity found for the selected date range.'
+                            : 'No activity yet.' %>
+                    </p>
+                <% } %>
+
+                <%# Controller already groups by day and preformats each item time. %>
+                <% (activitySections || []).forEach((section) => { %>
+                    <p class="inline-flex rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
+                        <%= section.dayLabel %>
+                    </p>
+                    <% section.items.forEach((item) => { %>
+                        <article class="rounded-xl border border-brand-secondary/70 p-4">
+                            <div class="flex items-start gap-3">
+                                <div class="mt-1 h-5 w-5 rounded-full border border-brand-secondary"></div>
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                        <h3 class="font-heading text-base font-bold text-brand-text"><%= item.title %></h3>
+                                        <span class="text-xs text-brand-text/60"><%= item.activityTimeLabel %></span>
+                                    </div>
+                                    <p class="mt-2 text-sm text-brand-text/80"><%= item.description || item.content %></p>
+                                </div>
+                            </div>
+                        </article>
+                    <% }) %>
+                <% }) %>
+            </div>
+        </article>
+    </section>
+
+    <section class="space-y-4">
+        <%# Report generator replaces the date display and quick report button. %>
+        <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/employees/' + employee.id, defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport }) %>
+
+        <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+            <h2 class="font-heading text-2xl font-bold text-brand-text">Your Teams</h2>
+            <div class="mt-4 space-y-3">
+                <% if (!(teamRows || []).length) { %>
+                    <p class="text-sm text-brand-text/70">No teams assigned.</p>
+                <% } %>
+                <% (teamRows || []).forEach((row) => { %>
+                    <a href="/teams/<%= row.team_id %>" class="flex items-center gap-3 rounded-xl border border-brand-secondary p-3 transition hover:bg-brand-bg">
+                        <div class="h-8 w-8 rounded-full border border-brand-secondary bg-brand-bg"></div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-brand-text"><%= row.team.name %> - <%= row.roleName %></p>
+                            <p class="text-xs text-brand-text/60"><%= row.startDateLabel %></p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+            <h2 class="font-heading text-2xl font-bold text-brand-text">Your Projects</h2>
+            <div class="mt-4 space-y-3">
+                <% if (!(projectRows || []).length) { %>
+                    <p class="text-sm text-brand-text/70">No projects assigned.</p>
+                <% } %>
+                <% (projectRows || []).forEach((row) => { %>
+                    <a href="/projects/<%= row.project.id %>" class="flex items-center gap-3 rounded-xl border border-brand-secondary p-3 transition hover:bg-brand-bg">
+                        <div class="h-8 w-8 rounded-full border border-brand-secondary bg-brand-bg"></div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-brand-text"><%= row.project.name %> - <%= row.roleName %></p>
+                            <p class="text-xs text-brand-text/60"><%= row.startDateLabel %></p>
+                        </div>
+                    </a>
+                <% }) %>
+            </div>
+        </article>
+
+        <a
+            href="/employees"
+            class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+        >
+            Back to employees
+        </a>
+    </section>
+</div>
+
+<script src="/js/dateRangePicker.js"></script>
