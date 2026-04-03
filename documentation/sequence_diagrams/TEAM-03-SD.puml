@@ -56,12 +56,8 @@ alt Deletion Failed
     V->L:Show unchanged view
     deactivate V
     activate C
-end
-            
-            note right
-            Store here a success message 
-            rendered by the teamDirectory.ejs
-            end note
+end         
+
             C->RO: redirect('/team')
             deactivate C
     activate RO

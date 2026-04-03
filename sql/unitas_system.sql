@@ -35,6 +35,8 @@ CREATE TABLE `account` (
   `first_login` tinyint(1) NOT NULL,
   `last_login` datetime DEFAULT NULL,
   `image` varchar(1024) DEFAULT NULL,
+  `recovery_token` varchar(16) DEFAULT NULL,
+  `recovery_token_expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -42,28 +44,31 @@ CREATE TABLE `account` (
 -- Dumping data for table `account`
 --
 
-INSERT INTO `account` (`account_id`, `employee_id`, `email`, `password_hash`, `slack_username`, `status`, `first_login`, `last_login`, `image`, `created_at`) VALUES
-('a1b2c3d4-0001-4000-8000-000000000001', 'emp-001', 'emp001@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@axolotl.lead', 'ACTIVE', 1, '2026-02-20 09:15:22', 'https://cdn.unitas-platform.com/profiles/emp-001.png', '2026-01-01 08:00:00'),
-('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', '2026-01-01 08:05:00'),
-('a1b2c3d4-0003-4000-8000-000000000003', 'emp-003', 'emp003@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@jaguar.dev', 'ACTIVE', 1, '2026-02-19 11:20:44', 'https://cdn.unitas-platform.com/profiles/emp-003.png', '2026-01-01 08:10:00'),
-('a1b2c3d4-0004-4000-8000-000000000004', 'emp-004', 'emp004@unitas.com', '$2b$12$L8sdfg8sdfg8sdfg8sdFWEweYxZp4', '@colibri.design', 'ACTIVE', 1, '2026-02-17 08:44:11', 'https://cdn.unitas-platform.com/profiles/emp-004.png', '2026-01-01 08:15:00'),
-('a1b2c3d4-0005-4000-8000-000000000005', 'emp-005', 'emp005@unitas.com', '$2b$12$Z7sdfg8sdfg8sdfg8sdQAZweYxZp5', '@tortuga.backend', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-005.png', '2026-01-01 08:20:00'),
-('a1b2c3d4-0006-4000-8000-000000000006', 'emp-006', 'emp006@unitas.com', '$2b$12$X9sdfg8sdfg8sdfg8sdRTYweYxZp6', '@aguila.growth', 'ACTIVE', 1, '2026-02-20 13:55:09', 'https://cdn.unitas-platform.com/profiles/emp-006.png', '2026-01-01 08:25:00'),
-('a1b2c3d4-0007-4000-8000-000000000007', 'emp-007', 'emp007@unitas.com', '$2b$12$V1sdfg8sdfg8sdfg8sdUIOweYxZp7', '@lobo.devops', 'ACTIVE', 1, '2026-02-16 07:55:10', 'https://cdn.unitas-platform.com/profiles/emp-007.png', '2026-01-01 08:30:00'),
-('a1b2c3d4-0008-4000-8000-000000000008', 'emp-008', 'emp008@unitas.com', '$2b$12$B2sdfg8sdfg8sdfg8sdPASweYxZp8', '@pantera.sec', 'ACTIVE', 1, '2026-02-22 09:02:33', 'https://cdn.unitas-platform.com/profiles/emp-008.png', '2026-01-01 08:35:00'),
-('a1b2c3d4-0009-4000-8000-000000000009', 'emp-009', 'emp009@unitas.com', '$2b$12$N3sdfg8sdfg8sdfg8sdLKJweYxZp9', '@delfin.mobile', 'ACTIVE', 1, '2026-02-21 14:12:01', 'https://cdn.unitas-platform.com/profiles/emp-009.png', '2026-01-01 08:40:00'),
-('a1b2c3d4-0010-4000-8000-000000000010', 'emp-010', 'emp010@unitas.com', '$2b$12$M4sdfg8sdfg8sdfg8sdPOIweYxZp0', '@buho.analytics', 'ACTIVE', 1, '2026-02-19 16:33:45', 'https://cdn.unitas-platform.com/profiles/emp-010.png', '2026-01-01 08:45:00'),
-('a1b2c3d4-0011-4000-8000-000000000011', 'emp-011', 'emp011@unitas.com', '$2b$12$Q5sdfg8sdfg8sdfg8sdZXCweYxZp1', '@ocelote.crm', 'ACTIVE', 1, '2026-02-18 12:22:22', 'https://cdn.unitas-platform.com/profiles/emp-011.png', '2026-01-01 08:50:00'),
-('a1b2c3d4-0012-4000-8000-000000000012', 'emp-012', 'emp012@unitas.com', '$2b$12$R6sdfg8sdfg8sdfg8sdVBNweYxZp2', '@halcon.payments', 'ACTIVE', 1, '2026-02-24 11:11:11', 'https://cdn.unitas-platform.com/profiles/emp-012.png', '2026-01-01 08:55:00'),
-('a1b2c3d4-0013-4000-8000-000000000013', 'emp-013', 'emp013@unitas.com', '$2b$12$T7sdfg8sdfg8sdfg8sdGHJweYxZp3', '@coyote.internal', 'ACTIVE', 1, '2026-02-23 10:09:09', 'https://cdn.unitas-platform.com/profiles/emp-013.png', '2026-01-01 09:00:00'),
-('a1b2c3d4-0014-4000-8000-000000000014', 'emp-014', 'emp014@unitas.com', '$2b$12$Y8sdfg8sdfg8sdfg8sdWERweYxZp4', '@mariposa.community', 'ACTIVE', 1, '2026-02-20 17:17:17', 'https://cdn.unitas-platform.com/profiles/emp-014.png', '2026-01-01 09:05:00'),
-('a1b2c3d4-0015-4000-8000-000000000015', 'emp-015', 'emp015@unitas.com', '$2b$12$U9sdfg8sdfg8sdfg8sdTYUweYxZp5', '@tiburon.growth', 'ACTIVE', 1, '2026-02-27 15:30:30', 'https://cdn.unitas-platform.com/profiles/emp-015.png', '2026-01-01 09:10:00'),
-('a1b2c3d4-0016-4000-8000-000000000016', 'emp-016', 'emp016@unitas.com', '$2b$12$I0sdfg8sdfg8sdfg8sdQWEweYxZp6', '@armadillo.validation', 'ACTIVE', 1, '2026-03-01 09:45:00', 'https://cdn.unitas-platform.com/profiles/emp-016.png', '2026-01-01 09:15:00'),
-('a1b2c3d4-0017-4000-8000-000000000017', 'emp-017', 'emp017@unitas.com', '$2b$12$O1sdfg8sdfg8sdfg8sdASDweYxZp7', '@mapache.ai', 'ACTIVE', 1, '2026-03-02 13:13:13', 'https://cdn.unitas-platform.com/profiles/emp-017.png', '2026-01-01 09:20:00'),
-('a1b2c3d4-0018-4000-8000-000000000018', 'emp-018', 'emp018@unitas.com', '$2b$12$P2sdfg8sdfg8sdfg8sdFGHweYxZp8', '@venado.recruit', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-018.png', '2026-01-01 09:25:00'),
-('a1b2c3d4-0019-4000-8000-000000000019', 'emp-019', 'emp019@unitas.com', '$2b$12$A3sdfg8sdfg8sdfg8sdJKLweYxZp9', '@camaleon.content', 'DISABLED', 1, '2026-02-22 08:08:08', 'https://cdn.unitas-platform.com/profiles/emp-019.png', '2026-01-01 09:30:00'),
-('a1b2c3d4-0020-4000-8000-000000000020', 'emp-020', 'emp020@unitas.com', '$2b$12$S4sdfg8sdfg8sdfg8sdZXCweYxZp0', '@hormiga.support', 'ACTIVE', 1, '2026-02-28 18:18:18', 'https://cdn.unitas-platform.com/profiles/emp-020.png', '2026-01-01 09:35:00');
-
+INSERT INTO `account` (
+  `account_id`, `employee_id`, `email`, `password_hash`,
+  `slack_username`, `status`, `first_login`, `last_login`,
+  `image`, `recovery_token`, `recovery_token_expires_at`, `created_at`
+) VALUES
+('a1b2c3d4-0001-4000-8000-000000000001', 'emp-001', 'emp001@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@axolotl.lead', 'ACTIVE', 1, '2026-02-20 09:15:22', 'https://cdn.unitas-platform.com/profiles/emp-001.png', NULL, NULL, '2026-01-01 08:00:00'),
+('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', 'A1B2C3D4E5F6G7H8', '2026-03-02 11:05:12', '2026-01-01 08:05:00'),
+('a1b2c3d4-0003-4000-8000-000000000003', 'emp-003', 'emp003@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@jaguar.dev', 'ACTIVE', 1, '2026-02-19 11:20:44', 'https://cdn.unitas-platform.com/profiles/emp-003.png', NULL, NULL, '2026-01-01 08:10:00'),
+('a1b2c3d4-0004-4000-8000-000000000004', 'emp-004', 'emp004@unitas.com', '$2b$12$L8sdfg8sdfg8sdfg8sdFWEweYxZp4', '@colibri.design', 'ACTIVE', 1, '2026-02-17 08:44:11', 'https://cdn.unitas-platform.com/profiles/emp-004.png', 'ZXCVBNM123456789', '2026-03-01 09:44:11', '2026-01-01 08:15:00'),
+('a1b2c3d4-0005-4000-8000-000000000005', 'emp-005', 'emp005@unitas.com', '$2b$12$Z7sdfg8sdfg8sdfg8sdQAZweYxZp5', '@tortuga.backend', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-005.png', NULL, NULL, '2026-01-01 08:20:00'),
+('a1b2c3d4-0006-4000-8000-000000000006', 'emp-006', 'emp006@unitas.com', '$2b$12$X9sdfg8sdfg8sdfg8sdRTYweYxZp6', '@aguila.growth', 'ACTIVE', 1, '2026-02-20 13:55:09', 'https://cdn.unitas-platform.com/profiles/emp-006.png', 'QWERTYUIOPASDFGH', '2026-03-02 14:55:09', '2026-01-01 08:25:00'),
+('a1b2c3d4-0007-4000-8000-000000000007', 'emp-007', 'emp007@unitas.com', '$2b$12$V1sdfg8sdfg8sdfg8sdUIOweYxZp7', '@lobo.devops', 'ACTIVE', 1, '2026-02-16 07:55:10', 'https://cdn.unitas-platform.com/profiles/emp-007.png', NULL, NULL, '2026-01-01 08:30:00'),
+('a1b2c3d4-0008-4000-8000-000000000008', 'emp-008', 'emp008@unitas.com', '$2b$12$B2sdfg8sdfg8sdfg8sdPASweYxZp8', '@pantera.sec', 'ACTIVE', 1, '2026-02-22 09:02:33', 'https://cdn.unitas-platform.com/profiles/emp-008.png', 'LKJHGFDSAZXCVBNM', '2026-03-02 10:02:33', '2026-01-01 08:35:00'),
+('a1b2c3d4-0009-4000-8000-000000000009', 'emp-009', 'emp009@unitas.com', '$2b$12$N3sdfg8sdfg8sdfg8sdLKJweYxZp9', '@delfin.mobile', 'ACTIVE', 1, '2026-02-21 14:12:01', 'https://cdn.unitas-platform.com/profiles/emp-009.png', NULL, NULL, '2026-01-01 08:40:00'),
+('a1b2c3d4-0010-4000-8000-000000000010', 'emp-010', 'emp010@unitas.com', '$2b$12$M4sdfg8sdfg8sdfg8sdPOIweYxZp0', '@buho.analytics', 'ACTIVE', 1, '2026-02-19 16:33:45', 'https://cdn.unitas-platform.com/profiles/emp-010.png', 'MNBVCXZLKJHGFDSA', '2026-03-02 17:33:45', '2026-01-01 08:45:00'),
+('a1b2c3d4-0011-4000-8000-000000000011', 'emp-011', 'emp011@unitas.com', '$2b$12$Q5sdfg8sdfg8sdfg8sdZXCweYxZp1', '@ocelote.crm', 'ACTIVE', 1, '2026-02-18 12:22:22', 'https://cdn.unitas-platform.com/profiles/emp-011.png', NULL, NULL, '2026-01-01 08:50:00'),
+('a1b2c3d4-0012-4000-8000-000000000012', 'emp-012', 'emp012@unitas.com', '$2b$12$R6sdfg8sdfg8sdfg8sdVBNweYxZp2', '@halcon.payments', 'ACTIVE', 1, '2026-02-24 11:11:11', 'https://cdn.unitas-platform.com/profiles/emp-012.png', 'POIUYTREWQLKJHGF', '2026-03-02 12:11:11', '2026-01-01 08:55:00'),
+('a1b2c3d4-0013-4000-8000-000000000013', 'emp-013', 'emp013@unitas.com', '$2b$12$T7sdfg8sdfg8sdfg8sdGHJweYxZp3', '@coyote.internal', 'ACTIVE', 1, '2026-02-23 10:09:09', 'https://cdn.unitas-platform.com/profiles/emp-013.png', NULL, NULL, '2026-01-01 09:00:00'),
+('a1b2c3d4-0014-4000-8000-000000000014', 'emp-014', 'emp014@unitas.com', '$2b$12$Y8sdfg8sdfg8sdfg8sdWERweYxZp4', '@mariposa.community', 'ACTIVE', 1, '2026-02-20 17:17:17', 'https://cdn.unitas-platform.com/profiles/emp-014.png', 'ASDFGHJKLQWERTYU', '2026-03-02 18:17:17', '2026-01-01 09:05:00'),
+('a1b2c3d4-0015-4000-8000-000000000015', 'emp-015', 'emp015@unitas.com', '$2b$12$U9sdfg8sdfg8sdfg8sdTYUweYxZp5', '@tiburon.growth', 'ACTIVE', 1, '2026-02-27 15:30:30', 'https://cdn.unitas-platform.com/profiles/emp-015.png', NULL, NULL, '2026-01-01 09:10:00'),
+('a1b2c3d4-0016-4000-8000-000000000016', 'emp-016', 'emp016@unitas.com', '$2b$12$I0sdfg8sdfg8sdfg8sdQWEweYxZp6', '@armadillo.validation', 'ACTIVE', 1, '2026-03-01 09:45:00', 'https://cdn.unitas-platform.com/profiles/emp-016.png', 'ZXCASDQWEPLMOKNI', '2026-03-02 10:45:00', '2026-01-01 09:15:00'),
+('a1b2c3d4-0017-4000-8000-000000000017', 'emp-017', 'emp017@unitas.com', '$2b$12$O1sdfg8sdfg8sdfg8sdASDweYxZp7', '@mapache.ai', 'ACTIVE', 1, '2026-03-02 13:13:13', 'https://cdn.unitas-platform.com/profiles/emp-017.png', NULL, NULL, '2026-01-01 09:20:00'),
+('a1b2c3d4-0018-4000-8000-000000000018', 'emp-018', 'emp018@unitas.com', '$2b$12$P2sdfg8sdfg8sdfg8sdFGHweYxZp8', '@venado.recruit', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-018.png', NULL, NULL, '2026-01-01 09:25:00'),
+('a1b2c3d4-0019-4000-8000-000000000019', 'emp-019', 'emp019@unitas.com', '$2b$12$A3sdfg8sdfg8sdfg8sdJKLweYxZp9', '@camaleon.content', 'DISABLED', 1, '2026-02-22 08:08:08', 'https://cdn.unitas-platform.com/profiles/emp-019.png', 'EXPIREDTOKEN1234', '2026-02-22 09:08:08', '2026-01-01 09:30:00'),
+('a1b2c3d4-0020-4000-8000-000000000020', 'emp-020', 'emp020@unitas.com', '$2b$12$S4sdfg8sdfg8sdfg8sdZXCweYxZp0', '@hormiga.support', 'ACTIVE', 1, '2026-02-28 18:18:18', 'https://cdn.unitas-platform.com/profiles/emp-020.png', NULL, NULL, '2026-01-01 09:35:00');
 -- --------------------------------------------------------
 
 --
@@ -875,7 +880,7 @@ CREATE TABLE `project` (
   `employee_responsible_id` char(36) NOT NULL,
   `name` varchar(150) NOT NULL,
   `description` varchar(1000) DEFAULT NULL,
-  `status` enum('PLANNED','IN PROGRESS','ON HOLD','COMPLETED','CANCELLED') NOT NULL,
+  `status` enum('PLANNED','IN PROGRESS','ON HOLD','COMPLETED','CANCELLED','DISABLED') NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
   `created_at` datetime NOT NULL

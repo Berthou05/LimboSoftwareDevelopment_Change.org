@@ -48,18 +48,21 @@ deactivate U
             deactivate P
         C->V:response.status(200).json({success:true, body:members});
         deactivate C
-        end group
     activate V
+        end group
+    
     V->V:generateMembers(members);
-    V->U:Updated view
+    V->U:HTML
     deactivate V
 
 alt Team Members Obtention Failed
+        activate C
     group TEAM-05 alt
         C->V:response.status(500).json({success:false, message:error});     
         deactivate C
-    end group
     activate V
+    end group
+    
     V->V:showErrorPopup(error);
     V->U:Updated view
     deactivate V

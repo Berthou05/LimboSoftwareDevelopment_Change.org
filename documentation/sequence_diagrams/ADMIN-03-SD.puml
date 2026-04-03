@@ -2,8 +2,8 @@
 skinparam style strictuml
 
 actor Admin as A   
-boundary "routes" as RO
 boundary "vista roleAdmin.ejs" as V
+boundary "admin.routes" as RO
 control "roleAdmin.controller" as C
 entity "Role.model" as R
 entity "RolePrivilege.model" as RP
