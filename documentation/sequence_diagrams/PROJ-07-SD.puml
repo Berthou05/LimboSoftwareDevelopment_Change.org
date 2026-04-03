@@ -2,30 +2,74 @@
 autonumber
 skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+actor User as U
+boundary "projectDirectory.ejs" as PV
+boundary "project.ejs" as V
+boundary "project.routes" as RO
+control "project.controller" as C
+entity "collaboration.model" as P
+database "unitas_system" as BD
 
-User -> Sys: Selects specific Project from dashboard
-activate Sys
+autonumber
 
-Sys -> Sys: Retrieves project_id from selection
-Sys -> DB: Sends query for employees by project_id
-activate DB
+activate U
+U->PV:Clicks on a project over the project directory page.
+deactivate U
+    activate PV
+    PV->RO: GET project/:project_id
+    deactivate PV
+        activate RO
+        RO->C: getProjectPage(request,response);
+        deactivate RO
+            activate C
+                note right
+                The information for the 
+                initial page render is 
+                obtained.
+                end note
+            C->V:response.render('pages/project.ejs',{...});
+            deactivate C
+    activate V
+    V->V:loadContent();
+    group PROJ-07
+    V->RO:fetch('/project/:project_id/members',{method: GET, headers:{body:'application/json'}})
+    deactivate V
+        activate RO
+        RO->C:getProjectMembers(request,response)
+        deactivate RO
+        activate C
+        C->>P:fetchDetailedByProject(project_id)
+            activate P
+            P->>BD:return db.execute(`SELECTC.collaboration_id,C.project_id,C.employee_id, C.description, C.started_at, C.ended_at, E.full_name \nFROM collaboration AS C \nLEFT JOIN employee AS E \nON E.employee_id = C.employee_id \nWHERE C.project_id = ?AND C.ended_at IS NULL \nORDER BY E.full_name ASC`,[project_id]);
+                activate BD
+                BD-->P:members
+                deactivate BD
+            P-->C:members
+            deactivate P
+        C->V:response.status(200).json({success:true, body:members});
+        deactivate C
+    activate V
+        end group
 
-DB --> Sys: Returns list of participants and roles
-deactivate DB
+    V->V:generateMembers(members);
+    V->U: HTML
+    deactivate V
 
-alt Are participants assigned? (yes)
-    Sys -> DB: Retrieves profile metadata and images
-    activate DB
-    DB --> Sys: Returns metadata
-    deactivate DB
-    Sys -> Sys: Renders "Project Participants" module
-    Sys --> User: Displays participant list and contact info
-else Are participants assigned? (no)
-    Sys --> User: Displays "No participants assigned" message
+alt Project Members Obtention Failed
+        activate C
+    group PROJ-07 alt
+        C->V:response.status(500).json({success:false, message:error});     
+        deactivate C
+    activate V
+    end group
+    V->V:showErrorPopup(error);
+    V->U:Updated view
+    deactivate V
 end
 
-deactivate Sys
+
+
+
+
+
 @enduml

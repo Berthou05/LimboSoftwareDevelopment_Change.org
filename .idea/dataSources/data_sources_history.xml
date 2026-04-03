@@ -49,8 +49,8 @@
       <schema-mapping>
         <introspection-scope>
           <node kind="schema">
-            <name qname="@" />
             <name qname="unitas_system" />
+            <name qname="@" />
           </node>
         </introspection-scope>
       </schema-mapping>

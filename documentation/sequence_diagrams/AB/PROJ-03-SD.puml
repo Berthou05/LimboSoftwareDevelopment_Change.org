@@ -3,14 +3,13 @@ skinparam style strictuml
 
 actor User as U
 boundary "project_details.ejs" as V
-boundary "routes" as RO
+boundary "projectDirectory.ejs" as PD
+boundary "project.routes" as RO
 control "project.controller" as C
-entity "Project.model" as M
+entity "project.model" as M
 database "unitas_system" as BD
 
 autonumber
-
-== Delete Project ==
 
 activate U
 U -> V: Clicks "Delete Project" button
@@ -29,14 +28,13 @@ alt Confirms deletion? (no)
     V -> V: closeConfirmationModal()
     V -> U: Displays Project Details page (no changes)
     deactivate V
-
-else Confirms deletion? (yes)
+end
     activate U
     U -> V: Clicks "Confirm" button
     deactivate U
     activate V
     V -> V: captureProjectId(id)
-    V -> RO: fetch('/project/delete/:id', {method: DELETE})
+    V -> RO: fetch('/project/:id_project/delete',{method: DELETE, headers:{'Accept': 'application/json'}})
     deactivate V
 
     activate RO
@@ -44,34 +42,34 @@ else Confirms deletion? (yes)
     deactivate RO
 
     activate C
-    C -> M: deleteProjectById(project_id)
+    C ->> M: deactivate(project_id)
     activate M
-    M -> BD: execute('DELETE FROM project WHERE id = ?', [project_id])
-    activate BD
-    
-    alt Database Success? (yes)
-        BD --> M: success_status
-        M --> C: success_status
-        C -> V: response.json({success: true})
-        activate V
-        V -> V: redirectToDashboard()
-        V -> V: displaySuccessNotification("Project Deleted Successfully")
-        V -> U: Redirects and shows success message
-        deactivate V
-        
-    else Database Success? (no)
-        BD --> M: error_log
+    M ->> BD: execute('UPDATE project SET project.status='DISABLED' \nWHERE project.project_id=?;', [project_id])
+        activate BD
+        BD-->M: Query OK
         deactivate BD
-        M --> C: error_log
-        deactivate M
-        C -> V: response.json({success: false, error: 'Could not delete project'})
-        activate V
-        V -> V: displayErrorMessage("Error: Could not delete project")
-        V -> U: Displays error notification
-        deactivate V
-    end
-end
+    M-->C: Query OK
+    deactivate M
+    
+    alt Project Deletion Failed
 
-deactivate C
+        C -> V: response.json({success: false, error: 'Could not delete project'})
+        deactivate C
+    activate V
+    V -> V: displayErrorMessage(error)
+    V -> U: Displays error notification
+    deactivate V
+    activate C
+    end
+
+        
+        
+        C -> RO: response.redirect('/project')
+        deactivate C
+
+        note right
+        Render responsible under the 
+        controller function getTeams.
+        end note
 
 @enduml
