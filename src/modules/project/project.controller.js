@@ -1,7 +1,7 @@
 /*
 Title: project.controller.js
 Last modification: March 26,2026
-Modified by: OpenAI
+Modified by: Alexis Berthou
 */
 
 const Project = require('../../models/project');
@@ -320,6 +320,7 @@ exports.createProject = (request, response, next) => {
         );
 
         return project.save().then(() => {
+            request.session.success = `Project ${projectForm.name} was created successfully.`;
             return response.redirect('/projects');
         });
     }).catch((error) => {
@@ -561,25 +562,30 @@ exports.joinProject = (request, response, next) => {
 
     Project.findById(projectId).then(([projectRows]) => {
         if (!projectRows.length) {
+            request.session.error = 'The selected project was not found.';
             return response.redirect('/projects');
         }
 
         if (projectRows[0].employee_responsible_id === employeeId) {
+            request.session.warning = 'You are already the project lead.';
             return response.redirect(`/projects/${projectId}`);
         }
 
         return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
             .then(([membershipRows]) => {
                 if (membershipRows.length > 0) {
+                    request.session.warning = 'You are already a member of this project.';
                     return response.redirect(`/projects/${projectId}`);
                 }
 
                 return Collaboration.joinProject(projectId, employeeId).then(() => {
+                    request.session.success = `You joined ${projectRows[0].name || 'the project'}.`;
                     return response.redirect(`/projects/${projectId}`);
                 });
             });
     }).catch((error) => {
         console.log(error);
+        request.session.error = 'We could not update the project membership right now.';
         return response.redirect(`/projects/${projectId}`);
     });
 };
@@ -590,25 +596,30 @@ exports.leaveProject = (request, response, next) => {
 
     Project.findById(projectId).then(([projectRows]) => {
         if (!projectRows.length) {
+            request.session.error = 'The selected project was not found.';
             return response.redirect('/projects');
         }
 
         if (projectRows[0].employee_responsible_id === employeeId) {
+            request.session.warning = 'The project lead cannot leave the project.';
             return response.redirect(`/projects/${projectId}`);
         }
 
         return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
             .then(([membershipRows]) => {
                 if (!membershipRows.length) {
+                    request.session.warning = 'You are not currently a member of this project.';
                     return response.redirect(`/projects/${projectId}`);
                 }
 
                 return Collaboration.leaveProject(projectId, employeeId).then(() => {
+                    request.session.success = `You left ${projectRows[0].name || 'the project'}.`;
                     return response.redirect(`/projects/${projectId}`);
                 });
             });
     }).catch((error) => {
         console.log(error);
+        request.session.error = 'We could not update the project membership right now.';
         return response.redirect(`/projects/${projectId}`);
     });
 };

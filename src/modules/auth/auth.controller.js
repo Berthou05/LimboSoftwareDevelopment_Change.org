@@ -60,11 +60,8 @@ Function responsible for rendering login page.
 Available without authentication*/
 
 exports.getLogin = (request, response, next)=>{
-    const error = request.session.error || '';
-    request.session.error='';
     return response.render('pages/login', {
         csrfToken: request.csrfToken(),
-        error:error,
         isLoginPage: true,
         pageTitle: 'Login'
     });
@@ -92,19 +89,28 @@ exports.postLogin = (request, response, next)=>{
 
                         Account.getPrivilegesFromAccountId(rows[0].account_id).then(([privileges, fieldData])=>{
                             request.session.privileges = privileges;
+                            request.session.success = 'Welcome back.';
                             return request.session.save((error) => {
+                                if (error) {
+                                    console.log(error);
+                                    request.session.error = 'We could not log you in right now.';
+                                    request.session.success = '';
+                                    return response.redirect('/');
+                                }
                                 return response.redirect('/home');
                             });
 
                         })
                         .catch((error)=>{
                             console.log(error);
+                            request.session.error = 'We could not log you in right now.';
                             return response.redirect('/');
                         })
 
                     })
                     .catch((error)=>{
                         console.log(error);
+                        request.session.error = 'We could not log you in right now.';
                         return response.redirect('/');
                     })                        
                         
@@ -116,12 +122,14 @@ exports.postLogin = (request, response, next)=>{
             })
             .catch((error)=>{
                 console.log(error);
+                request.session.error = 'We could not log you in right now.';
                 return response.redirect('/');
             });
         };
     })
     .catch((error)=>{
         console.log(error);
+        request.session.error = 'We could not log you in right now.';
         return response.redirect('/');
     });
 }

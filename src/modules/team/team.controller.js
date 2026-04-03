@@ -217,12 +217,16 @@ const respondMembershipRequest = function respondMembershipRequest(
 ) {
     const acceptHeader = request.get('Accept') || '';
 
-    if (acceptHeader.includes('application/json')) {
-        return response.status(statusCode).json(payload);
+    if (payload && payload.successMessage) {
+        request.session.success = payload.successMessage;
+    } else if (payload && payload.warningMessage) {
+        request.session.warning = payload.warningMessage;
+    } else if (payload && payload.error) {
+        request.session.error = payload.error;
     }
 
-    if (payload && payload.error) {
-        request.session.error = payload.error;
+    if (acceptHeader.includes('application/json')) {
+        return response.status(statusCode).json(payload);
     }
     return response.redirect(`/teams/${teamId}`);
 };
@@ -440,6 +444,8 @@ exports.toggleTeamMembership = (request, response, next) => {
     const targetEmployeeId = isAddMemberRequest
         ? request.body.employeeId
         : request.session.employeeId;
+    let flashType = '';
+    let flashMessage = '';
 
     if (!targetEmployeeId) {
         request.session.error = isAddMemberRequest
@@ -453,10 +459,18 @@ exports.toggleTeamMembership = (request, response, next) => {
             const membership = memberships[0];
 
             if (!membership) {
+                flashType = 'success';
+                flashMessage = isAddMemberRequest
+                    ? 'Member added to the team.'
+                    : 'You joined the team.';
                 return EmployeeTeamMembership.join(targetEmployeeId, teamId);
             }
 
             if (membership.left_at) {
+                flashType = 'success';
+                flashMessage = isAddMemberRequest
+                    ? 'Member added to the team.'
+                    : 'You joined the team.';
                 return EmployeeTeamMembership.update(targetEmployeeId, teamId, {
                     joined_at: new Date(),
                     left_at: null,
@@ -465,12 +479,22 @@ exports.toggleTeamMembership = (request, response, next) => {
             }
 
             if (isAddMemberRequest) {
+                flashType = 'warning';
+                flashMessage = 'That employee is already a member of this team.';
                 return Promise.resolve();
             }
 
+            flashType = 'success';
+            flashMessage = 'You left the team.';
             return EmployeeTeamMembership.leave(targetEmployeeId, teamId);
         })
-        .then(() => response.redirect(`/teams/${teamId}`))
+        .then(() => {
+            if (flashType && flashMessage) {
+                request.session[flashType] = flashMessage;
+            }
+
+            return response.redirect(`/teams/${teamId}`);
+        })
         .catch((error) => {
             console.log(error);
             request.session.error = `Error updating membership for team ${teamId}.`;
@@ -496,7 +520,12 @@ exports.addTeamMember = (request, response, next) => {
         const membership = memberships[0];
 
         if (!membership) {
-            return EmployeeTeamMembership.join(employeeId, teamId);
+            return EmployeeTeamMembership.join(employeeId, teamId).then(() => {
+                return respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                    successMessage: 'Member added to the team.',
+                });
+            });
         }
 
         if (membership.left_at) {
@@ -504,13 +533,18 @@ exports.addTeamMember = (request, response, next) => {
                 joined_at: new Date(),
                 left_at: null,
                 role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+            }).then(() => {
+                return respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                    successMessage: 'Member added to the team.',
+                });
             });
         }
-        return Promise.resolve();
+        return respondMembershipRequest(request, response, teamId, 200, {
+            success: true,
+            warningMessage: 'That employee is already a member of this team.',
+        });
     })
-    .then(() => respondMembershipRequest(request, response, teamId, 200, {
-        success: true,
-    }))
     .catch((error) => {
         console.log(error);
         return respondMembershipRequest(request, response, teamId, 500, {
@@ -557,6 +591,7 @@ exports.removeTeamMember = (request, response, next) => {
         return EmployeeTeamMembership.leave(employeeId, teamId)
             .then(() => respondMembershipRequest(request, response, teamId, 200, {
                 success: true,
+                successMessage: 'Member removed from the team.',
             }));
     })
     .catch((error) => {

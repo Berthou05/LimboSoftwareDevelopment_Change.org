@@ -7,6 +7,7 @@ Modified by: Hurtado, R.
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
+const flashMessage = require('./src/middleware/flashMessage');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
@@ -38,6 +39,8 @@ app.use(session({
     resave: false,        
     saveUninitialized: false, 
 }));
+
+app.use(flashMessage);
 
 /*Instalacion de csurf*/
 const csrf = require('csurf');

@@ -29,8 +29,6 @@ exports.getRoleAdmin = (request, response, next) => {
                     roles: roles, 
                     role_privileges:role_privileges,
                     privileges:privileges,
-                    success: request.session.success||'',
-                    error: request.session.error || '',
                 });
             })
             .catch((error)=>{
