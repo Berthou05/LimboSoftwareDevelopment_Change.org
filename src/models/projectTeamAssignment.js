@@ -45,11 +45,24 @@ module.exports = class ProjectTeam {
                 T.name,
                 T.description,
                 T.image,
-                T.status
+                T.status,
+                COUNT(ET.employee_id) AS member_count
             FROM projectteam AS PT
             LEFT JOIN team AS T
                 ON T.team_id = PT.team_id
+            LEFT JOIN employeeteam AS ET
+                ON ET.team_id = T.team_id
+                AND ET.left_at IS NULL
             WHERE PT.project_id = ?
+            GROUP BY
+                PT.team_id,
+                PT.project_id,
+                PT.team_role,
+                PT.joined_at,
+                T.name,
+                T.description,
+                T.image,
+                T.status
             ORDER BY T.name ASC`,
             [project_id],
         );

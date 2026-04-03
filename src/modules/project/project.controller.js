@@ -13,6 +13,7 @@ const Collaboration = require('../../models/collaboration');
 const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
+const Team = require('../../models/team');
 
 const PAGE_TITLE = 'Project';
 const PAGE_SUBTITLE = 'Intermediate selection for own and other projects.';
@@ -402,6 +403,7 @@ exports.getProjectPage = (request, response, next) => {
         Collaboration.fetchDetailedByProject(projectId),
         Collaboration.findActiveByProjectAndEmployee(projectId, employeeId),
         Employee.fetchAll(),
+        Team.findAll(),
     ]).then(([
         [projectRows],
         [achievementRows],
@@ -413,6 +415,7 @@ exports.getProjectPage = (request, response, next) => {
         [memberRows],
         [activeCollaborationRows],
         [allEmployees],
+        [allTeams],
     ]) => {
         const activityRows = activityResponse.rows || [];
         const activityError = activityResponse.error || '';
@@ -446,6 +449,7 @@ exports.getProjectPage = (request, response, next) => {
                     buttonLabel: 'Join Project',
                 },
                 availableEmployees: [],
+                availableTeams: [],
                 activitySections: [],
                 activityFilter,
                 activityError: activityFilter.error || activityError || '',
@@ -481,6 +485,14 @@ exports.getProjectPage = (request, response, next) => {
             .map((employee) => ({
                 id: employee.employee_id,
                 fullName: employee.full_name,
+            }));
+
+        const currentTeamIds = new Set(teamRows.map((team) => team.team_id));
+        const availableTeams = allTeams
+            .filter((team) => !currentTeamIds.has(team.team_id))
+            .map((team) => ({
+                id: team.team_id,
+                name: team.name || 'Unnamed team',
             }));
 
         return response.render('pages/project', {
@@ -541,6 +553,7 @@ exports.getProjectPage = (request, response, next) => {
                     image: team.image || null,
                     status: team.status || 'Unknown',
                     role: team.team_role || 'CONTRIBUTOR',
+                    memberCount: Number(team.member_count || 0),
                     joinedAtLabel: formatDateLabel(team.joined_at, 'Date unavailable'),
                 })),
                 membersDetailed: memberRows.map((member) => ({
@@ -588,6 +601,7 @@ exports.getProjectPage = (request, response, next) => {
             quickReport: '',
             currentEmployeeId: employeeId,
             availableEmployees,
+            availableTeams,
         });
     }).catch((error) => {
         console.log(error);
@@ -706,6 +720,104 @@ exports.removeProjectMember = (request, response, next) => {
             console.log(error);
             return respondMembershipRequest(request, response, projectId, 500, {
                 error: `Error removing a member from project ${projectId}.`,
+            });
+        });
+};
+
+exports.addProjectTeam = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const teamId = String(request.body.teamId || '').trim();
+
+    if (!teamId) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: 'Select a valid team to add to the project.',
+        });
+    }
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            return Team.findById(teamId).then(([teamRows]) => {
+                const team = teamRows[0];
+
+                if (!team) {
+                    return respondMembershipRequest(request, response, projectId, 404, {
+                        error: 'The selected team was not found.',
+                    });
+                }
+
+                return ProjectTeam.fetchByTeamAndProject(teamId, projectId)
+                    .then(([assignments]) => {
+                        if (assignments.length > 0) {
+                            return respondMembershipRequest(request, response, projectId, 200, {
+                                success: true,
+                                warningMessage: 'That team is already assigned to this project.',
+                            });
+                        }
+
+                        const projectTeam = new ProjectTeam(
+                            teamId,
+                            projectId,
+                            'CONTRIBUTOR',
+                            new Date(),
+                        );
+
+                        return projectTeam.save()
+                            .then(() => respondMembershipRequest(request, response, projectId, 200, {
+                                success: true,
+                                successMessage: 'Team added to the project.',
+                            }));
+                    });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error adding a team to project ${projectId}.`,
+            });
+        });
+};
+
+exports.removeProjectTeam = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const teamId = request.params.team_id;
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            return ProjectTeam.fetchByTeamAndProject(teamId, projectId)
+                .then(([assignments]) => {
+                    if (!assignments.length) {
+                        return respondMembershipRequest(request, response, projectId, 404, {
+                            error: 'That team is not currently assigned to this project.',
+                        });
+                    }
+
+                    return ProjectTeam.delete(teamId, projectId)
+                        .then(() => respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            successMessage: 'Team removed from the project.',
+                        }));
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error removing a team from project ${projectId}.`,
             });
         });
 };

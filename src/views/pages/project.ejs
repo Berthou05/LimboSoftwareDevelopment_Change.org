@@ -49,7 +49,9 @@
     }) %>
 
     <%- include('../partials/projectDirectory/projectTeams', {
-      project
+      project,
+      csrfToken,
+      availableTeams: typeof availableTeams !== 'undefined' ? availableTeams : []
     }) %>
 
     <%- include('../partials/projectDirectory/projectMembers', {

@@ -16,6 +16,8 @@ router.get('/', isAuth, projectController.getProjects);
 router.post('/', isAuth, projectController.createProject);
 router.post('/:project_id/members', isAuth, projectController.addProjectMember);
 router.post('/:project_id/members/:employee_id/remove', isAuth, projectController.removeProjectMember);
+router.post('/:project_id/teams', isAuth, projectController.addProjectTeam);
+router.post('/:project_id/teams/:team_id/remove', isAuth, projectController.removeProjectTeam);
 router.post('/:project_id/join', isAuth, projectController.joinProject);
 router.post('/:project_id/leave', isAuth, projectController.leaveProject);
 router.post('/:project_id/toggle-membership', isAuth, projectController.toggleProjectMembership);
