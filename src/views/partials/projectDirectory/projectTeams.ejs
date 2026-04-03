@@ -1,14 +1,13 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
     <div class="flex items-center justify-between gap-3">
         <h2 class="font-heading text-xl font-bold text-brand-text">Teams Involved</h2>
-        <button
-            type="button"
-            data-popup-open="project-add-team"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
-            aria-label="Add team"
-        >
-            +
-        </button>
+        <%- include('../shared/actionButton', {
+            buttonPopupOpen: 'project-add-team',
+            buttonIcon: 'plus',
+            buttonLabel: 'Add',
+            buttonVariant: 'small',
+            buttonAriaLabel: 'Add team',
+        }) %>
     </div>
     <div class="mt-4 space-y-2">
         <% const teamsDetailed = project?.teamsDetailed || []; %>

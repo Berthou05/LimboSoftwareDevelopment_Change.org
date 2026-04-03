@@ -4,14 +4,13 @@
             <h2 class="font-heading text-2xl font-bold text-brand-text">Goals</h2>
             <p class="mt-1 text-sm text-brand-text/60">Current goals and milestones tracked for this project</p>
         </div>
-        <button
-            type="button"
-            data-popup-open="project-add-goal"
-            class="inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
-            aria-label="Add goal"
-        >
-            +
-        </button>
+        <%- include('../shared/actionButton', {
+            buttonPopupOpen: 'project-add-goal',
+            buttonIcon: 'plus',
+            buttonLabel: 'Add',
+            buttonVariant: 'small',
+            buttonAriaLabel: 'Add goal',
+        }) %>
     </div>
 
     <% const goalsDetailed = project?.goalsDetailed || []; %>
@@ -27,24 +26,20 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-brand-text/50"><%= goal.dueDateLabel || 'No due date' %></span>
-                        <button
-                            type="button"
-                            data-popup-open="edit-goal-<%= goal.id %>"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/20"
-                            aria-label="Edit goal"
-                        >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </button>
-                        <button
-                            type="button"
-                            data-popup-open="delete-goal-<%= goal.id %>"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
-                            aria-label="Delete goal"
-                        >
-                            x
-                        </button>
+                        <%- include('../shared/actionButton', {
+                            buttonPopupOpen: 'edit-goal-' + goal.id,
+                            buttonIcon: 'edit',
+                            buttonLabel: 'Edit',
+                            buttonVariant: 'compact',
+                            buttonAriaLabel: 'Edit goal',
+                        }) %>
+                        <%- include('../shared/actionButton', {
+                            buttonPopupOpen: 'delete-goal-' + goal.id,
+                            buttonIcon: 'trash',
+                            buttonLabel: 'Delete',
+                            buttonVariant: 'compact',
+                            buttonAriaLabel: 'Delete goal',
+                        }) %>
                     </div>
                 </div>
                 <p class="mt-2 text-sm text-brand-text/70"><%= goal.description %></p>

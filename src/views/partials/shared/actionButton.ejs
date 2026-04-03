@@ -1,0 +1,59 @@
+<%# Template: partials/shared/actionButton.ejs
+   Purpose: Reusable bordered action button with shared icon variants.
+   Expected locals:
+   - buttonType
+   - buttonLabel
+   - buttonAriaLabel
+   - buttonIcon: plus | edit | trash | close
+   - buttonVariant: default | compact | small | icon-only
+   - buttonClasses
+   - buttonPopupOpen
+   - buttonPopupClose
+%>
+
+<%
+    const actionType = typeof buttonType !== 'undefined' ? buttonType : 'button';
+    const actionLabel = typeof buttonLabel !== 'undefined' ? buttonLabel : '';
+    const actionAriaLabel = typeof buttonAriaLabel !== 'undefined' ? buttonAriaLabel : (actionLabel || 'Action');
+    const actionIcon = typeof buttonIcon !== 'undefined' ? buttonIcon : 'plus';
+    const actionVariant = typeof buttonVariant !== 'undefined' ? buttonVariant : 'default';
+    const actionClasses = typeof buttonClasses !== 'undefined' ? buttonClasses : '';
+    const variantClass = actionVariant === 'compact'
+        ? ' panel-action-button--compact'
+        : actionVariant === 'small'
+            ? ' panel-action-button--small'
+        : actionVariant === 'icon-only'
+            ? ' panel-action-button--icon-only'
+            : '';
+    const buttonClassName = 'panel-action-button' + variantClass + (actionClasses ? ' ' + actionClasses : '');
+%>
+
+<button
+    type="<%= actionType %>"
+    <% if (typeof buttonPopupOpen !== 'undefined' && buttonPopupOpen) { %>data-popup-open="<%= buttonPopupOpen %>"<% } %>
+    <% if (typeof buttonPopupClose !== 'undefined' && buttonPopupClose) { %>data-popup-close<% } %>
+    class="<%= buttonClassName %>"
+    aria-label="<%= actionAriaLabel %>"
+>
+    <% if (actionIcon === 'edit') { %>
+        <svg class="panel-action-button__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    <% } else if (actionIcon === 'trash') { %>
+        <svg class="panel-action-button__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M7.5 4.5V3.75C7.5 3.336 7.836 3 8.25 3H11.75C12.164 3 12.5 3.336 12.5 3.75V4.5M4.5 5.5H15.5M6 5.5V14.25C6 14.664 6.336 15 6.75 15H13.25C13.664 15 14 14.664 14 14.25V5.5M8.5 8V12.5M11.5 8V12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    <% } else if (actionIcon === 'close') { %>
+        <svg class="panel-action-button__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    <% } else { %>
+        <svg class="panel-action-button__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M10 4.5V15.5M4.5 10H15.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    <% } %>
+
+    <% if (actionLabel && actionVariant !== 'icon-only') { %>
+        <span><%= actionLabel %></span>
+    <% } %>
+</button>

@@ -1,6 +1,6 @@
 /*
 Title: project.controller.js
-Last modification: March 26,2026
+Last modification: April 2,2026
 Modified by: Alexis Berthou
 */
 
@@ -12,6 +12,7 @@ const Activity = require('../../models/activity');
 const Collaboration = require('../../models/collaboration');
 const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
+const Employee = require('../../models/employee');
 
 const PAGE_TITLE = 'Project';
 const PAGE_SUBTITLE = 'Intermediate selection for own and other projects.';
@@ -190,6 +191,30 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
         rangeEnd: endDate ? new Date(`${endDate}T23:59:59.999`) : null,
         error: '',
     };
+};
+
+const respondMembershipRequest = function respondMembershipRequest(
+    request,
+    response,
+    projectId,
+    statusCode,
+    payload,
+) {
+    const acceptHeader = request.get('Accept') || '';
+
+    if (payload && payload.successMessage) {
+        request.session.success = payload.successMessage;
+    } else if (payload && payload.warningMessage) {
+        request.session.warning = payload.warningMessage;
+    } else if (payload && payload.error) {
+        request.session.error = payload.error;
+    }
+
+    if (acceptHeader.includes('application/json')) {
+        return response.status(statusCode).json(payload);
+    }
+
+    return response.redirect(`/projects/${projectId}`);
 };
 
 /*getProjects
@@ -376,6 +401,7 @@ exports.getProjectPage = (request, response, next) => {
         ProjectTeam.fetchDetailedByProject(projectId),
         Collaboration.fetchDetailedByProject(projectId),
         Collaboration.findActiveByProjectAndEmployee(projectId, employeeId),
+        Employee.fetchAll(),
     ]).then(([
         [projectRows],
         [achievementRows],
@@ -386,6 +412,7 @@ exports.getProjectPage = (request, response, next) => {
         [teamRows],
         [memberRows],
         [activeCollaborationRows],
+        [allEmployees],
     ]) => {
         const activityRows = activityResponse.rows || [];
         const activityError = activityResponse.error || '';
@@ -418,6 +445,7 @@ exports.getProjectPage = (request, response, next) => {
                     canToggle: false,
                     buttonLabel: 'Join Project',
                 },
+                availableEmployees: [],
                 activitySections: [],
                 activityFilter,
                 activityError: activityFilter.error || activityError || '',
@@ -444,6 +472,16 @@ exports.getProjectPage = (request, response, next) => {
                 buttonLabel: 'Leave Project',
             };
         }
+
+        const currentMemberIds = new Set(memberRows.map((member) => member.employee_id));
+        currentMemberIds.add(project.employee_responsible_id);
+
+        const availableEmployees = allEmployees
+            .filter((employee) => !currentMemberIds.has(employee.employee_id))
+            .map((employee) => ({
+                id: employee.employee_id,
+                fullName: employee.full_name,
+            }));
 
         return response.render('pages/project', {
             csrfToken: request.csrfToken(),
@@ -549,11 +587,127 @@ exports.getProjectPage = (request, response, next) => {
             },
             quickReport: '',
             currentEmployeeId: employeeId,
+            availableEmployees,
         });
     }).catch((error) => {
         console.log(error);
         next(error);
     });
+};
+
+exports.addProjectMember = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = String(request.body.employeeId || '').trim();
+
+    if (!employeeId) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: 'Select a valid employee to add to the project.',
+        });
+    }
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            if (project.employee_responsible_id === employeeId) {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'The project lead is already part of the project.',
+                });
+            }
+
+            return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+                .then(([memberships]) => {
+                    if (memberships.length > 0) {
+                        return respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            warningMessage: 'That employee is already a member of this project.',
+                        });
+                    }
+
+                    return Collaboration.fetchByProject(projectId)
+                        .then(([projectCollaborations]) => {
+                            const existingCollaboration = projectCollaborations.find((membership) => (
+                                membership.employee_id === employeeId
+                                && membership.ended_at
+                            ));
+
+                            if (existingCollaboration) {
+                                return Collaboration.update(existingCollaboration.collaboration_id, {
+                                    description: existingCollaboration.description || 'Added from project detail page.',
+                                    started_at: new Date(),
+                                    ended_at: null,
+                                });
+                            }
+
+                            return Collaboration.joinProject(projectId, employeeId, 'Added from project detail page.');
+                        })
+                        .then(() => respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            successMessage: 'Member added to the project.',
+                        }));
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error adding a member to project ${projectId}.`,
+            });
+        });
+};
+
+exports.removeProjectMember = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.params.employee_id;
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            if (project.employee_responsible_id === employeeId) {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'The project lead cannot be removed from the project.',
+                });
+            }
+
+            if (employeeId === request.session.employeeId) {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'Use the Leave Project action to remove yourself.',
+                });
+            }
+
+            return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+                .then(([memberships]) => {
+                    if (!memberships.length) {
+                        return respondMembershipRequest(request, response, projectId, 404, {
+                            error: 'That employee is not currently a member of this project.',
+                        });
+                    }
+
+                    return Collaboration.leaveProject(projectId, employeeId)
+                        .then(() => respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            successMessage: 'Member removed from the project.',
+                        }));
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error removing a member from project ${projectId}.`,
+            });
+        });
 };
 
 exports.joinProject = (request, response, next) => {

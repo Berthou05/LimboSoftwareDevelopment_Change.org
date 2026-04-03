@@ -1,7 +1,7 @@
 /*
 Title: project.routes.js
-Last modification: March 24,2026
-Modified by: Hurtado, R.
+Last modification: April 2,2026
+Modified by: Alexis Berthou
 */
 
 const express = require('express');
@@ -14,6 +14,8 @@ router.get('/search', isAuth, projectController.searchProjects);
 router.get('/new', isAuth, projectController.getNewProjectPage);
 router.get('/', isAuth, projectController.getProjects);
 router.post('/', isAuth, projectController.createProject);
+router.post('/:project_id/members', isAuth, projectController.addProjectMember);
+router.post('/:project_id/members/:employee_id/remove', isAuth, projectController.removeProjectMember);
 router.post('/:project_id/join', isAuth, projectController.joinProject);
 router.post('/:project_id/leave', isAuth, projectController.leaveProject);
 router.post('/:project_id/toggle-membership', isAuth, projectController.toggleProjectMembership);

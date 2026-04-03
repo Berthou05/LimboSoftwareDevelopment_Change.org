@@ -58,7 +58,11 @@ const initializeAddMemberAutocomplete = function initializeAddMemberAutocomplete
     }
 
     const normalize = function normalize(value) {
-        return String(value || '').trim().toLowerCase();
+        return String(value || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLowerCase();
     };
 
     const findExact = function findExact(query) {

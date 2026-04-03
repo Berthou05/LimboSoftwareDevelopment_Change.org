@@ -18,16 +18,13 @@
                 <p class="text-sm text-brand-text/70"><%= project?.description || 'No project description has been added yet.' %></p>
             </div>
         </div>
-        <button
-            type="button"
-            data-popup-open="project-edit-info"
-            class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/20"
-            aria-label="Edit project information"
-        >
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-        </button>
+        <%- include('../shared/actionButton', {
+            buttonPopupOpen: 'project-edit-info',
+            buttonIcon: 'edit',
+            buttonLabel: 'Edit',
+            buttonClasses: 'shrink-0',
+            buttonAriaLabel: 'Edit project information',
+        }) %>
     </div>
     <div class="flex flex-wrap gap-2 text-xs text-brand-text/70">
         <span class="inline-flex rounded-full border border-brand-secondary px-3 py-1 font-semibold">

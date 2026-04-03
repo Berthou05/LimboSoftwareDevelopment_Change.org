@@ -18,6 +18,32 @@
     --shadow-panel: 0 0.875rem 2.1875rem rgba(4, 3, 22, 0.08);
 }
 
+@layer components {
+    .panel-action-button {
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-brand-secondary bg-white px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30;
+    }
+
+    .panel-action-button--compact {
+        @apply px-3 py-2 text-xs;
+    }
+
+    .panel-action-button--small {
+        @apply gap-1 rounded-lg px-2 py-1 text-xs;
+    }
+
+    .panel-action-button--primary {
+        @apply border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white;
+    }
+
+    .panel-action-button--icon-only {
+        @apply h-10 w-10 rounded-lg p-0;
+    }
+
+    .panel-action-button__icon {
+        @apply h-4 w-4 shrink-0;
+    }
+}
+
 /* @plugin "daisyui";
 
 @plugin "daisyui/theme"{

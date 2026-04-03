@@ -15,13 +15,13 @@
                         <p class="mt-1 text-sm text-brand-text/60"><%= popupDescriptionText %></p>
                     <% } %>
                 </div>
-                <button
-                    type="button"
-                    data-popup-close
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
-                >
-                    x
-                </button>
+                <%- include('../shared/actionButton', {
+                    buttonPopupClose: true,
+                    buttonIcon: 'close',
+                    buttonVariant: 'icon-only',
+                    buttonClasses: 'shrink-0',
+                    buttonAriaLabel: 'Close popup',
+                }) %>
             </div>
 
             <form data-popup-form class="mt-5 space-y-4">

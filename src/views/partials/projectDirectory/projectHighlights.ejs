@@ -1,14 +1,13 @@
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
     <div class="flex items-center justify-between gap-3">
         <h2 class="font-heading text-xl font-bold text-brand-text">Project Highlights</h2>
-        <button
-            type="button"
-            data-popup-open="project-add-highlight"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand-secondary text-lg font-semibold text-brand-text/70 transition hover:bg-brand-secondary/20"
-            aria-label="Add highlight"
-        >
-            +
-        </button>
+        <%- include('../shared/actionButton', {
+            buttonPopupOpen: 'project-add-highlight',
+            buttonIcon: 'plus',
+            buttonLabel: 'Add',
+            buttonVariant: 'small',
+            buttonAriaLabel: 'Add highlight',
+        }) %>
     </div>
     <div class="mt-4 space-y-3">
         <% const highlightsDetailed = project?.highlightsDetailed || []; %>
@@ -23,24 +22,20 @@
                         <p class="mt-1 text-sm font-semibold text-brand-text"><%= highlight.title %></p>
                     </div>
                     <div class="flex shrink-0 gap-2">
-                        <button
-                            type="button"
-                            data-popup-open="edit-highlight-<%= highlight.id %>"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/20"
-                            aria-label="Edit highlight"
-                        >
-                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                <path d="M13.5 3.5L16.5 6.5M5 15L7.8 14.4C8.2 14.3 8.5 14.1 8.7 13.8L15.7 6.8C16.1 6.4 16.1 5.8 15.7 5.4L14.6 4.3C14.2 3.9 13.6 3.9 13.2 4.3L6.2 11.3C5.9 11.5 5.7 11.8 5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </button>
-                        <button
-                            type="button"
-                            data-popup-open="delete-highlight-<%= highlight.id %>"
-                            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand-secondary text-sm font-bold text-brand-text/70 transition hover:bg-brand-secondary/20"
-                            aria-label="Delete highlight"
-                        >
-                            x
-                        </button>
+                        <%- include('../shared/actionButton', {
+                            buttonPopupOpen: 'edit-highlight-' + highlight.id,
+                            buttonIcon: 'edit',
+                            buttonLabel: 'Edit',
+                            buttonVariant: 'compact',
+                            buttonAriaLabel: 'Edit highlight',
+                        }) %>
+                        <%- include('../shared/actionButton', {
+                            buttonPopupOpen: 'delete-highlight-' + highlight.id,
+                            buttonIcon: 'trash',
+                            buttonLabel: 'Delete',
+                            buttonVariant: 'compact',
+                            buttonAriaLabel: 'Delete highlight',
+                        }) %>
                     </div>
                 </div>
                 <p class="mt-1 text-xs text-brand-text/60"><%= highlight.content %></p>
