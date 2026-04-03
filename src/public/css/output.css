@@ -888,12 +888,6 @@
   .bg-brand-accent {
     background-color: var(--color-brand-accent);
   }
-  .bg-brand-accent\/20 {
-    background-color: color-mix(in srgb, #ffcc00 20%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-brand-accent) 20%, transparent);
-    }
-  }
   .bg-brand-bg {
     background-color: var(--color-brand-bg);
   }
@@ -915,6 +909,12 @@
       background-color: color-mix(in oklab, var(--color-brand-bg) 90%, transparent);
     }
   }
+  .bg-brand-nav\/20 {
+    background-color: color-mix(in srgb, #003cd9 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-brand-nav) 20%, transparent);
+    }
+  }
   .bg-brand-primary {
     background-color: var(--color-brand-primary);
   }
@@ -924,16 +924,16 @@
       background-color: color-mix(in oklab, var(--color-brand-primary) 10%, transparent);
     }
   }
-  .bg-brand-primary\/20 {
-    background-color: color-mix(in srgb, #ffdb00 20%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-brand-primary) 20%, transparent);
-    }
-  }
   .bg-brand-text\/35 {
     background-color: color-mix(in srgb, #040316 35%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-brand-text) 35%, transparent);
+    }
+  }
+  .bg-brand-title\/20 {
+    background-color: color-mix(in srgb, #f34e49 20%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-brand-title) 20%, transparent);
     }
   }
   .bg-emerald-50 {
@@ -1143,6 +1143,9 @@
   .text-amber-800 {
     color: var(--color-amber-800);
   }
+  .text-brand-nav {
+    color: var(--color-brand-nav);
+  }
   .text-brand-primary {
     color: var(--color-brand-primary);
   }
@@ -1232,6 +1235,12 @@
   .shadow-xl {
     --tw-shadow: 0 20px 25px -5px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 8px 10px -6px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
+  }
+  .ring-brand-nav\/30 {
+    --tw-ring-color: color-mix(in srgb, #003cd9 30%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      --tw-ring-color: color-mix(in oklab, var(--color-brand-nav) 30%, transparent);
+    }
   }
   .ring-brand-primary\/30 {
     --tw-ring-color: color-mix(in srgb, #ffdb00 30%, transparent);
