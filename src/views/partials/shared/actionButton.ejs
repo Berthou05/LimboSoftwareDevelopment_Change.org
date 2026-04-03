@@ -6,6 +6,7 @@
    - buttonAriaLabel
    - buttonIcon: plus | edit | trash | close
    - buttonVariant: default | compact | small | icon-only
+   - buttonTone: default | nav | highlight | danger
    - buttonClasses
    - buttonPopupOpen
    - buttonPopupClose
@@ -17,6 +18,7 @@
     const actionAriaLabel = typeof buttonAriaLabel !== 'undefined' ? buttonAriaLabel : (actionLabel || 'Action');
     const actionIcon = typeof buttonIcon !== 'undefined' ? buttonIcon : 'plus';
     const actionVariant = typeof buttonVariant !== 'undefined' ? buttonVariant : 'default';
+    const actionTone = typeof buttonTone !== 'undefined' ? buttonTone : 'default';
     const actionClasses = typeof buttonClasses !== 'undefined' ? buttonClasses : '';
     const variantClass = actionVariant === 'compact'
         ? ' panel-action-button--compact'
@@ -25,7 +27,14 @@
         : actionVariant === 'icon-only'
             ? ' panel-action-button--icon-only'
             : '';
-    const buttonClassName = 'panel-action-button' + variantClass + (actionClasses ? ' ' + actionClasses : '');
+    const toneClass = actionTone === 'nav'
+        ? ' panel-action-button--nav'
+        : actionTone === 'highlight'
+            ? ' panel-action-button--highlight'
+        : actionTone === 'danger'
+            ? ' panel-action-button--danger'
+            : '';
+    const buttonClassName = 'panel-action-button' + variantClass + toneClass + (actionClasses ? ' ' + actionClasses : '');
 %>
 
 <button

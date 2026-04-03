@@ -4,9 +4,9 @@
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button
             type="submit"
-            class="w-full rounded-xl border px-4 py-2 text-sm font-semibold transition <%= isMember ? 'border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/30' %>"
+            class="app-cta-button w-full <%= isMember ? 'app-cta-button--neutral' : 'app-cta-button--highlight' %>"
         >
-        <%= isMember ? 'Leave Team' : 'Join Team' %>
+            <%= isMember ? 'Leave Team' : 'Join Team' %>
         </button>
     </form>
 </div>

@@ -8,6 +8,10 @@
     --color-brand-primary: #ffdb00;
     --color-brand-secondary: #c8c6c7;
     --color-brand-accent: #ffcc00;
+    --color-brand-nav: #003cd9;
+    --color-brand-highlight: #fbd14b;
+    --color-brand-title: #f34e49;
+    --color-brand-neutral: #ffffff;
     --color-brand-base-100: #fbfbfe;
     --color-brand-base-200: #f3f3f9;
     --color-brand-base-300: #e7e7f2;
@@ -20,7 +24,7 @@
 
 @layer components {
     .panel-action-button {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-brand-secondary bg-white px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-primary/30;
+        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-brand-secondary bg-brand-neutral px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-nav/20;
     }
 
     .panel-action-button--compact {
@@ -32,7 +36,19 @@
     }
 
     .panel-action-button--primary {
-        @apply border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white;
+        @apply border-brand-nav text-brand-nav hover:bg-brand-nav hover:text-white;
+    }
+
+    .panel-action-button--nav {
+        @apply border-brand-nav text-brand-nav hover:bg-brand-nav hover:text-white;
+    }
+
+    .panel-action-button--highlight {
+        @apply border-brand-highlight bg-brand-highlight text-brand-text hover:border-brand-highlight hover:bg-brand-highlight/90 hover:text-brand-text;
+    }
+
+    .panel-action-button--danger {
+        @apply border-red-300 text-red-500 hover:bg-red-500 hover:text-white;
     }
 
     .panel-action-button--icon-only {
@@ -41,6 +57,98 @@
 
     .panel-action-button__icon {
         @apply h-4 w-4 shrink-0;
+    }
+
+    .app-brand-title {
+        @apply text-brand-title;
+    }
+
+    .app-nav-link {
+        @apply flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-2;
+    }
+
+    .app-nav-link--active {
+        @apply bg-brand-nav text-white shadow-md;
+    }
+
+    .app-nav-link--inactive {
+        @apply text-brand-text/80 hover:bg-brand-nav/10 hover:text-brand-nav;
+    }
+
+    .app-nav-toggle {
+        @apply text-brand-text/70 transition hover:border-brand-nav hover:bg-brand-nav/10 hover:text-brand-nav;
+    }
+
+    .app-avatar-button {
+        @apply bg-brand-nav text-white;
+    }
+
+    .app-cta-button {
+        @apply inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-highlight/40;
+    }
+
+    .app-cta-button--highlight {
+        @apply border-brand-highlight bg-brand-highlight text-brand-text hover:bg-brand-highlight/90;
+    }
+
+    .app-cta-button--nav {
+        @apply border-brand-nav bg-brand-nav text-white hover:bg-brand-nav/90;
+    }
+
+    .app-cta-button--neutral {
+        @apply border-brand-secondary bg-brand-neutral text-brand-text/80 hover:bg-brand-secondary/20;
+    }
+
+    .app-directory-card--active {
+        @apply border-2 border-brand-nav/40;
+    }
+
+    .app-directory-avatar {
+        @apply bg-brand-nav/10 text-brand-nav;
+    }
+
+    .app-link-button {
+        @apply inline-flex rounded-xl border px-3 py-2 text-sm font-semibold transition;
+    }
+
+    .app-link-button--nav {
+        @apply border-brand-nav text-brand-nav hover:bg-brand-nav hover:text-white;
+    }
+
+    .app-hover-highlight {
+        @apply hover:text-brand-nav;
+    }
+
+    .app-quick-range-button {
+        @apply rounded-lg border px-3 py-1 text-sm font-semibold transition;
+    }
+
+    .app-quick-range-button--active {
+        @apply border-brand-nav bg-brand-nav text-white;
+    }
+
+    .app-quick-range-button--idle {
+        @apply border-brand-secondary text-brand-text/80 hover:bg-brand-nav/10 hover:text-brand-nav;
+    }
+
+    .app-breadcrumb {
+        @apply inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition;
+    }
+
+    .app-breadcrumb--static {
+        @apply border-brand-secondary bg-white text-brand-text/70;
+    }
+
+    .app-breadcrumb--interactive {
+        @apply border-brand-nav/30 bg-white text-brand-nav hover:border-brand-nav hover:bg-brand-nav/10;
+    }
+
+    .app-breadcrumb--active {
+        @apply border-brand-nav bg-brand-nav text-white shadow-sm;
+    }
+
+    .app-breadcrumb--compact {
+        @apply px-2 py-0.5 text-[10px];
     }
 }
 

@@ -54,10 +54,8 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
 
     const weekdayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     const presetButtonClass = {
-        active: 'rounded-lg border border-brand-primary bg-brand-primary px-3 py-1 text-sm '
-            + 'font-semibold text-white transition',
-        idle: 'rounded-lg border border-brand-secondary px-3 py-1 text-sm font-semibold '
-            + 'text-brand-text/80 transition hover:bg-brand-secondary/20',
+        active: 'app-quick-range-button app-quick-range-button--active',
+        idle: 'app-quick-range-button app-quick-range-button--idle',
     };
 
     const parseIsoDate = function parseIsoDate(value) {

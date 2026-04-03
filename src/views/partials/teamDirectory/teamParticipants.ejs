@@ -3,7 +3,7 @@
     <div class="js-inline-picker">
         <div class="flex items-center justify-between mb-3">
             <h2 class="font-heading text-xl font-bold text-brand-text">Team Participants</h2>
-            <button type="button" class="js-picker-toggle inline-flex items-center gap-1 rounded-lg border border-brand-primary px-2 py-1 text-xs font-semibold text-brand-primary bg-white hover:bg-brand-primary hover:text-white transition">
+            <button type="button" class="js-picker-toggle panel-action-button panel-action-button--small">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
                 Add
             </button>
@@ -23,7 +23,7 @@
                                 class="h-7 w-7 shrink-0 rounded-full border border-brand-secondary object-cover"
                             />
                         <% } else { %>
-                            <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[10px] font-bold text-brand-primary">
+                            <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
                                 <%= member.employee?.fullName ? member.employee.fullName.split(' ').map(n => n[0]).join('') : '?' %>
                             </div>
                         <% } %>
@@ -56,7 +56,7 @@
                     <input type="hidden" name="employeeId" class="js-picker-id" required />
                 </div>
                 <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
-                <button type="submit" class="mt-2 w-full rounded-xl border border-brand-primary text-brand-primary px-4 py-2 text-sm font-semibold hover:bg-brand-primary hover:text-white transition">Add to Team</button>
+                <button type="submit" class="panel-action-button mt-2 w-full">Add to Team</button>
             </form>
             <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableEmployees || []).map((emp) => ({ id: emp.id, label: emp.fullName }))) %></script>
         </div>

@@ -4,7 +4,7 @@
     <button
       id="mobileMenuToggle"
       type="button"
-      class="flex h-9 w-9 items-center justify-center rounded-lg border border-brand-secondary text-brand-text/70 transition hover:bg-brand-secondary/30 sm:h-10 sm:w-10 lg:hidden"
+      class="app-nav-toggle flex h-9 w-9 items-center justify-center rounded-lg border border-brand-secondary sm:h-10 sm:w-10 lg:hidden"
       aria-label="Open menu"
     >
       <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -18,7 +18,7 @@
       <div class="relative" data-account-menu>
         <button
           type="button"
-          class="flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary font-heading font-bold text-white"
+          class="app-avatar-button flex h-10 w-10 items-center justify-center rounded-full font-heading font-bold"
           data-account-menu-toggle
           aria-label="Open account menu"
           aria-expanded="false"
@@ -46,7 +46,7 @@
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" >
             <input
               type="submit"
-              class="w-full rounded-lg border border-brand-accent px-2 py-2 text-left text-sm font-semibold text-brand-accent transition hover:bg-brand-accent hover:text-white"
+              class="app-cta-button app-cta-button--nav w-full rounded-lg px-2 py-2 text-left"
               value="Sign out"
             />
           </form>

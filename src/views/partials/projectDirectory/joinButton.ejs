@@ -4,10 +4,10 @@
         <button
             type="submit"
             <%= projectMembership?.canToggle ? '' : 'disabled' %>
-            class="w-full rounded-xl border px-4 py-2 text-sm font-semibold transition <%= projectMembership?.canToggle
+            class="app-cta-button w-full <%= projectMembership?.canToggle
                 ? (projectMembership?.isMember
-                    ? 'border-brand-accent text-brand-accent hover:bg-brand-accent hover:text-white'
-                    : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/30')
+                    ? 'app-cta-button--neutral'
+                    : 'app-cta-button--highlight')
                 : 'cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50' %>"
         >
             <%= projectMembership?.buttonLabel || 'Join Project' %>

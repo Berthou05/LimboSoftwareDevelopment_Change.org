@@ -1,7 +1,7 @@
 /*
 Title: team.controller.js
-Last modification: March 24,2026
-Modified by: Hurtado, R.
+Last modification: April 3,2026
+Modified by: Alexis Berthou
 */
 
 const Team = require('../../models/team');
@@ -362,7 +362,7 @@ exports.getTeamPage = (request, response, next) => {
                 id: teamRow.team_id,
                 name: teamRow.name,
                 description: teamRow.description,
-                image: teamRow.image || null,
+                image: buildAvatarUrl(teamRow.name),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,

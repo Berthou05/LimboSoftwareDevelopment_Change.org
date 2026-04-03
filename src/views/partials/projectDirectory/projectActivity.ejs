@@ -3,19 +3,19 @@
     <div class="flex items-center justify-between gap-2">
         <h2 class="font-heading text-xl font-bold text-brand-text">Project Activity</h2>
         <div class="flex flex-wrap items-center justify-end gap-2">
-            <a href="<%= `${projectPath}?activityPreset=today` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'today' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+            <a href="<%= `${projectPath}?activityPreset=today` %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Today
             </a>
-            <a href="<%= `${projectPath}?activityPreset=week` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'week' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+            <a href="<%= `${projectPath}?activityPreset=week` %>" class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Week
             </a>
-            <a href="<%= `${projectPath}?activityPreset=month` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'month' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+            <a href="<%= `${projectPath}?activityPreset=month` %>" class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Month
             </a>
-            <a href="<%= `${projectPath}?activityPreset=quarter` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'quarter' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+            <a href="<%= `${projectPath}?activityPreset=quarter` %>" class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Quarter
             </a>
-            <a href="<%= `${projectPath}?activityPreset=all` %>" class="rounded-full border px-3 py-1 text-xs font-semibold transition <%= activityFilter?.preset === 'all' ? 'border-yellow-400 bg-yellow-300 text-white shadow-sm' : 'border-brand-secondary text-brand-text/70 hover:bg-white' %>">
+            <a href="<%= `${projectPath}?activityPreset=all` %>" class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 All
             </a>
         </div>
@@ -39,7 +39,7 @@
             <p class="sticky top-0 bg-white py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text/40"><%= section.dayLabel %></p>
             <% section.items.forEach((item) => { %>
                 <div class="flex items-start gap-2 rounded-lg px-2 py-2 transition hover:bg-brand-bg/50">
-                    <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/10 text-[9px] font-bold text-brand-primary">
+                    <div class="app-directory-avatar flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold">
                         <%= item.authorInitials || '?' %>
                     </div>
                     <div class="min-w-0 flex-1">

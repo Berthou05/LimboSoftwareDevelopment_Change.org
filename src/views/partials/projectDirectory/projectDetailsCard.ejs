@@ -9,7 +9,7 @@
             <% if (projectImage) { %>
                 <img src="<%= projectImage %>" alt="<%= project?.name || 'Project' %>" class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover" />
             <% } else { %>
-                <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold text-brand-primary">
+                <div class="app-directory-avatar flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold">
                     <%= (project?.name || 'P').trim().charAt(0).toUpperCase() %>
                 </div>
             <% } %>
@@ -27,16 +27,16 @@
         }) %>
     </div>
     <div class="flex flex-wrap gap-2 text-xs text-brand-text/70">
-        <span class="inline-flex rounded-full border border-brand-secondary px-3 py-1 font-semibold">
+        <span class="app-breadcrumb app-breadcrumb--static">
             <%= project?.status || 'Unknown' %>
         </span>
-        <span class="inline-flex rounded-full border border-brand-secondary px-3 py-1 font-semibold">
+        <span class="app-breadcrumb app-breadcrumb--static">
             Lead: <%= leadName %>
         </span>
-        <span class="inline-flex rounded-full border border-brand-secondary px-3 py-1 font-semibold">
+        <span class="app-breadcrumb app-breadcrumb--static">
             Start: <%= project?.startDateLabel || 'N/A' %>
         </span>
-        <span class="inline-flex rounded-full border border-brand-secondary px-3 py-1 font-semibold">
+        <span class="app-breadcrumb app-breadcrumb--static">
             End: <%= project?.endDateLabel || 'In progress' %>
         </span>
     </div>

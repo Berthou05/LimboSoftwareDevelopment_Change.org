@@ -1,6 +1,6 @@
 <%
     const cardClasses = team.isMember
-        ? 'border-2 border-brand-primary'
+        ? 'app-directory-card--active'
         : 'border border-brand-secondary';
     const placeholderInitials = (team.name || 'T')
         .trim()
@@ -21,8 +21,8 @@
             />
         <% } else { %>
             <div
-                class="flex h-14 w-14 items-center justify-center rounded-xl bg-brand-bg
-                    text-lg font-bold text-brand-primary"
+                class="app-directory-avatar flex h-14 w-14 items-center justify-center rounded-xl bg-brand-bg
+                    text-lg font-bold"
             >
                 <%= placeholderInitials %>
             </div>
@@ -37,8 +37,7 @@
     </p>
     <a
         href="/teams/<%= team.id %>"
-        class="mt-4 inline-flex rounded-xl border border-brand-primary px-3 py-2 text-sm
-            font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white"
+        class="app-link-button app-link-button--nav mt-4"
     >
         Open team
     </a>
