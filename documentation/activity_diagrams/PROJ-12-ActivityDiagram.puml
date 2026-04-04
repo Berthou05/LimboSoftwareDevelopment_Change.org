@@ -3,25 +3,29 @@ skinparam activityFlowDirection Down
 
 |User|
 start
-:Open Projects section;
+:Selects a Project page;
 
 |System|
-:Retrieve projects;
-
-|User|
-:Show projects;
-:Select project;
-
+:Sends a query to retrieve the Project Achievements;
+|Database|
+:Returns the achievements information;
 |System|
-:Retrieve project achievements;
+if(Did the system receive an error from the database?)is(yes)then
+  |User|
+  :Show error message ‘Error while obtaining project achievements;
+  stop
+|System|
+else(no)
+  if(Does the Project have Achievements?)is(yes)then
 
-if (Achievements exist?) then (Yes)
-  |User|
-  :Show achievements;
-else (No)
-  |User|
-  :Show "No achievements";
+  else(no)
+  :Stores the message: "This project has no achievements.";
+  endif
 endif
+:Processes the achievements data;
+:Renders the Project page;
+|User|
+:Visualizes the Project page;
 
 stop
 @enduml

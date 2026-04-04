@@ -7,10 +7,18 @@ start
 :Generates a confirmation dialog for the deletion;
 
 |User|
-:Confirms deletion by clicking the "Confirm" button;
+:Clicks a button;
 
-|System|
-:Sends a query to delete the ProjectAchievement object;
+if(Did the User click the ‘Confirm’ button?)is(yes)then
+    |System|
+    :Sends a query to delete the ProjectAchievement object;
+else(no)
+    |System|
+    :Close pop-up;
+    stop
+endif
+
+
 
 |Database|
 :Deletes the ProjectAchievement object;
@@ -26,12 +34,19 @@ endif
 
 |Database|
 :Returns the Project information;
-
+|System|
+if(Did the database return an error?)is(yes)then
+    |User|
+    :Show error message Achievement deletion has failed”;
+    stop
+  else(no)
+  endif
 |System|
 :Renders the Project Page with updated information;
 
 |User|
 :Sees the Project Page without the deleted Achievement;
+:Display success message;
 
 stop
 @enduml

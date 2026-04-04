@@ -10,41 +10,135 @@ database "unitas_system" as BD
 
 autonumber
 
-activate U
+actor "User" as U
 
-U -> V: Hover/Click over "Team Information" button
-activate V
-V -> V: showTeamInfo()
-V ->> RO: fetch('/team/info/${team_id}', {\n method:'GET',\n headers:{'Accept':'application/json'}\n})
-deactivate V
+boundary "home.ejs" as HV
+boundary "home.routes" as HRO
+control "home.controller" as HC
 
-activate RO
-RO -> C: getTeamInfo(request, response)
-deactivate RO
+boundary "team.ejs" as TV
+boundary "team.routes" as TRO
+control "team.controller" as TC
 
-activate C
-C -> T: getTeamInfo(team_id)
-activate T
-T -> BD: execute("SELECT * FROM team WHERE team_id = ?", [team_id])
-activate BD
-BD --> T: info
-deactivate BD
-T --> C: info
-deactivate T
-C --> V: response.json({ body: info })
-deactivate C
+boundary "project.ejs" as PV
+boundary "project.routes" as PRO
+control "project.controller" as PC
 
-activate V
-V -> V: createInfoPopover(info)
-V --> U: Updated view
-deactivate V
+boundary "employeeDetails.ejs" as EV
+boundary "employee.routes" as ERO
+control "employee.controller" as EC
 
-opt Close Information
-    U -> V: Clicks or hovers outside "Team Information"
-    activate V
-    V -> V: closePopover()
-    V --> U: Updated view
-    deactivate V
+entity "activity.model" as A
+database "unitas_system" as DB
+
+alt User opens Home
+    U -> HRO: GET /home
+    activate HRO
+    HRO -> HC: getHome(request, response)
+    activate HC
+
+    HC -> A: fetchByEmployeeBtw(session.employeeId, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT employee activity rows
+    activate DB
+    DB --> A: latest self activity rows
+    deactivate DB
+    A --> HC: latest self activity rows
+    deactivate A
+
+    HC -> A: getTeamActivitiesFromEmpBtw(session.employeeId, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT team activity rows\nfor the employee teams
+    activate DB
+    DB --> A: team activity rows
+    deactivate DB
+    A --> HC: team activity rows
+    deactivate A
+
+    HC -> HC: build latestActivitySections\nbuild teamActivitySections
+    HC --> HRO: render('pages/home', {latestActivitySections, teamActivitySections})
+    deactivate HC
+    HRO --> HV: HTML response
+    deactivate HRO
+    HV -> HV: Render "Your Latest Activity"\nRender "Team Activity"
+
+else User opens Team
+    U -> TRO: GET /teams/:team_id
+    activate TRO
+    TRO -> TC: getTeamPage(request, response)
+    activate TC
+
+    TC -> A: getTeamMembersActivities(team_id)
+    activate A
+    A -> DB: SELECT team member activity rows
+    activate DB
+    DB --> A: team activity rows
+    deactivate DB
+    A --> TC: team activity rows
+    deactivate A
+
+    TC -> TC: build activitySections
+    TC --> TRO: render('pages/team', {activitySections})
+    deactivate TC
+    TRO --> TV: HTML response
+    deactivate TRO
+    TV -> TV: Render "Team Activity"
+
+else User opens Project
+    U -> PRO: GET /projects/:project_id[?activityPreset|startDate|endDate]
+    activate PRO
+    PRO -> PC: getProjectPage(request, response)
+    activate PC
+    PC -> PC: resolveActivityFilter(request.query)
+
+    alt Project activity filter applied
+        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
+        activate A
+        A -> DB: SELECT project activity rows\nwithin selected range
+        activate DB
+        DB --> A: filtered project activity rows
+        deactivate DB
+        A --> PC: filtered project activity rows
+        deactivate A
+    else Default project activity
+        PC -> A: fetchByProject(project_id)
+        activate A
+        A -> DB: SELECT all project activity rows
+        activate DB
+        DB --> A: project activity rows
+        deactivate DB
+        A --> PC: project activity rows
+        deactivate A
+    end
+
+    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
+    PC --> PRO: render('pages/project', {activitySections, activityFilter})
+    deactivate PC
+    PRO --> PV: HTML response
+    deactivate PRO
+    PV -> PV: Render "Project Activity"
+
+else User opens Employee details
+    U -> ERO: GET /employees/:employee_id
+    activate ERO
+    ERO -> EC: getEmployeePage(request, response)
+    activate EC
+
+    EC -> A: fetchByEmployeeBtw(employee_id, latestRangeStart, latestRangeEnd)
+    activate A
+    A -> DB: SELECT employee activity rows
+    activate DB
+    DB --> A: latest self activity rows
+    deactivate DB
+    A --> EC: latest self activity rows
+    deactivate A
+
+    EC -> EC: build activitySections
+    EC --> ERO: render('pages/employeeDetails', {activitySections})
+    deactivate EC
+    ERO --> EV: HTML response
+    deactivate ERO
+    EV -> EV: Render self "Latest Activity"
 end
 
 deactivate U

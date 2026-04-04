@@ -47,7 +47,7 @@ end if
 |Database|
 :Returns queries response;
 |System|
-:Renders the Team Page with updated information;
+:Updates the Team Page with updated information;
 |User|
 :Displays a success message;
 stop

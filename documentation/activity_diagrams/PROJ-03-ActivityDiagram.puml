@@ -7,37 +7,35 @@ start
 :Displays confirmation modal;
 
 |User|
-if (Confirms deletion?) then (yes)
+if (Confirms deletion?) is (yes) then
     |System|
-    :Sends deletion request (project_id);
-    
-    |Database|
-    :Executes DELETE/ARCHIVE query;
-    |System|
-    :Returns success/failure status;
-    
-    |System|
-    if (Success?) then (yes)
-        :Redirects to Projects Dashboard;
-        |User|
-        :Displays
-        "Project Deleted
-        Successfully" notification;
-    else (no)
-        |System|
-        :Generates error log;
-        |User|
-        :Displays
-        "Error: Could not
-        delete project" message;
-    endif
+    :Sends a deletion request with the project_id to the Database;
 else (no)
     |System|
     :Closes modal;
     |User|
     :Displays Project Details page (no changes);
+    stop
 endif
 
+
+    
+    |Database|
+    :removes the project record and its relational dependencies (participants/tasks);
+    
+    |System|
+    if (Did the System receive an error from the database?) is (no) then
+
+    else(yes)
+        |User|
+        :Displays 'Error: Could not delete project' message;
+        stop
+    endif
+
+
+|System|
+:Updates the Project page;
 |User|
+:Displays 'Project Deleted Successfully' notification;
 stop
 @enduml

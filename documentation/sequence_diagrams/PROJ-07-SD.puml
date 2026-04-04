@@ -1,4 +1,13 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "project_details.ejs" as V
+boundary "routes" as RO
+control "project.controller" as C
+entity "Project.model" as M
+database "unitas_system" as BD
+
 autonumber
 skinparam Style strictuml
 

@@ -1,15 +1,7 @@
 @startuml
 skinparam conditionStyle diamond
 
-|User (Admin)|
-start
-:Navigates to the **Roles** section;
-
-|System|
-:Renders the **Roles Administration** table;
-:Displays toggle switches for each privilege;
-
-|User (Admin)|
+|Admin|
 :Toggles a specific Privilege switch;
 
 |System|
@@ -22,16 +14,14 @@ start
 |System|
 if (Update Successful?) then (yes)
     :Confirms record update;
-    |System|
-    :Displays success notification;
     :Refreshes toggle state in the UI;
+    |Admin|
+    :Displays success notification;
 else (no)
-    |Database|
-    :Returns error (Conflict or Connection error);
     |System|
-    :Displays error message;
     :Reverts toggle switch to previous state;
+    |Admin|
+    :Displays error message;
 endif
-
 stop
 @enduml

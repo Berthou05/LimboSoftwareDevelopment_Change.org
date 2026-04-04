@@ -1,32 +1,63 @@
 @startuml
+skinparam style strictuml
+
+actor User as U
+boundary "login.ejs" as V
+boundary "routes" as RO
+control "auth.controller" as C
+entity "User.model" as M
+database "unitas_system" as BD
+
 autonumber
-skinparam Style strictuml
 
-actor User
-participant "System" as Sys
-database "Database" as DB
+== User Sign In ==
 
-User -> Sys: Enters company email and password
-User -> Sys: Clicks "Sign In" button
-activate Sys
+activate U
+U -> V: Enters company email and password
+U -> V: Clicks "Sign In" button
+deactivate U
 
-Sys -> Sys: Validates input format
-Sys -> DB: Requests user credentials
-activate DB
+activate V
+V -> V: validatesInputFormat()
+V -> RO: fetch('/auth/login', {method: POST, body: credentials})
+deactivate V
 
-DB -> DB: Searches for user record
-DB --> Sys: Returns user data, hashed password, and role
-deactivate DB
+activate RO
+RO -> C: login(request, response)
+deactivate RO
+
+activate C
+C -> M: fetchUserByEmail(email)
+activate M
+
+M -> BD: execute('SELECT * FROM user WHERE email = ?', [email])
+activate BD
+BD --> M: user_record (includes hashed_password and role)
+deactivate BD
+
+M --> C: user_record
+deactivate M
 
 alt Credentials valid? (yes)
-    Sys -> Sys: Generates session token
-    Sys -> Sys: Determines Role (Admin, Lead, or Employee)
-    Sys -> Sys: Redirects to role-specific Dashboard
-    Sys --> User: Displays home page
+    C -> C: comparePassword(input, hashed)
+    C -> C: generateSessionToken()
+    C -> C: determineRole(Admin, Lead, or Employee)
+    
+    C -> V: response.json({success: true, redirect: '/dashboard'})
+    activate V
+    V -> V: redirectToRoleSpecificDashboard()
+    V -> U: Displays home page / Dashboard
+    deactivate V
+    
 else Credentials valid? (no)
-    Sys -> Sys: Clears password field
-    Sys --> User: Displays "Invalid Credentials" message
+    C -> V: response.json({success: false, error: 'Invalid Credentials'})
+    activate V
+    V -> V: clearsPasswordField()
+    V -> V: displayErrorMessage("Invalid Credentials")
+    V -> U: Displays "Invalid Credentials" message
+    deactivate V
 end
 
-deactivate Sys
+deactivate C
+
 @enduml

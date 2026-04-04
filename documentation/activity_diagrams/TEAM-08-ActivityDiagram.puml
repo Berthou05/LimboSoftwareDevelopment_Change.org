@@ -3,31 +3,34 @@ skinparam activityFlowDirection Down
 
 |User|
 start
-:Open Teams section;
+:Accesses the Team page;
 
 |System|
-:Retrieve teams;
+:Retrieves team_id from the Team page;
+:Gathers projects through queries;
 
-|User|
-:Show teams;
-:Select team;
-
-|System|
-:Retrieve team details;
-
-|User|
-:Show team details;
+|Database|
+:Returns the project's information;
 
 |System|
-:Check projects;
-
-if (Projects exist?) then (Yes)
+if(Did the system receive an error from the database?)is(yes)then
   |User|
-  :Show team projects;
-else (No)
-  |User|
-  :Show "No projects";
+  :Show error message ‘Error while obtaining team projects’;
+  stop
+|System|
+else(no)
+  if(Did the System receive more than one project information?)is(yes)then
+
+  else(no)
+    :Store text “There are no projects in the current team”;
+  endif
 endif
+
+|System|
+:Renders Team page;
+
+|User|
+:Visualized Team page;
 
 stop
 @enduml

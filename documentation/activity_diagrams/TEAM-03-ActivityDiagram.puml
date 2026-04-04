@@ -1,37 +1,54 @@
 @startuml
-skinparam ActivityDiamondMaxWidth 100
-skinparam Padding 5
-
-|User|
+|Lead|
 start
-:Selects "Delete Team";
-
+:Clicks the “Delete” button in the Team page;
 |System|
-:Displays warning modal;
-note right: Projects will not\nbe deleted
+:Generates a confirmation popup;
+|Lead|
+:Clicks a button;
+|System|
+if(Did the Lead click the “Confirmation” button?)is(yes)then
 
-|User|
-if (Confirms permanent deletion?) then (yes)
-    |System|
-    :Sends deactivation request (team_id);
-    
-    |Database|
-    :Sets Team status to 'Inactive';
-    :Unlinks active member associations;
-    :Returns success status;
-    
-    |System|
-    :Removes Team from navigation menu;
-    :Redirects to Global Dashboard;
-    |User|
-    :Displays "Team successfully removed" message;
-else (no)
-    |System|
-    :Closes modal;
-    |User|
-    :Displays Team Settings (no changes);
+else(no)
+    if(Did the User click the “Cancel” button?)is(yes)then
+        stop
+    else(no)
+        stop
+        note right
+        Return to Did the Lead click
+        the “Confirmation” button
+        end note
+    endif
 endif
 
-|User|
+|System|
+:Sends a modify record request to the database;
+|Database|
+:Changes status of the Team from teams;
+|System|
+if( Did the database return an error?)is(yes)then
+    |Lead|
+    :Show error message 'Team deletion has failed';
+    stop
+    |System|
+else(no)
+endif
+
+|System|
+:Gathers Teams of the Lead through queries;
+|Database|
+:Returns the Teams information;
+|System|
+if( Did the database return an error?)is(yes)then
+    |Lead|
+    :Show error message 'TIntermediate Team cound not load';
+    stop
+
+else(no)
+endif
+|System|
+:Renders the Intermediate Team page with updated information;
+|Lead|
+:Display a success message;
 stop
 @enduml
