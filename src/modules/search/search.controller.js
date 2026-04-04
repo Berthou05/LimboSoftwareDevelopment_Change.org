@@ -4,6 +4,8 @@ Last modification: March 24,2026
 Modified by: Hurtado, R.
 */
 
+//? Function to handle global search is required.
+
 exports.getSearch = (request, response, next) => {
     return response.render('pages/search',{
         csrfToken: request.csrfToken(),
