@@ -1,9 +1,9 @@
-/*! tailwindcss v4.2.2 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.2.1 | MIT License | https://tailwindcss.com */
 @layer properties;
 @layer theme, base, components, utilities;
 @layer theme {
   :root, :host {
-    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    --font-sans: "Commissioner", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
@@ -232,8 +232,8 @@
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
-    --color-brand-text: #040316;
-    --color-brand-bg: #fbfbfe;
+    --color-brand-text: #403A49;
+    --color-brand-bg: #ffffff;
     --color-brand-primary: #ffdb00;
     --color-brand-secondary: #c8c6c7;
     --color-brand-accent: #ffcc00;
@@ -241,7 +241,7 @@
     --color-brand-highlight: #fbd14b;
     --color-brand-title: #f34e49;
     --color-brand-neutral: #ffffff;
-    --font-heading: "Sora", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Commissioner", ui-sans-serif, system-ui, sans-serif;
   }
 }
 @layer base {
@@ -892,19 +892,19 @@
     background-color: var(--color-brand-bg);
   }
   .bg-brand-bg\/30 {
-    background-color: color-mix(in srgb, #fbfbfe 30%, transparent);
+    background-color: color-mix(in srgb, #ffffff 30%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-brand-bg) 30%, transparent);
     }
   }
   .bg-brand-bg\/60 {
-    background-color: color-mix(in srgb, #fbfbfe 60%, transparent);
+    background-color: color-mix(in srgb, #ffffff 60%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-brand-bg) 60%, transparent);
     }
   }
   .bg-brand-bg\/90 {
-    background-color: color-mix(in srgb, #fbfbfe 90%, transparent);
+    background-color: color-mix(in srgb, #ffffff 90%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-brand-bg) 90%, transparent);
     }
@@ -1225,7 +1225,7 @@
     opacity: 0%;
   }
   .shadow-panel {
-    --tw-shadow: 0 0.875rem 2.1875rem var(--tw-shadow-color, rgba(4, 3, 22, 0.08));
+    --tw-shadow: 0 0 var(--tw-shadow-color, #0000);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .shadow-sm {
@@ -1354,7 +1354,7 @@
   .hover\:bg-brand-bg\/50 {
     &:hover {
       @media (hover: hover) {
-        background-color: color-mix(in srgb, #fbfbfe 50%, transparent);
+        background-color: color-mix(in srgb, #ffffff 50%, transparent);
         @supports (color: color-mix(in lab, red, red)) {
           background-color: color-mix(in oklab, var(--color-brand-bg) 50%, transparent);
         }
@@ -1476,7 +1476,7 @@
   }
   .max-lg\:shadow-panel {
     @media (width < 64rem) {
-      --tw-shadow: 0 0.875rem 2.1875rem var(--tw-shadow-color, rgba(4, 3, 22, 0.08));
+      --tw-shadow: 0 0 var(--tw-shadow-color, #0000);
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
@@ -1607,7 +1607,7 @@
 /*! tailwindcss v4.0.15 | MIT License | https://tailwindcss.com */
 @layer theme {
   :root,:host {
-    --font-sans: "Inter","ui-sans-serif","system-ui","-apple-system","system-ui","Segoe UI","Roboto","Helvetica Neue","Arial","Noto Sans","sans-serif","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    --font-sans: "Commissioner","ui-sans-serif","system-ui","-apple-system","system-ui","Segoe UI","Roboto","Helvetica Neue","Arial","Noto Sans","sans-serif","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
     --font-mono: "ui-monospace","SFMono-Regular","Menlo","Monaco","Consolas","Liberation Mono","Courier New","monospace";
     --color-red-50: oklch(97.1% .013 17.38);
     --color-red-100: oklch(93.6% .032 17.717);
@@ -1828,7 +1828,7 @@
     --blur-xs: 4px;
     --default-transition-duration: .15s;
     --default-transition-timing-function: cubic-bezier(.4,0,.2,1);
-    --font-body: "Inter","ui-sans-serif","system-ui","-apple-system","system-ui","Segoe UI","Roboto","Helvetica Neue","Arial","Noto Sans","sans-serif","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    --font-body: "Commissioner","ui-sans-serif","system-ui","-apple-system","system-ui","Segoe UI","Roboto","Helvetica Neue","Arial","Noto Sans","sans-serif","Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
     --spacing-2xl: 16rem;
     --spacing-8xl: 90rem;
   }
@@ -9898,8 +9898,6 @@
   .app-nav-link--active {
     background-color: var(--color-brand-nav);
     color: var(--color-white);
-    --tw-shadow: 0 4px 6px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 2px 4px -2px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .app-nav-link--inactive {
     color: color-mix(in srgb, #040316 80%, transparent);
@@ -10163,13 +10161,16 @@
     border-color: var(--color-brand-nav);
     background-color: var(--color-brand-nav);
     color: var(--color-white);
-    --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1));
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
   .app-breadcrumb--compact {
     padding-inline: calc(var(--spacing) * 2);
     padding-block: calc(var(--spacing) * 0.5);
     font-size: 10px;
+  }
+}
+@layer utilities {
+  .shadow-sm, .shadow-md, .shadow-xl, .shadow-panel {
+    box-shadow: none !important;
   }
 }
 @property --tw-space-y-reverse {

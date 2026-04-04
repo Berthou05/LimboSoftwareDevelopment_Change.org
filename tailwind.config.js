@@ -5,7 +5,7 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          text: '#040316',
+          text: '#403A49',
           bg: '#fbfbfe',
           primary: '#ffdb00',
           secondary: '#c8c6c7',
@@ -14,19 +14,19 @@ module.exports = {
           highlight: '#fbd14b',
           title: '#f34e49',
           neutral: '#ffffff',
-          'base-100': '#fbfbfe',
-          'base-200': '#f3f3f9',
-          'base-300': '#e7e7f2',
+          'base-100': '#ffffff',
+          'base-200': '#ffffff',
+          'base-300': '#ffffff',
         },
       },
       fontFamily: {
-        sans: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        heading: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        body: ['Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Commissioner', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Commissioner', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['Commissioner', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        body: ['Commissioner', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        panel: '0 14px 35px rgba(4, 3, 22, 0.08)',
+        panel: '0 0 #0000',
       },
     },
   },

@@ -1,7 +1,7 @@
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
     <% const projectPath = `/projects/${project?.id || project?.project_id || ''}`; %>
     <div class="flex items-center justify-between gap-2">
-        <h2 class="font-heading text-xl font-bold text-brand-text">Project Activity</h2>
+        <h2 class="font-heading text-xl font-semibold text-brand-text">Project Activity</h2>
         <div class="flex flex-wrap items-center justify-end gap-2">
             <a href="<%= `${projectPath}?activityPreset=today` %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Today

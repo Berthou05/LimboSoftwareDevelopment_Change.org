@@ -3,8 +3,8 @@
 @import "flowbite";
 
 @theme {
-    --color-brand-text: #040316;
-    --color-brand-bg: #fbfbfe;
+    --color-brand-text: #403A49;
+    --color-brand-bg: #ffffff;
     --color-brand-primary: #ffdb00;
     --color-brand-secondary: #c8c6c7;
     --color-brand-accent: #ffcc00;
@@ -12,14 +12,14 @@
     --color-brand-highlight: #fbd14b;
     --color-brand-title: #f34e49;
     --color-brand-neutral: #ffffff;
-    --color-brand-base-100: #fbfbfe;
-    --color-brand-base-200: #f3f3f9;
-    --color-brand-base-300: #e7e7f2;
+    --color-brand-base-100: #ffffff;
+    --color-brand-base-200: #ffffff;
+    --color-brand-base-300: #ffffff;
 
-    --font-heading: "Sora", ui-sans-serif, system-ui, sans-serif;
-    --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: "Commissioner", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Commissioner", ui-sans-serif, system-ui, sans-serif;
 
-    --shadow-panel: 0 0.875rem 2.1875rem rgba(4, 3, 22, 0.08);
+    --shadow-panel: 0 0 #0000;
 }
 
 @layer components {
@@ -68,7 +68,7 @@
     }
 
     .app-nav-link--active {
-        @apply bg-brand-nav text-white shadow-md;
+        @apply bg-brand-nav text-white;
     }
 
     .app-nav-link--inactive {
@@ -144,11 +144,20 @@
     }
 
     .app-breadcrumb--active {
-        @apply border-brand-nav bg-brand-nav text-white shadow-sm;
+        @apply border-brand-nav bg-brand-nav text-white;
     }
 
     .app-breadcrumb--compact {
         @apply px-2 py-0.5 text-[10px];
+    }
+}
+
+@layer utilities {
+    .shadow-sm,
+    .shadow-md,
+    .shadow-xl,
+    .shadow-panel {
+        box-shadow: none !important;
     }
 }
 
