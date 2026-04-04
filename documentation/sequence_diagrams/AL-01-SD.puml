@@ -1,128 +1,115 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "Slack Automation" as S
-boundary "dailyentry.routes" as RO
-control "dailyentry.controller" as C
-control "dailyentry.service" as SV
-entity "account.model" as A
-entity "employee.model" as E
-entity "dailyentry.model" as D
-entity "activity.model" as AC
-entity "ai.service" as AI
-database "unitas_system" as DB
+actor    "Slack Automation"        as Slack
+boundary "dailyentry.routes"       as Routes
+control  "dailyentry.controller"   as Controller
+entity   "account.repository"      as AccountRepository
+entity   "dailyentry.repository"   as DailyEntryRepository
+entity   "activity.repository"     as ActivityRepository
+entity   "ai.provider"             as AIProvider
+database "unitas_system"           as DB
 
-S -> RO: POST /daily-entries/slack\nJSON payload
-activate RO
-RO -> C: submitFromSlack(request, response)
-activate C
-C -> SV: submitFromSlack(payload)
-activate SV
-SV -> SV: validateRequiredFields(source, slackUserId, date,\ndidToday, doingTomorrow, blockers)
+activate Slack
+Slack      ->  Routes     : POST /daily-entries/slack\n{slack_username, entry_date,\ndone, to_do, blockers,\nslack_standup_URL}
+activate Routes
+Routes     ->  Controller : submitFromSlack(req, res)
+activate Controller
 
-alt Payload invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: 400 invalid payload
-deactivate C
-RO --> S: 400 {success:false,error:"Invalid payload"}
-deactivate RO
-else Payload valid
-SV -> A: findBySlackUserId(payload.slackUserId)
-activate A
-A -> DB: SELECT id, slack_user_id\nFROM account\nWHERE slack_user_id = ?
-activate DB
-DB --> A: account row / null
-deactivate DB
-A --> SV: account / null
-deactivate A
+Controller ->  Controller : validateSlackSignature(req.headers)
 
-alt Account not found
-SV --> C: 404 account not found
-deactivate SV
-C --> RO: error result
-deactivate C
-RO --> S: 404 {success:false,error:"Account not found"}
-deactivate RO
-else Account found
-SV -> E: findByAccountId(account.id)
-activate E
-E -> DB: SELECT id, account_id\nFROM employee\nWHERE account_id = ?
-activate DB
-DB --> E: employee row / null
-deactivate DB
-E --> SV: employee / null
-deactivate E
+alt Invalid signature
+    Controller --> Routes : throw 401
+    Routes     --> Slack  : HTTP 401 Unauthorized
 
-alt Employee not found
-SV --> C: 404 employee not found
-deactivate SV
-C --> RO: error result
-deactivate C
-RO --> S: 404 {success:false,error:"Employee not found"}
-deactivate RO
-else Employee found
-SV -> D: findByEmployeeAndDate(employee.id, payload.date)
-activate D
-D -> DB: SELECT id\nFROM dailyentry\nWHERE employee_id = ? AND entry_date = ?
-activate DB
-DB --> D: existing entry / null
-deactivate DB
-D --> SV: existing entry / null
-deactivate D
+else Valid signature
 
-alt Duplicate daily entry
-SV --> C: 409 duplicate entry
-deactivate SV
-C --> RO: duplicate result
-deactivate C
-RO --> S: 409 {success:false,error:"Daily entry already exists"}
-deactivate RO
-else Entry not found
-SV -> D: create(employee.id, payload.date,\npayload.didToday, payload.doingTomorrow, payload.blockers)
-activate D
-D -> DB: INSERT INTO dailyentry(employee_id, entry_date, did_today,\ndoing_tomorrow, blockers, source)\nVALUES (?, ?, ?, ?, ?, 'slack_workflow')
-activate DB
-DB --> D: inserted dailyentry id
-deactivate DB
-D --> SV: dailyentry
-deactivate D
+    Controller ->  AccountRepository : findBySlackUsername(slack_username)
+    activate AccountRepository
+    AccountRepository ->  DB               : SELECT account_id, employee_id, status\nFROM account\nWHERE slack_username = ?
+    activate DB
+    DB                --> AccountRepository : account | null
+    deactivate DB
+    AccountRepository --> Controller        : account | null
+    deactivate AccountRepository
 
-SV -> AI: generateActivities(didToday, doingTomorrow, blockers)
-activate AI
-AI --> SV: aiResponse / error
-deactivate AI
-SV -> SV: validateAiResponse(aiResponse)
+    alt Account not found or DISABLED
+        Controller --> Routes : throw 404
+        Routes     --> Slack  : HTTP 404 Not Found
 
-alt AI response invalid or AI request failed
-SV --> C: partial success with dailyentry
-deactivate SV
-C --> RO: 202 partial success
-deactivate C
-RO --> S: 202 {success:true,status:"partial_success",\ndailyEntrySaved:true,activitiesSaved:0}
-deactivate RO
-else AI response valid
-loop For each generated activity
-SV -> AC: create(dailyentry.id, activity)
-activate AC
-AC -> DB: INSERT INTO activity(dailyentry_id, description,\ncategory, confidence_score)\nVALUES (?, ?, ?, ?)
-activate DB
-DB --> AC: inserted activity id
-deactivate DB
-AC --> SV: activity saved
-deactivate AC
+    else Account active
+
+        Controller ->  DailyEntryRepository : findByEmployeeAndDate\n(employee_id, entry_date)
+        activate DailyEntryRepository
+        DailyEntryRepository ->  DB                  : SELECT entry_id FROM dailyentry\nWHERE employee_id = ?\nAND entry_date = ?
+        activate DB
+        DB                   --> DailyEntryRepository : entry | null
+        deactivate DB
+        DailyEntryRepository --> Controller            : entry | null
+        deactivate DailyEntryRepository
+
+        alt Entry already exists for today
+            Controller --> Routes : throw 409
+            Routes     --> Slack  : HTTP 409 Conflict
+
+        else No duplicate
+
+            Controller ->  DailyEntryRepository : create(employee_id, entry_date,\nto_do, done, blockers,\nslack_standup_URL)
+            activate DailyEntryRepository
+            DailyEntryRepository ->  DB                  : INSERT INTO dailyentry\n(entry_id, employee_id, entry_date,\nto_do, done, blockers,\nslack_standup_URL)
+            activate DB
+            DB                   --> DailyEntryRepository : entry_id
+            deactivate DB
+            DailyEntryRepository --> Controller            : entry_id
+            deactivate DailyEntryRepository
+
+            Controller --> Routes : 202 Accepted {entry_id}
+            Routes     --> Slack  : HTTP 202 Accepted
+
+            Controller ->> AIProvider : extractActivities\n(entry_id, done, to_do, blockers)
+            activate AIProvider
+            AIProvider --> Controller : activities[] | error
+            deactivate AIProvider
+
+            alt AI extraction failed
+                Controller -> Controller : logFailure(entry_id, error)
+                note right of Controller
+                    Daily entry is preserved.
+                    Only extraction failed.
+                end note
+
+            else Activities extracted
+
+                loop for each extracted activity
+                    Controller ->  ActivityRepository : findProjectMatch\n(activity.project_hint)
+                    activate ActivityRepository
+                    ActivityRepository ->  DB                 : SELECT project_id FROM project\nWHERE name LIKE ?\nAND status <> 'DISABLED'
+                    activate DB
+                    DB                 --> ActivityRepository  : project_id | null
+                    deactivate DB
+                    ActivityRepository --> Controller          : project_id | null
+                    deactivate ActivityRepository
+
+                    Controller ->  ActivityRepository : create(entry_id, employee_id,\nproject_id, title, description)
+                    activate ActivityRepository
+                    ActivityRepository ->  DB                 : INSERT INTO activity\n(activity_id, entry_id,\nemployee_id, project_id,\ntitle, description)
+                    activate DB
+                    DB                 --> ActivityRepository  : activity_id
+                    deactivate DB
+                    ActivityRepository --> Controller          : activity_id
+                    deactivate ActivityRepository
+                end
+
+            end
+        end
+    end
 end
 
-SV --> C: success with dailyentry and activities
-deactivate SV
-C --> RO: 201 created
-deactivate C
-RO --> S: 201 {success:true,status:"success",\ndailyEntrySaved:true,activitiesSaved:n}
-deactivate RO
-end
-end
-end
-end
+deactivate Controller
+deactivate Routes
+deactivate Slack
 
 @enduml
