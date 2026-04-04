@@ -273,15 +273,17 @@ exports.getEmployeePage = (request, response, next)=>{
             activityPromise.then(([activities,fieldData])=>{
                 Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
 
+                    //Normalization of the Projets
                     const projectRows = employee_projects.map(proj => ({
                         project: {
                             id: proj.project_id,
-                            name: proj.name // make sure your query returns this
+                            name: proj.name 
                         },
-                        roleName: proj.coll_description || 'MEMBER', // adjust to your column
-                        startDateLabel: formatDayLabel(proj.started_at) // or correct field
+                        roleName: proj.coll_description || 'MEMBER', 
+                        startDateLabel: formatDayLabel(proj.started_at) 
                     }));
 
+                    //Normalization of the teams
                     const teamRows = team.map((team) => ({
                         team: {
                             id: team.team_id,
@@ -291,14 +293,14 @@ exports.getEmployeePage = (request, response, next)=>{
                         startDateLabel: formatDayLabel(team.joined_at),
                     }));
 
+                    //Normalization of the employee information.
                     const employee = {
                         employee_id: info[0].employee_id,
                         full_name: info[0].full_name,
                         image: buildAvatarUrl(info[0].full_name),
                     };
 
-                    //Analizar como se declara projectRows. Su estructura
-
+                    //! Required to make Report Implementation in render.
                     const reportSubjects = {
                         employees: [
                             { id: employeeId, name: employee.full_name},

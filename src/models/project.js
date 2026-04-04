@@ -185,7 +185,12 @@ module.exports = class Project {
     whose id=employee_id*/
 
     static getProjectByEmployeeId(employee_id){
-        return db.execute('SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, P.employee_responsible_id,E.full_name,C.description as coll_description,C.started_at,C.ended_at FROM project as P INNER JOIN collaboration as C on P.project_id=C.project_id INNER JOIN employee as E ON P.employee_responsible_id=E.employee_id WHERE C.employee_id=?;',
+        return db.execute(`
+            SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, P.employee_responsible_id,E.full_name,C.description as coll_description,C.started_at,C.ended_at 
+            FROM project as P 
+            INNER JOIN collaboration as C on P.project_id=C.project_id 
+            INNER JOIN employee as E ON P.employee_responsible_id=E.employee_id 
+            WHERE C.employee_id=?;`,
             [employee_id]);
     };
 

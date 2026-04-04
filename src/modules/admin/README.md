@@ -32,6 +32,11 @@ Description: Creation of the backend function that handles the approval or cance
 In: **admin-accounts.ejs**
 Description: Creation of the backend function that handles the update of the assignation of different roles to an account. Refer to ADMIN-05 SD for more information.
 
+---
+8. 
+In: **admin-roles.ejs**
+Description: All the currently developed methods related to roles in the admin.controller, require normalization of data.
+
 
 ## Frontend requirements
 
