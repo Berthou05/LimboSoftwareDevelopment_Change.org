@@ -1,136 +1,130 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
+actor    "User"                    as User
+boundary "activityLog.ejs"         as View
+boundary "activityLog.routes"      as Routes
+control  "activityLog.controller"  as Controller
+control  "activityLog.service"     as Service
+entity   "activity.model"          as Model
+database "unitas_system"           as DB
 
-boundary "home.ejs" as HV
-boundary "home.routes" as HRO
-control "home.controller" as HC
+note over View
+    Reusable module embedded in:
+    Home, Team, Project, Employee pages.
+    Receives scope and identifiers
+    from the parent page context.
+end note
 
-boundary "team.ejs" as TV
-boundary "team.routes" as TRO
-control "team.controller" as TC
+activate User
+User ->  View : page containing\nActivity Log module loads
+activate View
 
-boundary "project.ejs" as PV
-boundary "project.routes" as PRO
-control "project.controller" as PC
+View ->  View : readPageContext()\nextract scope, identifiers\n(employee_id | team_id | project_id)
 
-boundary "employeeDetails.ejs" as EV
-boundary "employee.routes" as ERO
-control "employee.controller" as EC
+View ->> Routes : fetch('/activity-log'\n + '?scope={scope}'\n + '&{identifier_key}={id}'\n + '&range=today')
+activate Routes
+Routes ->  Controller : getActivityLog(req, res)
+activate Controller
+Controller ->  Service    : getActivityLog\n(scope, identifiers, range)
+activate Service
 
-entity "activity.model" as A
-database "unitas_system" as DB
+Service ->  Service : validateScope(scope)
+Service ->  Service : validateIdentifiers(scope, identifiers)
+Service ->  Service : validateRange(range)
 
-alt User opens Home
-    U -> HRO: GET /home
-    activate HRO
-    HRO -> HC: getHome(request, response)
-    activate HC
+alt Invalid scope, identifiers or range
+    Service    --> Controller : throw 400
+    Controller --> Routes     : res.status(400)\n.json({ error: 'Invalid parameters' })
+    Routes     --> View       : 400 { error }
+    View       ->  View       : renderError\n('Invalid parameters')
 
-    HC -> A: fetchByEmployeeBtw(session.employeeId, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT employee activity rows
-    activate DB
-    DB --> A: latest self activity rows
-    deactivate DB
-    A --> HC: latest self activity rows
-    deactivate A
+else Valid parameters
 
-    HC -> A: getTeamActivitiesFromEmpBtw(session.employeeId, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT team activity rows\nfor the employee teams
-    activate DB
-    DB --> A: team activity rows
-    deactivate DB
-    A --> HC: team activity rows
-    deactivate A
+    Service -> Service : resolveDateRange(range)\n→ { rangeStart, rangeEnd }
 
-    HC -> HC: build latestActivitySections\nbuild teamActivitySections
-    HC --> HRO: render('pages/home', {latestActivitySections, teamActivitySections})
-    deactivate HC
-    HRO --> HV: HTML response
-    deactivate HRO
-    HV -> HV: Render "Your Latest Activity"\nRender "Team Activity"
-
-else User opens Team
-    U -> TRO: GET /teams/:team_id
-    activate TRO
-    TRO -> TC: getTeamPage(request, response)
-    activate TC
-
-    TC -> A: getTeamMembersActivities(team_id)
-    activate A
-    A -> DB: SELECT team member activity rows
-    activate DB
-    DB --> A: team activity rows
-    deactivate DB
-    A --> TC: team activity rows
-    deactivate A
-
-    TC -> TC: build activitySections
-    TC --> TRO: render('pages/team', {activitySections})
-    deactivate TC
-    TRO --> TV: HTML response
-    deactivate TRO
-    TV -> TV: Render "Team Activity"
-
-else User opens Project
-    U -> PRO: GET /projects/:project_id[?activityPreset|startDate|endDate]
-    activate PRO
-    PRO -> PC: getProjectPage(request, response)
-    activate PC
-    PC -> PC: resolveActivityFilter(request.query)
-
-    alt Project activity filter applied
-        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
-        activate A
-        A -> DB: SELECT project activity rows\nwithin selected range
+    alt scope == employee
+        Service ->  Model : findByEmployee\n(employee_id, rangeStart, rangeEnd)
+        activate Model
+        Model   ->  DB    : SELECT a.activity_id, a.title,\na.description, a.completed_at,\np.name AS project_name\nFROM activity a\nLEFT JOIN project p\nON a.project_id = p.project_id\nWHERE a.employee_id = ?\nAND a.completed_at BETWEEN ? AND ?\nORDER BY a.completed_at DESC
         activate DB
-        DB --> A: filtered project activity rows
+        DB      --> Model   : rows
         deactivate DB
-        A --> PC: filtered project activity rows
-        deactivate A
-    else Default project activity
-        PC -> A: fetchByProject(project_id)
-        activate A
-        A -> DB: SELECT all project activity rows
+        Model   --> Service : activities[]
+        deactivate Model
+
+    else scope == team
+        Service ->  Model : findByTeam\n(team_id, rangeStart, rangeEnd)
+        activate Model
+        Model   ->  DB    : SELECT a.activity_id, a.title,\na.description, a.completed_at,\ne.full_name AS employee_name,\np.name AS project_name\nFROM activity a\nJOIN employeeteam et\nON a.employee_id = et.employee_id\nLEFT JOIN project p\nON a.project_id = p.project_id\nJOIN employee e\nON a.employee_id = e.employee_id\nWHERE et.team_id = ?\nAND et.left_at IS NULL\nAND a.completed_at BETWEEN ? AND ?\nORDER BY a.completed_at DESC
         activate DB
-        DB --> A: project activity rows
+        DB      --> Model   : rows
         deactivate DB
-        A --> PC: project activity rows
-        deactivate A
+        Model   --> Service : activities[]
+        deactivate Model
+
+    else scope == project
+        Service ->  Model : findByProject\n(project_id, rangeStart, rangeEnd)
+        activate Model
+        Model   ->  DB    : SELECT a.activity_id, a.title,\na.description, a.completed_at,\ne.full_name AS employee_name\nFROM activity a\nJOIN employee e\nON a.employee_id = e.employee_id\nWHERE a.project_id = ?\nAND a.completed_at BETWEEN ? AND ?\nORDER BY a.completed_at DESC
+        activate DB
+        DB      --> Model   : rows
+        deactivate DB
+        Model   --> Service : activities[]
+        deactivate Model
     end
 
-    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
-    PC --> PRO: render('pages/project', {activitySections, activityFilter})
-    deactivate PC
-    PRO --> PV: HTML response
-    deactivate PRO
-    PV -> PV: Render "Project Activity"
+    alt No activities found
+        Service    --> Controller : return { activities: [] }
+        Controller --> Routes     : res.json({ activities: [] })
+        Routes     --> View       : 200 { activities: [] }
+        View       ->  View       : renderActivityLog([])\nshow empty state
 
-else User opens Employee details
-    U -> ERO: GET /employees/:employee_id
-    activate ERO
-    ERO -> EC: getEmployeePage(request, response)
-    activate EC
+    else Activities found
+        Service    ->  Service    : formatActivityEntries(activities)
+        Service    --> Controller : return { activities }
+        Controller --> Routes     : res.json({ activities })
+        Routes     --> View       : 200 { activities }
+        View       ->  View       : renderActivityLog(activities)
+    end
 
-    EC -> A: fetchByEmployeeBtw(employee_id, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT employee activity rows
-    activate DB
-    DB --> A: latest self activity rows
-    deactivate DB
-    A --> EC: latest self activity rows
-    deactivate A
-
-    EC -> EC: build activitySections
-    EC --> ERO: render('pages/employeeDetails', {activitySections})
-    deactivate EC
-    ERO --> EV: HTML response
-    deactivate ERO
-    EV -> EV: Render self "Latest Activity"
 end
+
+deactivate Service
+deactivate Controller
+deactivate Routes
+
+opt User changes date filter\n(Today | Week | Month | Quarter | All)
+    User ->  View : clicks filter button
+    View ->  View : setActiveFilter(range)
+    View ->> Routes : fetch('/activity-log'\n + '?scope={scope}'\n + '&{identifier_key}={id}'\n + '&range={newRange}')
+    activate Routes
+    Routes ->  Controller : getActivityLog(req, res)
+    activate Controller
+    Controller ->  Service : getActivityLog\n(scope, identifiers, newRange)
+    activate Service
+    Service ->  Service : resolveDateRange(newRange)
+    Service ->  Model   : findBy[Scope]\n(identifiers, rangeStart, rangeEnd)
+    activate Model
+    Model   ->  DB      : SELECT ...\nWHERE ...\nAND completed_at BETWEEN ? AND ?
+    activate DB
+    DB      --> Model   : rows
+    deactivate DB
+    Model   --> Service : activities[]
+    deactivate Model
+    Service --> Controller : return { activities }
+    deactivate Service
+    Controller --> Routes  : res.json({ activities })
+    deactivate Controller
+    Routes  --> View       : 200 { activities }
+    deactivate Routes
+    View    ->  View       : renderActivityLog(activities)
+end
+
+deactivate View
+deactivate User
 
 @enduml

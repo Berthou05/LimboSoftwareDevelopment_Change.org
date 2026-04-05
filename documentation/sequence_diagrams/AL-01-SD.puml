@@ -4,112 +4,120 @@ skinparam sequenceArrowThickness 1.2
 skinparam roundcorner 6
 autonumber
 
-actor    "Slack Automation"        as Slack
-boundary "dailyentry.routes"       as Routes
-control  "dailyentry.controller"   as Controller
-entity   "account.repository"      as AccountRepository
-entity   "dailyentry.repository"   as DailyEntryRepository
-entity   "activity.repository"     as ActivityRepository
-entity   "ai.provider"             as AIProvider
-database "unitas_system"           as DB
+actor    "Slack Automation"       as Slack
+boundary "dailyentry.routes"      as Routes
+control  "dailyentry.controller"  as Controller
+entity   "account.model"          as AccountModel
+entity   "dailyentry.model"       as DailyEntryModel
+entity   "activity.model"         as ActivityModel
+control  "ai.wrapper"             as AIWrapper
+entity   "ai.provider"            as AIProvider
+database "unitas_system"          as DB
 
-activate Slack
-Slack      ->  Routes     : POST /daily-entries/slack\n{slack_username, entry_date,\ndone, to_do, blockers,\nslack_standup_URL}
+Slack -> Routes : POST /daily-entries/slack\n{slack_username, entry_date,\ndone, to_do, blockers,\nslack_standup_URL}
 activate Routes
-Routes     ->  Controller : submitFromSlack(req, res)
+Routes -> Controller : submitFromSlack(req, res)
 activate Controller
+deactivate Routes
 
-Controller ->  Controller : validateSlackSignature(req.headers)
+Controller -> Controller : validateSlackSignature(req.headers)
 
 alt Invalid signature
-    Controller --> Routes : throw 401
-    Routes     --> Slack  : HTTP 401 Unauthorized
+    Controller --> Routes : res.status(401).json\n({ message: 'Invalid Slack signature' })
+    activate Routes
+    Routes --> Slack : HTTP 401 Unauthorized
+    deactivate Routes
+end
 
-else Valid signature
+Controller -> AccountModel : findBySlackUsername(slack_username)
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT account_id, employee_id, status\n   FROM account\n   WHERE slack_username = ?',\n  [slack_username]\n)
+activate DB
+DB --> AccountModel : account | null
+deactivate DB
+AccountModel --> Controller : account | null
+deactivate AccountModel
 
-    Controller ->  AccountRepository : findBySlackUsername(slack_username)
-    activate AccountRepository
-    AccountRepository ->  DB               : SELECT account_id, employee_id, status\nFROM account\nWHERE slack_username = ?
+alt Account not found or DISABLED
+    Controller --> Routes : res.status(404).json\n({ message: 'Employee account not found' })
+    activate Routes
+    Routes --> Slack : HTTP 404 Not Found
+    deactivate Routes
+end
+
+Controller -> DailyEntryModel : findByEmployeeAndDate\n(employee_id, entry_date)
+activate DailyEntryModel
+DailyEntryModel -> DB : execute(\n  'SELECT entry_id FROM dailyentry\n   WHERE employee_id = ?\n   AND entry_date = ?',\n  [employee_id, entry_date]\n)
+activate DB
+DB --> DailyEntryModel : entry | null
+deactivate DB
+DailyEntryModel --> Controller : entry | null
+deactivate DailyEntryModel
+
+alt Entry already exists for today
+    Controller --> Routes : res.status(409).json\n({ message: 'Daily entry already exists for today' })
+    activate Routes
+    Routes --> Slack : HTTP 409 Conflict
+    deactivate Routes
+end
+
+Controller -> DailyEntryModel : create(employee_id, entry_date,\nto_do, done, blockers,\nslack_standup_URL)
+activate DailyEntryModel
+DailyEntryModel -> DB : execute(\n  'INSERT INTO dailyentry\n   (entry_id, employee_id, entry_date,\n    to_do, done, blockers, slack_standup_URL)\n   VALUES (?, ?, ?, ?, ?, ?, ?)',\n  [entry_id, employee_id, entry_date,\n   to_do, done, blockers, slack_standup_URL]\n)
+activate DB
+DB --> DailyEntryModel : entry_id
+deactivate DB
+DailyEntryModel --> Controller : entry_id
+deactivate DailyEntryModel
+
+Controller ->> Routes : res.status(202).json\n({ message: 'Daily entry received',\n  entry_id: entry_id })
+activate Routes
+Routes ->> Slack : HTTP 202 Accepted
+deactivate Routes
+
+Controller ->> AIWrapper : extractActivities\n(entry_id, done, to_do, blockers)
+deactivate Controller
+activate AIWrapper
+AIWrapper ->> AIProvider : POST /completions\n{ model, messages:\n  [{ role: 'user',\n     content: done + to_do + blockers }] }
+activate AIProvider
+AIProvider --> AIWrapper : activities[] | error
+deactivate AIProvider
+
+alt AI extraction failed
+    AIWrapper -> AIWrapper : logFailure(entry_id, error)
+    note right of AIWrapper
+        Daily entry is preserved.
+        Only extraction failed.
+    end note
+    deactivate AIWrapper
+end
+
+AIWrapper --> Controller : activities[]
+deactivate AIWrapper
+activate Controller
+
+loop for each extracted activity
+
+    Controller -> ActivityModel : findProjectMatch\n(activity.project_hint)
+    activate ActivityModel
+    ActivityModel -> DB : execute(\n  'SELECT project_id FROM project\n   WHERE name LIKE ?\n   AND status <> ?',\n  [activity.project_hint, 'DISABLED']\n)
     activate DB
-    DB                --> AccountRepository : account | null
+    DB --> ActivityModel : project_id | null
     deactivate DB
-    AccountRepository --> Controller        : account | null
-    deactivate AccountRepository
+    ActivityModel --> Controller : project_id | null
+    deactivate ActivityModel
 
-    alt Account not found or DISABLED
-        Controller --> Routes : throw 404
-        Routes     --> Slack  : HTTP 404 Not Found
+    Controller -> ActivityModel : create(entry_id, employee_id,\nproject_id, title, description)
+    activate ActivityModel
+    ActivityModel -> DB : execute(\n  'INSERT INTO activity\n   (activity_id, entry_id, employee_id,\n    project_id, title, description)\n   VALUES (?, ?, ?, ?, ?, ?)',\n  [activity_id, entry_id, employee_id,\n   project_id, title, description]\n)
+    activate DB
+    DB --> ActivityModel : activity_id
+    deactivate DB
+    ActivityModel --> Controller : activity_id
+    deactivate ActivityModel
 
-    else Account active
-
-        Controller ->  DailyEntryRepository : findByEmployeeAndDate\n(employee_id, entry_date)
-        activate DailyEntryRepository
-        DailyEntryRepository ->  DB                  : SELECT entry_id FROM dailyentry\nWHERE employee_id = ?\nAND entry_date = ?
-        activate DB
-        DB                   --> DailyEntryRepository : entry | null
-        deactivate DB
-        DailyEntryRepository --> Controller            : entry | null
-        deactivate DailyEntryRepository
-
-        alt Entry already exists for today
-            Controller --> Routes : throw 409
-            Routes     --> Slack  : HTTP 409 Conflict
-
-        else No duplicate
-
-            Controller ->  DailyEntryRepository : create(employee_id, entry_date,\nto_do, done, blockers,\nslack_standup_URL)
-            activate DailyEntryRepository
-            DailyEntryRepository ->  DB                  : INSERT INTO dailyentry\n(entry_id, employee_id, entry_date,\nto_do, done, blockers,\nslack_standup_URL)
-            activate DB
-            DB                   --> DailyEntryRepository : entry_id
-            deactivate DB
-            DailyEntryRepository --> Controller            : entry_id
-            deactivate DailyEntryRepository
-
-            Controller --> Routes : 202 Accepted {entry_id}
-            Routes     --> Slack  : HTTP 202 Accepted
-
-            Controller ->> AIProvider : extractActivities\n(entry_id, done, to_do, blockers)
-            activate AIProvider
-            AIProvider --> Controller : activities[] | error
-            deactivate AIProvider
-
-            alt AI extraction failed
-                Controller -> Controller : logFailure(entry_id, error)
-                note right of Controller
-                    Daily entry is preserved.
-                    Only extraction failed.
-                end note
-
-            else Activities extracted
-
-                loop for each extracted activity
-                    Controller ->  ActivityRepository : findProjectMatch\n(activity.project_hint)
-                    activate ActivityRepository
-                    ActivityRepository ->  DB                 : SELECT project_id FROM project\nWHERE name LIKE ?\nAND status <> 'DISABLED'
-                    activate DB
-                    DB                 --> ActivityRepository  : project_id | null
-                    deactivate DB
-                    ActivityRepository --> Controller          : project_id | null
-                    deactivate ActivityRepository
-
-                    Controller ->  ActivityRepository : create(entry_id, employee_id,\nproject_id, title, description)
-                    activate ActivityRepository
-                    ActivityRepository ->  DB                 : INSERT INTO activity\n(activity_id, entry_id,\nemployee_id, project_id,\ntitle, description)
-                    activate DB
-                    DB                 --> ActivityRepository  : activity_id
-                    deactivate DB
-                    ActivityRepository --> Controller          : activity_id
-                    deactivate ActivityRepository
-                end
-
-            end
-        end
-    end
 end
 
 deactivate Controller
-deactivate Routes
-deactivate Slack
 
 @enduml
