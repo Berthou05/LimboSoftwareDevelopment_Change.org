@@ -2,88 +2,66 @@
 skinparam style strictuml
 
 actor User as U
-boundary "routes" as RO
-boundary "vista projectList.ejs" as VL
-boundary "vista projectShow.ejs" as VS
+boundary "view projectDirectory.ejs" as PV
+boundary "view pages/project.ejs" as V
+boundary "project.routes" as RO
 control "project.controller" as C
-entity "Project.model" as PM
 entity "Achievement.model" as AM
 database "unitas_system" as BD
+autonumber
 
 activate U
-U -> RO:GET /projects
+U -> PV: Clicks on a Project
 deactivate U
-    activate RO
-    RO -> C:index(request, response)
-    deactivate RO
-        activate C
-        C ->> PM:findAll()
-            activate PM
-            PM ->> BD:execute('SELECT * FROM projects')
-                activate BD
-                BD --> PM:rows
-                deactivate BD
-            PM --> C:projects
-            deactivate PM
-        
-        alt no projects
-            C -> VL:response.render('projects/index.ejs', {message: "No projects available"})
-            deactivate C
-                activate VL
-                VL -> U:HTML + "No projects available" message
-                deactivate VL
-        
-        else projects exist
-            C -> VL:response.render('projects/index.ejs', {projects: projects})
-            deactivate C
-                activate VL
-                VL -> U:HTML with projects list
-                deactivate VL
-        end
-
-activate U
-U -> VL:Clicks on a Project
-deactivate U
-    activate VL
-    VL -> RO:GET /projects/:id
-    deactivate VL
+    activate PV
+    PV -> RO: GET /project/:project_id
+    deactivate PV
         activate RO
-        RO -> C:show(request, response)
+        RO -> C: getProjectPage(request, response)
         deactivate RO
             activate C
-            C ->> PM:findById(id)
-                activate PM
-                PM ->> BD:execute('SELECT * FROM projects WHERE id=?', [id])
-                    activate BD
-                    BD --> PM:project
-                    deactivate BD
-                PM --> C:project
-                deactivate PM
-            
-            C ->> AM:getAchievements(project_id)
+            C -> V: response.render('pages/project', {...})
+            deactivate C
+    activate V
+    V -> V: loadContent()
+    group PROJ-12
+    note right of V
+        This AJAX function is reusable for
+        other User Cases such as editing or
+        deleting achievements.
+    end note
+    V -> RO: fetch('/project/:project_id/achievements', {method: GET, headers:{'Accept': 'application/json'}})
+    deactivate V
+        activate RO
+        RO -> C: getProjectAchievements(request, response)
+                deactivate RO
+            activate C
+            C ->> AM: fetchByProject(project_id)
                 activate AM
-                AM ->> BD:execute('SELECT * FROM achievements WHERE project_id=?', [project_id])
+                AM ->> BD: execute('SELECT A.achievement_id, A.project_id,\nA.employee_responsible_id, A.title, A.description,\nA.achievement_date, A.evidence_link, E.full_name\nFROM achievement AS A\nLEFT JOIN employee AS E ON E.employee_id = A.employee_responsible_id\nWHERE A.project_id = ?\nORDER BY A.achievement_date DESC, A.title ASC;', [project_id])
                     activate BD
-                    BD --> AM:achievements
+                    BD --> AM: achievements
                     deactivate BD
-                AM --> C:achievements
+                AM --> C: achievements
                 deactivate AM
-            
-            alt no achievements
-                C -> VS:response.render('projects/show.ejs', {project: project, achievements: [], message: "No achievements for this project"})
-                deactivate C
-                    activate VS
-                    VS -> U:HTML + Project details + "No achievements" message
-                    deactivate VS
-            
-            else has achievements
-                C -> VS:response.render('projects/show.ejs', {project: project, achievements: achievements})
-                deactivate C
-                    activate VS
-                    VS -> U:HTML + Project details + Achievements section
-                    deactivate VS
-            end
+            C -> V: response.status(200).json({success:true, body: achievements})
+            deactivate C
+    activate V
+    end group
+    V -> V: generateAchievements(achievements)
+    V -> U: HTML + Achievements section\n+ "No achievements for this project" message
+    deactivate V
 
-activate U
+alt Project Achievements Obtention Failed
+        activate C
+    group PROJ-12 alt
+        C -> V: response.status(500).json({success:false, message:error})
+        deactivate C
+    activate V
+    end group
+    V -> V: showErrorPopup(error)
+    V -> U: HTML + Error popup\n+ Project view remains loaded
+    deactivate V
+end
 
 @enduml
