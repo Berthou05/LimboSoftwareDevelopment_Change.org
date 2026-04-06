@@ -14,7 +14,6 @@ database "unitas_system"         as DB
 
 activate Admin
 Admin -> AccountsView : Open "Accounts Administration"
-deactivate Admin
 activate AccountsView
 AccountsView -> Routes : GET /admin/accounts
 activate Routes
@@ -29,7 +28,7 @@ alt Missing ADMIN-01 privilege
     activate Routes
     Routes ->> AccountsView : HTTP 403 -> /home
     deactivate Routes
-    AccountsView --> Admin : Access denied to roles dropdown screen
+    AccountsView --> Admin : Access denied to role selection view
 end
 
 Controller -> RoleModel : fetchAll()
@@ -73,5 +72,6 @@ end
 
 deactivate Controller
 deactivate AccountsView
+deactivate Admin
 
 @enduml
