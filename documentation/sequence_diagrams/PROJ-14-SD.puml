@@ -1,68 +1,142 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "project-achievements.ejs" as V
-boundary "project.routes" as RO
-control "project.controller" as C
-control "project.service" as SV
-entity "projectachievement.model" as X
-database "unitas_system" as DB
+actor    "Employee"                                  as User
+boundary "pages/project.ejs"                          as AchievementsView
+control  "teamDetails.js (AJAX)"                     as Client
+boundary "project.routes"                            as Routes
+control  "project.controller"                        as Controller
+entity   "project.model"                             as ProjectModel
+entity   "achievement.model"                         as AchievementModel
+database "unitas_system"                             as DB
 
-U -> V: Click "Edit achievement"
-activate V
-V -> V: enableAchievementEditMode(achievementId)
+note right of Routes
+  Target route for PROJ-14:
+  router.post('/:project_id/achievements/:achievement_id/edit',
+    isAuth, projectController.updateProjectAchievement)
+end note
 
-opt Cancel achievement edit
-U -> V: Click "Cancel"
-V -> V: restoreAchievementRow(achievementId)
+activate User
+User -> AchievementsView : Click "Edit" on achievement card
+deactivate User
+activate AchievementsView
+AchievementsView -> Client : openEditAchievementPopup(achievement_id)
+activate Client
+AchievementsView --> User : Show edit popup (title, description,\nachievementDate, evidenceLink)
+deactivate AchievementsView
+
+activate User
+User -> Client : Update fields and submit popup
+deactivate User
+Client -> Client : validateAchievementPayload(title, description,\nachievementDate, evidenceLink)
+
+alt Invalid payload on client
+    Client -> AchievementsView : showAchievementValidationError()
+    AchievementsView --> User : Inline validation error message
 end
 
-U -> V: Click "Save"
-V -> RO: fetch('/projects/:projectId/achievements/:achievementId',\n{method:'PATCH', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify(achievementForm)})
-activate RO
-RO -> C: updateAchievement(request, response)
-activate C
-C -> SV: updateAchievement(projectId, achievementId, achievementForm)
-activate SV
-SV -> SV: validateAchievementFields(title, description, achievementDate)
+Client -> Routes : fetch('/projects/:project_id/achievements/:achievement_id/edit',\n{ method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/x-www-form-urlencoded'},\nbody:'title=...&description=...&achievementDate=...&evidenceLink=...&_csrf=...' })
+activate Routes
+Routes -> Controller : updateProjectAchievement(request, response)
+activate Controller
+deactivate Routes
 
-alt Achievement fields invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid achievement data"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showAchievementUpdateError(error)
-else Achievement fields valid
-SV -> X: updateAchievement(projectId, achievementId, achievementForm)
-activate X
-X -> DB: UPDATE projectachievement\nSET title = ?, description = ?, achievement_date = ?\nWHERE id = ? AND project_id = ?
-activate DB
-DB --> X: updated rows
-deactivate DB
-X --> SV: update result
-deactivate X
-SV -> X: findById(projectId, achievementId)
-activate X
-X -> DB: SELECT id, project_id, title, description, achievement_date\nFROM projectachievement\nWHERE id = ? AND project_id = ?
-activate DB
-DB --> X: updated achievement row
-deactivate DB
-X --> SV: achievement
-deactivate X
-SV --> C: updated achievement data
-deactivate SV
-C --> RO: response.json({success:true,data:achievement})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateAchievementsModule(data)
+Controller -> Controller : hasPrivilege('PROJ-14', request.session.privileges)
+
+alt Missing privilege PROJ-14
+    Controller ->> Routes : res.status(403).json\n({ error: 'You cannot edit project achievements.' })
+    activate Routes
+    Routes ->> Client : HTTP 403 Forbidden
+    deactivate Routes
+    Client -> AchievementsView : showAchievementError(error)
+    AchievementsView --> User : Privilege error message
 end
-deactivate V
+
+Controller -> Controller : validateAchievementPayload(title, description,\nachievementDate, evidenceLink)
+
+alt Invalid payload on server
+    Controller ->> Routes : res.status(400).json\n({ error: 'Invalid achievement data.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> AchievementsView : showAchievementError(error)
+    AchievementsView --> User : Invalid achievement input message
+end
+
+Controller -> ProjectModel : findById(project_id)
+activate ProjectModel
+ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.status\n   FROM project AS P\n   WHERE P.project_id = ?',\n  [project_id]\n)
+activate DB
+DB --> ProjectModel : projectRows[]
+deactivate DB
+ProjectModel --> Controller : projectRows[]
+deactivate ProjectModel
+
+alt Project not found
+    Controller ->> Routes : res.status(404).json\n({ error: 'The selected project was not found.' })
+    activate Routes
+    Routes ->> Client : HTTP 404 Not Found
+    deactivate Routes
+    Client -> AchievementsView : showAchievementError(error)
+    AchievementsView --> User : Project not found message
+end
+
+Controller -> AchievementModel : fetchById(achievement_id)
+activate AchievementModel
+AchievementModel -> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.title, A.description,\n          A.achievement_date, A.evidence_link\n   FROM achievement AS A\n   WHERE A.achievement_id = ?\n   LIMIT 1',\n  [achievement_id]\n)
+activate DB
+DB --> AchievementModel : achievementRows[]
+deactivate DB
+AchievementModel --> Controller : achievementRows[]
+deactivate AchievementModel
+
+alt Achievement not found or not linked to project
+    Controller ->> Routes : res.status(404).json\n({ error: 'The selected achievement was not found for this project.' })
+    activate Routes
+    Routes ->> Client : HTTP 404 Not Found
+    deactivate Routes
+    Client -> AchievementsView : showAchievementError(error)
+    AchievementsView --> User : Achievement not found message
+end
+
+Controller -> AchievementModel : update(achievement_id,\n{ title, description, achievement_date, evidence_link })
+activate AchievementModel
+AchievementModel -> DB : execute(\n  'UPDATE achievement\n   SET title = ?,\n       description = ?,\n       achievement_date = ?,\n       evidence_link = ?\n   WHERE achievement_id = ?\n   AND project_id = ?',\n  [title, description, achievementDate, evidenceLink,\n   achievement_id, project_id]\n)
+activate DB
+DB --> AchievementModel : update result
+deactivate DB
+AchievementModel --> Controller : achievement updated
+deactivate AchievementModel
+
+Controller -> AchievementModel : fetchByProject(project_id)
+activate AchievementModel
+AchievementModel -> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.employee_responsible_id,\n          A.title, A.description, A.achievement_date, A.evidence_link,\n          E.full_name\n   FROM achievement AS A\n   LEFT JOIN employee AS E\n     ON E.employee_id = A.employee_responsible_id\n   WHERE A.project_id = ?\n   ORDER BY A.achievement_date DESC, A.title ASC',\n  [project_id]\n)
+activate DB
+DB --> AchievementModel : achievementRows[]
+deactivate DB
+AchievementModel --> Controller : achievementRows[]
+deactivate AchievementModel
+
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'Achievement updated successfully.',\n  achievements: achievementRows })
+activate Routes
+Routes ->> Client : HTTP 200 OK application/json
+deactivate Routes
+Client -> AchievementsView : updateAchievementsModule(data.achievements)\ncloseEditAchievementPopup()
+AchievementsView --> User : Updated achievement card list
+
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'Error updating project achievement.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> AchievementsView : showAchievementError(error)
+    AchievementsView --> User : Generic update error message
+end
+
+deactivate Controller
+deactivate Client
 
 @enduml

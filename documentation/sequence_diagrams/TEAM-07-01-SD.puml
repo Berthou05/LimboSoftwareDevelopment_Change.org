@@ -1,78 +1,101 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "team-members.ejs" as V
-boundary "team.routes" as RO
-control "team.controller" as C
-entity "employee.model" as E
-entity "employeeteam.model" as X
-database "unitas_system" as DB
+actor    "Employee"                  as User
+boundary "teamDirectory/joinButton.ejs" as JoinButton
+control  "teamDetails.js (AJAX)"     as Client
+boundary "team.routes"               as Routes
+control  "team.controller"           as Controller
+entity   "employeeTeamMembership.model" as EmployeeTeam
+database "unitas_system"             as DB
 
-U -> V: Click "Leave team"
-activate V
+activate User
+User -> JoinButton : Click "Leave Team"\n(same action toggles membership)
+deactivate User
+activate JoinButton
+JoinButton -> Client : submitToggleMembership()
+activate Client
 
-opt Cancel leave action
-    V -> V: closeLeaveDialog()
+Client -> Routes : fetch('/teams/:team_id/toggle-membership',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/x-www-form-urlencoded'},\nbody:'_csrf=...'})
+activate Routes
+Routes -> Controller : toggleTeamMembership(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : targetEmployeeId = request.session.employeeId
+
+alt Missing authenticated employee
+    Controller ->> Routes : res.status(401).json\n({ error: 'You must be logged in to update team membership.' })
+    activate Routes
+    Routes ->> Client : HTTP 401 Unauthorized
+    deactivate Routes
+    Client -> JoinButton : showMembershipError(error)
+    JoinButton --> User : Authentication error message
 end
 
-V -> RO: fetch('/teams/:teamId/members/self',\n{method:'DELETE', headers:{'Accept':'application/json'}})
-activate RO
-RO -> C: leaveTeam(request, response)
-activate C
-
-C -> E: findByAccountId(session.accountId)
-activate E
-E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE account_id = ?
+Controller -> EmployeeTeam : fetchByEmployeeAndTeam\n(targetEmployeeId, team_id)
+activate EmployeeTeam
+EmployeeTeam -> DB : execute(\n  'SELECT *\n   FROM employeeteam\n   WHERE employee_id = ?\n   AND team_id = ?',\n  [targetEmployeeId, team_id]\n)
 activate DB
-DB --> E: employee row
+DB --> EmployeeTeam : memberships[]
 deactivate DB
-E --> C: employee
-deactivate E
+EmployeeTeam --> Controller : memberships[]
+deactivate EmployeeTeam
 
-C -> X: findActiveMembership(teamId, employee.id)
-activate X
-X -> DB: SELECT id, joined_at\nFROM employeeteam\nWHERE team_id = ?\nAND employee_id = ?\nAND left_at IS NULL
-activate DB
-DB --> X: active membership / null
-deactivate DB
-X --> C: membership / null
-deactivate X
-
-alt Membership not found
-    C --> RO: response.json({success:false,\nerror:"You are not a member of this team"})
-    deactivate C
-    RO --> V: HTTP 404 application/json
-    deactivate RO
-    V -> V: response.json()
-    V -> V: showMembersError(error)
-else Membership found
-    C -> X: markLeftAt(teamId, employee.id)
-    activate X
-    X -> DB: UPDATE employeeteam\nSET left_at = NOW()\nWHERE team_id = ?\nAND employee_id = ?\nAND left_at IS NULL
+alt Membership does not exist
+    Controller -> EmployeeTeam : join(targetEmployeeId, team_id)
+    activate EmployeeTeam
+    EmployeeTeam -> DB : execute(\n  'INSERT INTO employeeteam\n   (employee_id, team_id, joined_at, left_at, role)\n   VALUES (?, ?, ?, ?, ?)',\n  [targetEmployeeId, team_id,\n   NOW(), NULL, 'EMPLOYEE']\n)
     activate DB
-    DB --> X: updated rows
+    DB --> EmployeeTeam : insert result
     deactivate DB
-    X --> C: membership updated
-    deactivate X
-
-    C -> X: listActiveMembers(teamId)
-    activate X
-    X -> DB: SELECT et.team_id,\n e.id AS employee_id,\n e.first_name,\n e.last_name,\n et.role\nFROM employeeteam et\nJOIN employee e\nON e.id = et.employee_id\nWHERE et.team_id = ?\nAND et.left_at IS NULL\nORDER BY e.first_name, e.last_name
-    activate DB
-    DB --> X: active member rows
-    deactivate DB
-    X --> C: members
-    deactivate X
-
-    C --> RO: response.json({success:true,\ndata:members})
-    deactivate C
-    RO --> V: HTTP 200 application/json
-    deactivate RO
-    V -> V: response.json()
-    V -> V: updateTeamMembersModule(data)
+    EmployeeTeam --> Controller : joined
+    deactivate EmployeeTeam
 end
 
-deactivate V
+alt Existing membership is inactive (left_at not null)
+    Controller -> EmployeeTeam : update(targetEmployeeId, team_id,\n{joined_at: NOW(), left_at: null,\n role: previousRole || 'EMPLOYEE'})
+    activate EmployeeTeam
+    EmployeeTeam -> DB : execute(\n  'UPDATE employeeteam\n   SET joined_at = ?, left_at = ?, role = ?\n   WHERE employee_id = ? AND team_id = ?',\n  [NOW(), NULL, previousRole || 'EMPLOYEE',\n   targetEmployeeId, team_id]\n)
+    activate DB
+    DB --> EmployeeTeam : update result
+    deactivate DB
+    EmployeeTeam --> Controller : rejoined
+    deactivate EmployeeTeam
+end
+
+alt Existing membership is active
+    Controller -> EmployeeTeam : leave(targetEmployeeId, team_id)
+    activate EmployeeTeam
+    EmployeeTeam -> DB : execute(\n  'UPDATE employeeteam\n   SET left_at = ?\n   WHERE employee_id = ?\n   AND team_id = ?',\n  [NOW(), targetEmployeeId, team_id]\n)
+    activate DB
+    DB --> EmployeeTeam : update result
+    deactivate DB
+    EmployeeTeam --> Controller : left
+    deactivate EmployeeTeam
+end
+
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'You left the team.' | 'You joined the team.' })
+activate Routes
+Routes ->> Client : HTTP 200 OK application/json
+deactivate Routes
+Client -> JoinButton : updateJoinButtonFromMembershipState()\nupdateTeamParticipantsModule()
+JoinButton --> User : Team membership view refreshed
+
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'Error updating membership for team {team_id}.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> JoinButton : showMembershipError(error)
+    JoinButton --> User : Generic membership error
+end
+
+deactivate Controller
+deactivate Client
+deactivate JoinButton
+
 @enduml

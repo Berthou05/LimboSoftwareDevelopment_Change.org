@@ -1,61 +1,77 @@
 @startuml
 skinparam style strictuml
-
-actor Admin as A   
-boundary "routes" as RO
-boundary "vista roleAdmin.ejs" as V
-control "roleAdmin.controller" as C
-entity "Role.model" as R
-entity "RolePrivilege.model" as RP
-entity "Privilege.model" as P
-entity "AccountRole.model" as AR
-database "unitas_system" as BD
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-activate A
-A -> RO:GET/admin/roles
-deactivate A
-    activate RO
-    RO -> C:getRoleAdmin(request,response)
-    deactivate RO
-        activate C
-        C ->> R:fetchAll()
-            activate R
-            R->>BD:execute('SELECT * FROM role');
-                activate BD
-                BD-->R:roles
-                deactivate BD
-            R-->C:roles
-            deactivate R
-        C->>RP:fetchAll();
-            activate RP
-            RP-->BD:execute('SELECT * FROM roleprivilege');
-                activate BD
-                BD-->RP:role_privileges
-                deactivate BD
-            RP-->C:role_privileges
-            deactivate RP
-        C->>P:fetchAll();
-            activate P
-            P->>BD:execute('SELECT * FROM privilege');
-                activate BD
-                BD-->P:privileges
-                deactivate BD
-            P-->C:privileges
-            deactivate P
-            C->V: response.render('pages/admin-roles',\n{roles: roles, privileges:privileges, role_privileges:role_privileges, success: request.session.success ||''})
-        deactivate C
-    activate V
-    V->A:HTML
-    deactivate V
+actor    "Admin"                 as Admin
+boundary "pages/admin-accounts.ejs" as AccountsView
+boundary "admin.routes"          as Routes
+control  "admin.controller"      as Controller
+entity   "account.model"         as AccountModel
+entity   "role.model"            as RoleModel
+database "unitas_system"         as DB
 
+activate Admin
+Admin -> AccountsView : Open "Accounts Administration"
+deactivate Admin
+activate AccountsView
+AccountsView -> Routes : GET /admin/accounts
+activate Routes
+Routes -> Controller : getAccounts(request, response)
+activate Controller
+deactivate Routes
 
-alt Any Query Failed
-    activate C
-    C->RO: response.render('/home',{error:error})
-    deactivate C
+Controller -> Controller : hasPrivilege('ADMIN-01', request.session.privileges)
 
+alt Missing ADMIN-01 privilege
+    Controller ->> Routes : response.status(403).redirect('/home')
+    activate Routes
+    Routes ->> AccountsView : HTTP 403 -> /home
+    deactivate Routes
+    AccountsView --> Admin : Access denied to roles dropdown screen
+end
 
-end 
+Controller -> RoleModel : fetchAll()
+activate RoleModel
+RoleModel -> DB : execute(\n  'SELECT role_id, name\n   FROM role\n   ORDER BY name ASC'\n)
+activate DB
+DB --> RoleModel : roles[]
+deactivate DB
+RoleModel --> Controller : roles[]
+deactivate RoleModel
+
+Controller -> AccountModel : fetchAllWithRole()
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT A.account_id, A.email, A.status, A.created_at,\n          E.full_name, A.slack_username,\n          R.role_id, R.name AS role_name\n   FROM account AS A\n   INNER JOIN employee AS E\n     ON E.employee_id = A.employee_id\n   LEFT JOIN accountrole AS AR\n     ON AR.account_id = A.account_id\n   LEFT JOIN role AS R\n     ON R.role_id = AR.role_id\n   ORDER BY E.full_name ASC'\n)
+activate DB
+DB --> AccountModel : accounts[]
+deactivate DB
+AccountModel --> Controller : accounts[]
+deactivate AccountModel
+
+Controller ->> Routes : response.render('pages/admin-accounts',\n{ csrfToken, accounts, roles })
+activate Routes
+Routes ->> AccountsView : HTTP 200 HTML
+deactivate Routes
+
+alt No accounts found
+    AccountsView -> AccountsView : Render empty accounts state
+    AccountsView --> Admin : Show page with roles dropdown catalog available
+else Accounts found
+    AccountsView -> AccountsView : Render accounts table + role dropdown per row
+    AccountsView --> Admin : Show current role and allowed role options\n(Admin, Lead, Employee)
+end
+
+alt Unexpected error (catch)
+    Controller ->> Routes : response.redirect('/home')
+    activate Routes
+    Routes ->> AccountsView : HTTP 302 -> /home
+    deactivate Routes
+    AccountsView --> Admin : Generic access/error feedback
+end
+
+deactivate Controller
+deactivate AccountsView
 
 @enduml

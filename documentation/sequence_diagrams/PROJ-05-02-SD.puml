@@ -1,157 +1,259 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "project-members.ejs" as V
-boundary "project.routes" as RO
-control "project.controller" as C
-control "project.service" as SV
-entity "employee.model" as E
-entity "team.model" as T
-entity "collaboration.model" as X
-entity "projectteam.model" as PT
-database "unitas_system" as DB
+actor    "Employee"                             as User
+boundary "projectMembers.ejs / projectTeams.ejs" as MembersView
+control  "teamDetails.js (AJAX)"               as Client
+boundary "project.routes"                      as Routes
+control  "project.controller"                  as Controller
+entity   "project.model"                       as ProjectModel
+entity   "team.model"                          as TeamModel
+entity   "collaboration.model"                 as CollaborationModel
+entity   "projectteam.model"                   as ProjectTeamModel
+database "unitas_system"                       as DB
 
-U -> V: Open "Add members" modal
-activate V
-V -> V: showAddMembersModal()
+activate User
+User -> MembersView : Click "Add" on Members or Teams panel
+deactivate User
+activate MembersView
+MembersView -> Client : openAssigneePopup()
+activate Client
+MembersView --> User : Show add-assignee popup
+Client -> Client : canManage = hasPrivilege('PROJ-05-02')
 
-U -> V: Search employees or teams
-V -> RO: fetch('/projects/:projectId/members/search?term=ana&type=all')
-activate RO
-RO -> C: searchProjectMembers(request, response)
-activate C
-C -> SV: searchProjectMembers(projectId, filters)
-activate SV
-SV -> SV: validateSearchFilters(term, type)
-
-alt Search filters invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid search filters"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showMemberSearchError(error)
-else Search filters valid
-SV -> E: searchAvailableEmployees(projectId, term)
-activate E
-E -> DB: SELECT e.id, e.first_name, e.last_name\nFROM employee e\nWHERE CONCAT(e.first_name, ' ', e.last_name) LIKE ?\nAND NOT EXISTS (\nSELECT 1 FROM collaboration c\nWHERE c.project_id = ? AND c.employee_id = e.id AND c.left_at IS NULL\n)
-activate DB
-DB --> E: employee candidates
-deactivate DB
-E --> SV: employees
-deactivate E
-SV -> T: searchAvailableTeams(projectId, term)
-activate T
-T -> DB: SELECT t.id, t.name\nFROM team t\nWHERE t.name LIKE ?\nAND NOT EXISTS (\nSELECT 1 FROM projectteam pt\nWHERE pt.project_id = ? AND pt.team_id = t.id AND pt.left_at IS NULL\n)
-activate DB
-DB --> T: team candidates
-deactivate DB
-T --> SV: teams
-deactivate T
-SV --> C: search results
-deactivate SV
-C --> RO: response.json({success:true,data:{employees,teams}})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: renderMemberSearchResults(data)
+alt Missing privilege PROJ-05-02
+    Client -> MembersView : showPermissionError()\nhideAssigneePopup()
+    MembersView --> User : Access denied feedback
 end
 
-U -> V: Select results and click "Save"
-V -> RO: fetch('/projects/:projectId/members',\n{method:'POST', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify({employees:[...],teams:[...]})})
-activate RO
-RO -> C: addProjectMembers(request, response)
-activate C
-C -> SV: addProjectMembers(projectId, selections)
-activate SV
-SV -> SV: validateSelections(selections)
+group Add Employee to Project (AJAX)
+    activate User
+    User -> Client : Select employee + role + start_date\n[description when role = COLLABORATION]
+    deactivate User
+    Client -> Client : validateMemberPayload(employeeId,\nrole, started_at, description)
 
-alt No selections submitted
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Select at least one member"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showMemberSaveError(error)
-else Selections valid
-loop Each selected employee
-SV -> X: findActiveMembership(projectId, employeeId)
-activate X
-X -> DB: SELECT id\nFROM collaboration\nWHERE project_id = ? AND employee_id = ? AND left_at IS NULL
-activate DB
-DB --> X: membership row / null
-deactivate DB
-X --> SV: membership / null
-deactivate X
-alt Employee already in project
-SV -> SV: markDuplicateEmployee(employeeId)
-else Employee not in project
-SV -> X: createMembership(projectId, employeeId)
-activate X
-X -> DB: INSERT INTO collaboration(project_id, employee_id, joined_at)\nVALUES (?, ?, NOW())
-activate DB
-DB --> X: inserted collaboration id
-deactivate DB
-X --> SV: employee added
-deactivate X
-end
+    alt Invalid member payload
+        Client -> MembersView : showAddMemberError('Invalid data.')
+        MembersView --> User : Invalid member input message
+    end
+
+    Client -> Routes : fetch('/projects/:project_id/members',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({employeeId, role,\nstarted_at, description, _csrf})})
+    activate Routes
+    Routes -> Controller : addProjectMember(request, response)
+    activate Controller
+    deactivate Routes
+
+    Controller -> Controller : hasPrivilege('PROJ-05-02', request.session.privileges)
+
+    alt Missing privilege PROJ-05-02
+        Controller ->> Routes : res.status(403).json\n({ error: 'You cannot add members to this project.' })
+        activate Routes
+        Routes ->> Client : HTTP 403 Forbidden
+        deactivate Routes
+        Client -> MembersView : showAddMemberError(error)
+        MembersView --> User : Permission error message
+    end
+
+    Controller -> Controller : validateAddMemberPayload(employeeId,\nrole, started_at, description)
+
+    alt Invalid member payload (server)
+        Controller ->> Routes : res.status(400).json\n({ error: 'Invalid member data.' })
+        activate Routes
+        Routes ->> Client : HTTP 400 Bad Request
+        deactivate Routes
+        Client -> MembersView : showAddMemberError(error)
+        MembersView --> User : Invalid member data message
+    end
+
+    Controller -> ProjectModel : findById(project_id)
+    activate ProjectModel
+    ProjectModel -> DB : execute(\n  'SELECT project_id, employee_responsible_id\n   FROM project WHERE project_id = ?',\n  [project_id]\n)
+    activate DB
+    DB --> ProjectModel : projectRows[]
+    deactivate DB
+    ProjectModel --> Controller : projectRows[]
+    deactivate ProjectModel
+
+    alt Project not found
+        Controller ->> Routes : res.status(404).json\n({ error: 'The selected project was not found.' })
+        activate Routes
+        Routes ->> Client : HTTP 404 Not Found
+        deactivate Routes
+        Client -> MembersView : showAddMemberError(error)
+        MembersView --> User : Project not found message
+    end
+
+    Controller -> Controller : ensure employeeId <> project.employee_responsible_id
+
+    alt Employee is project lead
+        Controller ->> Routes : res.status(400).json\n({ error: 'The project lead is already part of the project.' })
+        activate Routes
+        Routes ->> Client : HTTP 400 Bad Request
+        deactivate Routes
+        Client -> MembersView : showAddMemberError(error)
+        MembersView --> User : Project lead cannot be re-added message
+    end
+
+    Controller -> CollaborationModel : findActiveByProjectAndEmployee\n(project_id, employeeId)
+    activate CollaborationModel
+    CollaborationModel -> DB : execute(\n  'SELECT * FROM collaboration\n   WHERE project_id = ?\n   AND employee_id = ?\n   AND ended_at IS NULL',\n  [project_id, employeeId]\n)
+    activate DB
+    DB --> CollaborationModel : membershipRows[]
+    deactivate DB
+    CollaborationModel --> Controller : membershipRows[]
+    deactivate CollaborationModel
+
+    alt Membership already exists
+        Controller ->> Routes : res.status(200).json\n({ success: true,\n  warningMessage: 'That employee is already a member of this project.' })
+        activate Routes
+        Routes ->> Client : HTTP 200 OK application/json
+        deactivate Routes
+        Client -> MembersView : showAddMemberWarning(message)
+        MembersView --> User : Already member warning
+    end
+
+    Controller -> CollaborationModel : upsertMembership(project_id, employeeId,\nrole, description, started_at)
+    activate CollaborationModel
+    CollaborationModel -> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    role, description, started_at, ended_at)\n   VALUES (UUID(), ?, ?, ?, ?, ?, NULL)\n   ON DUPLICATE KEY UPDATE\n   role = VALUES(role),\n   description = VALUES(description),\n   started_at = VALUES(started_at),\n   ended_at = NULL',\n  [project_id, employeeId,\n   role, description, started_at]\n)
+    activate DB
+    DB --> CollaborationModel : upsert result
+    deactivate DB
+    CollaborationModel --> Controller : member persisted
+    deactivate CollaborationModel
+
+    Controller -> CollaborationModel : fetchDetailedByProject(project_id)
+    activate CollaborationModel
+    CollaborationModel -> DB : execute(\n  'SELECT C.collaboration_id, C.employee_id,\n   C.role, C.description, C.started_at,\n   E.full_name\n   FROM collaboration AS C\n   LEFT JOIN employee AS E ON E.employee_id = C.employee_id\n   WHERE C.project_id = ? AND C.ended_at IS NULL\n   ORDER BY E.full_name ASC',\n  [project_id]\n)
+    activate DB
+    DB --> CollaborationModel : membersDetailed[]
+    deactivate DB
+    CollaborationModel --> Controller : membersDetailed[]
+    deactivate CollaborationModel
+
+    Controller ->> Routes : res.status(200).json\n({ success: true,\n  successMessage: 'Member added to the project.',\n  members: membersDetailed })
+    activate Routes
+    Routes ->> Client : HTTP 200 OK application/json
+    deactivate Routes
+    Client -> MembersView : updateMembersModule(data.members)\ncloseAddMemberPopup()
+    MembersView --> User : Members panel refreshed
+    deactivate Controller
 end
 
-loop Each selected team
-SV -> PT: findActiveProjectTeam(projectId, teamId)
-activate PT
-PT -> DB: SELECT id\nFROM projectteam\nWHERE project_id = ? AND team_id = ? AND left_at IS NULL
-activate DB
-DB --> PT: projectteam row / null
-deactivate DB
-PT --> SV: projectteam / null
-deactivate PT
-alt Team already linked to project
-SV -> SV: markDuplicateTeam(teamId)
-else Team not linked to project
-SV -> PT: createProjectTeam(projectId, teamId)
-activate PT
-PT -> DB: INSERT INTO projectteam(project_id, team_id, joined_at)\nVALUES (?, ?, NOW())
-activate DB
-DB --> PT: inserted projectteam id
-deactivate DB
-PT --> SV: team linked
-deactivate PT
-end
+group Add Team to Project (AJAX)
+    activate User
+    User -> Client : Select team + role + start_date\n[description when role = COLLABORATION]
+    deactivate User
+    Client -> Client : validateTeamPayload(teamId,\nteam_role, started_at, description)
+
+    alt Invalid team payload
+        Client -> MembersView : showAddTeamError('Invalid data.')
+        MembersView --> User : Invalid team input message
+    end
+
+    Client -> Routes : fetch('/projects/:project_id/teams',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({teamId, team_role,\nstarted_at, description, _csrf})})
+    activate Routes
+    Routes -> Controller : addProjectTeam(request, response)
+    activate Controller
+    deactivate Routes
+
+    Controller -> Controller : hasPrivilege('PROJ-05-02', request.session.privileges)
+
+    alt Missing privilege PROJ-05-02 (team)
+        Controller ->> Routes : res.status(403).json\n({ error: 'You cannot add teams to this project.' })
+        activate Routes
+        Routes ->> Client : HTTP 403 Forbidden
+        deactivate Routes
+        Client -> MembersView : showAddTeamError(error)
+        MembersView --> User : Permission error message
+    end
+
+    Controller -> Controller : validateAddTeamPayload(teamId,\nteam_role, started_at, description)
+
+    alt Invalid team payload (server)
+        Controller ->> Routes : res.status(400).json\n({ error: 'Invalid team data.' })
+        activate Routes
+        Routes ->> Client : HTTP 400 Bad Request
+        deactivate Routes
+        Client -> MembersView : showAddTeamError(error)
+        MembersView --> User : Invalid team data message
+    end
+
+    Controller -> ProjectModel : findById(project_id)
+    activate ProjectModel
+    ProjectModel -> DB : execute(\n  'SELECT project_id FROM project\n   WHERE project_id = ?',\n  [project_id]\n)
+    activate DB
+    DB --> ProjectModel : projectRows[]
+    deactivate DB
+    ProjectModel --> Controller : projectRows[]
+    deactivate ProjectModel
+
+    alt Project not found (team)
+        Controller ->> Routes : res.status(404).json\n({ error: 'The selected project was not found.' })
+        activate Routes
+        Routes ->> Client : HTTP 404 Not Found
+        deactivate Routes
+        Client -> MembersView : showAddTeamError(error)
+        MembersView --> User : Project not found message
+    end
+
+    Controller -> TeamModel : findById(teamId)
+    activate TeamModel
+    TeamModel -> DB : execute(\n  'SELECT team_id, name\n   FROM team\n   WHERE team_id = ?',\n  [teamId]\n)
+    activate DB
+    DB --> TeamModel : teamRows[]
+    deactivate DB
+    TeamModel --> Controller : teamRows[]
+    deactivate TeamModel
+
+    alt Team not found
+        Controller ->> Routes : res.status(404).json\n({ error: 'The selected team was not found.' })
+        activate Routes
+        Routes ->> Client : HTTP 404 Not Found
+        deactivate Routes
+        Client -> MembersView : showAddTeamError(error)
+        MembersView --> User : Team not found message
+    end
+
+    Controller -> ProjectTeamModel : upsertProjectTeam(project_id, teamId,\nteam_role, started_at, description)
+    activate ProjectTeamModel
+    ProjectTeamModel -> DB : execute(\n  'INSERT INTO projectteam\n   (team_id, project_id, team_role,\n    joined_at, description)\n   VALUES (?, ?, ?, ?, ?)\n   ON DUPLICATE KEY UPDATE\n   team_role = VALUES(team_role),\n   joined_at = VALUES(joined_at),\n   description = VALUES(description)',\n  [teamId, project_id, team_role,\n   started_at, description]\n)
+    activate DB
+    DB --> ProjectTeamModel : upsert result
+    deactivate DB
+    ProjectTeamModel --> Controller : team assignment persisted
+    deactivate ProjectTeamModel
+
+    Controller -> ProjectTeamModel : fetchDetailedByProject(project_id)
+    activate ProjectTeamModel
+    ProjectTeamModel -> DB : execute(\n  'SELECT PT.team_id, PT.team_role,\n   PT.joined_at, PT.description,\n   T.name\n   FROM projectteam AS PT\n   INNER JOIN team AS T ON T.team_id = PT.team_id\n   WHERE PT.project_id = ?\n   ORDER BY T.name ASC',\n  [project_id]\n)
+    activate DB
+    DB --> ProjectTeamModel : teamsDetailed[]
+    deactivate DB
+    ProjectTeamModel --> Controller : teamsDetailed[]
+    deactivate ProjectTeamModel
+
+    Controller ->> Routes : res.status(200).json\n({ success: true,\n  successMessage: 'Team added to the project.',\n  teams: teamsDetailed })
+    activate Routes
+    Routes ->> Client : HTTP 200 OK application/json
+    deactivate Routes
+    Client -> MembersView : updateTeamsModule(data.teams)\ncloseAddTeamPopup()
+    MembersView --> User : Teams panel refreshed
+    deactivate Controller
 end
 
-SV -> X: listProjectParticipants(projectId)
-activate X
-X -> DB: SELECT c.id, e.id AS employee_id, e.first_name, e.last_name\nFROM collaboration c\nJOIN employee e ON e.id = c.employee_id\nWHERE c.project_id = ? AND c.left_at IS NULL\nORDER BY e.first_name, e.last_name
-activate DB
-DB --> X: participant rows
-deactivate DB
-X --> SV: participants
-deactivate X
-SV -> PT: listProjectTeams(projectId)
-activate PT
-PT -> DB: SELECT pt.id, t.id AS team_id, t.name\nFROM projectteam pt\nJOIN team t ON t.id = pt.team_id\nWHERE pt.project_id = ? AND pt.left_at IS NULL\nORDER BY t.name
-activate DB
-DB --> PT: linked team rows
-deactivate DB
-PT --> SV: teams
-deactivate PT
-SV --> C: refreshed member data
-deactivate SV
-C --> RO: response.json({success:true,data:{participants,teams,duplicates}})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateParticipantsModule(data)
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'Error updating project members.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> MembersView : showAddMemberError(error)\nshowAddTeamError(error)
+    MembersView --> User : Generic add-member/add-team error
 end
-deactivate V
+
+deactivate Client
+deactivate MembersView
 
 @enduml

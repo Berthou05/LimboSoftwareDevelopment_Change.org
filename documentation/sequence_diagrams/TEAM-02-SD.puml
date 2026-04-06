@@ -1,89 +1,117 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "team-info.ejs" as V
-boundary "team.routes" as RO
-control "team.controller" as C
-control "team.service" as SV
-entity "employee.model" as E
-entity "team.model" as X
-database "unitas_system" as DB
+actor    "Employee"                              as User
+boundary "pages/team.ejs"                        as TeamView
+boundary "team.routes"                           as Routes
+control  "team.controller"                       as Controller
+entity   "team.model"                            as TeamModel
+database "unitas_system"                         as DB
 
-U -> V: Click "Edit team"
-activate V
-V -> V: enableTeamEditMode()
+note right of Routes
+  Target route for TEAM-02:
+  router.post('/:team_id/team-info', isAuth, teamController.updateTeamInfo)
+end note
 
-opt Cancel team edit
-U -> V: Click "Cancel"
-V -> V: restoreTeamInfo()
+activate User
+User -> TeamView : Click "Edit Team Info"
+deactivate User
+activate TeamView
+TeamView -> TeamView : Open basic info form
+TeamView --> User : Show editable fields\n(name, description, image)
+deactivate TeamView
+
+activate User
+User -> TeamView : Submit basic info form
+deactivate User
+activate TeamView
+TeamView -> Routes : POST /teams/:team_id/team-info\n{ name, description, image, _csrf }
+activate Routes
+Routes -> Controller : updateTeamInfo(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : canEdit = request.session.privileges.some(\n  (priv) => priv.privilege_id === 'TEAM-02'\n)
+
+alt Missing TEAM-02 privilege
+    Controller ->> Routes : response.status(403).render('pages/team',\n{ error: 'You do not have permission to edit team information.' })
+    activate Routes
+    Routes ->> TeamView : HTTP 403 HTML
+    deactivate Routes
+    TeamView --> User : Show permission error
 end
 
-U -> V: Click "Save"
-V -> RO: fetch('/teams/:teamId',\n{method:'PATCH', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify(teamForm)})
-activate RO
-RO -> C: updateTeam(request, response)
-activate C
-C -> SV: updateTeam(teamId, teamForm)
-activate SV
-SV -> SV: validateTeamFields(name, ownerEmployeeId, description,\nstartDate, endDate, status)
+Controller -> Controller : validateTeamInfo(name, description, image)
 
-alt Team fields invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid team data"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showTeamUpdateError(error)
-else Team fields valid
-SV -> E: findById(ownerEmployeeId)
-activate E
-E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE id = ?
-activate DB
-DB --> E: owner row / null
-deactivate DB
-E --> SV: owner / null
-deactivate E
+alt Invalid basic info payload
+    Controller ->> Routes : response.status(400).render('pages/team',\n{ formErrors: ['Invalid team name, description, or image.'] })
+    activate Routes
+    Routes ->> TeamView : HTTP 400 HTML
+    deactivate Routes
+    TeamView --> User : Show validation errors
+end
 
-alt Owner not found
-SV --> C: owner validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Owner not found"})
-deactivate C
-RO --> V: HTTP 404 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showTeamUpdateError(error)
-else Owner found
-SV -> X: updateTeam(teamId, teamForm)
-activate X
-X -> DB: UPDATE team\nSET name = ?, owner_employee_id = ?, description = ?,\nstart_date = ?, end_date = ?, status = ?\nWHERE id = ?
+Controller -> TeamModel : findById(team_id)
+activate TeamModel
+TeamModel -> DB : execute(\n  'SELECT team_id, employee_responsible_id, name, description, image, status\n   FROM team\n   WHERE team_id = ?',\n  [team_id]\n)
 activate DB
-DB --> X: updated rows
+DB --> TeamModel : teamRows[]
 deactivate DB
-X --> SV: update result
-deactivate X
-SV -> X: findById(teamId)
-activate X
-X -> DB: SELECT id, name, owner_employee_id, description,\nstart_date, end_date, status\nFROM team\nWHERE id = ?
+TeamModel --> Controller : teamRows[]
+deactivate TeamModel
+
+alt Team not found
+    Controller ->> Routes : response.status(404).render('pages/error404',\n{ pageTitle: 'Team not found' })
+    activate Routes
+    Routes ->> TeamView : HTTP 404 HTML
+    deactivate Routes
+    TeamView --> User : Show "Team not found"
+end
+
+Controller -> TeamModel : findByName(name)
+activate TeamModel
+TeamModel -> DB : execute(\n  'SELECT team_id\n   FROM team\n   WHERE name = ?\n   AND team_id <> ?\n   LIMIT 1',\n  [name, team_id]\n)
 activate DB
-DB --> X: updated team row
+DB --> TeamModel : duplicatedNameRows[]
 deactivate DB
-X --> SV: team
-deactivate X
-SV --> C: updated team data
-deactivate SV
-C --> RO: response.json({success:true,data:team})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateTeamModule(data)
+TeamModel --> Controller : duplicatedNameRows[]
+deactivate TeamModel
+
+alt Team name already in use
+    Controller ->> Routes : response.status(409).render('pages/team',\n{ formErrors: ['A team with this name already exists.'] })
+    activate Routes
+    Routes ->> TeamView : HTTP 409 HTML
+    deactivate Routes
+    TeamView --> User : Show duplicate-name error
 end
+
+Controller -> TeamModel : updateTeamInfo(team_id, name, description, image)
+activate TeamModel
+TeamModel -> DB : execute(\n  'UPDATE team\n   SET name = ?,\n       description = ?,\n       image = ?\n   WHERE team_id = ?',\n  [name, description, image, team_id]\n)
+activate DB
+DB --> TeamModel : update result
+deactivate DB
+TeamModel --> Controller : team updated
+deactivate TeamModel
+
+Controller ->> Routes : response.redirect('/teams/:team_id?updated=team-info')
+activate Routes
+Routes ->> TeamView : HTTP 302 -> GET /teams/:team_id
+deactivate Routes
+TeamView --> User : Show updated team information + success message
+
+alt Unexpected error (catch)
+    Controller ->> Routes : response.status(500).render('pages/team',\n{ error: 'Error updating team basic information.' })
+    activate Routes
+    Routes ->> TeamView : HTTP 500 HTML
+    deactivate Routes
+    TeamView --> User : Show generic update error
 end
-deactivate V
+
+deactivate Controller
+deactivate TeamView
 
 @enduml

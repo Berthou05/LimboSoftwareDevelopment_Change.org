@@ -14,4 +14,6 @@ router.post('/logout',authController.getLogout);
 router.get('/new',authController.getSignin);
 router.post('/new',authController.postSignin);
 
+//? Need to implement recover route '/recover'.
+
 module.exports = router;

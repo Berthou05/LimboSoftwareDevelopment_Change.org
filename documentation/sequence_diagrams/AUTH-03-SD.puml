@@ -1,174 +1,215 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "recover-password.ejs" as V
-boundary "reset-password.ejs" as V2
-boundary "auth.routes" as RO
-control "auth.controller" as C
-control "auth.service" as SV
-entity "account.model" as X
-entity "email.service" as ES
-database "unitas_system" as DB
+actor    "User"                              as User
+boundary "pages/login.ejs"                   as LoginView
+boundary "pages/recover-email.ejs"           as RecoverEmailView
+boundary "pages/recover-token.ejs"           as RecoverTokenView
+boundary "pages/recover-reset-password.ejs"  as RecoverResetView
+boundary "auth.routes"                       as Routes
+control  "auth.controller"                   as Controller
+entity   "account.model"                     as AccountModel
+control  "email.service"                     as EmailService
+database "unitas_system"                     as DB
 
-U -> V: Submit password recovery form
-activate V
-V -> RO: POST /auth/recover
-activate RO
-RO -> C: recoverPassword(request, response)
-activate C
-C -> SV: recoverPassword(email)
-activate SV
-SV -> SV: validateEmailFormat(email)
+note right of AccountModel
+  Account fields used by AUTH-03:
+  - recovery_token VARCHAR(16)
+  - recovery_token_expires_at DATETIME
+end note
 
-alt Email format invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.render('recover-password', {error})
-deactivate C
-RO --> V: response.render(...)
-deactivate RO
-else Email format valid
-SV -> X: findByEmail(email)
-activate X
-X -> DB: SELECT id, email\nFROM account\nWHERE email = ?
+activate User
+User -> LoginView : Click "Recover Password"
+deactivate User
+activate LoginView
+LoginView -> Routes : GET /recover
+activate Routes
+Routes -> Controller : getRecoverEmail(request, response)
+activate Controller
+deactivate Routes
+Controller ->> Routes : response.render('pages/recover-email',\n{ csrfToken, formErrors: [], formSuccess: '' })
+activate Routes
+Routes ->> RecoverEmailView : HTTP 200 HTML
+deactivate Routes
+RecoverEmailView --> User : Show email confirmation page
+deactivate Controller
+deactivate LoginView
+
+activate User
+User -> RecoverEmailView : Enter email and submit form
+deactivate User
+activate RecoverEmailView
+RecoverEmailView -> RecoverEmailView : Browser validation\n(required + type='email')
+RecoverEmailView -> Routes : POST /recover/email\n{ email, _csrf }
+activate Routes
+Routes -> Controller : postRecoverEmail(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : validateEmailFormat(email)
+
+alt Invalid email format
+    Controller ->> Routes : response.status(400).render('pages/recover-email',\n{ formErrors:['Enter a valid email address.'] })
+    activate Routes
+    Routes ->> RecoverEmailView : HTTP 400 HTML
+    deactivate Routes
+    RecoverEmailView --> User : Show email format error
+end
+
+Controller -> AccountModel : fetchByEmail(email)
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT account_id, employee_id, email, status\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
 activate DB
-DB --> X: account row / null
+DB --> AccountModel : accountRows[]
 deactivate DB
-X --> SV: account / null
-deactivate X
+AccountModel --> Controller : accountRows[]
+deactivate AccountModel
 
-alt Email not registered
-SV --> C: account not found
-deactivate SV
-C --> RO: response.render('recover-password', {error})
-deactivate C
-RO --> V: response.render(...)
-deactivate RO
-else Email registered
-SV -> X: storeRecoveryToken(account.id, token, expiresAt)
-activate X
-X -> DB: UPDATE account\nSET recovery_token = ?, recovery_token_expires_at = ?\nWHERE id = ?
+alt Account not found or DISABLED
+    Controller ->> Routes : response.render('pages/recover-token',\n{ recoveryEmail: email,\n  formSuccess: 'If the email exists, a passkey was sent.' })
+    activate Routes
+    Routes ->> RecoverTokenView : HTTP 200 HTML
+    deactivate Routes
+    RecoverTokenView --> User : Show token page with generic message
+end
+
+Controller -> Controller : recoveryToken = generatePasskey(8)\nexpiresAt = NOW + 15 minutes
+Controller -> AccountModel : setRecoveryToken(account_id, recoveryToken, expiresAt)
+activate AccountModel
+AccountModel -> DB : execute(\n  'UPDATE account\n   SET recovery_token = ?,\n       recovery_token_expires_at = ?\n   WHERE account_id = ?',\n  [recoveryToken, expiresAt, account_id]\n)
 activate DB
-DB --> X: token stored
+DB --> AccountModel : update result
 deactivate DB
-X --> SV: token saved
-deactivate X
-SV -> ES: sendPasswordRecoveryEmail(account.email, resetLink)
-activate ES
-ES --> SV: delivered / failed
-deactivate ES
+AccountModel --> Controller : token saved
+deactivate AccountModel
+
+Controller -> EmailService : sendRecoveryPasskey(email, recoveryToken, expiresAt)
+activate EmailService
+EmailService --> Controller : delivered | failed
+deactivate EmailService
 
 alt Email delivery failed
-SV -> X: clearRecoveryToken(account.id)
-activate X
-X -> DB: UPDATE account\nSET recovery_token = NULL, recovery_token_expires_at = NULL\nWHERE id = ?
+    Controller -> AccountModel : clearRecoveryToken(account_id)
+    activate AccountModel
+    AccountModel -> DB : execute(\n  'UPDATE account\n   SET recovery_token = NULL,\n       recovery_token_expires_at = NULL\n   WHERE account_id = ?',\n  [account_id]\n)
+    activate DB
+    DB --> AccountModel : update result
+    deactivate DB
+    AccountModel --> Controller : token cleared
+    deactivate AccountModel
+
+    Controller ->> Routes : response.status(500).render('pages/recover-email',\n{ formErrors:['Unable to send recovery passkey. Try again.'] })
+    activate Routes
+    Routes ->> RecoverEmailView : HTTP 500 HTML
+    deactivate Routes
+    RecoverEmailView --> User : Show email service error
+end
+
+Controller ->> Routes : response.render('pages/recover-token',\n{ recoveryEmail: email,\n  formSuccess: 'Enter the passkey sent to your email.' })
+activate Routes
+Routes ->> RecoverTokenView : HTTP 200 HTML
+deactivate Routes
+RecoverTokenView --> User : Show token/passkey input page
+deactivate Controller
+deactivate RecoverEmailView
+
+activate User
+User -> RecoverTokenView : Enter email + passkey and submit
+deactivate User
+activate RecoverTokenView
+RecoverTokenView -> RecoverTokenView : Front-end required field validation
+RecoverTokenView -> Routes : POST /recover/token\n{ email, passkey, _csrf }
+activate Routes
+Routes -> Controller : postRecoverToken(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> AccountModel : fetchRecoveryByEmail(email)
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT account_id, email, status,\n          recovery_token, recovery_token_expires_at\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
 activate DB
-DB --> X: token cleared
+DB --> AccountModel : recoveryRows[]
 deactivate DB
-X --> SV: cleanup done
-deactivate X
-SV --> C: delivery error
-deactivate SV
-C --> RO: response.render('recover-password', {error})
-deactivate C
-RO --> V: response.render(...)
-deactivate RO
-else Email delivery succeeded
-SV --> C: recovery email sent
-deactivate SV
-C --> RO: response.render('recover-password', {message})
-deactivate C
-RO --> V: response.render(...)
-deactivate RO
-end
-end
-end
-deactivate V
+AccountModel --> Controller : recoveryRows[]
+deactivate AccountModel
 
-U -> RO: GET /auth/reset?token=...
-activate RO
-RO -> C: showResetForm(request, response)
-activate C
-C -> SV: validateRecoveryToken(token)
-activate SV
-SV -> X: findByRecoveryToken(token)
-activate X
-X -> DB: SELECT id, recovery_token_expires_at\nFROM account\nWHERE recovery_token = ?
+Controller -> Controller : validatePasskey(passkey, recovery_token)\nvalidatePasskeyExpiration(recovery_token_expires_at)
+
+alt Invalid or expired passkey
+    Controller ->> Routes : response.status(400).render('pages/recover-token',\n{ recoveryEmail: email,\n  formErrors:['Invalid or expired passkey.'] })
+    activate Routes
+    Routes ->> RecoverTokenView : HTTP 400 HTML
+    deactivate Routes
+    RecoverTokenView --> User : Show passkey validation error
+end
+
+Controller ->> Routes : response.render('pages/recover-reset-password',\n{ recoveryEmail: email, passkey })
+activate Routes
+Routes ->> RecoverResetView : HTTP 200 HTML
+deactivate Routes
+RecoverResetView --> User : Show reset password page
+deactivate Controller
+deactivate RecoverTokenView
+
+activate User
+User -> RecoverResetView : Enter new password + confirmation\nSubmit form
+deactivate User
+activate RecoverResetView
+RecoverResetView -> RecoverResetView : Front-end password policy + confirmation check
+RecoverResetView -> Routes : POST /recover/reset\n{ email, passkey, password, confirmPassword, _csrf }
+activate Routes
+Routes -> Controller : postRecoverResetPassword(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : validatePasswordPolicy(password)\nvalidatePasswordMatch(password, confirmPassword)
+
+alt Invalid password payload
+    Controller ->> Routes : response.status(400).render('pages/recover-reset-password',\n{ recoveryEmail: email, passkey,\n  formErrors:['Password policy or confirmation is invalid.'] })
+    activate Routes
+    Routes ->> RecoverResetView : HTTP 400 HTML
+    deactivate Routes
+    RecoverResetView --> User : Show password validation error
+end
+
+Controller -> AccountModel : fetchRecoveryByEmail(email)
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT account_id, email, status,\n          recovery_token, recovery_token_expires_at\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
 activate DB
-DB --> X: account row / null
+DB --> AccountModel : recoveryRows[]
 deactivate DB
-X --> SV: account / null
-deactivate X
+AccountModel --> Controller : recoveryRows[]
+deactivate AccountModel
 
-alt Token invalid or expired
-SV --> C: invalid token
-deactivate SV
-C --> RO: response.render('recover-password', {error})
-deactivate C
-RO --> V: response.render(...)
-deactivate RO
-else Token valid
-SV --> C: token accepted
-deactivate SV
-C --> RO: response.render('reset-password', {token})
-deactivate C
-RO --> V2: response.render(...)
-deactivate RO
+Controller -> Controller : revalidatePasskey(passkey, recovery_token)\nrevalidatePasskeyExpiration(recovery_token_expires_at)
+
+alt Invalid or expired passkey during reset
+    Controller ->> Routes : response.status(400).render('pages/recover-token',\n{ recoveryEmail: email,\n  formErrors:['Passkey expired. Request a new one.'] })
+    activate Routes
+    Routes ->> RecoverTokenView : HTTP 400 HTML
+    deactivate Routes
+    RecoverTokenView --> User : Return to passkey page with error
 end
 
-U -> V2: Submit new password
-activate V2
-V2 -> RO: POST /auth/reset
-activate RO
-RO -> C: resetPassword(request, response)
-activate C
-C -> SV: resetPassword(token, newPassword)
-activate SV
-SV -> SV: validatePasswordRules(newPassword)
-
-alt Password invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.render('reset-password', {error})
-deactivate C
-RO --> V2: response.render(...)
-deactivate RO
-else Password valid
-SV -> X: findByRecoveryToken(token)
-activate X
-X -> DB: SELECT id, recovery_token_expires_at\nFROM account\nWHERE recovery_token = ?
+Controller -> Controller : passwordHash = bcrypt.hash(password, 12)
+Controller -> AccountModel : updatePasswordAndClearRecovery(account_id, passwordHash)
+activate AccountModel
+AccountModel -> DB : execute(\n  'UPDATE account\n   SET password_hash = ?,\n       recovery_token = NULL,\n       recovery_token_expires_at = NULL\n   WHERE account_id = ?',\n  [passwordHash, account_id]\n)
 activate DB
-DB --> X: account row / null
+DB --> AccountModel : update result
 deactivate DB
-X --> SV: account / null
-deactivate X
+AccountModel --> Controller : password updated
+deactivate AccountModel
 
-alt Token invalid during reset
-SV --> C: invalid token
-deactivate SV
-C --> RO: response.render('reset-password', {error})
-deactivate C
-RO --> V2: response.render(...)
-deactivate RO
-else Token valid during reset
-SV -> X: updatePassword(account.id, passwordHash)
-activate X
-X -> DB: UPDATE account\nSET password_hash = ?, recovery_token = NULL,\nrecovery_token_expires_at = NULL\nWHERE id = ?
-activate DB
-DB --> X: password updated
-deactivate DB
-X --> SV: password reset complete
-deactivate X
-SV --> C: password updated
-deactivate SV
-C --> RO: response.redirect('/login?reset=success')
-deactivate C
-RO --> V2: response.redirect(...)
-deactivate RO
-end
-end
-deactivate V2
+Controller ->> Routes : response.redirect('/?passwordRecovered=1')
+activate Routes
+Routes ->> LoginView : HTTP 302 -> GET /
+deactivate Routes
+LoginView --> User : Show login page with success message
+deactivate Controller
+deactivate RecoverResetView
 
 @enduml

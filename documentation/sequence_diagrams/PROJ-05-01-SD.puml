@@ -1,81 +1,146 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "project-members.ejs" as V
-boundary "project.routes" as RO
-control "project.controller" as C
-control "project.service" as SV
-entity "employee.model" as E
-entity "collaboration.model" as X
-database "unitas_system" as DB
+actor    "Employee"                         as User
+boundary "projectDirectory/joinButton.ejs" as JoinButton
+control  "teamDetails.js (AJAX)"            as Client
+boundary "project.routes"                   as Routes
+control  "project.controller"               as Controller
+entity   "project.model"                    as ProjectModel
+entity   "collaboration.model"              as CollaborationModel
+database "unitas_system"                    as DB
 
-U -> V: Click "Join"
-activate V
+activate User
+User -> JoinButton : Click "Join Project"
+deactivate User
+activate JoinButton
+JoinButton -> Client : openJoinProjectPopup()
+activate Client
+JoinButton --> User : Show role/start-date popup
+activate User
+User -> Client : Select role + start_date\n[description when role = COLLABORATION]
+deactivate User
+Client -> Client : validateJoinPayload(role, started_at,\ndescription)
 
-opt Cancel join dialog
-V -> V: closeJoinDialog()
+alt Invalid join payload
+    Client -> JoinButton : showJoinValidationError()
+    JoinButton --> User : Inline validation message
 end
 
-V -> RO: fetch('/projects/:projectId/members/self',\n{method:'POST', headers:{'Content-Type':'application/json'}})
-activate RO
-RO -> C: addSelfToProject(request, response)
-activate C
-C -> SV: addSelfToProject(projectId, session.accountId)
-activate SV
-SV -> E: findByAccountId(session.accountId)
-activate E
-E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE account_id = ?
+Client -> Routes : fetch('/projects/:project_id/join',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({role, started_at, description, _csrf})})
+activate Routes
+Routes -> Controller : joinProject(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : hasPrivilege('PROJ-05-01', request.session.privileges)
+
+alt Missing privilege PROJ-05-01
+    Controller ->> Routes : res.status(403).json\n({ error: 'You cannot join this project.' })
+    activate Routes
+    Routes ->> Client : HTTP 403 Forbidden
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Privilege error message
+end
+
+Controller -> Controller : validateJoinPayload(role, started_at,\ndescription)
+
+alt Invalid join payload (server)
+    Controller ->> Routes : res.status(400).json\n({ error: 'Invalid join data.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Invalid input message
+end
+
+Controller -> ProjectModel : findById(project_id)
+activate ProjectModel
+ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.employee_responsible_id,\n   P.name, P.status\n   FROM project AS P\n   WHERE P.project_id = ?',\n  [project_id]\n)
 activate DB
-DB --> E: employee row
+DB --> ProjectModel : projectRows[]
 deactivate DB
-E --> SV: employee
-deactivate E
-SV -> X: findActiveMembership(projectId, employee.id)
-activate X
-X -> DB: SELECT id\nFROM collaboration\nWHERE project_id = ? AND employee_id = ? AND left_at IS NULL
+ProjectModel --> Controller : projectRows[]
+deactivate ProjectModel
+
+alt Project not found
+    Controller ->> Routes : res.status(404).json\n({ error: 'The selected project was not found.' })
+    activate Routes
+    Routes ->> Client : HTTP 404 Not Found
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Project not found message
+end
+
+Controller -> Controller : employee_id = request.session.employeeId
+
+alt User is project lead
+    Controller ->> Routes : res.status(409).json\n({ error: 'You are already the project lead.' })
+    activate Routes
+    Routes ->> Client : HTTP 409 Conflict
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Already lead warning
+end
+
+Controller -> CollaborationModel : findActiveByProjectAndEmployee\n(project_id, employee_id)
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'SELECT * FROM collaboration\n   WHERE project_id = ?\n   AND employee_id = ?\n   AND ended_at IS NULL',\n  [project_id, employee_id]\n)
 activate DB
-DB --> X: membership row / null
+DB --> CollaborationModel : membershipRows[]
 deactivate DB
-X --> SV: membership / null
-deactivate X
+CollaborationModel --> Controller : membershipRows[]
+deactivate CollaborationModel
 
 alt Membership already exists
-SV --> C: duplicate membership error
-deactivate SV
-C --> RO: response.json({success:false,error:"Already joined"})
-deactivate C
-RO --> V: HTTP 409 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showJoinProjectError(error)
-else Membership does not exist
-SV -> X: createMembership(projectId, employee.id)
-activate X
-X -> DB: INSERT INTO collaboration(project_id, employee_id, joined_at)\nVALUES (?, ?, NOW())
-activate DB
-DB --> X: inserted collaboration id
-deactivate DB
-X --> SV: collaboration created
-deactivate X
-SV -> X: listProjectParticipants(projectId)
-activate X
-X -> DB: SELECT c.id, e.id AS employee_id, e.first_name, e.last_name\nFROM collaboration c\nJOIN employee e ON e.id = c.employee_id\nWHERE c.project_id = ? AND c.left_at IS NULL\nORDER BY e.first_name, e.last_name
-activate DB
-DB --> X: participant rows
-deactivate DB
-X --> SV: participants
-deactivate X
-SV --> C: participants data
-deactivate SV
-C --> RO: response.json({success:true,data:participants})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateParticipantsModule(data)
+    Controller ->> Routes : res.status(409).json\n({ error: 'You are already a member of this project.' })
+    activate Routes
+    Routes ->> Client : HTTP 409 Conflict
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Already member warning
 end
-deactivate V
+
+Controller -> CollaborationModel : joinProject(project_id, employee_id,\nrole, description, started_at)
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    role, description, started_at, ended_at)\n   VALUES (UUID(), ?, ?, ?, ?, ?, NULL)',\n  [project_id, employee_id,\n   role, description, started_at]\n)
+activate DB
+DB --> CollaborationModel : insert result
+deactivate DB
+CollaborationModel --> Controller : collaboration created
+deactivate CollaborationModel
+
+Controller -> CollaborationModel : fetchDetailedByProject(project_id)
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'SELECT C.collaboration_id, C.employee_id,\n   C.role, C.description, C.started_at,\n   E.full_name\n   FROM collaboration AS C\n   LEFT JOIN employee AS E\n   ON E.employee_id = C.employee_id\n   WHERE C.project_id = ? AND C.ended_at IS NULL\n   ORDER BY E.full_name ASC',\n  [project_id]\n)
+activate DB
+DB --> CollaborationModel : membersDetailed[]
+deactivate DB
+CollaborationModel --> Controller : membersDetailed[]
+deactivate CollaborationModel
+
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'You joined the project.',\n  projectMembership: { isMember: true,\n  buttonLabel: 'Leave Project' },\n  members: membersDetailed })
+activate Routes
+Routes ->> Client : HTTP 200 OK application/json
+deactivate Routes
+Client -> JoinButton : updateJoinButton(data.projectMembership)\nupdateProjectMembers(data.members)\ncloseJoinProjectPopup()
+JoinButton --> User : Updated membership state
+
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'We could not update the project membership right now.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Generic join error
+end
+
+deactivate Controller
+deactivate Client
+deactivate JoinButton
 
 @enduml

@@ -143,3 +143,7 @@ exports.getLogout = (request, response, next)=>{
         return response.redirect('/');
     });
 }
+
+/*
+? Function for handling /recover is missing
+*/
