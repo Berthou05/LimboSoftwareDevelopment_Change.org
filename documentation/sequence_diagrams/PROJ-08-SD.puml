@@ -5,7 +5,7 @@ skinparam roundcorner 6
 autonumber
 
 actor    "Employee"                                      as User
-boundary "project.ejs + projectGoals.ejs"                as GoalsView
+boundary "pages/project.ejs"                             as GoalsView
 boundary "project.routes"                                as Routes
 control  "project.controller"                            as Controller
 entity   "project.model"                                 as ProjectModel
