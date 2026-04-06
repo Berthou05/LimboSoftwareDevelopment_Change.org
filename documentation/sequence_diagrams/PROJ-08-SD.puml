@@ -1,44 +1,81 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "project-goals.ejs" as V
-boundary "project.routes" as RO
-control "project.controller" as C
-control "project.service" as SV
-entity "goal.model" as X
-database "unitas_system" as DB
+actor    "Employee"                                      as User
+boundary "project.ejs + projectGoals.ejs"                as GoalsView
+boundary "project.routes"                                as Routes
+control  "project.controller"                            as Controller
+entity   "project.model"                                 as ProjectModel
+entity   "goal.model"                                    as GoalModel
+database "unitas_system"                                 as DB
 
-U -> V: Open Goals module
-activate V
-V -> RO: fetch('/projects/:projectId/goals')
-activate RO
-RO -> C: getProjectGoals(request, response)
-activate C
-C -> SV: getProjectGoals(projectId)
-activate SV
-SV -> X: findByProjectId(projectId)
-activate X
-X -> DB: SELECT id, title, description, status, target_date\nFROM goal\nWHERE project_id = ?\nORDER BY target_date ASC
+activate User
+User -> GoalsView : Open project detail page
+User -> GoalsView : Navigate to Goals module
+deactivate User
+activate GoalsView
+
+GoalsView -> Routes : GET /projects/:project_id
+activate Routes
+Routes -> Controller : getProjectPage(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : Promise.all([...])
+note right of Controller
+  Target engineering loads related modules in parallel.
+  This sequence specifies project + goals interactions.
+end note
+
+Controller -> ProjectModel : findById(project_id)
+activate ProjectModel
+ProjectModel -> DB : execute(\n  'SELECT ... FROM project WHERE project_id = ?',\n  [project_id]\n)
 activate DB
-DB --> X: goal rows
+DB --> ProjectModel : projectRows[]
 deactivate DB
-X --> SV: goals
-deactivate X
-SV --> C: goals data
-deactivate SV
-C --> RO: response.json({success:true,data:goals})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
+ProjectModel --> Controller : projectRows[]
+deactivate ProjectModel
 
-alt No goals returned
-V -> V: renderGoalsModule({items:[],empty:true})
-else Goals returned
-V -> V: renderGoalsModule(data)
+Controller -> GoalModel : fetchByProject(project_id)
+activate GoalModel
+GoalModel -> DB : execute(\n  'SELECT G.goal_id, G.title, G.description, G.due_date,\n   G.status, G.created_at, E.full_name\n   FROM goal AS G\n   LEFT JOIN employee AS E ON E.employee_id = G.employee_responsible_id\n   WHERE G.project_id = ?\n   ORDER BY CASE WHEN G.due_date IS NULL THEN 1 ELSE 0 END,\n            G.due_date ASC, G.created_at DESC',\n  [project_id]\n)
+activate DB
+DB --> GoalModel : goalRows[]
+deactivate DB
+GoalModel --> Controller : goalRows[]
+deactivate GoalModel
+
+alt Unexpected error while loading project context
+    Controller -> Controller : console.log(error)
+    Controller -> Controller : next(error)
+else Project context loaded
+    alt Project not found
+        Controller ->> Routes : response.status(404).render('pages/project',\n{ error: 'Project not found', project: { goalsDetailed: [] } })
+        activate Routes
+        Routes ->> GoalsView : HTTP 404 + rendered project page
+        deactivate Routes
+        GoalsView --> User : Show "Project not found"
+    else Project found
+        Controller -> Controller : map goalRows -> project.goalsDetailed
+        Controller ->> Routes : response.render('pages/project',\n{ project: { goalsDetailed, ... } })
+        activate Routes
+        Routes ->> GoalsView : HTTP 200 + rendered project page
+        deactivate Routes
+
+        alt No goals registered
+            GoalsView -> GoalsView : render empty goals state
+            GoalsView --> User : Show "No goals registered for this project."
+        else Goals available
+            GoalsView -> GoalsView : render goals cards
+            GoalsView --> User : Show goals list with status, due date, and author
+        end
+    end
 end
-deactivate V
+
+deactivate Controller
+deactivate GoalsView
 
 @enduml
