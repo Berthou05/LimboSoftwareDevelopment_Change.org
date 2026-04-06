@@ -1,79 +1,150 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "Admin" as U
-boundary "accounts.ejs" as V
-boundary "admin.routes" as RO
-control "admin.controller" as C
-control "admin.service" as SV
-entity "role.model" as R
-entity "accountrole.model" as X
-database "unitas_system" as DB
+actor    "Admin User"                  as Admin
+boundary "admin-accounts.ejs"          as AccountsView
+control  "adminAccounts.js (AJAX)"     as Client
+boundary "admin.routes"                as Routes
+control  "admin.controller"            as Controller
+entity   "account.model"               as AccountModel
+entity   "role.model"                  as RoleModel
+entity   "accountRoleAssignment.model" as AccountRoleModel
+database "unitas_system"               as DB
 
-U -> V: Change role in account row
-activate V
-V -> RO: fetch('/admin/accounts/:accountId/role',\n{method:'PATCH', headers:{'Content-Type':'application/json'},\nbody:JSON.stringify({roleId})})
-activate RO
-RO -> C: assignRole(request, response)
-activate C
-C -> SV: assignRole(accountId, roleId)
-activate SV
-SV -> R: findById(roleId)
-activate R
-R -> DB: SELECT id, name\nFROM role\nWHERE id = ?
-activate DB
-DB --> R: role row / null
-deactivate DB
-R --> SV: role / null
-deactivate R
+activate Admin
+Admin -> AccountsView : Change role dropdown\n(Admin | Lead | Employee)
+deactivate Admin
+activate AccountsView
+AccountsView -> Client : onRoleChanged(account_id, role_name)
+activate Client
+Client -> Client : validateRoleSelection(role_name)
 
-alt Role invalid
-SV --> C: validation error
-deactivate SV
-C --> RO: response.json({success:false,error:"Invalid role"})
-deactivate C
-RO --> V: HTTP 400 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showRoleAssignmentError(error)
-else Role valid
-SV -> X: updateRole(accountId, roleId)
-activate X
-X -> DB: UPDATE accountrole\nSET role_id = ?, updated_at = NOW()\nWHERE account_id = ? AND revoked_at IS NULL
-activate DB
-DB --> X: updated rows / database error
-deactivate DB
-X --> SV: update result
-deactivate X
-
-alt Update failed
-SV --> C: update error
-deactivate SV
-C --> RO: response.json({success:false,error:"Role could not be updated"})
-deactivate C
-RO --> V: HTTP 500 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showRoleAssignmentError(error)
-else Update succeeded
-SV -> X: findActiveRoleByAccount(accountId)
-activate X
-X -> DB: SELECT ar.account_id, r.id AS role_id, r.name\nFROM accountrole ar\nJOIN role r ON r.id = ar.role_id\nWHERE ar.account_id = ? AND ar.revoked_at IS NULL
-activate DB
-DB --> X: updated account role row
-deactivate DB
-X --> SV: account role
-deactivate X
-SV --> C: updated row data
-deactivate SV
-C --> RO: response.json({success:true,data:accountRole})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateAccountRoleRow(data)
+alt Invalid role selection on client
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError('Invalid role')
+    AccountsView --> Admin : Validation message
 end
-deactivate V
+
+Client -> Routes : fetch('/admin/accounts/:account_id/role',\n{method:'PATCH', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({role_name, _csrf})})
+activate Routes
+Routes -> Controller : updateAccountRole(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> Controller : hasPrivilege('ADMIN-05', request.session.privileges)
+
+alt Missing privilege ADMIN-05
+    Controller ->> Routes : res.status(403).json\n({ error: 'You do not have permission to update account roles.' })
+    activate Routes
+    Routes ->> Client : HTTP 403 Forbidden
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Permission error
+end
+
+Controller -> Controller : validateRolePayload(account_id, role_name)
+
+alt Invalid role payload
+    Controller ->> Routes : res.status(400).json\n({ error: 'Invalid role selection.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Invalid input message
+end
+
+Controller -> AccountModel : findById(account_id)
+activate AccountModel
+AccountModel -> DB : execute(\n  'SELECT account_id, employee_id, status\n   FROM account\n   WHERE account_id = ?',\n  [account_id]\n)
+activate DB
+DB --> AccountModel : accountRow | null
+deactivate DB
+AccountModel --> Controller : accountRow | null
+deactivate AccountModel
+
+alt Account not found
+    Controller ->> Routes : res.status(404).json\n({ error: 'Account not found.' })
+    activate Routes
+    Routes ->> Client : HTTP 404 Not Found
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Account not found message
+end
+
+Controller -> RoleModel : findByName(role_name)
+activate RoleModel
+RoleModel -> DB : execute(\n  'SELECT role_id, name\n   FROM role\n   WHERE name = ?',\n  [role_name]\n)
+activate DB
+DB --> RoleModel : roleRow | null
+deactivate DB
+RoleModel --> Controller : roleRow | null
+deactivate RoleModel
+
+alt Role not found in catalog
+    Controller ->> Routes : res.status(400).json\n({ error: 'Selected role is not available.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Role unavailable message
+end
+
+Controller -> AccountRoleModel : countActiveAdminsExcluding(account_id)
+activate AccountRoleModel
+AccountRoleModel -> DB : execute(\n  'SELECT COUNT(*) AS admin_count\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE r.name = ?\n   AND ar.account_id <> ?',\n  ['ADMIN', account_id]\n)
+activate DB
+DB --> AccountRoleModel : adminCount
+deactivate DB
+AccountRoleModel --> Controller : adminCount
+deactivate AccountRoleModel
+
+alt Attempt to remove last Admin
+    Controller ->> Routes : res.status(409).json\n({ error: 'At least one Admin account is required.' })
+    activate Routes
+    Routes ->> Client : HTTP 409 Conflict
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Business-rule warning
+end
+
+Controller -> AccountRoleModel : updateRole(account_id, role_id)
+activate AccountRoleModel
+AccountRoleModel -> DB : execute(\n  'UPDATE accountrole\n   SET role_id = ?\n   WHERE account_id = ?',\n  [role_id, account_id]\n)
+activate DB
+DB --> AccountRoleModel : update result
+deactivate DB
+AccountRoleModel --> Controller : roleUpdated
+deactivate AccountRoleModel
+
+Controller -> AccountRoleModel : fetchRoleByAccount(account_id)
+activate AccountRoleModel
+AccountRoleModel -> DB : execute(\n  'SELECT ar.account_id, r.role_id, r.name\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE ar.account_id = ?',\n  [account_id]\n)
+activate DB
+DB --> AccountRoleModel : accountRoleRow
+deactivate DB
+AccountRoleModel --> Controller : accountRoleRow
+deactivate AccountRoleModel
+
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'Role updated successfully.',\n  data: { account_id, role_name } })
+activate Routes
+Routes ->> Client : HTTP 200 OK application/json
+deactivate Routes
+Client -> AccountsView : updateRoleCell(data)\nshowRoleUpdateSuccess(message)
+AccountsView --> Admin : Updated role shown in row
+
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'Role could not be updated right now.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    AccountsView --> Admin : Generic error message
+end
+
+deactivate Controller
+deactivate Client
+deactivate AccountsView
 
 @enduml
