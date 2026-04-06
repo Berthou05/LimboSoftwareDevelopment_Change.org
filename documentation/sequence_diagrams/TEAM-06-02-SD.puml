@@ -6,37 +6,34 @@ boundary "team.ejs" as V
 boundary "team.routes" as RO
 boundary "search.routes" as SR
 control "team.controller" as C
-control "search.controller" as CS
-entity "search.model" as S
+entity "employee.model" as S
 entity "employeeteam.model" as  ET
-entity "employee.model" as E
 database "unitas_system" as BD
 
 autonumber
 activate L
-L->V: Click "Add" button
-deactivate L
+L->>V: Click "Add" button
     activate V
     V->V: showSearchPopup();
-    V->L: Show popup
+    V-->L: Show popup
     deactivate V
 
 alt Cancel Search Join
-activate L
-L->V: Click "Close" button.
-deactivate L
+L->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
     deactivate V
 end
 
+    
 group Search [Employee Search]
+L->>V:User types name
+    activate V
     V->V:validateInput();
     V->V:startEmployeeSearch(name);
-    V->SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
-    deactivate V
+    V->>SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
         activate SR
-        SR->CS: getEmployeeSearchResult(request, results); 
+        SR->C: getEmployeeSearchResult(request, results); 
         deactivate SR
             activate C
             C->>S: getEmployeeSearch(name, page, limit);
@@ -47,22 +44,19 @@ group Search [Employee Search]
                     deactivate BD
                 S-->C: results
                 deactivate S
-            C->V: response.json({body:results});
+            C-->V: response.json({body:results});
             deactivate C
-    activate V
     V->V:generateEmployeeResults(results);
-    V->L:updated view
+    V-->L:updated view
     deactivate V
-activate L
+
 opt View More Results
-L->V: Clicks the "View More" button.
-deactivate L
+L->>V: Clicks the "View More" button.
     activate V
     V->V:continueEmployeeSearch(name);
-    V->SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
-    deactivate V
+    V->>SR:fetch('/search/employee/?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
         activate SR
-        SR->CS: getEmployeeSearchResult(request, results); 
+        SR->C: getEmployeeSearchResult(request, results); 
         deactivate SR
             activate C
             C->>S: getEmployeeSearch(name, page, limit);
@@ -73,27 +67,22 @@ deactivate L
                     deactivate BD
                 S-->C: results
                 deactivate S
-            C->V: response.json({body:results});
+            C-->V: response.json({body:results});
             deactivate C
-    activate V
     V->V:generateResults(results);
-    V->L:updated view
+    V-->L:updated view
     deactivate V
-activate L
 end
-L->V: click on a matching result
-deactivate L
+L->>V: Click on a matching result
     activate V
 end
 
     V->V: showRolePopup();
-    V->L: Show popup
+    V-->L: Show popup
     deactivate V
 
 alt Cancel Role Join
-activate L
-L->V: Click "Close" button.
-deactivate L
+L->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
     deactivate V
@@ -102,13 +91,10 @@ end
 
 
 
-activate L
-L->V: Click "Submit" button.
-deactivate L
+L->>V: Click "Submit" button.
     activate V
     V->V: addEmployeeTeam(team_id, employee_id, role)
-    V->RO: fetch('/team/join', {method:'POST', headers: { 'Accept': 'application/json'}, body:JSON.stringify({team_id= ..., employee_id: ..., role:...})})
-    deactivate V
+    V->>RO: fetch('/team/join', {method:'POST', headers: { 'Accept': 'application/json'}, body:JSON.stringify({team_id= ..., employee_id: ..., role:...})})
         activate RO
         RO->C: addEmployeeTeam(request, response);
         deactivate RO
@@ -124,13 +110,9 @@ deactivate L
                 deactivate ET
             
 alt member>0
-            C->V: response.json({success:false, body:error});
-            deactivate C
-    activate V
+            C-->V: response.json({success:false, body:error});
     V->V: showFailingJoinMessage(team_id, employee_id, role, error);
-    V->L: Error message
-    deactivate V
-            activate C
+    V-->L: Error message
 end
 
 
@@ -155,24 +137,20 @@ end
             TEAM-05. 
             Consult Sequence Diagram
             end note
-            C->V: response.status(200).json({success:true, body:members});
-            deactivate C
-        activate V
+            C-->V: response.status(200).json({success:true, body:members});
         end group
 
     V->V: showTeamMembers(employees);
     V->V: showSuccessJoinMessage(team_id, employee_id, role);
-    V->L: Updated view + success message
-    deactivate V
+    V-->L: Updated view + success message
 
 alt Join Failed
-            activate C
-            C->V: response.json({success:false, body:error});
+            C-->V: response.json({success:false, body:error});
             deactivate C
-    activate V
     V->V: showFailingJoinMessage(team_id, employee_id, role, error);
-    V->L: Error message
+    V-->L: Error message
     deactivate V
 end
+deactivate L
 
 @enduml

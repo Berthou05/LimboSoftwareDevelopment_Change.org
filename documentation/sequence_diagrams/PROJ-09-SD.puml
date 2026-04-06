@@ -10,29 +10,23 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-L->V: Click "Add" button in the Project Goal module
-deactivate L
+L->>V: Click "Add" button in the Project Goal module
     activate V
     V->V: showGoalPopup();
-    V->L: Show goal popup
+    V-->L: Show goal popup
     deactivate V
 
 opt Cancel Creation
-activate L
-L->V: Clicks the "Close" button.
-deactivate L
+L->>V: Clicks the "Close" button.
     activate V
     V->V: closePopup();
     deactivate V
 end
 
-activate L
-L->V: Clicks the "Submit" button
-deactivate L
+L->>V: Clicks the "Submit" button
     activate V
     V->V: createAchievement(data)
-    V->RO: fetch('/project/goal/new',{method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
-    deactivate V
+    V->>RO: fetch('/project/goal/new',{method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
         activate RO
         RO->C: createGoal(request, response);
         deactivate RO
@@ -45,7 +39,7 @@ deactivate L
                     deactivate BD
                 A-->C: goal_id
                 deactivate A
-            C->A: fetchOneGoal(goal_id);
+            C->>A: fetchOneGoal(goal_id);
                 activate A
                 A->>BD: execute('SELECT goal_id, title, description, due_date, status FROM goal WHERE goal_id=?', [goal_id]);
                     activate BD
@@ -53,23 +47,18 @@ deactivate L
                     deactivate BD
                 A-->C: data
                 deactivate A
-            C->V: response.json({success:true, body:data});
-            deactivate C
-    activate V
+            C-->V: response.json({success:true, body:data});
     V->V:closePopup();
     V->V:createGoalModal(data);
-    deactivate V
 
     alt Creation failed
-            activate C
-            C->V: response.json({success:false, error:error});
+            C-->V: response.json({success:false, error:error});
             deactivate C
-    activate V
     V->V:closePopup();
     V->V:showErrorPopoup(error);
     end
 
-    V->L: Updated view
+    V-->L: Updated view
     deactivate V
-
+deactivate L
 @enduml

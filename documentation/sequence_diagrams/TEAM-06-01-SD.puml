@@ -10,29 +10,23 @@ database "unitas_system" as BD
 
 autonumber
 activate U
-U->V: Click "Join" button
-deactivate U
+U->>V: Click "Join" button
     activate V
     V->V: showRolePopup();
-    V->U: Show popup
+    V-->U: Show popup
     deactivate V
 
 alt Cancel Join
-activate U
-U->V: Click "Close" button.
-deactivate U
+U->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
     deactivate V
 end
 
-activate U
-U->V: Click "Submit" button.
-deactivate U
+U->>V: Click "Submit" button.
     activate V
     V->V: addEmployeeTeam(team_id, employee_id, role)
-    V->RO: fetch('/team/join', {method:'POST', headers: { 'Accept': 'application/json'}, body:JSON.stringify({team_id= ..., employee_id: ..., role:...})})
-    deactivate V
+    V->>RO: fetch('/team/join', {method:'POST', headers: { 'Accept': 'application/json'}, body:JSON.stringify({team_id= ..., employee_id: ..., role:...})})
         activate RO
         RO->C: addEmployeeTeam(request, response);
         deactivate RO
@@ -47,13 +41,9 @@ deactivate U
                 deactivate ET
             
 alt member>0
-            C->V: response.json({success:false, body:error});
-            deactivate C
-    activate V
+            C-->V: response.json({success:false, body:error});
     V->V: showFailingJoinMessage(team_id, employee_id, role, error);
-    V->U: Error message
-    deactivate V
-            activate C
+    V-->U: Error message
 end
             
             C->>ET: addEmployeeTeam(team_id, employee_id, role);
@@ -70,30 +60,26 @@ end
         
         activate RO
         group 'TEAM-05'
-        RO->C: getTeamMembers(request,response)
+        RO->C: getTeamMembers(request,response)        
         deactivate RO
-            activate C
+        activate C
             note right
             TEAM-05. 
             Consult Sequence Diagram
             end note
-            C->V: response.status(200).json({success:true, body:members});
-            deactivate C
-    activate V
+            C-->V: response.status(200).json({success:true, body:members});
         end group
     V->V: showTeamMembers(members);
     V->V: showSuccessJoinMessage(team_id, employee_id, role);
-    V->U: Updated view + success message
-    deactivate V
+    V-->U: Updated view + success message
 
 alt Join Failed
-            activate C
-            C->V: response.json({success:false, body:error});
+            C-->V: response.json({success:false, body:error});
             deactivate C
-    activate V
     V->V: showFailingJoinMessage(team_id, employee_id, role, error);
-    V->U: Error message
+    V-->U: Error message
     deactivate V
 end
+deactivate U
 
 @enduml
