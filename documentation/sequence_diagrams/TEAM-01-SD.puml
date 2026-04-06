@@ -1,0 +1,98 @@
+@startuml
+skinparam style strictuml
+
+actor Lead as U
+boundary "team.routes" as RO
+boundary "view pages/teamNew.ejs" as V
+control "team.controller" as C
+entity "Team.model" as TM
+database "unitas_system" as BD
+
+activate U
+U -> RO: GET /new
+deactivate U
+
+activate RO
+RO -> C: getNewTeamPage(request, response)
+deactivate RO
+
+activate C
+C -> V: response.render('pages/teamNew')
+deactivate C
+
+activate V
+V -> U: HTML form
+deactivate V
+
+
+activate U
+U -> RO: POST /new
+deactivate U
+
+activate RO
+RO -> C: createTeam(request, response)
+deactivate RO
+
+activate C
+C -> C: validate(request.body)
+C -> TM: findByName(request.body.name)
+activate TM
+
+TM -> BD: execute('SELECT team_id, name FROM team WHERE name=?',[request.body.name])
+activate BD
+BD --> TM: exists/null
+deactivate BD
+
+TM --> C: exists/null
+deactivate TM
+
+C -> TM: new Team('', request.session.employeeId, request.body.name, request.body.description, new Date(), request.file.filename)
+activate TM
+
+C ->> TM: save()
+TM ->> BD: execute('INSERT INTO team(team_id, employee_responsible_id, name, description, created_at, image) VALUES(UUID(),?,?,?,?,?)',[request.session.employeeId, request.body.name, request.body.description, new Date(), request.file.filename])
+activate BD
+BD --> TM: Query OK
+deactivate BD
+
+TM --> C: team saved
+deactivate TM
+
+C -> V: response.redirect('/team')
+deactivate C
+
+activate V
+V -> U: Redirect /team
+deactivate V
+
+opt Invalid input
+    activate C
+    C -> V: response.render('pages/teamNew', {errors})
+    deactivate C
+
+    activate V
+    V -> U: HTML + Error messages
+    deactivate V
+end
+
+opt Team already created
+    activate C
+    C -> V: response.render('pages/teamNew', {error: "Team already exists"})
+    deactivate C
+
+    activate V
+    V -> U: HTML + Error message
+    deactivate V
+end
+
+opt Team creation failed
+    activate C
+    C -> V: response.render('pages/teamNew', {error: "The team could not be created right now"})
+    deactivate C
+
+    activate V
+    V -> U: HTML + Error message
+    deactivate V
+end
+
+@enduml

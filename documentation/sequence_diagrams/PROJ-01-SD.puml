@@ -32,15 +32,26 @@ deactivate U
     deactivate RO
         activate C
         C -> C: fullname = request.body.name + " " + request.body.lastname
+        C -> C: const employee_id = ''
+        C -> C: const account_id = ''
         C -> EM: new Employee(fullname, request.body.names, request.body.lastnames)
             activate EM
             C ->> EM: save()
                 EM ->> BD: execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',[fullname, request.body.names, request.body.lastnames])
                     activate BD
-                    BD --> EM: employee_id
+                    BD --> EM: Query OK
                     deactivate BD
-            EM --> C: employee_id
+            EM --> C: employee saved
             deactivate EM
+        C ->> EM: getEmployeeIdByFullname(fullname)
+            activate EM
+            EM ->> BD: execute('SELECT employee_id FROM employee WHERE full_name=?',[fullname])
+                activate BD
+                BD --> EM: employee_id
+                deactivate BD
+            EM --> C: Promise employee_id
+            deactivate EM
+        C -> C: employee_id = Employee.getEmployeeIdByFullname(fullname)
         C -> AM: new Account(employee_id, request.body.email, request.body.password, request.body.slack_username)
             activate AM
             C ->> AM: save()
@@ -50,10 +61,19 @@ deactivate U
                     deactivate B
                 AM ->> BD: execute('INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())',[employee_id, request.body.email, password_cifred, request.body.slack_username, AccountStatus.ACTIVE, 0, null, null])
                     activate BD
-                    BD --> AM: account_id
+                    BD --> AM: Query OK
                     deactivate BD
-            AM --> C: account_id
+            AM --> C: account saved
             deactivate AM
+        C ->> AM: getAccountIdByEmailSlack(request.body.email, request.body.slack_username)
+            activate AM
+            AM ->> BD: execute('SELECT account_id FROM account WHERE email=? AND slack_username=?',[request.body.email, request.body.slack_username])
+                activate BD
+                BD --> AM: account_id
+                deactivate BD
+            AM --> C: Promise account_id
+            deactivate AM
+        C -> C: account_id = Account.getAccountIdByEmailSlack(request.body.email, request.body.slack_username)
         C -> ARM: new AccountRole(account_id, request.body.role_id)
             activate ARM
             C ->> ARM: save()
