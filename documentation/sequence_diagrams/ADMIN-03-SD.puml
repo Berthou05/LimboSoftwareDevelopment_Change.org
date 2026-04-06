@@ -13,21 +13,19 @@ database "unitas_system" as BD
 autonumber
 
 activate A
-A->V:Clicks "Delete" on a role
-deactivate A
+A->>V:Clicks "Delete" on a role
     activate V
     V->V:showConfirmPopup(roleId);
+    V-->A:Updated view
     deactivate V
 
-activate A
 opt Admin annotation
-A->V:Clicks "Cancel" button
-deactivate A
+A->>V:Clicks "Cancel" button
     activate V
     V->V:hidePopup();
+    V-->A:Updated view
     deactivate V
 end
-activate A
 
 A->V:Clicks "Confirm" button
 deactivate A
@@ -49,7 +47,7 @@ deactivate A
 
                 C->>RP:deleteByRoleId(delete_role_id);
                     activate RP
-                    RP-->BD:execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
+                    RP->>BD:execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
                         activate BD
                         BD-->RP:Query OK
                         deactivate BD

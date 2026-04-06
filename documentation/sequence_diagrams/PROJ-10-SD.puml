@@ -10,30 +10,25 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-
-L -> V:Click "Edit" button of a Project Goal.
-deactivate L
+L ->> V:Click "Edit" button of a Project Goal.
     activate V
-    V -> V: unlockInputs(goal_id);
+    V -> V: openPopup(goal_id);
+    V -->L: Updated view
     deactivate V
 
 
 opt Cancel Edition
-activate L
-L -> V: Click "Cancel" button
-deactivate L
+L ->> V: Click "Cancel" button
     activate V
-    V -> V: lockInputs(goal_id);
+    V -> V: closePopup(goal_id);
+    V -->L: Updated view
     deactivate V
 end
 
-activate L
-L -> V: Click "Save" button
-deactivate L
+L ->> V: Click "Save" button
     activate V
     V -> V: updateGoal(goal_id);
-    V -> RO: fetch(`/project/goal/${goal_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)});
-    deactivate V
+    V ->> RO: fetch(`/project/goal/${goal_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)});
         activate RO
             RO -> C: updateGoal(request, response);
         deactivate RO
@@ -46,25 +41,20 @@ deactivate L
                     deactivate BD
                 G-->C: Query OK
                 deactivate G
-            C->V: response.json({success:true});
-            deactivate C
-    activate V
+            C-->V: response.json({success:true});
     V->V: lockInputs(goal_id);
     V->V: showSuccessPopup("Goal updated successfully");
-    V->L: View updated
-    deactivate V
+    V-->L: View updated
 
     alt Edition failed
-            activate C
-                C->V: response.json({success:false, error: error});        
+                C-->V: response.json({success:false, error: error});        
             deactivate C
-    activate V
     V->V: lockInputs(goal_id);
     V->V: showErrorPopup(error);
-    V->L: View updated
+    V-->L: View updated
     deactivate V
     end
-    
+deactivate L
 
 
 

@@ -39,10 +39,11 @@ deactivate U
             C->V:response.render('pages/project.ejs',{...});
             deactivate C
     activate V
-    V->V:loadContent();
-    group PROJ-07
-    V->RO:fetch('/project/:project_id/members',{method: GET, headers:{body:'application/json'}})
+    V->U:HTML
     deactivate V
+activate U
+    group PROJ-07
+    U->>RO:fetch('/project/:project_id/members',{method: GET, headers:{body:'application/json'}})
         activate RO
         RO->C:getProjectMembers(request,response)
         deactivate RO
@@ -55,27 +56,21 @@ deactivate U
                 deactivate BD
             P-->C:members
             deactivate P
-        C->V:response.status(200).json({success:true, body:members});
-        deactivate C
-    activate V
+        C-->U:response.status(200).json({success:true, body:members});
         end group
 
-    V->V:generateMembers(members);
-    V->U: HTML
-    deactivate V
+    U->U:generateMembers(members);
+    U-->U: Updated view
 
 alt Project Members Obtention Failed
-        activate C
     group PROJ-07 alt
-        C->V:response.status(500).json({success:false, message:error});     
+        C-->U:response.status(500).json({success:false, message:error});     
         deactivate C
-    activate V
     end group
-    V->V:showErrorPopup(error);
-    V->U:Updated view
-    deactivate V
+    U->U:showErrorPopup(error);
+    U-->U:Updated view
 end
-
+deactivate U
 
 
 

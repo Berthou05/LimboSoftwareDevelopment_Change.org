@@ -10,14 +10,12 @@ database "unitas_system" as BD
 autonumber
 
 activate A
-A->V:Switches a privilege toggle at a privilege row and a role column.
-deactivate A
+A->>V:Switches a privilege toggle at a privilege row and a role column.
     activate V
     V->V: Modifies toggle
 
 opt Add privilege
-    V->RO: fetch('admin/roles/add', \n{method:PATCH, headers:{'Accept': 'application/json'}, \nbody: JSON.stringify(privilege:privilege_id, role:role_id)};
-    deactivate V
+    V->>RO: fetch('admin/roles/add', \n{method:PATCH, headers:{'Accept': 'application/json'}, \nbody: JSON.stringify(privilege:privilege_id, role:role_id)};
         activate RO
         RO->C: addPrivilegeRole(request,response) 
         deactivate RO
@@ -33,13 +31,9 @@ opt Add privilege
             
             
     alt relation>0
-            C->V: responde.status(500);
-            deactivate C
-        activate V
-        V->A: Not changing view
-        deactivate V
+            C-->V: responde.status(500);
+        V-->A: Not changing view
             
-            activate C
     end  
             create entity newRolePrivilege as RolePrivilege
             C->RolePrivilege**: new RolePrivilege(role_id, privilege_id)
@@ -51,23 +45,18 @@ opt Add privilege
                         deactivate BD
                         RolePrivilege-->C:Query OK
                 deactivate RolePrivilege
-            C->V:response.status(200);
-            deactivate C
+            C-->V:response.status(200);
 
     alt 'RolePrivilege could not save'
-            C->V:response.status(500);
+            C-->V:response.status(500);
             deactivate C
-    activate V
     V->V: showErrorPopup(`Privilege ${privilege_id} could not be saved correctly to Role ${role_id}`);
-    V->A: Returns toggle to previous position
-    deactivate V
+    V-->A: Returns toggle to previous position
     end
 end
 
-    activate V
 opt Remove Privilege
-    V->RO: fetch('admin/roles/remove', \n{method:PATCH, headers:{'Accept': 'application/json'}, \nbody: JSON.stringify(privilege:privilege_id, role:role_id)};
-    deactivate V
+    V->>RO: fetch('admin/roles/remove', \n{method:PATCH, headers:{'Accept': 'application/json'}, \nbody: JSON.stringify(privilege:privilege_id, role:role_id)};
         activate RO
         RO->C: removePrivilegeRole(request,response) 
         deactivate RO
@@ -83,13 +72,9 @@ opt Remove Privilege
             
             
     alt relation<0
-            C->V: responde.status(500);
-            deactivate C
-        activate V
-        V->A: Not changing view
-        deactivate V
+            C-->V: responde.status(500);
+        V-->A: Not changing view
             
-            activate C
     end  
             C->>RP: delete(role_id, privilege_id);
                 activate RP
@@ -100,17 +85,15 @@ opt Remove Privilege
                 RP-->C:Query OK
                 deactivate RP
 
-            C->V:response.status(200);
-            deactivate C
+            C-->V:response.status(200);
 
     alt 'RolePrivilege could not remove'
-            C->V:response.status(500);
+            C-->V:response.status(500);
             deactivate C
-    activate V
     V->V: showErrorPopup(`Privilege ${privilege_id} could not be removed correctly from Role ${role_id}`);
-    V->A: Returns toggle to previous position
+    V-->A: Returns toggle to previous position
     deactivate V
     end
-
+deactivate A
 end
 @enduml

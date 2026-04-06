@@ -13,13 +13,14 @@ activate L
 L->>V: Click "Add" button in the Project Goal module
     activate V
     V->V: showGoalPopup();
-    V-->L: Show goal popup
+    V-->L: Updated view
     deactivate V
 
 opt Cancel Creation
 L->>V: Clicks the "Close" button.
     activate V
     V->V: closePopup();
+    V-->L: Updated view
     deactivate V
 end
 
@@ -50,15 +51,15 @@ L->>V: Clicks the "Submit" button
             C-->V: response.json({success:true, body:data});
     V->V:closePopup();
     V->V:createGoalModal(data);
+    V-->L: Updated view
 
     alt Creation failed
             C-->V: response.json({success:false, error:error});
             deactivate C
     V->V:closePopup();
     V->V:showErrorPopoup(error);
-    end
-
     V-->L: Updated view
+    end
     deactivate V
 deactivate L
 @enduml

@@ -10,61 +10,50 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-
-L -> V:Click "Edit" button in the Information Module.
-deactivate L
+L ->> V:Click "Edit" button in the Information Module.
     activate V
-    V -> V: unlockInputs(project_id);
+    V->V: openPopup(project_id);
+    V-->L: Updated View
     deactivate V
 
-
 opt Cancel Edition
-activate L
-L -> V: Click "Cancel" button
-deactivate L
+L ->> V: Click "Cancel" button
     activate V
-    V -> V: lockInputs(project_id);
+    V -> V: closePopup(project_id);
+    V-->L: Updated View
     deactivate V
 end
 
-activate L
-L -> V: Click "Save" button
-deactivate L
+L ->> V: Click "Save" button
     activate V
     V -> V: updateInfo(project_id);
-    V -> RO: fetch(`/project/info/${project_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.strinPify(data)});
-    deactivate V
+    V ->> RO: fetch(`/project/info/${project_id}`, {method: PUT, headers:{'Accept': 'application/json'}, body: JSON.strinPify(data)});
         activate RO
             RO -> C: updateInfo(request, response);
         deactivate RO
             activate C
             C ->> P: updateInfo(project_id, name, description, status, end_date);
                 activate P
-                P->>BD: execute('UPDATE project SET name=?, description=?, status=?, end_date=? WHERE project_id=?',[name, description, status, end_date, project_id]);
+                P->>BD: execute('UPDATE project SET name=?, description=?, status=?, end_date=? WHERE project_id=?',\n[name, description, status, end_date, project_id]);
                     activate BD
                     BD-->P: Query OK
                     deactivate BD
                 P-->C: Query OK
                 deactivate P
-            C->V: response.json({success:true});
-            deactivate C
-    activate V
+            C-->V: response.json({success:true});
     V->V: lockInputs(project_id);
     V->V: showSuccessPopup("Project updated successfully");
-    V->L: View updated
-    deactivate V
+    V-->L: View updated
 
     alt Edition failed
-            activate C
-                C->V: response.json({success:false, error: error});        
+                C-->V: response.json({success:false, error: error});        
             deactivate C
-    activate V
     V->V: lockInputs(project_id);
     V->V: showErrorPopup(error);
-    V->L: View updated
+    V-->L: View updated
     deactivate V
     end
-    
+deactivate L    
 
 
 

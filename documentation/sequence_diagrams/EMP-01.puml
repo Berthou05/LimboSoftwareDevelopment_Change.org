@@ -1,0 +1,81 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "auth.routes" as RO
+boundary "view signin.ejs" as V
+control "auth.controller" as C
+entity "Employee.model" as EM
+entity "Account.model" as AM
+entity "AccountRole.model" as ARM
+control "bcrypt" as B
+database "unitas_system" as BD
+autonumber
+activate U
+U -> RO: GET /new
+deactivate U
+    activate RO
+    RO -> C: getSignin(request, response)
+    deactivate RO
+        activate C
+        C -> V: response.render('signin', {csrfToken: request.csrfToken()})
+        deactivate C
+    activate V
+    V -> U: HTML form
+    deactivate V
+
+activate U
+U -> RO: POST /new
+deactivate U
+    activate RO
+    RO -> C: postSignin(request, response)
+    deactivate RO
+        activate C
+        C -> C: fullname = request.body.name + " " + request.body.lastname
+        C -> EM: new Employee(fullname, request.body.names, request.body.lastnames)
+            activate EM
+            C ->> EM: save()
+                EM ->> BD: execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',[fullname, request.body.names, request.body.lastnames])
+                    activate BD
+                    BD --> EM: employee_id
+                    deactivate BD
+            EM --> C: employee_id
+            deactivate EM
+        C -> AM: new Account(employee_id, request.body.email, request.body.password, request.body.slack_username)
+            activate AM
+            C ->> AM: save()
+                AM ->> B: hash(this.password, 12)
+                    activate B
+                    B --> AM: password_cifred
+                    deactivate B
+                AM ->> BD: execute('INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())',[employee_id, request.body.email, password_cifred, request.body.slack_username, AccountStatus.ACTIVE, 0, null, null])
+                    activate BD
+                    BD --> AM: account_id
+                    deactivate BD
+            AM --> C: account_id
+            deactivate AM
+        C -> ARM: new AccountRole(account_id, request.body.role_id)
+            activate ARM
+            C ->> ARM: save()
+                ARM ->> BD: execute('INSERT INTO accountrole(account_id, role_id) VALUES (?,?)',[account_id, request.body.role_id])
+                    activate BD
+                    BD --> ARM: Query OK
+                    deactivate BD
+            ARM --> C: account role saved
+            deactivate ARM
+        C -> V: response.redirect('/accountAdmin')
+        deactivate C
+    activate V
+    V -> U: Redirect /accountAdmin
+    deactivate V
+
+    opt Employee, Account or AccountRole creation failed
+            activate C
+            C -> V: response.redirect('/')
+            deactivate C
+        activate V
+        V -> U: Redirect /
+        deactivate V
+    end
+
+@enduml

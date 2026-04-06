@@ -1,14 +1,4 @@
 @startuml
-skinparam style strictuml
-
-actor User as U
-boundary "team_view.ejs" as V
-boundary "routes" as RO
-control "team.controller" as C
-entity "Employee.model" as M
-database "unitas_system" as DB
-
-autonumber
 skinparam Style strictuml
 
 actor User as U
@@ -36,13 +26,12 @@ deactivate U
             initial page render is 
             obtained.
             end note
-            C->V:response.render('pages/team.ejs',{...});
+            C->U:response.render('pages/team.ejs',{...});
             deactivate C
-    activate V
-    V->V:loadContent();
+    activate U
+    U->U:loadContent();
     group TEAM-05
-    V->RO:fetch('/team/:team_id/members',{method: GET, headers:{body:'application/json'}})
-    deactivate V
+    U->>RO:fetch('/team/:team_id/members',{method: GET, headers:{body:'application/json'}})
         activate RO
         RO->C:getTeamMembers(request,response)
         deactivate RO
@@ -55,26 +44,19 @@ deactivate U
                 deactivate BD
             P-->C:members
             deactivate P
-        C->V:response.status(200).json({success:true, body:members});
-        deactivate C
-    activate V
+        C-->U:response.status(200).json({success:true, body:members});
         end group
     
-    V->V:generateMembers(members);
-    V->U:HTML
-    deactivate V
+    U->U:generateMembers(members);
+    U->U:HTML
 
 alt Team Members Obtention Failed
-        activate C
-    group TEAM-05 alt
-        C->V:response.status(500).json({success:false, message:error});     
+        C-->U:response.status(500).json({success:false, message:error});     
         deactivate C
-    activate V
-    end group
     
-    V->V:showErrorPopup(error);
-    V->U:Updated view
-    deactivate V
+    U->U:showErrorPopup(error);
+    U->U:Updated view
+    deactivate U
 end
 
 

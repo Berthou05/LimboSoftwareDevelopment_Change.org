@@ -13,15 +13,13 @@ database "unitas_system" as BD
 autonumber
 
 activate U
-U->V: Clicks the "Search" button.
-deactivate U
+U->>V: Clicks the "Search" button.
     activate V
     V->V:validateInput();
     V->V:startSearch(name);
-    V->RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
-    deactivate V
+    V->>RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
         activate RO
-        RO->CS: getSearchResult(request, results); 
+        RO->C: getSearchResult(request, results); 
         deactivate RO
             activate C
             C->>S: getSearch(name, page, limit);
@@ -32,23 +30,19 @@ deactivate U
                     deactivate BD
                 S-->C: results
                 deactivate S
-            C->V: response.json({body:results});
+            C-->V: response.json({body:results});
             deactivate C
-    activate V
     V->V:generateResults(results);
-    V->U:updated view
+    V-->U:updated view
     deactivate V
 
 opt View More Results
-activate U
-U->V: Clicks the "View More" button.
-deactivate U
+U->>V: Clicks the "View More" button.
     activate V
     V->V:continueSearch(name);
-    V->RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
-    deactivate V
+    V->>RO:fetch('/search?name=${new URLSearchParams({n:name});}&page=${currentPage}', {method: 'GET', headers: { 'Accept': 'application/json'}});
         activate RO
-        RO->CS: getSearchResult(request, results); 
+        RO->C: getSearchResult(request, results); 
         deactivate RO
             activate C
             C->>S: getSearch(name, page, limit);
@@ -59,14 +53,12 @@ deactivate U
                     deactivate BD
                 S-->C: results
                 deactivate S
-            C->V: response.json({body:results});
+            C-->V: response.json({body:results});
             deactivate C
-    activate V
     V->V:generateResults(results);
-    V->U:updated view
+    V-->U:updated view
     deactivate V
 end
-activate U
 U->V: click on a matching result
 deactivate U
     activate V

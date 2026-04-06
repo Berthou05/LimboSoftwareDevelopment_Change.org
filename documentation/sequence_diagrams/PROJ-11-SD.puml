@@ -10,29 +10,25 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-L -> V:Click "Delete" button of a Project Goal.
-deactivate L
+L ->> V:Click "Delete" button of a Project Goal.
     activate V
     V -> V: showConfirmationPopup(goal_id);
+    V-->L:Updated view
     deactivate V
 
 
 opt Cancel Elimination
-activate L
-L -> V: Click "Cancel" button
-deactivate L
+L ->> V: Click "Cancel" button
     activate V
     V -> V: closePopup();
+    V-->L:Updated view
     deactivate V
 end
 
-activate L
-L -> V: Click "Confirm" button
-deactivate L
+L ->> V: Click "Confirm" button
     activate V
     V -> V: deleteGoal(goal_id);
-    V -> RO: fetch(`/project/goal/${goal_id}`, {method: DELETE, headers:{'Accept': 'application/json'}})
-    deactivate V
+    V ->> RO: fetch(`/project/goal/${goal_id}`, {method: DELETE, headers:{'Accept': 'application/json'}})
         activate RO
             RO -> C: deleteGoal(request, response);
         deactivate RO
@@ -45,26 +41,21 @@ deactivate L
                     deactivate BD
                 G-->C: Query OK
                 deactivate G
-                C->V: return response.status(200).json({success:true});
-            deactivate C
-    activate V
+                C-->V: return response.status(200).json({success:true});
     V->V: deleteGoalView(goal_id);
     V->V: showSuccessPopup("Goal deleted successfully");
     V->V: closePopup();
-    V->L: View updated
-    deactivate V
+    V-->L: View updated
 
     alt Deletion failed
-            activate C
-                C->V: return response.status(500).json({success:false, message: error.stack});        
+                C-->V: return response.status(500).json({success:false, message: error.stack});        
             deactivate C
-    activate V
     V->V: closePopup();
     V->V: showErrorPopup(error);    
-    V->L: View updated
+    V-->L: View updated
     deactivate V
     end
-    
+deactivate L
 
 
 
