@@ -6,13 +6,15 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const router = express.Router();
+const isAuth = require('../../middleware/isAuthenticated');
 
 const authController = require('./auth.controller');
 router.get('/', authController.getLogin);
 router.post('/',authController.postLogin);
-router.post('/logout',authController.getLogout);
-router.get('/new',authController.getSignin);
-router.post('/new',authController.postSignin);
+router.post('/logout', isAuth, authController.getLogout);
+// ADMIN-03: only privileged admins can provision new accounts through this route.
+router.get('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.getSignin);
+router.post('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.postSignin);
 
 //? Need to implement recover route '/recover'.
 

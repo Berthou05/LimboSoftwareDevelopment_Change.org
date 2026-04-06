@@ -38,7 +38,7 @@ alt Invalid payload on client
     AchievementsView --> User : Inline validation error message
 end
 
-Client -> Routes : fetch('/projects/:project_id/achievements/:achievement_id/edit',\n{ method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/x-www-form-urlencoded'},\nbody:'title=...&description=...&achievementDate=...&evidenceLink=...&_csrf=...' })
+Client ->> Routes : fetch('/projects/:project_id/achievements/:achievement_id/edit',\n{ method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/x-www-form-urlencoded'},\nbody:'title=...&description=...&achievementDate=...&evidenceLink=...&_csrf=...' })
 activate Routes
 Routes -> Controller : updateProjectAchievement(request, response)
 activate Controller
@@ -66,13 +66,13 @@ alt Invalid payload on server
     AchievementsView --> User : Invalid achievement input message
 end
 
-Controller -> ProjectModel : findById(project_id)
+Controller ->> ProjectModel : findById(project_id)
 activate ProjectModel
-ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.status\n   FROM project AS P\n   WHERE P.project_id = ?',\n  [project_id]\n)
+ProjectModel ->> DB : execute(\n  'SELECT P.project_id, P.status\n   FROM project AS P\n   WHERE P.project_id = ?',\n  [project_id]\n)
 activate DB
-DB --> ProjectModel : projectRows[]
+DB -->> ProjectModel : projectRows[]
 deactivate DB
-ProjectModel --> Controller : projectRows[]
+ProjectModel -->> Controller : projectRows[]
 deactivate ProjectModel
 
 alt Project not found
@@ -84,13 +84,13 @@ alt Project not found
     AchievementsView --> User : Project not found message
 end
 
-Controller -> AchievementModel : fetchById(achievement_id)
+Controller ->> AchievementModel : fetchById(achievement_id)
 activate AchievementModel
-AchievementModel -> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.title, A.description,\n          A.achievement_date, A.evidence_link\n   FROM achievement AS A\n   WHERE A.achievement_id = ?\n   LIMIT 1',\n  [achievement_id]\n)
+AchievementModel ->> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.title, A.description,\n          A.achievement_date, A.evidence_link\n   FROM achievement AS A\n   WHERE A.achievement_id = ?\n   LIMIT 1',\n  [achievement_id]\n)
 activate DB
-DB --> AchievementModel : achievementRows[]
+DB -->> AchievementModel : achievementRows[]
 deactivate DB
-AchievementModel --> Controller : achievementRows[]
+AchievementModel -->> Controller : achievementRows[]
 deactivate AchievementModel
 
 alt Achievement not found or not linked to project
@@ -102,22 +102,22 @@ alt Achievement not found or not linked to project
     AchievementsView --> User : Achievement not found message
 end
 
-Controller -> AchievementModel : update(achievement_id,\n{ title, description, achievement_date, evidence_link })
+Controller ->> AchievementModel : update(achievement_id,\n{ title, description, achievement_date, evidence_link })
 activate AchievementModel
-AchievementModel -> DB : execute(\n  'UPDATE achievement\n   SET title = ?,\n       description = ?,\n       achievement_date = ?,\n       evidence_link = ?\n   WHERE achievement_id = ?\n   AND project_id = ?',\n  [title, description, achievementDate, evidenceLink,\n   achievement_id, project_id]\n)
+AchievementModel ->> DB : execute(\n  'UPDATE achievement\n   SET title = ?,\n       description = ?,\n       achievement_date = ?,\n       evidence_link = ?\n   WHERE achievement_id = ?\n   AND project_id = ?',\n  [title, description, achievementDate, evidenceLink,\n   achievement_id, project_id]\n)
 activate DB
-DB --> AchievementModel : update result
+DB -->> AchievementModel : update result
 deactivate DB
-AchievementModel --> Controller : achievement updated
+AchievementModel -->> Controller : achievement updated
 deactivate AchievementModel
 
-Controller -> AchievementModel : fetchByProject(project_id)
+Controller ->> AchievementModel : fetchByProject(project_id)
 activate AchievementModel
-AchievementModel -> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.employee_responsible_id,\n          A.title, A.description, A.achievement_date, A.evidence_link,\n          E.full_name\n   FROM achievement AS A\n   LEFT JOIN employee AS E\n     ON E.employee_id = A.employee_responsible_id\n   WHERE A.project_id = ?\n   ORDER BY A.achievement_date DESC, A.title ASC',\n  [project_id]\n)
+AchievementModel ->> DB : execute(\n  'SELECT A.achievement_id, A.project_id, A.employee_responsible_id,\n          A.title, A.description, A.achievement_date, A.evidence_link,\n          E.full_name\n   FROM achievement AS A\n   LEFT JOIN employee AS E\n     ON E.employee_id = A.employee_responsible_id\n   WHERE A.project_id = ?\n   ORDER BY A.achievement_date DESC, A.title ASC',\n  [project_id]\n)
 activate DB
-DB --> AchievementModel : achievementRows[]
+DB -->> AchievementModel : achievementRows[]
 deactivate DB
-AchievementModel --> Controller : achievementRows[]
+AchievementModel -->> Controller : achievementRows[]
 deactivate AchievementModel
 
 Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'Achievement updated successfully.',\n  achievements: achievementRows })

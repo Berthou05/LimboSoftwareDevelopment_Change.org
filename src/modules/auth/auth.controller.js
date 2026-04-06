@@ -83,12 +83,29 @@ exports.postLogin = (request, response, next)=>{
             bcrypt.compare(request.body.password, rows[0].password_hash).then((doMatch)=>{
                 if(doMatch){
                     request.session.isAuth = true;
+                    request.session.isLoggedIn = true;
                     request.session.employeeId = rows[0].employee_id;
                     Employee.getNamesByEmployeeId(rows[0].employee_id).then(([employeeRows])=>{
                         request.session.username = employeeRows[0]?.names || '';
 
                         Account.getPrivilegesFromAccountId(rows[0].account_id).then(([privileges, fieldData])=>{
-                            request.session.privileges = privileges;
+                            const privilege = {};
+                            (Array.isArray(privileges) ? privileges : []).forEach((row) => {
+                                const privilegeId = String(row.privilege_id || '').trim().toUpperCase();
+                                if (!privilegeId) {
+                                    return;
+                                }
+                                privilege[privilegeId] = true;
+                            });
+
+                            // Canonical session payload for authorization and identity.
+                            request.session.user = {
+                                id: rows[0].account_id,
+                                employeeId: rows[0].employee_id,
+                                username: request.session.username || '',
+                                privilege,
+                            };
+
                             request.session.success = 'Welcome back.';
                             return request.session.save((error) => {
                                 if (error) {

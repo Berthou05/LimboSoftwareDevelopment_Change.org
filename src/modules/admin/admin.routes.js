@@ -10,9 +10,12 @@ const isAuth = require('../../middleware/isAuthenticated');
 
 const adminController = require('./admin.controller');
 
-router.get('/accounts',isAuth, adminController.getAccounts);
-router.get('/roles',isAuth, adminController.getRoleAdmin);
-router.delete('/roles/:roleId',isAuth,adminController.deleteRole);
-router.get('roles/newRole/:name', isAuth, adminController.createRole);
+// ADMIN-01: access administration views.
+router.get('/accounts', isAuth, isAuth.requirePermission('ADMIN-01'), adminController.getAccounts);
+router.get('/roles', isAuth, isAuth.requirePermission('ADMIN-01'), adminController.getRoleAdmin);
+// ADMIN-03: delete roles.
+router.delete('/roles/:roleId', isAuth, isAuth.requirePermission('ADMIN-03'), adminController.deleteRole);
+// ADMIN-02: create roles.
+router.get('/roles/newRole/:name', isAuth, isAuth.requirePermission('ADMIN-02'), adminController.createRole);
 
 module.exports = router;

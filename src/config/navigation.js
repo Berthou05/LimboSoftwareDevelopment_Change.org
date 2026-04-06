@@ -1,6 +1,4 @@
 // config/navigation.js
-
-
 /* 
 Routes for navigation items in the application.
 */

@@ -1,146 +1,196 @@
 @startuml
 skinparam style strictuml
-
-actor User as U
-boundary "team.ejs" as V
-boundary "team.routes" as RO
-control "team.controller" as C
-entity "team.model" as T
-database "unitas_system" as BD
-
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
+actor    "Employee"                  as User
 
-boundary "home.ejs" as HV
-boundary "home.routes" as HRO
-control "home.controller" as HC
+boundary "home.routes"               as HomeRoutes
+control  "home.controller"           as HomeController
+boundary "pages/home.ejs"            as HomeView
 
-boundary "team.ejs" as TV
-boundary "team.routes" as TRO
-control "team.controller" as TC
+boundary "team.routes"               as TeamRoutes
+control  "team.controller"           as TeamController
+boundary "pages/team.ejs"            as TeamView
 
-boundary "project.ejs" as PV
-boundary "project.routes" as PRO
-control "project.controller" as PC
+boundary "project.routes"            as ProjectRoutes
+control  "project.controller"        as ProjectController
+boundary "pages/project.ejs"         as ProjectView
 
-boundary "employeeDetails.ejs" as EV
-boundary "employee.routes" as ERO
-control "employee.controller" as EC
+boundary "employee.routes"           as EmployeeRoutes
+control  "employee.controller"       as EmployeeController
+boundary "pages/employeeDetails.ejs" as EmployeeView
 
-entity "activity.model" as A
-database "unitas_system" as DB
+entity   "activity.model"            as ActivityModel
+database "unitas_system"             as DB
 
-alt User opens Home
-    U -> HRO: GET /home
-    activate HRO
-    HRO -> HC: getHome(request, response)
-    activate HC
+alt Employee opens Home (target module with personal and team logs)
+    activate User
+    User -> HomeRoutes : GET /home[?activityPreset|startDate|endDate]
+    deactivate User
+    activate HomeRoutes
+    HomeRoutes -> HomeController : getHome(request, response)
+    deactivate HomeRoutes
+    activate HomeController
+    HomeController -> HomeController : resolveActivityFilter(request.query)
 
-    HC -> A: fetchByEmployeeBtw(session.employeeId, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT employee activity rows
-    activate DB
-    DB --> A: latest self activity rows
-    deactivate DB
-    A --> HC: latest self activity rows
-    deactivate A
-
-    HC -> A: getTeamActivitiesFromEmpBtw(session.employeeId, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT team activity rows\nfor the employee teams
-    activate DB
-    DB --> A: team activity rows
-    deactivate DB
-    A --> HC: team activity rows
-    deactivate A
-
-    HC -> HC: build latestActivitySections\nbuild teamActivitySections
-    HC --> HRO: render('pages/home', {latestActivitySections, teamActivitySections})
-    deactivate HC
-    HRO --> HV: HTML response
-    deactivate HRO
-    HV -> HV: Render "Your Latest Activity"\nRender "Team Activity"
-
-else User opens Team
-    U -> TRO: GET /teams/:team_id
-    activate TRO
-    TRO -> TC: getTeamPage(request, response)
-    activate TC
-
-    TC -> A: getTeamMembersActivities(team_id)
-    activate A
-    A -> DB: SELECT team member activity rows
-    activate DB
-    DB --> A: team activity rows
-    deactivate DB
-    A --> TC: team activity rows
-    deactivate A
-
-    TC -> TC: build activitySections
-    TC --> TRO: render('pages/team', {activitySections})
-    deactivate TC
-    TRO --> TV: HTML response
-    deactivate TRO
-    TV -> TV: Render "Team Activity"
-
-else User opens Project
-    U -> PRO: GET /projects/:project_id[?activityPreset|startDate|endDate]
-    activate PRO
-    PRO -> PC: getProjectPage(request, response)
-    activate PC
-    PC -> PC: resolveActivityFilter(request.query)
-
-    alt Project activity filter applied
-        PC -> A: fetchByProjectBetween(project_id, rangeStart, rangeEnd)
-        activate A
-        A -> DB: SELECT project activity rows\nwithin selected range
-        activate DB
-        DB --> A: filtered project activity rows
-        deactivate DB
-        A --> PC: filtered project activity rows
-        deactivate A
-    else Default project activity
-        PC -> A: fetchByProject(project_id)
-        activate A
-        A -> DB: SELECT all project activity rows
-        activate DB
-        DB --> A: project activity rows
-        deactivate DB
-        A --> PC: project activity rows
-        deactivate A
+    alt Invalid activity date filter
+        HomeController -> HomeController : latestActivityRows = []\nteamActivityRows = []\nhomeActivityError = 'Correct the activity dates and try again.'
     end
 
-    PC -> PC: normalizeActivity(rows)\nbuildActivitySections(rows)
-    PC --> PRO: render('pages/project', {activitySections, activityFilter})
-    deactivate PC
-    PRO --> PV: HTML response
-    deactivate PRO
-    PV -> PV: Render "Project Activity"
-
-else User opens Employee details
-    U -> ERO: GET /employees/:employee_id
-    activate ERO
-    ERO -> EC: getEmployeePage(request, response)
-    activate EC
-
-    EC -> A: fetchByEmployeeBtw(employee_id, latestRangeStart, latestRangeEnd)
-    activate A
-    A -> DB: SELECT employee activity rows
+    HomeController ->> ActivityModel : fetchByEmployeeBtw(session.employeeId,\nrangeStart, rangeEnd)
+    activate ActivityModel
+    ActivityModel ->> DB : execute(\n  'SELECT title, description, completed_at, project_id\n   FROM activity\n   WHERE employee_id = ?\n   AND completed_at BETWEEN ? AND ?',\n  [session.employeeId, rangeStart, rangeEnd]\n)
     activate DB
-    DB --> A: latest self activity rows
+    DB -->> ActivityModel : personalActivityRows[]
     deactivate DB
-    A --> EC: latest self activity rows
-    deactivate A
+    ActivityModel -->> HomeController : personalActivityRows[]
+    deactivate ActivityModel
 
-    EC -> EC: build activitySections
-    EC --> ERO: render('pages/employeeDetails', {activitySections})
-    deactivate EC
-    ERO --> EV: HTML response
-    deactivate ERO
-    EV -> EV: Render self "Latest Activity"
+    HomeController ->> ActivityModel : getTeamActivitiesFromEmpBtw(session.employeeId,\nrangeStart, rangeEnd)
+    activate ActivityModel
+    ActivityModel ->> DB : execute(\n  'SELECT A.title, A.description, A.completed_at,\n          A.employee_id, A.project_id\n   FROM activity AS A\n   WHERE (A.completed_at BETWEEN ? AND ?)\n   AND A.employee_id IN (\n     SELECT ET.employee_id\n     FROM employeeteam AS ET\n     WHERE ET.team_id IN (\n       SELECT ET.team_id\n       FROM employeeteam AS ET\n       WHERE ET.employee_id = ?\n     )\n   )',\n  [rangeStart, rangeEnd, session.employeeId]\n)
+    activate DB
+    DB -->> ActivityModel : teamActivityRows[]
+    deactivate DB
+    ActivityModel -->> HomeController : teamActivityRows[]
+    deactivate ActivityModel
+
+    alt Activity query fails
+        HomeController -> HomeController : latestActivityRows = []\nteamActivityRows = []\nhomeActivityError = 'The activity log could not be loaded. Please try again.'
+    end
+
+    HomeController -> HomeController : latestActivitySections = buildActivitySections(personalActivityRows)\nteamActivitySections = buildActivitySections(teamActivityRows)
+    HomeController ->> HomeRoutes : render('pages/home',\n{ latestActivitySections, teamActivitySections,\n  homeActivityFilter, homeActivityError })
+    activate HomeRoutes
+    HomeRoutes -->> HomeView : HTML response
+    deactivate HomeRoutes
+    HomeView -->> User : Render "Your Latest Activity"\nRender "Team Activity"
+    deactivate HomeController
+
+else Employee opens Team details activity
+    activate User
+    User -> TeamRoutes : GET /teams/:team_id[?activityPreset|startDate|endDate]
+    deactivate User
+    activate TeamRoutes
+    TeamRoutes -> TeamController : getTeamPage(request, response)
+    deactivate TeamRoutes
+    activate TeamController
+    TeamController -> TeamController : resolveActivityFilter(request.query)
+
+    alt Invalid activity date filter
+        TeamController -> TeamController : memberActivities = []\nactivityError = 'Correct the activity dates and try again.'
+    else Filter is valid
+        alt Filtered range
+            TeamController ->> ActivityModel : getTeamMembersActivities(team_id,\nrangeStart, rangeEnd)
+            activate ActivityModel
+            ActivityModel ->> DB : execute(\n  'SELECT A.activity_id, A.project_id, A.title, A.description,\n          A.completed_at, A.employee_id, E.full_name, ET.role\n   FROM activity AS A\n   INNER JOIN employee AS E ON A.employee_id = E.employee_id\n   INNER JOIN employeeteam AS ET ON ET.employee_id = E.employee_id\n   WHERE ET.team_id = ?\n   AND A.completed_at >= ?\n   AND A.completed_at <= ?\n   ORDER BY A.completed_at DESC, A.title ASC',\n  [team_id, rangeStart, rangeEnd]\n)
+            activate DB
+            DB -->> ActivityModel : memberActivities[]
+            deactivate DB
+            ActivityModel -->> TeamController : memberActivities[]
+            deactivate ActivityModel
+        else All activity
+            TeamController ->> ActivityModel : getTeamMembersActivities(team_id)
+            activate ActivityModel
+            ActivityModel ->> DB : execute(\n  'SELECT A.activity_id, A.project_id, A.title, A.description,\n          A.completed_at, A.employee_id, E.full_name, ET.role\n   FROM activity AS A\n   INNER JOIN employee AS E ON A.employee_id = E.employee_id\n   INNER JOIN employeeteam AS ET ON ET.employee_id = E.employee_id\n   WHERE ET.team_id = ?\n   ORDER BY A.completed_at DESC, A.title ASC',\n  [team_id]\n)
+            activate DB
+            DB -->> ActivityModel : memberActivities[]
+            deactivate DB
+            ActivityModel -->> TeamController : memberActivities[]
+            deactivate ActivityModel
+        end
+    end
+
+    alt Activity query fails
+        TeamController -> TeamController : memberActivities = []\nactivityError = 'The activity log could not be loaded. Please try again.'
+    end
+
+    TeamController -> TeamController : activitySections = buildActivitySections(memberActivities)
+    TeamController ->> TeamRoutes : render('pages/team',\n{ activitySections, activityFilter, activityError })
+    activate TeamRoutes
+    TeamRoutes -->> TeamView : HTML response
+    deactivate TeamRoutes
+    TeamView -->> User : Render "Team Activity"
+    deactivate TeamController
+
+else Employee opens Project details activity
+    activate User
+    User -> ProjectRoutes : GET /projects/:project_id[?activityPreset|startDate|endDate]
+    deactivate User
+    activate ProjectRoutes
+    ProjectRoutes -> ProjectController : getProjectPage(request, response)
+    deactivate ProjectRoutes
+    activate ProjectController
+    ProjectController -> ProjectController : resolveActivityFilter(request.query)
+
+    alt Invalid activity date filter
+        ProjectController -> ProjectController : activityRows = []\nactivityError = 'Correct the activity dates and try again.'
+    else Filter is valid
+        alt Filtered range
+            ProjectController ->> ActivityModel : fetchByProjectBetween(project_id,\nrangeStart, rangeEnd)
+            activate ActivityModel
+            ActivityModel ->> DB : execute(\n  'SELECT A.activity_id, A.project_id, A.employee_id,\n          A.entry_id, A.title, A.description,\n          A.completed_at, E.full_name\n   FROM activity AS A\n   LEFT JOIN employee AS E\n     ON E.employee_id = A.employee_id\n   WHERE A.project_id = ?\n   AND A.completed_at >= ?\n   AND A.completed_at <= ?\n   ORDER BY A.completed_at DESC, A.title ASC',\n  [project_id, rangeStart, rangeEnd]\n)
+            activate DB
+            DB -->> ActivityModel : activityRows[]
+            deactivate DB
+            ActivityModel -->> ProjectController : activityRows[]
+            deactivate ActivityModel
+        else All activity
+            ProjectController ->> ActivityModel : fetchByProject(project_id)
+            activate ActivityModel
+            ActivityModel ->> DB : execute(\n  'SELECT A.activity_id, A.project_id, A.employee_id,\n          A.entry_id, A.title, A.description,\n          A.completed_at, E.full_name\n   FROM activity AS A\n   LEFT JOIN employee AS E\n     ON E.employee_id = A.employee_id\n   WHERE A.project_id = ?\n   ORDER BY A.completed_at DESC, A.title ASC',\n  [project_id]\n)
+            activate DB
+            DB -->> ActivityModel : activityRows[]
+            deactivate DB
+            ActivityModel -->> ProjectController : activityRows[]
+            deactivate ActivityModel
+        end
+    end
+
+    alt Activity query fails
+        ProjectController -> ProjectController : activityRows = []\nactivityError = 'The activity log could not be loaded. Please try again.'
+    end
+
+    ProjectController -> ProjectController : activitySections = buildActivitySections(activityRows)
+    ProjectController ->> ProjectRoutes : render('pages/project',\n{ activitySections, activityFilter, activityError })
+    activate ProjectRoutes
+    ProjectRoutes -->> ProjectView : HTML response
+    deactivate ProjectRoutes
+    ProjectView -->> User : Render "Project Activity"
+    deactivate ProjectController
+
+else Employee opens Employee details activity
+    activate User
+    User -> EmployeeRoutes : GET /employees/:employee_id[?activityPreset|startDate|endDate]
+    deactivate User
+    activate EmployeeRoutes
+    EmployeeRoutes -> EmployeeController : getEmployeePage(request, response)
+    deactivate EmployeeRoutes
+    activate EmployeeController
+    EmployeeController -> EmployeeController : resolveActivityFilter(request.query)
+
+    alt Invalid activity date filter
+        EmployeeController -> EmployeeController : activities = []\nactivityError = 'Correct the activity dates and try again.'
+    else Filter is valid
+        EmployeeController ->> ActivityModel : fetchByEmployee(employee_id,\nrangeStart, rangeEnd)
+        activate ActivityModel
+        ActivityModel ->> DB : execute(\n  'SELECT A.activity_id, A.project_id, A.title,\n          A.description, A.completed_at, E.full_name\n   FROM activity AS A\n   INNER JOIN employee AS E\n     ON E.employee_id = A.employee_id\n   WHERE A.employee_id = ?\n   [AND A.completed_at >= ?]\n   [AND A.completed_at <= ?]\n   ORDER BY A.completed_at DESC, A.title ASC',\n  [employee_id, rangeStart?, rangeEnd?]\n)
+        activate DB
+        DB -->> ActivityModel : activities[]
+        deactivate DB
+        ActivityModel -->> EmployeeController : activities[]
+        deactivate ActivityModel
+    end
+
+    EmployeeController -> EmployeeController : activitySections = buildActivitySections(activities)
+    EmployeeController ->> EmployeeRoutes : render('pages/employeeDetails',\n{ activitySections, activityFilter, activityError })
+    activate EmployeeRoutes
+    EmployeeRoutes -->> EmployeeView : HTML response
+    deactivate EmployeeRoutes
+    EmployeeView -->> User : Render "Latest Activity"
+    deactivate EmployeeController
 end
-
-deactivate U
 
 @enduml

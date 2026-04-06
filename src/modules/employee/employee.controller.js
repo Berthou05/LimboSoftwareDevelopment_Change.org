@@ -205,11 +205,8 @@ employees:near_employees,
 
 exports.getEmployee = (request, response, next) => {
     const employeeId = request.session.employeeId;
-    const privileges = request.session.privileges;
-
-    const intermediate = privileges.some(
-        priv => priv.privilege_id === 'TEAM-01'
-    );
+    const privilegeMap = request.session?.user?.privilege || {};
+    const intermediate = Boolean(privilegeMap['TEAM-01']);
 
     if (!intermediate) {
         return response.redirect(`/employee/${employeeId}`);
