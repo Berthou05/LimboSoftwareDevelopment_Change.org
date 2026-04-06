@@ -1,81 +1,128 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "User" as U
-boundary "project-members.ejs" as V
-boundary "project.routes" as RO
-control "project.controller" as C
-control "project.service" as SV
-entity "employee.model" as E
-entity "collaboration.model" as X
-database "unitas_system" as DB
+actor    "Employee"                         as User
+boundary "projectDirectory/joinButton.ejs" as JoinButton
+boundary "project.routes"                   as Routes
+control  "project.controller"               as Controller
+entity   "project.model"                    as ProjectModel
+entity   "collaboration.model"              as CollaborationModel
+entity   "projectmemberrole.model"          as ProjectMemberRoleModel
+database "unitas_system"                    as DB
 
-U -> V: Click "Join"
-activate V
+User -> JoinButton : Click "Join Project"
+activate JoinButton
+JoinButton -> JoinButton : showJoinRoleDialog()
+User -> JoinButton : Select role + confirm join
+JoinButton -> Routes : POST /projects/:project_id/join\n(form-data: _csrf, role)
+activate Routes
+Routes -> Controller : joinProject(request, response)
+activate Controller
+deactivate Routes
 
-opt Cancel join dialog
-V -> V: closeJoinDialog()
+Controller -> ProjectModel : findById(project_id)
+activate ProjectModel
+ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.employee_responsible_id,\n   P.name, P.description, P.status,\n   P.start_date, P.end_date, P.created_at,\n   E.full_name AS lead_name\n   FROM project AS P\n   INNER JOIN employee AS E\n   ON E.employee_id = P.employee_responsible_id\n   WHERE P.project_id = ?',\n  [project_id]\n)
+activate DB
+DB --> ProjectModel : projectRows[]
+deactivate DB
+ProjectModel --> Controller : projectRows[]
+deactivate ProjectModel
+
+alt Project not found
+    Controller -> Controller : request.session.error =\n'The selected project was not found.'
+    Controller --> Routes : response.redirect('/projects')
+    activate Routes
+    Routes --> JoinButton : HTTP 302 Found
+    deactivate Routes
+    JoinButton --> User : Redirect + flash error
 end
 
-V -> RO: fetch('/projects/:projectId/members/self',\n{method:'POST', headers:{'Content-Type':'application/json'}})
-activate RO
-RO -> C: addSelfToProject(request, response)
-activate C
-C -> SV: addSelfToProject(projectId, session.accountId)
-activate SV
-SV -> E: findByAccountId(session.accountId)
-activate E
-E -> DB: SELECT id, first_name, last_name\nFROM employee\nWHERE account_id = ?
+Controller -> Controller : employee_id = request.session.employeeId\nrole = request.body.role
+
+alt User is project lead
+    Controller -> Controller : request.session.warning =\n'You are already the project lead.'
+    Controller --> Routes : response.redirect('/projects/:project_id')
+    activate Routes
+    Routes --> JoinButton : HTTP 302 Found
+    deactivate Routes
+    JoinButton --> User : Redirect + flash warning
+end
+
+Controller -> ProjectMemberRoleModel : validateRole(role)
+activate ProjectMemberRoleModel
+ProjectMemberRoleModel -> DB : execute(\n  'SELECT role_id, name\n   FROM projectmemberrole_catalog\n   WHERE name = ?\n   AND status = ?',\n  [role, 'ACTIVE']\n)
 activate DB
-DB --> E: employee row
+DB --> ProjectMemberRoleModel : roleRow | null
 deactivate DB
-E --> SV: employee
-deactivate E
-SV -> X: findActiveMembership(projectId, employee.id)
-activate X
-X -> DB: SELECT id\nFROM collaboration\nWHERE project_id = ? AND employee_id = ? AND left_at IS NULL
+ProjectMemberRoleModel --> Controller : roleRow | null
+deactivate ProjectMemberRoleModel
+
+alt Invalid role
+    Controller -> Controller : request.session.error =\n'Select a valid project role.'
+    Controller --> Routes : response.redirect('/projects/:project_id')
+    activate Routes
+    Routes --> JoinButton : HTTP 302 Found
+    deactivate Routes
+    JoinButton --> User : Redirect + flash error
+end
+
+Controller -> CollaborationModel : findActiveByProjectAndEmployee\n(project_id, employee_id)
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'SELECT * FROM collaboration\n   WHERE project_id = ?\n   AND employee_id = ?\n   AND ended_at IS NULL',\n  [project_id, employee_id]\n)
 activate DB
-DB --> X: membership row / null
+DB --> CollaborationModel : membershipRows[]
 deactivate DB
-X --> SV: membership / null
-deactivate X
+CollaborationModel --> Controller : membershipRows[]
+deactivate CollaborationModel
 
 alt Membership already exists
-SV --> C: duplicate membership error
-deactivate SV
-C --> RO: response.json({success:false,error:"Already joined"})
-deactivate C
-RO --> V: HTTP 409 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: showJoinProjectError(error)
-else Membership does not exist
-SV -> X: createMembership(projectId, employee.id)
-activate X
-X -> DB: INSERT INTO collaboration(project_id, employee_id, joined_at)\nVALUES (?, ?, NOW())
-activate DB
-DB --> X: inserted collaboration id
-deactivate DB
-X --> SV: collaboration created
-deactivate X
-SV -> X: listProjectParticipants(projectId)
-activate X
-X -> DB: SELECT c.id, e.id AS employee_id, e.first_name, e.last_name\nFROM collaboration c\nJOIN employee e ON e.id = c.employee_id\nWHERE c.project_id = ? AND c.left_at IS NULL\nORDER BY e.first_name, e.last_name
-activate DB
-DB --> X: participant rows
-deactivate DB
-X --> SV: participants
-deactivate X
-SV --> C: participants data
-deactivate SV
-C --> RO: response.json({success:true,data:participants})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json()
-V -> V: updateParticipantsModule(data)
+    Controller -> Controller : request.session.warning =\n'You are already a member of this project.'
+    Controller --> Routes : response.redirect('/projects/:project_id')
+    activate Routes
+    Routes --> JoinButton : HTTP 302 Found
+    deactivate Routes
+    JoinButton --> User : Redirect + flash warning
 end
-deactivate V
+
+Controller -> CollaborationModel : joinProject(project_id, employee_id,\n'Joined from project detail page.')
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    description, started_at, ended_at)\n   VALUES (UUID(), ?, ?, ?, NOW(), NULL)',\n  [project_id, employee_id,\n   'Joined from project detail page.']\n)
+activate DB
+DB --> CollaborationModel : insert result
+deactivate DB
+CollaborationModel --> Controller : collaboration created
+deactivate CollaborationModel
+
+Controller -> ProjectMemberRoleModel : assignMemberRole(project_id,\nemployee_id, role)
+activate ProjectMemberRoleModel
+ProjectMemberRoleModel -> DB : execute(\n  'INSERT INTO projectmemberrole\n   (project_id, employee_id, role, assigned_at)\n   VALUES (?, ?, ?, NOW())',\n  [project_id, employee_id, role]\n)
+activate DB
+DB --> ProjectMemberRoleModel : role assignment created
+deactivate DB
+ProjectMemberRoleModel --> Controller : role assigned
+deactivate ProjectMemberRoleModel
+
+Controller -> Controller : request.session.success =\n'You joined {project_name}.'
+Controller --> Routes : response.redirect('/projects/:project_id')
+activate Routes
+Routes --> JoinButton : HTTP 302 Found
+deactivate Routes
+JoinButton --> User : Redirect + flash success
+
+alt Unexpected error (catch)
+    Controller -> Controller : log(error)\nrequest.session.error =\n'We could not update the project membership right now.'
+    Controller --> Routes : response.redirect('/projects/:project_id')
+    activate Routes
+    Routes --> JoinButton : HTTP 302 Found
+    deactivate Routes
+    JoinButton --> User : Redirect + flash error
+end
+
+deactivate Controller
+deactivate JoinButton
 
 @enduml
