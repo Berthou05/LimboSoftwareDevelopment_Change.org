@@ -1,0 +1,66 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "view teamDirectory.ejs" as VD
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "Project.model" as PM
+entity "Achievement.model" as AM
+entity "Goal.model" as GM
+boundary "view pages/team.ejs" as V
+database "unitas_system" as BD
+autonumber
+
+activate U
+U -> VD: Click Team row with team_id
+deactivate U
+    activate VD
+    VD -> RO: GET /team/{team_id}
+    deactivate VD
+        activate RO
+        RO -> C: getTeamPage(request, response)
+        deactivate RO
+            activate C
+            note right of C
+                Promise.all([...]) also calls Team.findById(teamId),
+                Employee.getEmployeeByTeamId(teamId), activityPromise,
+                and Employee.fetchAll() to complete the full page render.
+                This sequence diagram only follows the project information flow.
+            end note
+            C ->> PM: getProjectsByTeamId(teamId)
+                activate PM
+                PM ->> BD: execute('SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, P.employee_responsible_id, E.full_name, PT.team_role FROM project as P INNER JOIN projectteam as PT ON PT.project_id=P.project_id INNER JOIN employee as E ON E.employee_id=P.employee_responsible_id WHERE PT.team_id=?;', [teamId])
+                    activate BD
+                    BD --> PM: teamProjects
+                    deactivate BD
+                PM --> C: teamProjects
+                deactivate PM
+            C -> C: projectsDetailed = teamProjects.map(...)
+            loop For each project in teamProjects
+                C ->> AM: fetchByProject(project.project_id)
+                    activate AM
+                    AM ->> BD: execute('SELECT * FROM achievement WHERE project_id=? ORDER BY achievement_date DESC;', [project.project_id])
+                        activate BD
+                        BD --> AM: achievements
+                        deactivate BD
+                    AM --> C: achievements
+                    deactivate AM
+                C ->> GM: fetchByProject(project.project_id)
+                    activate GM
+                    GM ->> BD: execute('SELECT * FROM goal WHERE project_id=? ORDER BY created_at DESC;', [project.project_id])
+                        activate BD
+                        BD --> GM: goals
+                        deactivate BD
+                    GM --> C: goals
+                    deactivate GM
+                C -> C: projectsDetailed.push({id, name, description, image, status, startDate, endDate, leadName, teamRole, activityLog, highlights, achievements})
+            end
+            C -> C: team.projectsDetailed = projectsDetailed
+            C -> V: response.render('pages/team', {team, ...})
+            deactivate C
+    activate V
+    V -> U: HTML page with Team projects information
+    deactivate V
+
+@enduml
