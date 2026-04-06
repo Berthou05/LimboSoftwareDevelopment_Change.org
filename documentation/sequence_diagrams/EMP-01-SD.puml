@@ -1,0 +1,128 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "employee.routes" as RO
+boundary "view pages/employeeDirectory.ejs" as VL
+boundary "view pages/employeeDetails.ejs" as VS
+control "employee.controller" as C
+entity "Employee.model" as EM
+entity "Activity.model" as ACM
+entity "EmployeeTeam.model" as ETM
+entity "Project.model" as PM
+database "unitas_system" as BD
+autonumber
+
+activate U
+U -> RO: GET /employee
+deactivate U
+    activate RO
+    RO -> C: getEmployee(request, response)
+    deactivate RO
+        activate C
+        C -> C: intermediate = privileges.some(priv => priv.privilege_id === 'TEAM-01')
+        C ->> EM: getNearEmployees(employeeId)
+            activate EM
+            EM ->> BD: execute('SELECT E.full_name, E.employee_id,\nA.slack_username, A.image, A.email\nFROM employee as E\nINNER JOIN account AS A ON E.employee_id=A.employee_id\nINNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id\nINNER JOIN team as T ON ET.team_id=T.team_id\nWHERE ET.team_id IN(SELECT T.team_id FROM team as T\nINNER JOIN employeeteam as ET ON ET.team_id=T.team_id\nWHERE ET.employee_id=? AND ET.role=?)\nUNION SELECT E.full_name, E.employee_id,\nA.slack_username, A.image, A.email\nFROM employee as E\nINNER JOIN account AS A ON E.employee_id=A.employee_id\nINNER JOIN collaboration as C ON C.employee_id=E.employee_id\nINNER JOIN project as P on C.project_id=P.project_id\nWHERE C.project_id IN(SELECT P.project_id FROM project as P\nWHERE P.employee_responsible_id=?);',[employeeId, 'LEAD', employeeId])
+                activate BD
+                BD --> EM: near_employees
+                deactivate BD
+            EM --> C: near_employees
+            deactivate EM
+        C -> VL: response.render('pages/employeeDirectory', {employees: employees})
+        deactivate C
+    activate VL
+    VL -> U: HTML with associated employees list
+    deactivate VL
+
+opt User has no TEAM-01 privilege
+        activate C
+        C -> C: intermediate = false
+        C -> VS: response.redirect(`/employee/${employeeId}`)
+        deactivate C
+    activate VS
+    VS -> U: Redirect /employee/:employee_id
+    deactivate VS
+end
+
+activate U
+U -> VL: Clicks on an Employee
+deactivate U
+    activate VL
+    VL -> RO: GET /employee/:employee_id
+    deactivate VL
+        activate RO
+        RO -> C: getEmployeePage(request, response)
+        deactivate RO
+            activate C
+            C -> C: intermediate = privileges.some(priv => priv.privilege_id === 'TEAM-01')
+            C ->> ETM: fetchTeamInfoByEmployee(employee_id)
+                activate ETM
+                ETM ->> BD: execute('SELECT ET.team_id, ET.joined_at, ET.role,\nT.name, T.description, T.image,\nT.employee_responsible_id, E.full_name\nFROM employeeteam as ET\nINNER JOIN team as T ON T.team_id=ET.team_id\nINNER JOIN employee as E ON E.employee_id=T.employee_responsible_id\nWHERE ET.employee_id=? AND ET.left_at IS NULL\nORDER BY ET.joined_at DESC',[employee_id])
+                    activate BD
+                    BD --> ETM: team
+                    deactivate BD
+                ETM --> C: team
+                deactivate ETM
+            C ->> EM: fetchById(employee_id)
+                activate EM
+                EM ->> BD: execute('SELECT E.full_name, E.employee_id,\nA.slack_username, A.image, A.email\nFROM employee AS E\nINNER JOIN account AS A ON E.employee_id=A.employee_id\nWHERE E.employee_id=?',[employee_id])
+                    activate BD
+                    BD --> EM: info
+                    deactivate BD
+                EM --> C: info
+                deactivate EM
+            C ->> ACM: fetchByEmployee(employee_id, activityFilter.rangeStart, activityFilter.rangeEnd)
+                activate ACM
+                ACM ->> BD: execute('SELECT A.activity_id, A.project_id, A.title,\nA.description, A.completed_at, E.full_name\nFROM activity as A\nINNER JOIN employee AS E ON E.employee_id=A.employee_id\nWHERE A.employee_id=? AND A.completed_at >= ?\nAND A.completed_at <= ?\nORDER BY A.completed_at DESC, A.title ASC;',[employee_id, activityFilter.rangeStart, activityFilter.rangeEnd])
+                    activate BD
+                    BD --> ACM: activities
+                    deactivate BD
+                ACM --> C: activities
+                deactivate ACM
+            C ->> PM: getProjectByEmployeeId(employee_id)
+                activate PM
+                PM ->> BD: execute('SELECT P.project_id, P.name, P.description,\nP.status, P.start_date, P.end_date,\nP.employee_responsible_id, E.full_name,\nC.description as coll_description, C.started_at, C.ended_at\nFROM project as P\nINNER JOIN collaboration as C on P.project_id=C.project_id\nINNER JOIN employee as E ON P.employee_responsible_id=E.employee_id\nWHERE C.employee_id=?;',[employee_id])
+                    activate BD
+                    BD --> PM: employee_projects
+                    deactivate BD
+                PM --> C: employee_projects
+                deactivate PM
+            C -> C: buildActivitySections(activities)
+            C -> C: teamRows = team.map(...)
+            C -> C: projectRows = employee_projects.map(...)
+            C -> C: employee = {employee_id, full_name, image}
+            C -> VS: response.render('pages/employeeDetails', {employee, activitySections, teamRows, projectRows, ...})
+            deactivate C
+    activate VS
+    VS -> U: HTML + Employee profile page
+    deactivate VS
+
+opt User has no TEAM-01 privilege and employee_id != request.session.employeeId
+        activate C
+        C -> VS: response.redirect(`/employee/${request.session.employeeId}`)
+        deactivate C
+    activate VS
+    VS -> U: Redirect /employee/:employee_id
+    deactivate VS
+end
+
+opt Employee directory could not be loaded
+        activate C
+        C -> VS: response.redirect('/home')
+        deactivate C
+    activate VS
+    VS -> U: Redirect /home
+    deactivate VS
+end
+
+opt Employee profile data could not be loaded
+        activate C
+        C -> VS: response.redirect('/employee')
+        deactivate C
+    activate VS
+    VS -> U: Redirect /employee
+    deactivate VS
+end
+
+@enduml
