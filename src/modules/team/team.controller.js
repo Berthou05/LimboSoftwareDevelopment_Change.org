@@ -375,6 +375,7 @@ exports.getTeamPage = (request, response, next) => {
                     employee: {
                         id: member.employee_id,
                         fullName: member.full_name,
+                        //! To be modified based on image.
                         image: buildAvatarUrl(member.full_name),
                     },
                 })),

@@ -13,6 +13,7 @@
       isMember: typeof isMember !== 'undefined' ? isMember : false,
       csrfToken
     }) %>
+
     <%- include('../partials/reportGenerator/reportGenerator', {
       redirectTo: '/teams/' + (team?.id || ''),
       defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'TEAM',
@@ -21,12 +22,14 @@
       latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
       quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
     }) %>
+
     <%- include('../partials/teamDirectory/teamParticipants', {
       team,
       csrfToken,
       currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
       availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : []
     }) %>
+    
     <%- include('../partials/teamDirectory/teamActivity', {
       team,
       activityFilter: typeof activityFilter !== 'undefined'
