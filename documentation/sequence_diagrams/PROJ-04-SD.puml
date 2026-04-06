@@ -2,49 +2,34 @@
 skinparam style strictuml
 
 actor User as U
-boundary "project.ejs" as V
+boundary "vista project.ejs" as V
 boundary "project.routes" as RO
 control "project.controller" as C
-entity "project.model" as T
+entity "Project.model" as ET
 database "unitas_system" as BD
-
 autonumber
 
 activate U
-U->V: Hover/Click over the "Project Information" button
+U->RO: GET /project/:project_id
 deactivate U
+    activate RO
+    RO -> C: getProjectPage(request, response)
+    deactivate RO
+        activate C
+        note right: This function is used by multiple User Cases\n more internal functional calls may be before or after
+        C->>ET: findById(project_id);
+            activate ET
+            ET->>BD: execute(`SELECT P.project_id,P.employee_responsible_id,P.name,P.description,P.status,P.start_date,P.end_date,P.created_at,NULL AS image,E.full_name AS lead_name\nFROM project AS P\nINNER JOIN employee AS E\nON E.employee_id = P.employee_responsible_id\nWHERE P.project_id = ?`,\n[project_id]);
+                activate BD
+                BD-->ET: projectRows
+                deactivate BD
+            ET-->C: projectRows
+            deactivate ET
+        C->V: response.render('project.ejs', { project: project })
+        note right: Same render is returned by all User Cases, \n more parameters to render must be contemplated.
+        deactivate C
     activate V
-    V->V: showProjectInfo();
-    V->RO: fetch('/project/info/`${team_id}`', {method: 'GET', headers: { 'Accept': 'application/json'}});
+    V->U: HTML
     deactivate V
-        activate RO
-        RO->C:getProjectInfo(request, response);
-        deactivate RO
-            activate C
-            C->>T: getProjectInfo(project_id);
-                activate T
-                T->>BD: execute('SELECT * FROM project WHERE project_id=?',[project_id]);
-                    activate BD
-                    BD-->T:info
-                    deactivate BD
-                T-->C:info
-                deactivate T
-            C->V: response.json({body:info});
-            deactivate C
-    activate V
-    V->V: createInfoPopover(info);
-    V->U: Updated view
-    deactivate V
-
-activate U
-opt Close Information
-U->V: Clicks or hovers outside the "Project Information" button
-deactivate U
-    activate V
-    V->V: closePopover();
-    U->V: Updated view
-    deactivate V
-end
-    
 
 @enduml

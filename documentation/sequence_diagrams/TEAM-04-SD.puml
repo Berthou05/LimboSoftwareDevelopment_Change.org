@@ -2,47 +2,33 @@
 skinparam style strictuml
 
 actor User as U
-boundary "team.ejs" as V
+boundary "vista team.ejs" as V
 boundary "team.routes" as RO
 control "team.controller" as C
-entity "team.model" as T
+entity "team.model" as ET
 database "unitas_system" as BD
-
 autonumber
 
-U -> V: Hover/Click over "Team Information" button
-activate V
-V -> V: showTeamInfo()
-V ->> RO: fetch('/team/info/${team_id}', {\n method:'GET',\n headers:{'Accept':'application/json'}\n})
-deactivate V
-
-activate RO
-RO -> C: getTeamInfo(request, response)
-deactivate RO
-
-activate C
-C -> T: getTeamInfo(team_id)
-activate T
-T -> BD: execute("SELECT * FROM team WHERE team_id = ?", [team_id])
-activate BD
-BD --> T: info
-deactivate BD
-T --> C: info
-deactivate T
-C --> V: response.json({ body: info })
-deactivate C
-
-activate V
-V -> V: createInfoPopover(info)
-V --> U: Updated view
-deactivate V
-
-opt Close Information
-    U -> V: Clicks or hovers outside "Team Information"
+activate U
+U->RO: GET /team/:team_id
+deactivate U
+    activate RO
+    RO -> C: getTeamPage(request, response)
+    deactivate RO
+        activate C
+        note right: This function is used by multiple User Cases\n more internal functional calls may be before or after
+        C->>ET: findById(team_id);
+            activate ET
+            ET->>BD: execute('SELECT * FROM team WHERE team_id = ?', [team_id]);                activate BD
+                BD-->ET: teamInfo
+                deactivate BD
+            ET-->C: teamInfo
+            deactivate ET
+        C->V: response.render('team.ejs', { team })
+        note right: Same render is returned by all User Cases, \n more parameters to render must be contemplated.
+        deactivate C
     activate V
-    V -> V: closePopover()
-    V --> U: Updated view
+    V->U: HTML
     deactivate V
-end
 
 @enduml
