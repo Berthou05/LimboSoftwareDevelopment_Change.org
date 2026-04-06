@@ -15,13 +15,14 @@ activate L
 L->>V: Click "Add" button
     activate V
     V->V: showSearchPopup();
-    V-->L: Show popup
+    V-->L: Updated view
     deactivate V
 
 alt Cancel Search Join
 L->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
+    V-->L: Updated view
     deactivate V
 end
 
@@ -78,13 +79,14 @@ L->>V: Click on a matching result
 end
 
     V->V: showRolePopup();
-    V-->L: Show popup
+    V-->L: Updated view
     deactivate V
 
 alt Cancel Role Join
 L->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
+    V-->L: Updated view
     deactivate V
 end
 

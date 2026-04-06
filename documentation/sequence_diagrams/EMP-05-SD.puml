@@ -2,64 +2,56 @@
 skinparam style strictuml
 
 actor User as U
-boundary "employee_profile.ejs" as V
+boundary "employeeDirectory.ejs" as ED
+boundary "employeeDetails.ejs" as V
 boundary "routes" as RO
-control "project.controller" as C
-entity "Project.model" as M
+control "employee.controller" as C
+entity "project.model" as M
 database "unitas_system" as DB
 
 autonumber
 
-== View Employee Projects ==
-
 activate U
-U -> V: Accesses an Employee's profile
+U ->> ED: Accesses an Employee's page.
 deactivate U
 
-activate V
-U -> V: Navigates to the "Your Projects" section
-V -> V: captureEmployeeId(id)
-V -> RO: fetch('/projects/employee/:id', {method: GET})
-deactivate V
+    activate ED
+    ED->>RO:GET employee/:employee_id
+    deactivate ED
 
-activate RO
-RO -> C: getProjectsByEmployee(request, response)
-deactivate RO
+        activate RO
+        RO->C:getEmployeePage(request,response)
+        deactivate RO
+            activate C
+            C->>M:getProjectByEmployeeId(employee_id)
+                activate M
+                M->>DB:execute(`SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, P.employee_responsible_id,E.full_name,C.description as coll_description,C.started_at,C.ended_at\n FROM project as P \nINNER JOIN collaboration as C on P.project_id=C.project_id \nINNER JOIN employee as E ON P.employee_responsible_id=E.employee_id \nWHERE C.employee_id=?;`,\n[employee_id]);
+                    activate DB
+                    DB-->M: projects
+                    deactivate DB
+                M-->C:projects
+                deactivate M
+            C->V: response.render('pages/employeeDetails.ejs', {projects: projects})
+        activate V
+        V->U:HTML
+        deactivate V
 
-activate C
-C -> M: fetchProjectsByMember(employee_id)
-activate M
-
-M -> DB: execute('SELECT * FROM project_members WHERE employee_id = ?', [employee_id])
-activate DB
-
-alt Is there a connection or data error? (yes)
-    DB --> M: connection_error
-    M --> C: error_status
-    C -> V: response.json({success: false, error: 'Database error'})
-    activate V
-    V -> U: Informs the user an error has occurred
-    deactivate V
-    
-else Is there a connection or data error? (no)
-    DB --> M: projects_list
-    deactivate DB
-    M --> C: projects_list
-    deactivate M
-    
-    C -> V: response.json({success: true, body: projects_list})
-    activate V
-    
-    alt projects_list is empty
-        V -> U: Show "no projects yet" message
-    else projects_list contains data
-        V -> V: displaySummaryList("Your Projects" widget)
-        V -> V: renderPageWithUserInfo()
-        V -> U: Views all projects linked to that Employee
-    end
-    deactivate V
+alt Render Failed
+    C->RO: response.redirect('/employee')
+    deactivate C
+    activate RO
+    RO->C:getEmployee(request,response)
+    deactivate RO
+        activate C
+        note right
+        Render of the Team Directory page + Error.
+        end note
+        C->ED:response.render('pages/employeeDirectory.ejs',{...}) 
+        deactivate C
+    activate ED
+    ED->U: HTML+Error Message
+    deactivate ED
 end
 
-deactivate C
 
 @enduml

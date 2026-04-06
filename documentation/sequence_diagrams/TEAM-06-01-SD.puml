@@ -13,13 +13,14 @@ activate U
 U->>V: Click "Join" button
     activate V
     V->V: showRolePopup();
-    V-->U: Show popup
+    V-->U:Updated view
     deactivate V
 
 alt Cancel Join
 U->>V: Click "Close" button.
     activate V
     V->V: hidePopup();
+    V-->U:Updated view
     deactivate V
 end
 

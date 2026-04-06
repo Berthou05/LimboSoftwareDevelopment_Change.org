@@ -1,16 +1,6 @@
 @startuml
 skinparam style strictuml
 
-actor User as U
-boundary "team_settings.ejs" as V
-boundary "routes" as RO
-control "team.controller" as C
-entity "Team.model" as M
-database "unitas_system" as BD
-
-autonumber
-skinparam Style strictuml
-
 actor Lead as L
 boundary "team.ejs" as V
 boundary "team.routes" as RO
@@ -21,29 +11,22 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-L->V:Click on the "Delete Team" button
-deactivate L
+L->>V:Click on the "Delete Team" button
     activate V
     V->V:data-popup-open="delete-team-<%= team_id %>"
-    V->L:Updated view
+    V-->L:Updated view
     deactivate V
 
 alt Cancel deletion
-activate L
-L->V:Click on the "Cancel" button
-deactivate L
+L->>V:Click on the "Cancel" button
     activate V
     V->V:data-popup-close
-    V->L:Updated view
+    V-->L:Updated view
     deactivate V
-activate L
 end
-L->V:Click on the "Delete" button
-deactivate L
+L->>V:Click on the "Delete" button
     activate V
-    V->V:submit
-    V->RO:fetch('/team/:team_id/delete',{method: DELETE, headers:{'Accept': 'application/json'}})
-    deactivate V
+    V->>RO:fetch('/team/:team_id/delete',{method: DELETE, headers:{'Accept': 'application/json'}})
         activate RO
         RO->C: deleteTeam(request, response);
         deactivate RO
@@ -58,13 +41,11 @@ deactivate L
                 deactivate T
 
 alt Deletion Failed
-            C->V:response.json({success:false})
-            deactivate C
-    activate V
+            C-->V:response.json({success:false})
     V->V:data-popup-close
-    V->L:Show unchanged view
+    V-->L:Show unchanged view
     deactivate V
-    activate C
+deactivate L
 end         
 
             C->RO: redirect('/team')
@@ -75,7 +56,7 @@ end
         controller function getTeams.
     end note
     deactivate RO
-            
+    
 
 
             

@@ -10,29 +10,24 @@ database "unitas_system" as BD
 autonumber
 
 activate L
-L->V: Click "Add" button in the Project Achievement module
-deactivate L
+L->>V: Click "Add" button in the Project Achievement module
     activate V
     V->V: showAchievementPopup();
-    V->L: Show achievement popup
+    V-->L: Updated view
     deactivate V
 
 opt Cancel Creation
-activate L
-L->V: Clicks the "Close" button.
-deactivate L
+L->>V: Clicks the "Close" button.
     activate V
     V->V: closePopup();
+    V-->L: Updated view
     deactivate V
 end
 
-activate L
-L->V: Clicks the "Submit" button
-deactivate L
+L->>V: Clicks the "Submit" button
     activate V
     V->V: createAchievement(data)
-    V->RO: fetch('/project/achievement/new',{method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
-    deactivate V
+    V->>RO: fetch('/project/achievement/new',{method: PUT, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
         activate RO
         RO->C: createAchievement(request, response);
         deactivate RO
@@ -53,26 +48,21 @@ deactivate L
                     deactivate BD
                 A-->C: data
                 deactivate A
-            C->V: response.json({success:true, body:data});
-            deactivate C
-    activate V
+            C-->V: response.json({success:true, body:data});
     V->V:closePopup();
     V->V:createAchievementModal(data);
     V->V:showSuccessPopup("Achievement created successfully");
-    V->L:Updated view
-    deactivate V
+    V-->L:Updated view
 
     alt Creation failed
-            activate C
-            C->V: response.json({success:false, error:error});
+            C-->V: response.json({success:false, error:error});
             deactivate C
-    activate V
     V->V:closePopup();
     V->V:showErrorPopoup(error);
-    V->L: Updated view
+    V-->L: Updated view
     deactivate V
     end
-
+deactivate L
 
 
 @enduml

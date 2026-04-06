@@ -3,61 +3,112 @@ skinparam style strictuml
 
 actor User as U
 boundary "login.ejs" as V
-boundary "routes" as RO
+boundary "home.ejs" as HV
+boundary "auth.routes" as RO
+boundary  "home.routes" as HR
 control "auth.controller" as C
-entity "User.model" as M
+control "home.controller" as HC
+entity "Account.model" as A
+entity "Employee.model" as E
+entity "bcryot" as BC
 database "unitas_system" as BD
 
 autonumber
 
-== User Sign In ==
+activate U
 
+note right
+User enters the Unitas 
+web application
+end note
+
+U->RO: GET /
+deactivate U
+    activate RO
+    RO->C:getLogin(request,response)
+    deactivate RO
+        activate C
+        C->V: esponse.render('pages/login.ejs',{...})
+        deactivate C
+    activate V
+    V->U:HTML Login Form
+    deactivate V
 activate U
 U -> V: Enters company email and password
 U -> V: Clicks "Sign In" button
 deactivate U
 
-activate V
-V -> V: validatesInputFormat()
-V -> RO: fetch('/auth/login', {method: POST, body: credentials})
-deactivate V
-
-activate RO
-RO -> C: login(request, response)
-deactivate RO
-
-activate C
-C -> M: fetchUserByEmail(email)
-activate M
-
-M -> BD: execute('SELECT * FROM user WHERE email = ?', [email])
-activate BD
-BD --> M: user_record (includes hashed_password and role)
-deactivate BD
-
-M --> C: user_record
-deactivate M
-
-alt Credentials valid? (yes)
-    C -> C: comparePassword(input, hashed)
-    C -> C: generateSessionToken()
-    C -> C: determineRole(Admin, Lead, or Employee)
-    
-    C -> V: response.json({success: true, redirect: '/dashboard'})
     activate V
-    V -> V: redirectToRoleSpecificDashboard()
-    V -> U: Displays home page / Dashboard
+    V -> RO: POST /
     deactivate V
-    
-else Credentials valid? (no)
-    C -> V: response.json({success: false, error: 'Invalid Credentials'})
+        activate RO
+        RO -> C: postLogin(request, response)
+        deactivate RO
+
+            activate C
+            C->>A: fetchByEmail(request.body.email)
+                activate A
+                A->>BD: execute('SELECT * FROM account WHERE email=?',[email]);
+                    activate BD
+                    BD-->A: acccount_info
+                    deactivate BD
+                A-->C: account_info
+                deactivate A
+            
+            C->>BC: compare(request.body.password, rows[0].password_hash)
+                activate BC
+                BC-->C:doMatch
+                deactivate BC
+            
+            C->>E: getNamesByEmployeeId(rows[0].employee_id)
+                activate E
+                E->>BD: execute('SELECT names FROM employee WHERE employee_id=?',[employee_id]);
+                    activate BD
+                    BD-->E: names
+                    deactivate BD
+                BD-->C: names
+                deactivate E
+
+            C->>A: getPrivilegesFromAccountId(rows[0].account_id)
+                activate A
+                A->>BD: execute('SELECT P.privilege_id \nFROM privilege AS P \nINNER JOIN roleprivilege AS RP ON RP.privilege_id=P.privilege_id \nINNER JOIN role AS R ON R.role_id=RP.role_id \nINNER JOIN accountrole AS AR ON R.role_id= AR.role_id \nINNER JOIN account AS A ON AR.account_id=A.account_id \nWHERE A.account_id=?;',[account_id])
+                    activate BD
+                    BD-->A: privileges
+                    deactivate BD
+                A-->C: privileges
+                deactivate A
+            
+alt Authentication failed
+            C->RO: redirect('/')
+            deactivate C
+
+        activate RO
+        RO->C:getLogin(request,response)
+        deactivate RO
+
+            activate C
+            C->V: response.render('pages/login.ejs',{...})
     activate V
-    V -> V: clearsPasswordField()
-    V -> V: displayErrorMessage("Invalid Credentials")
-    V -> U: Displays "Invalid Credentials" message
+    V->U:HTML Login Form + Error message
     deactivate V
 end
+            
+            C->HR: redirect('/home')
+            deactivate C
+    
+    activate HR
+    HR->HC: getHome(request,response)
+    deactivate HR
 
-deactivate C
+        activate HC
+        note right
+        Section responsible for the 
+        home.ejs render
+        end note
+        HC->HV: response.render('pages/home.ejs',{...});
+        deactivate HC
+    activate HV
+    HV->U: HTML
+    deactivate HV
 
 @enduml

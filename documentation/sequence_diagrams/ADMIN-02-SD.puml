@@ -10,23 +10,20 @@ database "unitas_system" as BD
 autonumber
 
 activate A
-A -> V: Clicks "Create Role" button.
-deactivate A
+A ->> V: Clicks "Create Role" button.
     activate V
     V->V:createRole();
-    V -> A: Show popup form.
+    V--> A: Updated view
     deactivate V
 
 alt Cancel role creation
-activate A
-A->V: Clicks "Close" button.
-deactivate A
+A->>V: Clicks "Close" button.
     activate V
     V->V:closePopup();
+    V--> A: Updated view
     deactivate V
 end
 
-activate A
 A->V: Clicks "Submit" button.
 deactivate A
     activate V
