@@ -2,90 +2,57 @@
 skinparam style strictuml
 
 actor User as U
-boundary "routes" as RO
-boundary "vista accountForm.ejs" as V
-control "account.controller" as C
+boundary "auth.routes" as RO
+boundary "view signin.ejs" as V
+control "auth.controller" as C
 entity "Employee.model" as EM
-entity "Account.model" as AM
-entity "AccountRole.model" as ARM
 database "unitas_system" as BD
 autonumber
 activate U
-U -> RO: GET /accounts/new
+U -> RO: GET /new
 deactivate U
     activate RO
-    RO -> C: getNew(request, response)
+    RO -> C: getSignin(request, response)
     deactivate RO
         activate C
-        C -> V: response.render('accountForm.ejs')
+        C -> V: response.render('signin', {csrfToken: request.csrfToken()})
         deactivate C
     activate V
     V -> U: HTML form
     deactivate V
 
 activate U
-U -> RO: POST /accounts
+U -> RO: POST /new
 deactivate U
     activate RO
-    RO -> C: create(request, response)
+    RO -> C: postSignin(request, response)
     deactivate RO
         activate C
-        C -> C: validate(data)
-        alt Invalid data
-            C -> V: response.render('accountForm.ejs', {errors})
-            deactivate C
-                activate V
-                V -> U: HTML + Error messages
-                deactivate V
-        else Valid data
-            C -> AM: findByEmail(email)
-                activate AM
-                AM -> BD: SELECT * FROM account WHERE email=?
+        C -> C: fullname = request.body.name + " " + request.body.lastname
+        C -> C: const employee_id = ''
+        C -> EM: new Employee(fullname, request.body.names, request.body.lastnames)
+            activate EM
+            C ->> EM: save()
+                EM ->> BD: execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',[fullname, request.body.names, request.body.lastnames])
                     activate BD
-                    BD --> AM: result
+                    BD --> EM: Query OK
                     deactivate BD
-                AM --> C: exists/null
-                deactivate AM
-            alt Email exists
-                C -> V: response.render('accountForm.ejs', {error: "Email already exists"})
-                deactivate C
-                    activate V
-                    V -> U: HTML + Error message
-                    deactivate V
-            else New email
-                C -> C: hash(password)
-                C -> EM: createEmployee(names, lastnames, ...)
-                    activate EM
-                    EM -> BD: INSERT INTO employee (...)
-                        activate BD
-                        BD --> EM: employee_id
-                        deactivate BD
-                    EM --> C: employee_id
-                    deactivate EM
-                C -> AM: createAccount(employee_id, email, password_hash, ...)
-                    activate AM
-                    AM -> BD: INSERT INTO account (...)
-                        activate BD
-                        BD --> AM: account_id
-                        deactivate BD
-                    AM --> C: account_id
-                    deactivate AM
-                C -> ARM: assignRole(account_id, role_id)
-                    activate ARM
-                    ARM -> BD: INSERT INTO accountrole (...)
-                        activate BD
-                        BD --> ARM: OK
-                        deactivate BD
-                    ARM --> C: assigned
-                    deactivate ARM
-                C -> V: response.render('success.ejs', {success: "Account created successfully"})
-                deactivate C
-                    activate V
-                    V -> U: HTML + Success message
-                    deactivate V
-            end
-        end
-
-activate U
+            EM --> C: employee saved
+            deactivate EM
+        C ->> EM: getEmployeeIdByFullname(fullname)
+            activate EM
+            EM ->> BD: execute('SELECT employee_id FROM employee WHERE full_name=?',[fullname])
+                activate BD
+                BD --> EM: employee_id
+                deactivate BD
+            EM --> C: Promise employee_id
+            deactivate EM
+        C -> C: employee_id = Employee.getEmployeeIdByFullname(fullname)
+        C -> C: catch(error)
+        C -> V: response.redirect('/')
+        deactivate C
+    activate V
+    V -> U: Redirect /
+    deactivate V
 
 @enduml
