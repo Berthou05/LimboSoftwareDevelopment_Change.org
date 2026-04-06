@@ -6,26 +6,61 @@ autonumber
 
 actor    "Employee"                         as User
 boundary "projectDirectory/joinButton.ejs" as JoinButton
+control  "teamDetails.js (AJAX)"            as Client
 boundary "project.routes"                   as Routes
 control  "project.controller"               as Controller
 entity   "project.model"                    as ProjectModel
 entity   "collaboration.model"              as CollaborationModel
-entity   "projectmemberrole.model"          as ProjectMemberRoleModel
 database "unitas_system"                    as DB
 
+activate User
 User -> JoinButton : Click "Join Project"
+deactivate User
 activate JoinButton
-JoinButton -> JoinButton : showJoinRoleDialog()
-User -> JoinButton : Select role + confirm join
-JoinButton -> Routes : POST /projects/:project_id/join\n(form-data: _csrf, role)
+JoinButton -> Client : openJoinProjectPopup()
+activate Client
+JoinButton --> User : Show role/start-date popup
+activate User
+User -> Client : Select role + start_date\n[description when role = COLLABORATION]
+deactivate User
+Client -> Client : validateJoinPayload(role, started_at,\ndescription)
+
+alt Invalid join payload
+    Client -> JoinButton : showJoinValidationError()
+    JoinButton --> User : Inline validation message
+end
+
+Client -> Routes : fetch('/projects/:project_id/join',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({role, started_at, description, _csrf})})
 activate Routes
 Routes -> Controller : joinProject(request, response)
 activate Controller
 deactivate Routes
 
+Controller -> Controller : hasPrivilege('PROJ-05-01', request.session.privileges)
+
+alt Missing privilege PROJ-05-01
+    Controller ->> Routes : res.status(403).json\n({ error: 'You cannot join this project.' })
+    activate Routes
+    Routes ->> Client : HTTP 403 Forbidden
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Privilege error message
+end
+
+Controller -> Controller : validateJoinPayload(role, started_at,\ndescription)
+
+alt Invalid join payload (server)
+    Controller ->> Routes : res.status(400).json\n({ error: 'Invalid join data.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Invalid input message
+end
+
 Controller -> ProjectModel : findById(project_id)
 activate ProjectModel
-ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.employee_responsible_id,\n   P.name, P.description, P.status,\n   P.start_date, P.end_date, P.created_at,\n   E.full_name AS lead_name\n   FROM project AS P\n   INNER JOIN employee AS E\n   ON E.employee_id = P.employee_responsible_id\n   WHERE P.project_id = ?',\n  [project_id]\n)
+ProjectModel -> DB : execute(\n  'SELECT P.project_id, P.employee_responsible_id,\n   P.name, P.status\n   FROM project AS P\n   WHERE P.project_id = ?',\n  [project_id]\n)
 activate DB
 DB --> ProjectModel : projectRows[]
 deactivate DB
@@ -33,41 +68,23 @@ ProjectModel --> Controller : projectRows[]
 deactivate ProjectModel
 
 alt Project not found
-    Controller -> Controller : request.session.error =\n'The selected project was not found.'
-    Controller --> Routes : response.redirect('/projects')
+    Controller ->> Routes : res.status(404).json\n({ error: 'The selected project was not found.' })
     activate Routes
-    Routes --> JoinButton : HTTP 302 Found
+    Routes ->> Client : HTTP 404 Not Found
     deactivate Routes
-    JoinButton --> User : Redirect + flash error
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Project not found message
 end
 
-Controller -> Controller : employee_id = request.session.employeeId\nrole = request.body.role
+Controller -> Controller : employee_id = request.session.employeeId
 
 alt User is project lead
-    Controller -> Controller : request.session.warning =\n'You are already the project lead.'
-    Controller --> Routes : response.redirect('/projects/:project_id')
+    Controller ->> Routes : res.status(409).json\n({ error: 'You are already the project lead.' })
     activate Routes
-    Routes --> JoinButton : HTTP 302 Found
+    Routes ->> Client : HTTP 409 Conflict
     deactivate Routes
-    JoinButton --> User : Redirect + flash warning
-end
-
-Controller -> ProjectMemberRoleModel : validateRole(role)
-activate ProjectMemberRoleModel
-ProjectMemberRoleModel -> DB : execute(\n  'SELECT role_id, name\n   FROM projectmemberrole_catalog\n   WHERE name = ?\n   AND status = ?',\n  [role, 'ACTIVE']\n)
-activate DB
-DB --> ProjectMemberRoleModel : roleRow | null
-deactivate DB
-ProjectMemberRoleModel --> Controller : roleRow | null
-deactivate ProjectMemberRoleModel
-
-alt Invalid role
-    Controller -> Controller : request.session.error =\n'Select a valid project role.'
-    Controller --> Routes : response.redirect('/projects/:project_id')
-    activate Routes
-    Routes --> JoinButton : HTTP 302 Found
-    deactivate Routes
-    JoinButton --> User : Redirect + flash error
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Already lead warning
 end
 
 Controller -> CollaborationModel : findActiveByProjectAndEmployee\n(project_id, employee_id)
@@ -80,49 +97,50 @@ CollaborationModel --> Controller : membershipRows[]
 deactivate CollaborationModel
 
 alt Membership already exists
-    Controller -> Controller : request.session.warning =\n'You are already a member of this project.'
-    Controller --> Routes : response.redirect('/projects/:project_id')
+    Controller ->> Routes : res.status(409).json\n({ error: 'You are already a member of this project.' })
     activate Routes
-    Routes --> JoinButton : HTTP 302 Found
+    Routes ->> Client : HTTP 409 Conflict
     deactivate Routes
-    JoinButton --> User : Redirect + flash warning
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Already member warning
 end
 
-Controller -> CollaborationModel : joinProject(project_id, employee_id,\n'Joined from project detail page.')
+Controller -> CollaborationModel : joinProject(project_id, employee_id,\nrole, description, started_at)
 activate CollaborationModel
-CollaborationModel -> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    description, started_at, ended_at)\n   VALUES (UUID(), ?, ?, ?, NOW(), NULL)',\n  [project_id, employee_id,\n   'Joined from project detail page.']\n)
+CollaborationModel -> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    role, description, started_at, ended_at)\n   VALUES (UUID(), ?, ?, ?, ?, ?, NULL)',\n  [project_id, employee_id,\n   role, description, started_at]\n)
 activate DB
 DB --> CollaborationModel : insert result
 deactivate DB
 CollaborationModel --> Controller : collaboration created
 deactivate CollaborationModel
 
-Controller -> ProjectMemberRoleModel : assignMemberRole(project_id,\nemployee_id, role)
-activate ProjectMemberRoleModel
-ProjectMemberRoleModel -> DB : execute(\n  'INSERT INTO projectmemberrole\n   (project_id, employee_id, role, assigned_at)\n   VALUES (?, ?, ?, NOW())',\n  [project_id, employee_id, role]\n)
+Controller -> CollaborationModel : fetchDetailedByProject(project_id)
+activate CollaborationModel
+CollaborationModel -> DB : execute(\n  'SELECT C.collaboration_id, C.employee_id,\n   C.role, C.description, C.started_at,\n   E.full_name\n   FROM collaboration AS C\n   LEFT JOIN employee AS E\n   ON E.employee_id = C.employee_id\n   WHERE C.project_id = ? AND C.ended_at IS NULL\n   ORDER BY E.full_name ASC',\n  [project_id]\n)
 activate DB
-DB --> ProjectMemberRoleModel : role assignment created
+DB --> CollaborationModel : membersDetailed[]
 deactivate DB
-ProjectMemberRoleModel --> Controller : role assigned
-deactivate ProjectMemberRoleModel
+CollaborationModel --> Controller : membersDetailed[]
+deactivate CollaborationModel
 
-Controller -> Controller : request.session.success =\n'You joined {project_name}.'
-Controller --> Routes : response.redirect('/projects/:project_id')
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'You joined the project.',\n  projectMembership: { isMember: true,\n  buttonLabel: 'Leave Project' },\n  members: membersDetailed })
 activate Routes
-Routes --> JoinButton : HTTP 302 Found
+Routes ->> Client : HTTP 200 OK application/json
 deactivate Routes
-JoinButton --> User : Redirect + flash success
+Client -> JoinButton : updateJoinButton(data.projectMembership)\nupdateProjectMembers(data.members)\ncloseJoinProjectPopup()
+JoinButton --> User : Updated membership state
 
 alt Unexpected error (catch)
-    Controller -> Controller : log(error)\nrequest.session.error =\n'We could not update the project membership right now.'
-    Controller --> Routes : response.redirect('/projects/:project_id')
+    Controller ->> Routes : res.status(500).json\n({ error: 'We could not update the project membership right now.' })
     activate Routes
-    Routes --> JoinButton : HTTP 302 Found
+    Routes ->> Client : HTTP 500 Internal Server Error
     deactivate Routes
-    JoinButton --> User : Redirect + flash error
+    Client -> JoinButton : showJoinError(error)
+    JoinButton --> User : Generic join error
 end
 
 deactivate Controller
+deactivate Client
 deactivate JoinButton
 
 @enduml
