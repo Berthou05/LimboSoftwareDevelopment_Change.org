@@ -1,68 +1,103 @@
 @startuml
 skinparam style strictuml
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
-actor "Admin" as U
-boundary "team-members.ejs" as V
-boundary "team.routes" as RO
-control "team.controller" as C
-entity "employeeteam.model" as X
-database "unitas_system" as DB
+actor    "Employee"                     as User
+boundary "teamParticipants.ejs"         as ParticipantsView
+control  "teamDetails.js (AJAX)"        as Client
+boundary "team.routes"                  as Routes
+control  "team.controller"              as Controller
+entity   "team.model"                   as TeamModel
+entity   "employeeTeamMembership.model" as EmployeeTeam
+database "unitas_system"                as DB
 
-U -> V: Click "Remove member"
-activate V
+activate User
+User -> ParticipantsView : Click "Remove" on selected member
+deactivate User
+activate ParticipantsView
+ParticipantsView -> Client : submitRemoveMemberForm()
+activate Client
 
-opt Cancel removal
-V -> V: closeRemoveMemberDialog
+Client -> Routes : fetch('/teams/:team_id/members/:employee_id/remove',\n{method:'POST', headers:{'Accept':'application/json',\n'Content-Type':'application/x-www-form-urlencoded'},\nbody:'_csrf=...'})
+activate Routes
+Routes -> Controller : removeTeamMember(request, response)
+activate Controller
+deactivate Routes
+
+Controller -> TeamModel : findById(team_id)
+activate TeamModel
+TeamModel -> DB : execute(\n  'SELECT * FROM team WHERE team_id = ?',\n  [team_id]\n)
+activate DB
+DB --> TeamModel : teamRows[]
+deactivate DB
+TeamModel --> Controller : teamRows[]
+deactivate TeamModel
+
+Controller -> EmployeeTeam : fetchByEmployeeAndTeam(employee_id, team_id)
+activate EmployeeTeam
+EmployeeTeam -> DB : execute(\n  'SELECT *\n   FROM employeeteam\n   WHERE employee_id = ?\n   AND team_id = ?',\n  [employee_id, team_id]\n)
+activate DB
+DB --> EmployeeTeam : memberships[]
+deactivate DB
+EmployeeTeam --> Controller : memberships[]
+deactivate EmployeeTeam
+
+alt Team not found
+    Controller ->> Routes : res.status(404).json\n({ error: 'Team {team_id} was not found.' })
+    activate Routes
+    Routes ->> Client : HTTP 404 Not Found
+    deactivate Routes
+    Client -> ParticipantsView : showMembersError(error)
+    ParticipantsView --> User : Team not found message
 end
 
-V -> RO: fetch DELETE /teams/:teamId/members/:employeeId
-activate RO
-RO -> C: removeMember
-activate C
-
-C -> X: findActiveMembership
-activate X
-X -> DB: SELECT id, joined_at\nFROM employeeteam\nWHERE team_id = ? AND employee_id = ? AND left_at IS NULL
-activate DB
-DB --> X: active membership / null
-deactivate DB
-X --> C: membership / null
-deactivate X
-
-alt Selected employee is not an active member
-C --> RO: response.json({success:false,error:"Employee is not an active member"})
-deactivate C
-RO --> V: HTTP 404 application/json
-deactivate RO
-V -> V: response.json
-V -> V: showMembersError
-else Selected employee is active
-C -> X: markLeftAt
-activate X
-X -> DB: UPDATE employeeteam\nSET left_at = NOW()\nWHERE team_id = ? AND employee_id = ? AND left_at IS NULL
-activate DB
-DB --> X: updated rows
-deactivate DB
-X --> C: membership updated
-deactivate X
-
-C -> X: listActiveMembers
-activate X
-X -> DB: SELECT et.team_id, e.id AS employee_id, e.first_name, e.last_name, et.role\nFROM employeeteam et\nJOIN employee e ON e.id = et.employee_id\nWHERE et.team_id = ? AND et.left_at IS NULL\nORDER BY e.first_name, e.last_name
-activate DB
-DB --> X: active member rows
-deactivate DB
-X --> C: members
-deactivate X
-
-C --> RO: response.json({success:true,data:members})
-deactivate C
-RO --> V: HTTP 200 application/json
-deactivate RO
-V -> V: response.json
-V -> V: updateTeamMembersModule
+alt Target member is team lead
+    Controller ->> Routes : res.status(400).json\n({ error: 'The team lead cannot be removed from the team.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> ParticipantsView : showMembersError(error)
+    ParticipantsView --> User : Team lead removal blocked
 end
 
-deactivate V
+alt Target member equals current session employee
+    Controller ->> Routes : res.status(400).json\n({ error: 'Use the Leave Team action to remove yourself.' })
+    activate Routes
+    Routes ->> Client : HTTP 400 Bad Request
+    deactivate Routes
+    Client -> ParticipantsView : showMembersError(error)
+    ParticipantsView --> User : Self-removal blocked in this flow
+end
+
+Controller -> EmployeeTeam : leave(employee_id, team_id)
+activate EmployeeTeam
+EmployeeTeam -> DB : execute(\n  'UPDATE employeeteam\n   SET left_at = ?\n   WHERE employee_id = ?\n   AND team_id = ?',\n  [NOW(), employee_id, team_id]\n)
+activate DB
+DB --> EmployeeTeam : update result
+deactivate DB
+EmployeeTeam --> Controller : member removed
+deactivate EmployeeTeam
+
+Controller ->> Routes : res.status(200).json\n({ success: true,\n  successMessage: 'Member removed from the team.' })
+activate Routes
+Routes ->> Client : HTTP 200 OK application/json
+deactivate Routes
+Client -> ParticipantsView : updateTeamParticipantsModule()\ncloseRemoveMemberFeedback()
+ParticipantsView --> User : Participants list refreshed
+
+alt Unexpected error (catch)
+    Controller ->> Routes : res.status(500).json\n({ error: 'Error removing a member from team {team_id}.' })
+    activate Routes
+    Routes ->> Client : HTTP 500 Internal Server Error
+    deactivate Routes
+    Client -> ParticipantsView : showMembersError(error)
+    ParticipantsView --> User : Generic remove-member error
+end
+
+deactivate Controller
+deactivate Client
+deactivate ParticipantsView
+
 @enduml
