@@ -708,6 +708,73 @@ exports.removeTeamMember = (request, response, next) => {
     });
 };
 
+/*deleteTeam
+Function responsible for disabling a team from the delete team popup.*/
+
+exports.deleteTeam = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.session.employeeId || '';
+    const acceptHeader = request.get('Accept') || '';
+    const respondDeleteTeam = function respondDeleteTeam(statusCode, payload, redirectTo = '/team') {
+        if (payload.successMessage) {
+            request.session.success = payload.successMessage;
+        } else if (payload.error) {
+            request.session.error = payload.error;
+        }
+
+        if (acceptHeader.includes('application/json')) {
+            return response.status(statusCode).json({
+                ...payload,
+                redirectTo,
+            });
+        }
+
+        return response.redirect(redirectTo);
+    };
+
+    return Team.findById(teamId)
+        .then(([teamRows]) => {
+            const team = teamRows[0];
+
+            if (!team) {
+                return respondDeleteTeam(404, {
+                    success: false,
+                    error: 'Team not found.',
+                });
+            }
+
+            if (team.employee_responsible_id !== employeeId) {
+                return respondDeleteTeam(403, {
+                    success: false,
+                    error: 'Only the team lead can delete this team.',
+                }, `/team/${teamId}`);
+            }
+
+            return Team.disableTeam(teamId)
+                .then(([result]) => {
+                    if (!result.affectedRows) {
+                        return respondDeleteTeam(500, {
+                            success: false,
+                            error: 'The team could not be deleted right now.',
+                        }, `/team/${teamId}`);
+                    }
+
+                    return respondDeleteTeam(200, {
+                        success: true,
+                        successMessage: 'Team deleted successfully.',
+                    });
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondDeleteTeam(500, {
+                success: false,
+                error: 'The team could not be deleted right now.',
+            });
+        });
+};
+
+//! Provisional function to load Team Intermediate
 /*searchTeams
 Function responsible for returning filtered team-directory HTML and autocomplete suggestions.*/
 

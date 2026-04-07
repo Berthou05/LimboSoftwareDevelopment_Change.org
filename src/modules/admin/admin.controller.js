@@ -89,9 +89,66 @@ Function responsible for assigning a role to an account*/
 
 exports.assignRole = (request,response,next)=>{
     const accountId = request.params.account_id;
-    const roleId = request.body.roleId 
-    AccountRole.countActiveAdminsExcluding(accountId)
-    
+    const roleId = request.body.roleId;
+    AccountRole.countActiveAdminsExcluding(accountId).then(([count,fieldData])=>{
+        if(count[0].admin_count > 0){
+            AccountRole.updateRole(accountId, roleId).then(()=>{
+                AccountRole.fetchRoleByAccount(accountId).then(([accountRoleRow, fieldData])=>{
+                    return response.status(200).json({ success: true, message: 'Role updated successfully.', data:{ account_id: accountRoleRow[0].account_id, role_name: accountRoleRow[0].name}});
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    return response.status(500).json({ error: 'Account information could not be updated.' })
+                })
+            })  
+            .catch((error)=>{
+                console.log(error);
+                return response.status(500).json({ error: 'Role could not be updated right now.' })
+            })
+        }
+        else{
+            console.log(error);
+            return response.status(409).json({ error: 'At least one Admin account is required.' })
+        }
+    })
+    .catch((error)=>{
+        console.log(error);
+        request.flash('error',error);
+        return response.redirect('/admin/accounts');
+    })
+}
+
+
+/*assignStatus
+Function responsible for assigning a role to an account*/
+
+exports.assignStatus = (request,response,next)=>{
+    const accountId = request.params.account_id;
+    const status = request.body.status;
+    AccountRole.countActiveAdminsExcluding(accountId).then(([count,fieldData])=>{
+        if(count[0].admin_count > 0){
+            Account.updateStatus(status,accountId).then(()=>{
+                Account.fetchById(accountId).then(([accountInfo, fieldData])=>{
+                    return response.status(200).json({ success: true, message: 'Status updated successfully.', data:{ account_id: accountInfo[0].account_id, status: accountInfo[0].status}});
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    return response.status(500).json({ error: 'Account information could not be updated.' })
+                })
+            }).catch((error)=>{
+                console.log(error);
+                return response.status(409).json({ error: 'Status couldn\'t be updated.'});
+            })
+        }
+        else{
+            console.log(error);
+            return response.status(409).json({ error: 'At least one Admin account is required.' });
+        }
+    })
+    .catch((error)=>{
+        console.log(error);
+        return response.status(409).json({ error: 'Admin count could\'t be validated'});
+    })
 }
 
 

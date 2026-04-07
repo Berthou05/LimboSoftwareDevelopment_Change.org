@@ -171,7 +171,40 @@ const initializeInlineSubmitForms = function initializeInlineSubmitForms() {
     }
 };
 
+const initializeDeleteTeamForms = function initializeDeleteTeamForms() {
+    const forms = document.querySelectorAll('[data-team-delete-form]');
+
+    for (const form of forms) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            await submitDeleteTeamForm(form);
+        });
+    }
+};
+
+const submitDeleteTeamForm = async function submitDeleteTeamForm(form) {
+    const response = await fetch(form.action, {
+        method: 'DELETE',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(new FormData(form)).toString(),
+    });
+
+    const payload = await response.json().catch(() => null);
+
+    if (response.ok) {
+        window.location.href = payload?.redirectTo || '/team';
+        return;
+    }
+
+    window.alert(payload?.error || form.dataset.errorMessage || 'The team could not be deleted right now.');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeInlinePickers();
     initializeInlineSubmitForms();
+    initializeDeleteTeamForms();
 });

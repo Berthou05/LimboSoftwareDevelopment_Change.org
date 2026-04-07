@@ -11,6 +11,8 @@ const isAuth = require('../../middleware/isAuthenticated');
 const adminController = require('./admin.controller');
 
 // ADMIN-01: access administration views.
+router.post('/accounts/:account_id/role',isAuth, isAuth.requirePermission('ADMIN-05'), adminController.assignRole);
+router.post('/accounts/:account_id/status',isAuth, isAuth.requirePermission('ADMIN-05'), adminController.assignStatus);
 router.get('/accounts', isAuth, isAuth.requirePermission('ADMIN-01'), adminController.getAccounts);
 router.get('/roles', isAuth, isAuth.requirePermission('ADMIN-01'), adminController.getRoleAdmin);
 // ADMIN-03: delete roles.
