@@ -24,11 +24,6 @@ module.exports = class Goal {
         this.created_at = created_at;
     }
 
-    // Delete goal
-    static delete(goal_id) {
-        return db.execute('DELETE FROM goal WHERE goal_id=?',[goal_id]);
-    }
-
     /*fetchByProject(project_id)
     Function responsible for returning all Goals related to a project_id*/
 
@@ -56,41 +51,76 @@ module.exports = class Goal {
         );
     }
 
-    // Create or Update goal
-    save() {
-        // TODO: Implement database logic
-        // If goal_id exists, update; otherwise, insert new record
+    /*create(project_id, employee_responsible_id, title, description, due_date, status)
+    Function responsible for creating a new goal for a project. This is used by the popup "Add Goal" flow.*/
+
+    static create(project_id, employee_responsible_id, title, description, due_date, status) {
+        return db.execute(
+            `INSERT INTO goal (
+                goal_id,
+                project_id,
+                employee_responsible_id,
+                title,
+                description,
+                due_date,
+                status,
+                created_at
+            ) VALUES (UUID(), ?, ?, ?, ?, ?, ?, NOW())`,
+            [project_id, employee_responsible_id, title, description, due_date, status],
+        );
     }
 
-    // Read all goals
-    static fetchAll() {
-        // TODO: Implement database query to fetch all goals
-    }
+    /*fetchById(goal_id)
+    Function responsible for reading a single goal by id. It is used to validate edit/delete operations.*/
 
-    // Read goal by ID
     static fetchById(goal_id) {
-        // TODO: Implement database query to fetch goal by ID
+        return db.execute(
+            `SELECT
+                goal_id,
+                project_id,
+                employee_responsible_id,
+                title,
+                description,
+                due_date,
+                status,
+                created_at
+            FROM goal
+            WHERE goal_id = ?
+            LIMIT 1`,
+            [goal_id],
+        );
     }
 
-    
+    /*update(goal_id, project_id, title, description, due_date, status)
+    Function responsible for updating one goal in the same project where it belongs.*/
 
-    // Read goals by responsible employee
-    static fetchByResponsible(employee_responsible_id) {
-        // TODO: Implement database query to fetch goals by responsible employee
+    static update(goal_id, project_id, title, description, due_date, status) {
+        return db.execute(
+            `UPDATE goal
+            SET
+                title = ?,
+                description = ?,
+                due_date = ?,
+                status = ?
+            WHERE goal_id = ?
+                AND project_id = ?`,
+            [title, description, due_date, status, goal_id, project_id],
+        );
     }
 
-    // Read goals by status
-    static fetchByStatus(status) {
-        // TODO: Implement database query to fetch goals by status
+    /*delete(goal_id, project_id)
+    Function responsible for deleting one goal. project_id is optional and used as a safety filter in project routes.*/
+
+    static delete(goal_id, project_id = null) {
+        if (project_id) {
+            return db.execute(
+                'DELETE FROM goal WHERE goal_id = ? AND project_id = ?',
+                [goal_id, project_id],
+            );
+        }
+
+        return db.execute('DELETE FROM goal WHERE goal_id = ?', [goal_id]);
     }
-
-    // Update goal
-    static update(goal_id, updateData) {
-        // TODO: Implement database update logic
-    }
-
-
-
 };
 
 module.exports.Status = Status;

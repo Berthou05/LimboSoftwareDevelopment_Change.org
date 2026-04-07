@@ -85,6 +85,42 @@ const initializePopups = function initializePopups() {
         }
     };
 
+    /*submitPopupForm(form)
+    Sends popup forms through AJAX and lets the UI refresh once the backend confirms the change.*/
+
+    const submitPopupForm = async function submitPopupForm(form) {
+        const formData = new FormData(form);
+        const body = new URLSearchParams();
+
+        for (const [key, value] of formData.entries()) {
+            body.append(key, String(value));
+        }
+
+        const response = await fetch(form.action, {
+            method: String(form.method || 'POST').toUpperCase(),
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+        });
+
+        if (response.ok) {
+            window.location.reload();
+            return;
+        }
+
+        let payload = null;
+
+        try {
+            payload = await response.json();
+        } catch (error) {
+            payload = null;
+        }
+
+        window.alert(payload?.error || form.dataset.errorMessage || 'Failed to submit form.');
+    };
+
     openButtons.forEach((button) => {
         button.addEventListener('click', () => {
             openPopup(button.getAttribute('data-popup-open'));
@@ -111,14 +147,21 @@ const initializePopups = function initializePopups() {
     });
 
     document.querySelectorAll('[data-popup-form]').forEach((form) => {
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const popup = form.closest('[data-popup]');
-            if (!popup) {
+            const formAction = (form.getAttribute('action') || '').trim();
+
+            if (!formAction) {
+                if (!popup) {
+                    return;
+                }
+
+                closePopup(popup);
                 return;
             }
 
-            closePopup(popup);
+            await submitPopupForm(form);
         });
     });
 

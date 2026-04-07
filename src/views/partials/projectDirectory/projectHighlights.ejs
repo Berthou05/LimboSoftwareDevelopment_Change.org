@@ -42,20 +42,26 @@
                 <p class="mt-2 text-[11px] text-brand-text/50">By: <%= highlight.authorName || 'Unknown' %></p>
             </div>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'edit-highlight-' + highlight.id,
                 popupTitle: 'Edit Highlight',
                 popupDescription: 'Adjust the title or content of this project highlight.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/highlights/' + highlight.id + '/edit',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [
                     { name: 'title', label: 'Title', value: highlight.title || '', placeholder: 'Project highlight' },
                     { name: 'content', label: 'Content', type: 'textarea', rows: 4, value: highlight.content || '', placeholder: 'Describe the highlight.' },
                 ],
             }) %>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'delete-highlight-' + highlight.id,
                 popupTitle: 'Delete Highlight',
                 popupDescription: 'Confirm if you want to remove this highlight from the project.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/highlights/' + highlight.id + '/remove',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [],
                 popupSubmitLabel: 'Delete',
                 popupSubmitTone: 'danger',
@@ -64,12 +70,16 @@
     </div>
 </article>
 
-<%- include('./actionPopup', {
+<%- include('../shared/actionPopup', {
     popupId: 'project-add-highlight',
     popupTitle: 'Add Highlight',
     popupDescription: 'Register a new highlight for this project.',
+    popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/highlights',
+    popupMethod: 'POST',
+    csrfToken,
     popupFields: [
         { name: 'title', label: 'Title', value: '', placeholder: 'New highlight' },
         { name: 'content', label: 'Content', type: 'textarea', rows: 4, value: '', placeholder: 'Share the key outcome or update.' },
     ],
 }) %>
+

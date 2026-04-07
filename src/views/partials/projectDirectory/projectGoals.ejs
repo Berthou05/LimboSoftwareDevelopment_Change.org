@@ -56,10 +56,13 @@
                 </div>
             </div>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'edit-goal-' + goal.id,
                 popupTitle: 'Edit Goal',
                 popupDescription: 'Update the goal details for this project.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/goals/' + goal.id + '/edit',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [
                     { name: 'title', label: 'Title', value: goal.title || '', placeholder: 'New goal' },
                     { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: goal.description || '', placeholder: 'Describe the goal.' },
@@ -70,14 +73,17 @@
                         { value: 'COMPLETED', label: 'COMPLETED' },
                         { value: 'CANCELLED', label: 'CANCELLED' },
                     ] },
-                    { name: 'dueDate', label: 'Due date', type: 'date', value: '' },
+                    { name: 'dueDate', label: 'Due date', type: 'date', value: goal.dueDate || '' },
                 ],
             }) %>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'delete-goal-' + goal.id,
                 popupTitle: 'Delete Goal',
                 popupDescription: 'Confirm if you want to remove this goal from the project.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/goals/' + goal.id + '/remove',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [],
                 popupSubmitLabel: 'Delete',
                 popupSubmitTone: 'danger',
@@ -86,10 +92,13 @@
     </div>
 </article>
 
-<%- include('./actionPopup', {
+<%- include('../shared/actionPopup', {
     popupId: 'project-add-goal',
     popupTitle: 'Add Goal',
     popupDescription: 'Create a new goal for this project.',
+    popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/goals',
+    popupMethod: 'POST',
+    csrfToken,
     popupFields: [
         { name: 'title', label: 'Title', value: '', placeholder: 'Increase classification accuracy' },
         { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the goal and expected impact.' },
@@ -103,3 +112,4 @@
         { name: 'dueDate', label: 'Due date', type: 'date', value: '' },
     ],
 }) %>
+

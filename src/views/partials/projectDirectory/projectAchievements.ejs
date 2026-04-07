@@ -51,22 +51,28 @@
                 <% } %>
             </div>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'edit-achievement-' + achievement.id,
                 popupTitle: 'Edit Achievement',
                 popupDescription: 'Update the achievement details shown in this card.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/achievements/' + achievement.id + '/edit',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [
                     { name: 'title', label: 'Title', value: achievement.title || '', placeholder: 'Achievement title' },
                     { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: achievement.description || '', placeholder: 'Describe the achievement.' },
-                    { name: 'achievementDate', label: 'Achievement date', type: 'date', value: '' },
+                    { name: 'achievementDate', label: 'Achievement date', type: 'date', value: achievement.achievementDate || '' },
                     { name: 'evidenceLink', label: 'Evidence link', value: achievement.evidenceLink || '', placeholder: 'https://...' },
                 ],
             }) %>
 
-            <%- include('./actionPopup', {
+            <%- include('../shared/actionPopup', {
                 popupId: 'delete-achievement-' + achievement.id,
                 popupTitle: 'Delete Achievement',
                 popupDescription: 'Confirm if you want to remove this achievement from the project.',
+                popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/achievements/' + achievement.id + '/remove',
+                popupMethod: 'POST',
+                csrfToken,
                 popupFields: [],
                 popupSubmitLabel: 'Delete',
                 popupSubmitTone: 'danger',
@@ -75,10 +81,13 @@
     </div>
 </article>
 
-<%- include('./actionPopup', {
+<%- include('../shared/actionPopup', {
     popupId: 'project-add-achievement',
     popupTitle: 'Add Achievement',
     popupDescription: 'Register a new achievement for this project.',
+    popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/achievements',
+    popupMethod: 'POST',
+    csrfToken,
     popupFields: [
         { name: 'title', label: 'Title', value: '', placeholder: 'Delivered MVP' },
         { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the outcome delivered by the team.' },
@@ -86,3 +95,4 @@
         { name: 'evidenceLink', label: 'Evidence link', value: '', placeholder: 'https://...' },
     ],
 }) %>
+

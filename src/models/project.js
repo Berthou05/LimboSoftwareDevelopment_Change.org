@@ -223,6 +223,23 @@ module.exports = class Project {
         );
     }
 
+    /*update(project_id, name, description, status, start_date, end_date)
+    Function responsible for updating the main project information shown in the details card popup.*/
+
+    static update(project_id, name, description, status, start_date, end_date) {
+        return db.execute(
+            `UPDATE project
+            SET
+                name = ?,
+                description = ?,
+                status = ?,
+                start_date = ?,
+                end_date = ?
+            WHERE project_id = ?`,
+            [name, description, status, start_date, end_date, project_id],
+        );
+    }
+
 };
 
 module.exports.Status = Status;

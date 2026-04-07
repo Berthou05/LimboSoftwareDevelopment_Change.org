@@ -43,10 +43,13 @@
     </div>
 </div>
 
-<%- include('./actionPopup', {
+<%- include('../shared/actionPopup', {
     popupId: 'project-edit-info',
     popupTitle: 'Edit Project Information',
     popupDescription: 'Update the main information displayed in the project description card.',
+    popupAction: '/projects/' + (project?.id || project?.project_id || '') + '/update',
+    popupMethod: 'POST',
+    csrfToken,
     popupFields: [
         { name: 'name', label: 'Project name', value: project?.name || '', placeholder: 'AI Assisted Classification' },
         { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: project?.description || '', placeholder: 'Describe the scope and purpose of the project.' },
@@ -57,7 +60,8 @@
             { value: 'COMPLETED', label: 'COMPLETED' },
             { value: 'CANCELLED', label: 'CANCELLED' },
         ] },
-        { name: 'startDate', label: 'Start date', type: 'date', value: project?.start_date || '' },
-        { name: 'endDate', label: 'End date', type: 'date', value: project?.end_date || '' },
+        { name: 'startDate', label: 'Start date', type: 'date', value: project?.startDateInput || '' },
+        { name: 'endDate', label: 'End date', type: 'date', value: project?.endDateInput || '' },
     ],
 }) %>
+

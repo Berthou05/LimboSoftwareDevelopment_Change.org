@@ -47,37 +47,72 @@ module.exports = class Achievement {
         );
     }
 
-    // Create or Update achievement
-    save() {
-        // TODO: Implement database logic
-        // If achievement_id exists, update; otherwise, insert new record
+    /*create(project_id, employee_responsible_id, title, description, achievement_date, evidence_link)
+    Function responsible for creating a new achievement for a project from the add popup.*/
+
+    static create(project_id, employee_responsible_id, title, description, achievement_date, evidence_link) {
+        return db.execute(
+            `INSERT INTO achievement (
+                achievement_id,
+                project_id,
+                employee_responsible_id,
+                title,
+                description,
+                achievement_date,
+                evidence_link
+            ) VALUES (UUID(), ?, ?, ?, ?, ?, ?)`,
+            [project_id, employee_responsible_id, title, description, achievement_date, evidence_link],
+        );
     }
 
-    // Read all achievements
-    static fetchAll() {
-        // TODO: Implement database query to fetch all achievements
-    }
+    /*fetchById(achievement_id)
+    Function responsible for reading one achievement. It is used to validate edit/delete operations.*/
 
-    // Read achievement by ID
     static fetchById(achievement_id) {
-        // TODO: Implement database query to fetch achievement by ID
+        return db.execute(
+            `SELECT
+                achievement_id,
+                project_id,
+                employee_responsible_id,
+                title,
+                description,
+                achievement_date,
+                evidence_link
+            FROM achievement
+            WHERE achievement_id = ?
+            LIMIT 1`,
+            [achievement_id],
+        );
     }
 
+    /*update(achievement_id, project_id, title, description, achievement_date, evidence_link)
+    Function responsible for updating one achievement inside its project.*/
 
-
-    // Read achievements by responsible employee
-    static fetchByResponsible(employee_responsible_id) {
-        // TODO: Implement database query to fetch achievements by responsible employee
+    static update(achievement_id, project_id, title, description, achievement_date, evidence_link) {
+        return db.execute(
+            `UPDATE achievement
+            SET
+                title = ?,
+                description = ?,
+                achievement_date = ?,
+                evidence_link = ?
+            WHERE achievement_id = ?
+                AND project_id = ?`,
+            [title, description, achievement_date, evidence_link, achievement_id, project_id],
+        );
     }
 
-    // Update achievement
-    static update(achievement_id, updateData) {
-        // TODO: Implement database update logic
-    }
+    /*delete(achievement_id, project_id)
+    Function responsible for deleting one achievement. project_id is optional and used as a safety filter in project routes.*/
 
-    // Delete achievement
-    static delete(achievement_id) {
-        // TODO: Implement database delete logic
-    }
+    static delete(achievement_id, project_id = null) {
+        if (project_id) {
+            return db.execute(
+                'DELETE FROM achievement WHERE achievement_id = ? AND project_id = ?',
+                [achievement_id, project_id],
+            );
+        }
 
+        return db.execute('DELETE FROM achievement WHERE achievement_id = ?', [achievement_id]);
+    }
 };

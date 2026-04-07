@@ -21,6 +21,8 @@ const PROJECT_CREATE_PAGE_TITLE = 'New Project';
 const PROJECT_CREATE_PAGE_SUBTITLE = 'Register a new project and assign yourself as the responsible lead.';
 const PROJECT_CREATE_DUPLICATE_MESSAGE = 'A project with that name already exists.';
 const PROJECT_CREATE_GENERIC_ERROR_MESSAGE = 'The project could not be created right now.';
+const PROJECT_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
+const GOAL_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
 
 const formatDateLabel = function formatDateLabel(value, fallback = '') {
     if (!value) {
@@ -89,6 +91,26 @@ const isValidDateInput = function isValidDateInput(value) {
     }
 
     return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
+};
+
+/*formatDateInput(value)
+Function responsible for converting DB date values into YYYY-MM-DD strings, so date inputs in popups can show existing values.*/
+
+const formatDateInput = function formatDateInput(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const year = String(date.getFullYear());
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 };
 
 const resolveActivityFilter = function resolveActivityFilter(query = {}) {
@@ -210,6 +232,25 @@ const respondMembershipRequest = function respondMembershipRequest(
     } else if (payload && payload.error) {
         request.session.error = payload.error;
     }
+
+    if (acceptHeader.includes('application/json')) {
+        return response.status(statusCode).json(payload);
+    }
+
+    return response.redirect(`/projects/${projectId}`);
+};
+
+/*respondProjectPopupRequest(request, response, projectId, statusCode, payload)
+Function responsible for returning JSON for AJAX popup submits and keeping a safe redirect fallback if the request was not AJAX.*/
+
+const respondProjectPopupRequest = function respondProjectPopupRequest(
+    request,
+    response,
+    projectId,
+    statusCode,
+    payload,
+) {
+    const acceptHeader = request.get('Accept') || '';
 
     if (acceptHeader.includes('application/json')) {
         return response.status(statusCode).json(payload);
@@ -509,6 +550,8 @@ exports.getProjectPage = (request, response, next) => {
                 status: project.status || 'Unknown',
                 startDateLabel: formatDateLabel(project.start_date, 'N/A'),
                 endDateLabel: formatDateLabel(project.end_date, 'In progress'),
+                startDateInput: formatDateInput(project.start_date),
+                endDateInput: formatDateInput(project.end_date),
                 lead: {
                     fullName: project.lead_name || 'Unknown',
                 },
@@ -518,6 +561,7 @@ exports.getProjectPage = (request, response, next) => {
                     description: achievement.description || 'No achievement description available.',
                     authorName: achievement.full_name || 'Unknown',
                     achievementDateLabel: formatDateLabel(achievement.achievement_date, 'Date unavailable'),
+                    achievementDate: formatDateInput(achievement.achievement_date),
                     evidenceLink: achievement.evidence_link || '',
                 })),
                 goalsDetailed: goalRows.map((goal) => ({
@@ -526,6 +570,7 @@ exports.getProjectPage = (request, response, next) => {
                     description: goal.description || 'No goal description available.',
                     status: goal.status || 'Unknown',
                     dueDateLabel: formatDateLabel(goal.due_date, 'No due date'),
+                    dueDate: formatDateInput(goal.due_date),
                     createdAtLabel: formatDateLabel(goal.created_at, 'Date unavailable'),
                     authorName: goal.full_name || 'Unknown',
                 })),
@@ -987,15 +1032,408 @@ exports.searchProjects = (request, response, next) => {
     });
 };
 
+/*updateProjectInfo
+Function responsible for updating project information from the "Edit Project Information" popup.*/
+
+exports.updateProjectInfo = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const name = typeof request.body.name === 'string' ? request.body.name.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const status = typeof request.body.status === 'string' ? request.body.status.trim() : '';
+    const startDate = typeof request.body.startDate === 'string' ? request.body.startDate.trim() : '';
+    const endDate = typeof request.body.endDate === 'string' ? request.body.endDate.trim() : '';
+
+    if (!name) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Project name is required.',
+        });
+    }
+
+    if (!PROJECT_ALLOWED_STATUS.includes(status)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Select a valid project status.',
+        });
+    }
+
+    if (!isValidDateInput(startDate) || !isValidDateInput(endDate)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide valid project dates.',
+        });
+    }
+
+    if (startDate && endDate && startDate > endDate) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'The project end date cannot be before the start date.',
+        });
+    }
+
+    return Project.update(
+        projectId,
+        name,
+        description || null,
+        status,
+        startDate || null,
+        endDate || null,
+    )
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not update project information right now.',
+            });
+        });
+};
+
+/*createGoal
+Function responsible for creating a goal from the "Add Goal" popup.*/
+
+exports.createGoal = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const status = typeof request.body.status === 'string' ? request.body.status.trim() : '';
+    const dueDate = typeof request.body.dueDate === 'string' ? request.body.dueDate.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Goal title is required.',
+        });
+    }
+
+    if (!GOAL_ALLOWED_STATUS.includes(status)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Select a valid goal status.',
+        });
+    }
+
+    if (!isValidDateInput(dueDate)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid due date.',
+        });
+    }
+
+    return Goal.create(
+        projectId,
+        employeeId,
+        title,
+        description || '',
+        dueDate || null,
+        status,
+    )
+        .then(() => respondProjectPopupRequest(request, response, projectId, 200, {
+            success: true,
+        }))
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not create goal right now.',
+            });
+        });
+};
+
+/*updateGoal
+Function responsible for updating a goal from the "Edit Goal" popup.*/
+
+exports.updateGoal = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const goalId = request.params.goal_id;
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const status = typeof request.body.status === 'string' ? request.body.status.trim() : '';
+    const dueDate = typeof request.body.dueDate === 'string' ? request.body.dueDate.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Goal title is required.',
+        });
+    }
+
+    if (!GOAL_ALLOWED_STATUS.includes(status)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Select a valid goal status.',
+        });
+    }
+
+    if (!isValidDateInput(dueDate)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid due date.',
+        });
+    }
+
+    return Goal.update(goalId, projectId, title, description || '', dueDate || null, status)
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected goal was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not update goal right now.',
+            });
+        });
+};
+
 /*deleteGoal
-AJAX function responsible for handling the goal deletion.*/
+Function responsible for deleting a goal from the "Delete Goal" popup.*/
 
 exports.deleteGoal = (request, response, next) => {
-    Goal.delete(request.params.goal_id).then(() => {
-        return response.status(200).json({ success: true });
-    })
-    .catch((error) => {
-        console.log(error);
-        return response.status(500).json({ success: false, message: error.stack });
-    });
+    const projectId = request.params.project_id;
+    const goalId = request.params.goal_id;
+
+    return Goal.delete(goalId, projectId)
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected goal was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not delete goal right now.',
+            });
+        });
+};
+
+/*createAchievement
+Function responsible for creating an achievement from the "Add Achievement" popup.*/
+
+exports.createAchievement = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const achievementDate = typeof request.body.achievementDate === 'string' ? request.body.achievementDate.trim() : '';
+    const evidenceLink = typeof request.body.evidenceLink === 'string' ? request.body.evidenceLink.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Achievement title is required.',
+        });
+    }
+
+    if (!achievementDate || !isValidDateInput(achievementDate)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid achievement date.',
+        });
+    }
+
+    return Achievement.create(
+        projectId,
+        employeeId,
+        title,
+        description || '',
+        achievementDate,
+        evidenceLink || null,
+    )
+        .then(() => respondProjectPopupRequest(request, response, projectId, 200, {
+            success: true,
+        }))
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not create achievement right now.',
+            });
+        });
+};
+
+/*updateAchievement
+Function responsible for updating an achievement from the "Edit Achievement" popup.*/
+
+exports.updateAchievement = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const achievementId = request.params.achievement_id;
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const achievementDate = typeof request.body.achievementDate === 'string' ? request.body.achievementDate.trim() : '';
+    const evidenceLink = typeof request.body.evidenceLink === 'string' ? request.body.evidenceLink.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Achievement title is required.',
+        });
+    }
+
+    if (!achievementDate || !isValidDateInput(achievementDate)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid achievement date.',
+        });
+    }
+
+    return Achievement.update(
+        achievementId,
+        projectId,
+        title,
+        description || '',
+        achievementDate,
+        evidenceLink || null,
+    )
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected achievement was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not update achievement right now.',
+            });
+        });
+};
+
+/*deleteAchievement
+Function responsible for deleting an achievement from the "Delete Achievement" popup.*/
+
+exports.deleteAchievement = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const achievementId = request.params.achievement_id;
+
+    return Achievement.delete(achievementId, projectId)
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected achievement was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not delete achievement right now.',
+            });
+        });
+};
+
+/*createHighlight
+Function responsible for creating a highlight from the "Add Highlight" popup.*/
+
+exports.createHighlight = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const content = typeof request.body.content === 'string' ? request.body.content.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Highlight title is required.',
+        });
+    }
+
+    if (!content) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Highlight content is required.',
+        });
+    }
+
+    return Highlight.create(employeeId, projectId, title, content)
+        .then(() => respondProjectPopupRequest(request, response, projectId, 200, {
+            success: true,
+        }))
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not create highlight right now.',
+            });
+        });
+};
+
+/*updateHighlight
+Function responsible for updating a highlight from the "Edit Highlight" popup.*/
+
+exports.updateHighlight = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const highlightId = request.params.highlight_id;
+    const title = typeof request.body.title === 'string' ? request.body.title.trim() : '';
+    const content = typeof request.body.content === 'string' ? request.body.content.trim() : '';
+
+    if (!title) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Highlight title is required.',
+        });
+    }
+
+    if (!content) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Highlight content is required.',
+        });
+    }
+
+    return Highlight.update(highlightId, projectId, title, content)
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected highlight was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not update highlight right now.',
+            });
+        });
+};
+
+/*deleteHighlight
+Function responsible for deleting a highlight from the "Delete Highlight" popup.*/
+
+exports.deleteHighlight = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const highlightId = request.params.highlight_id;
+
+    return Highlight.delete(highlightId, projectId)
+        .then(([result]) => {
+            if (!result.affectedRows) {
+                return respondProjectPopupRequest(request, response, projectId, 404, {
+                    error: 'The selected highlight was not found.',
+                });
+            }
+
+            return respondProjectPopupRequest(request, response, projectId, 200, {
+                success: true,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondProjectPopupRequest(request, response, projectId, 500, {
+                error: 'Could not delete highlight right now.',
+            });
+        });
 };

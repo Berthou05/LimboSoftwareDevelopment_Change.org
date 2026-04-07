@@ -14,25 +14,40 @@ module.exports = class Highlight {
         this.created_at = created_at;
     }
 
-    // Create or Update highlight
-    save() {
-        // TODO: Implement database logic
-        // If highlight_id exists, update; otherwise, insert new record
+    /*create(employee_id, project_id, title, content)
+    Function responsible for creating a new highlight from the add popup.*/
+
+    static create(employee_id, project_id, title, content) {
+        return db.execute(
+            `INSERT INTO highlight (
+                highlight_id,
+                employee_id,
+                project_id,
+                title,
+                content,
+                created_at
+            ) VALUES (UUID(), ?, ?, ?, ?, NOW())`,
+            [employee_id, project_id, title, content],
+        );
     }
 
-    // Read all highlights
-    static fetchAll() {
-        // TODO: Implement database query to fetch all highlights
-    }
+    /*fetchById(highlight_id)
+    Function responsible for reading one highlight. It is used to validate edit/delete operations.*/
 
-    // Read highlight by ID
     static fetchById(highlight_id) {
-        // TODO: Implement database query to fetch highlight by ID
-    }
-
-    // Read highlights by employee
-    static fetchByEmployee(employee_id) {
-        // TODO: Implement database query to fetch highlights by employee
+        return db.execute(
+            `SELECT
+                highlight_id,
+                employee_id,
+                project_id,
+                title,
+                content,
+                created_at
+            FROM highlight
+            WHERE highlight_id = ?
+            LIMIT 1`,
+            [highlight_id],
+        );
     }
 
     // Read highlights by project
@@ -55,14 +70,32 @@ module.exports = class Highlight {
         );
     }
 
-    // Update highlight
-    static update(highlight_id, updateData) {
-        // TODO: Implement database update logic
+    /*update(highlight_id, project_id, title, content)
+    Function responsible for updating one highlight inside its project.*/
+
+    static update(highlight_id, project_id, title, content) {
+        return db.execute(
+            `UPDATE highlight
+            SET
+                title = ?,
+                content = ?
+            WHERE highlight_id = ?
+                AND project_id = ?`,
+            [title, content, highlight_id, project_id],
+        );
     }
 
-    // Delete highlight
-    static delete(highlight_id) {
-        // TODO: Implement database delete logic
-    }
+    /*delete(highlight_id, project_id)
+    Function responsible for deleting one highlight. project_id is optional and used as a safety filter in project routes.*/
 
+    static delete(highlight_id, project_id = null) {
+        if (project_id) {
+            return db.execute(
+                'DELETE FROM highlight WHERE highlight_id = ? AND project_id = ?',
+                [highlight_id, project_id],
+            );
+        }
+
+        return db.execute('DELETE FROM highlight WHERE highlight_id = ?', [highlight_id]);
+    }
 };

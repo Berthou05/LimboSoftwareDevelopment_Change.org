@@ -3,6 +3,9 @@
     const submitLabel = typeof popupSubmitLabel !== 'undefined' ? popupSubmitLabel : 'Save';
     const popupDescriptionText = typeof popupDescription !== 'undefined' ? popupDescription : '';
     const popupFieldsList = Array.isArray(popupFields) ? popupFields : [];
+    const popupFormAction = typeof popupAction !== 'undefined' ? popupAction : '';
+    const popupFormMethod = typeof popupMethod !== 'undefined' ? popupMethod : 'POST';
+    const popupFormError = typeof popupErrorMessage !== 'undefined' ? popupErrorMessage : 'Failed to submit form.';
 %>
 
 <div data-popup="<%= popupId %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
@@ -15,7 +18,7 @@
                         <p class="mt-1 text-sm text-brand-text/60"><%= popupDescriptionText %></p>
                     <% } %>
                 </div>
-                <%- include('../shared/actionButton', {
+                <%- include('./actionButton', {
                     buttonPopupClose: true,
                     buttonIcon: 'close',
                     buttonVariant: 'icon-only',
@@ -24,7 +27,16 @@
                 }) %>
             </div>
 
-            <form data-popup-form class="mt-5 space-y-4">
+            <form
+                data-popup-form
+                action="<%= popupFormAction %>"
+                method="<%= popupFormMethod %>"
+                data-error-message="<%= popupFormError %>"
+                class="mt-5 space-y-4"
+            >
+                <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <% } %>
                 <% popupFieldsList.forEach((field) => { %>
                     <label class="block text-sm">
                         <span class="mb-2 block font-semibold text-brand-text/70"><%= field.label %></span>
@@ -75,3 +87,4 @@
         </div>
     </div>
 </div>
+
