@@ -44,53 +44,6 @@ alt Missing privilege ADMIN-05
     AccountsView --> Admin : Permission error
 end
 
-Controller -> Controller : validateRolePayload(account_id, role_name)
-
-alt Invalid role payload
-    Controller ->> Routes : res.status(400).json\n({ error: 'Invalid role selection.' })
-    activate Routes
-    Routes ->> Client : HTTP 400 Bad Request
-    deactivate Routes
-    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
-    AccountsView --> Admin : Invalid input message
-end
-
-Controller -> AccountModel : findById(account_id)
-activate AccountModel
-AccountModel -> DB : execute(\n  'SELECT account_id, employee_id, status\n   FROM account\n   WHERE account_id = ?',\n  [account_id]\n)
-activate DB
-DB --> AccountModel : accountRow | null
-deactivate DB
-AccountModel --> Controller : accountRow | null
-deactivate AccountModel
-
-alt Account not found
-    Controller ->> Routes : res.status(404).json\n({ error: 'Account not found.' })
-    activate Routes
-    Routes ->> Client : HTTP 404 Not Found
-    deactivate Routes
-    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
-    AccountsView --> Admin : Account not found message
-end
-
-Controller -> RoleModel : findByName(role_name)
-activate RoleModel
-RoleModel -> DB : execute(\n  'SELECT role_id, name\n   FROM role\n   WHERE name = ?',\n  [role_name]\n)
-activate DB
-DB --> RoleModel : roleRow | null
-deactivate DB
-RoleModel --> Controller : roleRow | null
-deactivate RoleModel
-
-alt Role not found in catalog
-    Controller ->> Routes : res.status(400).json\n({ error: 'Selected role is not available.' })
-    activate Routes
-    Routes ->> Client : HTTP 400 Bad Request
-    deactivate Routes
-    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
-    AccountsView --> Admin : Role unavailable message
-end
-
 Controller -> AccountRoleModel : countActiveAdminsExcluding(account_id)
 activate AccountRoleModel
 AccountRoleModel -> DB : execute(\n  'SELECT COUNT(*) AS admin_count\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE r.name = ?\n   AND ar.account_id <> ?',\n  ['ADMIN', account_id]\n)
