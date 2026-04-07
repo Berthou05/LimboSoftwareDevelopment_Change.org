@@ -6,6 +6,7 @@ Modified by: Hurtado, R.
 
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
+const multer = require('multer');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const flashMessage = require('./src/middleware/flashMessage');
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,32 @@ app.use(expressLayouts);
 const bodyParser = require('body-parser');
 app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({extended: false}));
+
+const fileStorage = multer.diskStorage({
+    destination: (request, file, callback) => {
+        callback(null, path.join(__dirname, 'src', 'public', 'images', 'teams'));
+    },
+    filename: (request, file, callback) => {
+        const safeOriginalName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
+        callback(null, `${Date.now()}-${safeOriginalName}`);
+    },
+});
+
+const fileFilter = (request, file, callback) => {
+    if (
+        file.mimetype === 'image/png'
+        || file.mimetype === 'image/jpg'
+        || file.mimetype === 'image/jpeg'
+    ) {
+        callback(null, true);
+        return;
+    }
+
+    request.fileValidationError = 'Team image must be a PNG or JPG file.';
+    callback(null, false);
+};
+
+app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
 
 /*Configuracion de Environment Variables*/
 require('dotenv').config();

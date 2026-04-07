@@ -11,6 +11,13 @@ const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const { randomUUID } = require('crypto');
+
+const TEAM_CREATE_PAGE_TITLE = 'New Team';
+const TEAM_CREATE_PAGE_SUBTITLE = 'Register a new team and assign yourself as the responsible lead.';
+const TEAM_CREATE_DUPLICATE_MESSAGE = 'A team with that name already exists.';
+const TEAM_CREATE_GENERIC_ERROR_MESSAGE = 'The team could not be created right now.';
+const TEAM_ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpg', 'image/jpeg'];
 
 
 //--------------------------- Auxiliar Functions ---------------------------
@@ -34,7 +41,7 @@ const normalizeTeam = function normalizeTeam(team) {
             team.full_name ??
             'Pending assignment',
         description: team.description ?? 'No team description has been added yet.',
-        image: buildAvatarUrl(team.name),
+        image: team.image || buildAvatarUrl(team.name),
         isMember: Boolean(team.isMember ?? team.is_member),
     };
 };
@@ -231,7 +238,104 @@ const respondMembershipRequest = function respondMembershipRequest(
     return response.redirect(`/teams/${teamId}`);
 };
 
+const renderNewTeamPage = function renderNewTeamPage(request, response, statusCode, payload = {}) {
+    return response.status(statusCode).render('pages/teamNew', {
+        csrfToken: request.csrfToken(),
+        isLoggedIn: request.session.isLoggedIn || '',
+        username: request.session.username || '',
+        pageTitle: TEAM_CREATE_PAGE_TITLE,
+        pageSubtitle: TEAM_CREATE_PAGE_SUBTITLE,
+        teamForm: payload.teamForm || {
+            name: '',
+            description: '',
+        },
+        formErrors: payload.formErrors || [],
+        formError: payload.formError || '',
+        formSuccess: payload.formSuccess || '',
+    });
+};
+
 //--------------------------- Main Functions ---------------------------
+
+/*getNewTeamPage
+Function responsible for rendering the new team form.*/
+
+exports.getNewTeamPage = (request, response, next) => {
+    return renderNewTeamPage(request, response, 200);
+};
+
+/*createTeam
+Function responsible for validating and storing a new team.*/
+
+exports.createTeam = (request, response, next) => {
+    const employeeId = request.session.employeeId || '';
+    const teamForm = {
+        name: typeof request.body.name === 'string' ? request.body.name.trim() : '',
+        description: typeof request.body.description === 'string' ? request.body.description.trim() : '',
+    };
+    const imagePath = request.file ? `/images/teams/${request.file.filename}` : null;
+
+    const formErrors = [];
+
+    if (!teamForm.name) {
+        formErrors.push('Team name is required.');
+    }
+
+    if (request.fileValidationError) {
+        formErrors.push(request.fileValidationError);
+    }
+
+    if (request.file && !TEAM_ALLOWED_IMAGE_TYPES.includes(request.file.mimetype)) {
+        formErrors.push('Team image must be a PNG or JPG file.');
+    }
+
+    if (formErrors.length > 0) {
+        return renderNewTeamPage(request, response, 422, {
+            teamForm,
+            formErrors,
+        });
+    }
+
+    return Team.findByName(teamForm.name)
+        .then(([teams]) => {
+            if (teams.length > 0) {
+                return renderNewTeamPage(request, response, 409, {
+                    teamForm,
+                    formError: TEAM_CREATE_DUPLICATE_MESSAGE,
+                });
+            }
+
+            const teamId = randomUUID();
+            const team = new Team(
+                teamId,
+                employeeId,
+                teamForm.name,
+                teamForm.description || null,
+                new Date(),
+                imagePath,
+                Team.Status.ACTIVE,
+            );
+
+            return team.save()
+                .then(() => EmployeeTeamMembership.join(
+                    employeeId,
+                    teamId,
+                    new Date(),
+                    EmployeeTeamMembership.EmployeeRole.LEAD,
+                ))
+                .then(() => {
+                    request.session.success = `Team ${teamForm.name} was created successfully.`;
+                    return response.redirect('/team');
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return renderNewTeamPage(request, response, 500, {
+                teamForm,
+                formError: TEAM_CREATE_GENERIC_ERROR_MESSAGE,
+            });
+        });
+};
 
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate

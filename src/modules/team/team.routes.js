@@ -11,6 +11,8 @@ const isAuth = require('../../middleware/isAuthenticated');
 const teamController = require('./team.controller');
 
 router.get('/search', isAuth, teamController.searchTeams);
+router.get('/new', isAuth, teamController.getNewTeamPage);
+router.post('/new', isAuth, teamController.createTeam);
 router.get('/', isAuth, teamController.getTeams);
 router.post('/:team_id/toggle-membership', isAuth, teamController.toggleTeamMembership);
 

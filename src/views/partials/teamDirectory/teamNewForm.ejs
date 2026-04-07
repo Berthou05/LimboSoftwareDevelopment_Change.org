@@ -1,0 +1,79 @@
+<%
+  const formState = typeof teamForm !== 'undefined'
+    ? teamForm
+    : { name: '', description: '' };
+  const validationErrors = typeof formErrors !== 'undefined' ? formErrors : [];
+  const successMessage = typeof formSuccess !== 'undefined' ? formSuccess : '';
+  const errorMessage = typeof formError !== 'undefined' ? formError : '';
+%>
+
+<section class="max-w-3xl space-y-6">
+  <% if (successMessage) { %>
+    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+      <%= successMessage %>
+    </div>
+  <% } %>
+
+  <% if (errorMessage) { %>
+    <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <%= errorMessage %>
+    </div>
+  <% } %>
+
+  <% if (validationErrors.length) { %>
+    <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+      <% validationErrors.forEach((message) => { %>
+        <p><%= message %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <form action="/team/new" method="POST" enctype="multipart/form-data" class="rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <div class="grid gap-5">
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text/70">Team name</span>
+        <input
+          type="text"
+          name="name"
+          value="<%= formState.name %>"
+          required
+          maxlength="120"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          placeholder="Growth Analytics Team"
+        />
+      </label>
+
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text/70">Description</span>
+        <textarea
+          name="description"
+          rows="4"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          placeholder="Describe the team's purpose, responsibilities, and focus areas."
+        ><%= formState.description %></textarea>
+      </label>
+
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text/70">Team image</span>
+        <input
+          type="file"
+          name="image"
+          accept="image/png,image/jpg,image/jpeg"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 text-sm text-brand-text/70 outline-none ring-brand-primary/30 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-secondary/40 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-text/80 focus:ring"
+        />
+        <span class="mt-1 block text-xs text-brand-text/50">Optional. Upload a PNG or JPG image that represents the team.</span>
+      </label>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button type="submit" class="rounded-xl bg-brand-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-accent">
+        Create team
+      </button>
+      <a href="/team" class="rounded-xl border border-brand-secondary px-5 py-3 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
+        Cancel
+      </a>
+    </div>
+  </form>
+</section>

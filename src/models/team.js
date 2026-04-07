@@ -3,14 +3,20 @@
 
 const db = require('../utils/database');
 
+const Status = {
+    ACTIVE: 'ACTIVE',
+    DISABLED: 'DISABLED',
+};
+
 module.exports = class Team {
-    constructor(team_id, employee_responsible_id, name, description, created_at, image) {
+    constructor(team_id, employee_responsible_id, name, description, created_at, image, status = Status.ACTIVE) {
         this.team_id = team_id;
         this.employee_responsible_id = employee_responsible_id;
         this.name = name;
         this.description = description;
         this.created_at = created_at;
         this.image = image;
+        this.status = status;
     }
 
     /*findAll()
@@ -26,6 +32,16 @@ module.exports = class Team {
 
     static findById(team_id) {
         return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
+    }
+
+    /*findByName(name)
+    Function responsible for returning a team with the same name.*/
+
+    static findByName(name) {
+        return db.execute(
+            'SELECT team_id, name FROM team WHERE name = ?',
+            [name],
+        );
     }
 
     /*fetchByEmployeeId(employee_id)
@@ -55,8 +71,26 @@ module.exports = class Team {
 
     // Create or Update team
     save() {
-        // TODO: Implement database logic
-        // If team_id exists, update; otherwise, insert new record
+        return db.execute(
+            `INSERT INTO team(
+                team_id,
+                employee_responsible_id,
+                name,
+                description,
+                created_at,
+                image,
+                status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                this.team_id,
+                this.employee_responsible_id,
+                this.name,
+                this.description,
+                this.created_at,
+                this.image,
+                this.status,
+            ],
+        );
     }
 
     // Read all teams
@@ -80,3 +114,5 @@ module.exports = class Team {
     }
 
 };
+
+module.exports.Status = Status;
