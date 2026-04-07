@@ -23,6 +23,7 @@ router.post('/:team_id/members', isAuth, teamController.addTeamMember);
 // router.post('/:team_id/join', isAuth, teamController.addTeamMember);
 
 router.post('/:team_id/members/:employee_id/remove', isAuth, teamController.removeTeamMember);
+router.delete('/:team_id/delete', isAuth, teamController.deleteTeam);
 router.get('/:team_id', isAuth, teamController.getTeamPage);
 
 module.exports = router;

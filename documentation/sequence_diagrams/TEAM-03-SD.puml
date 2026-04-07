@@ -61,5 +61,85 @@ end
 
             
     
+/'
+Alternative diagram code closer to the current implementation:
+
+@startuml
+skinparam style strictuml
+
+actor Lead as L
+boundary "team.ejs" as V
+boundary "teamDetails.js" as JS
+boundary "team.routes" as RO
+control "team.controller" as C
+entity "team.model" as T
+database "unitas_system" as BD
+
+autonumber
+
+L ->> V: Click on "Delete team"
+activate V
+V -> V: data-popup-open="delete-team-<%= team.id %>"
+V --> L: Show delete confirmation popup
+deactivate V
+
+alt Cancel deletion
+    L ->> V: Click on "Cancel"
+    activate V
+    V -> V: data-popup-close
+    V --> L: Close popup
+    deactivate V
+end
+
+L ->> V: Click on "Delete"
+activate V
+V ->> JS: submit [data-team-delete-form]
+activate JS
+JS ->> RO: fetch('/team/:team_id/delete', { method: 'DELETE', headers: { Accept: 'application/json' }, body: _csrf })
+deactivate V
+
+activate RO
+RO ->> C: deleteTeam(request, response)
+deactivate RO
+
+activate C
+C ->> T: findById(team_id)
+activate T
+T ->> BD: execute('SELECT * FROM team WHERE team_id = ?', [team_id])
+activate BD
+BD --> T: team row / empty
+deactivate BD
+T --> C: teamRows
+deactivate T
+
+alt Team not found
+    C --> JS: response.status(404).json({ success:false, error:'Team not found.', redirectTo:'/team' })
+    JS --> L: Show error
+else User is not team lead
+    C --> JS: response.status(403).json({ success:false, error:'Only the team lead can delete this team.', redirectTo:'/team/:team_id' })
+    JS --> L: Show error
+else Valid lead
+    C ->> T: disableTeam(team_id)
+    activate T
+    T ->> BD: execute('UPDATE team SET status = ? WHERE team_id = ?', ['DISABLED', team_id])
+    activate BD
+    BD --> T: Query OK
+    deactivate BD
+    T --> C: result
+    deactivate T
+
+    alt Deletion failed
+        C --> JS: response.status(500).json({ success:false, error:'The team could not be deleted right now.', redirectTo:'/team/:team_id' })
+        JS --> L: Show error
+    else Deletion succeeded
+        C --> JS: response.status(200).json({ success:true, redirectTo:'/team' })
+        JS ->> V: window.location.href = '/team'
+        V --> L: Render team directory through getTeams
+    end
+end
+deactivate C
+
+@enduml
+'/
 
 @enduml

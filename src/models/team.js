@@ -20,10 +20,10 @@ module.exports = class Team {
     }
 
     /*findAll()
-    Function responsible for returning all existent Teams*/
+    Function responsible for returning all active teams.*/
 
     static findAll() {
-        return db.execute('SELECT * FROM team');
+        return db.execute('SELECT * FROM team WHERE status = ?', [Status.ACTIVE]);
     }
 
     /*findById(team_id)
@@ -32,6 +32,16 @@ module.exports = class Team {
 
     static findById(team_id) {
         return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
+    }
+
+    /*disableTeam(team_id)
+    Function responsible for soft deleting a team by marking it as disabled.*/
+
+    static disableTeam(team_id) {
+        return db.execute(
+            'UPDATE team SET status = ? WHERE team_id = ?',
+            [Status.DISABLED, team_id],
+        );
     }
 
     /*findByName(name)
@@ -48,25 +58,25 @@ module.exports = class Team {
     Function responsible for returning all teams an employee is part of*/
 
     static fetchByEmployeeId(employee_id){
-        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL;',
-            [employee_id]);
+        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL AND T.status=?;',
+            [employee_id, Status.ACTIVE]);
     }
 
     /*fetchNotByEmployeeId(employee_id)
-    Function responsible for returning all teams an employee is not part of*/
+    Function responsible for returning all active teams an employee is not part of*/
 
     static fetchNotByEmployeeId(employee_id){
-        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL)',
-            [employee_id]);
+        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.status=? AND T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL)',
+            [Status.ACTIVE, employee_id]);
     }
 
     /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
-    Function responsible for obtaining all team information based on an
+    Function responsible for obtaining all active team information based on an
     employee_id and a date range*/
 
     static getEmployeeTeamsInfoBtw(employee_id, start_date, end_date){
-        return db.execute('SELECT name, description FROM team AS T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE ET.employee_id=? AND ET.joined_at >= ? AND (ET.left_at <= ? OR ET.left_at IS NULL);',
-            [employee_id, start_date, end_date]);
+        return db.execute('SELECT name, description FROM team AS T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE T.status=? AND ET.employee_id=? AND ET.joined_at >= ? AND (ET.left_at <= ? OR ET.left_at IS NULL);',
+            [Status.ACTIVE, employee_id, start_date, end_date]);
     }
 
     // Create or Update team
