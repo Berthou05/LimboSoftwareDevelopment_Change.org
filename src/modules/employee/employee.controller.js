@@ -187,6 +187,24 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     };
 };
 
+const normalizeDirectoryEmployee = function normalizeDirectoryEmployee(employee, currentEmployeeId = '') {
+    const employeeId = employee.employee_id || '';
+    const fullName = employee.full_name || 'Unknown employee';
+
+    return {
+        id: employeeId,
+        fullName,
+        slackUsername: employee.slack_username || '',
+        email: employee.email || '',
+        image: employee.image || buildAvatarUrl(fullName),
+        isSelf: Boolean(currentEmployeeId) && employeeId === currentEmployeeId,
+    };
+};
+
+const getOwnEmployeeUrl = function getOwnEmployeeUrl(employeeId) {
+    return `/employees/${employeeId}`;
+};
+
 //--------------------------- Main Functions ---------------------------
 
 /*getEmployee()
@@ -204,39 +222,97 @@ employees:near_employees,
 */
 
 exports.getEmployee = (request, response, next) => {
-    const employeeId = request.session.employeeId;
-    const privilegeMap = request.session?.user?.privilege || {};
-    const intermediate = Boolean(privilegeMap['TEAM-01']);
+    const employeeId = request.session.employeeId || '';
+    const ownEmployeeUrl = getOwnEmployeeUrl(employeeId);
 
-    if (!intermediate) {
-        return response.redirect(`/employee/${employeeId}`);
-    }
+    return Employee.searchDirectoryByLeadScope(employeeId, '')
+        .then(([directoryEmployees]) => {
+            if (directoryEmployees.length === 0) {
+                return response.redirect(ownEmployeeUrl);
+            }
 
-    Employee.getNearEmployees(employeeId).then(([near_employees]) => {
+            const employees = directoryEmployees.map((employee) => {
+                return normalizeDirectoryEmployee(employee, employeeId);
+            });
 
-        const employees = near_employees.map((employee) => ({
-            employee_id:employee.employee_id,
-            full_name: employee.full_name,
-            slack_username: employee.slack_username,
-            email:employee.email,
-            image: buildAvatarUrl(employee.full_name),
-        }));
-
-        return response.render('pages/employeeDirectory', {
-            csrfToken: request.csrfToken(),
-            isLoggedIn: request.session.isLoggedIn || '',
-            username: request.session.username || '',
-            pageTitle: `Employee`,
-            pageSubtitle: 'Intermediate selection for self and other employees.',
-            employees: employees,
-            query: '',
+            return response.render('pages/employeeDirectory', {
+                csrfToken: request.csrfToken(),
+                isLoggedIn: request.session.isLoggedIn || '',
+                username: request.session.username || '',
+                pageTitle: 'Employee',
+                pageSubtitle: 'Intermediate selection for self and other employees.',
+                employees,
+                query: '',
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            request.session.error = 'Error loading Intermediate';
+            return response.redirect('/home');
         });
-    })
-    .catch((error) => {
-        console.log(error);
-        request.session.error = `Error loading Intermediate`;
-        return response.redirect('/home');
-    });
+};
+
+/*searchEmployees
+Function responsible for returning filtered employee-directory HTML and autocomplete suggestions. */
+
+exports.searchEmployees = (request, response, next) => {
+    const employeeId = request.session.employeeId || '';
+    const ownEmployeeUrl = getOwnEmployeeUrl(employeeId);
+    const query = typeof request.query.q === 'string' ? request.query.q.trim() : '';
+
+    return Promise.all([
+        Employee.searchDirectoryByLeadScope(employeeId, query),
+        Employee.getDirectorySuggestionsByLeadScope(employeeId, query),
+    ])
+        .then(([
+            [directoryEmployees],
+            [suggestionEmployees],
+        ]) => {
+            if (query === '' && directoryEmployees.length === 0) {
+                return response.status(403).json({
+                    redirectUrl: ownEmployeeUrl,
+                });
+            }
+
+            const employees = directoryEmployees.map((employee) => {
+                return normalizeDirectoryEmployee(employee, employeeId);
+            });
+            const suggestions = suggestionEmployees.map((employee) => {
+                const normalizedEmployee = normalizeDirectoryEmployee(employee, employeeId);
+                return {
+                    id: normalizedEmployee.id,
+                    fullName: normalizedEmployee.fullName,
+                    slackUsername: normalizedEmployee.slackUsername,
+                    email: normalizedEmployee.email,
+                    isSelf: normalizedEmployee.isSelf,
+                };
+            });
+
+            return response.render('partials/employeeDirectory/employeeDirectoryResults', {
+                layout: false,
+                employees,
+            }, (renderError, resultsHtml) => {
+                if (renderError) {
+                    console.log(renderError);
+                    return response.status(500).json({
+                        error: 'Unable to search employees right now.',
+                    });
+                }
+
+                return response.json({
+                    query,
+                    resultsHtml,
+                    suggestions,
+                    totalEmployees: employees.length,
+                });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return response.status(500).json({
+                error: 'Unable to search employees right now.',
+            });
+        });
 };
 
 /*getEmployeePage
@@ -253,103 +329,115 @@ activities:activities,
 teams:teams,
 projects:projects,*/
 
-exports.getEmployeePage = (request, response, next)=>{
+exports.getEmployeePage = (request, response, next) => {
     const employeeId = request.params.employee_id;
-    const projects = [];
-    const activityFilter = resolveActivityFilter(request.query);
-    const activityPromise = activityFilter.error
-        ? Promise.resolve([[]])
-        : Activity.fetchByEmployee(
-            employeeId,
-            activityFilter.rangeStart,
-            activityFilter.rangeEnd
-        );
+    const currentEmployeeId = request.session.employeeId || '';
+    const ownEmployeeUrl = getOwnEmployeeUrl(currentEmployeeId);
 
-    EmployeeTeam.fetchTeamInfoByEmployee(employeeId).then(([team, fieldData])=>{
-        Employee.fetchById(employeeId).then(([info,fieldData])=>{
-            activityPromise.then(([activities,fieldData])=>{
-                Project.getProjectByEmployeeId(employeeId).then(([employee_projects, fieldData])=>{
+    const canAccessPromise = employeeId === currentEmployeeId
+        ? Promise.resolve(true)
+        : Employee.canViewInLeadScope(currentEmployeeId, employeeId).then(([rows]) => rows.length > 0);
 
-                    //Normalization of the Projets
-                    const projectRows = employee_projects.map(proj => ({
+    return canAccessPromise
+        .then((hasAccess) => {
+            if (!hasAccess) {
+                return response.redirect(ownEmployeeUrl);
+            }
+
+            const activityFilter = resolveActivityFilter(request.query);
+            const activityPromise = activityFilter.error
+                ? Promise.resolve([[]])
+                : Activity.fetchByEmployee(
+                    employeeId,
+                    activityFilter.rangeStart,
+                    activityFilter.rangeEnd,
+                );
+
+            return Promise.all([
+                EmployeeTeam.fetchTeamInfoByEmployee(employeeId),
+                Employee.fetchById(employeeId),
+                activityPromise,
+                Project.getProjectByEmployeeId(employeeId),
+            ])
+                .then(([
+                    [team],
+                    [info],
+                    [activities],
+                    [employeeProjects],
+                ]) => {
+                    if (!info.length) {
+                        request.session.error = `Error loading Employee ${employeeId}. Employee information not found.`;
+                        return response.redirect('/employees');
+                    }
+
+                    const projectRows = employeeProjects.map((project) => ({
                         project: {
-                            id: proj.project_id,
-                            name: proj.name 
+                            id: project.project_id,
+                            name: project.name,
                         },
-                        roleName: proj.coll_description || 'MEMBER', 
-                        startDateLabel: formatDayLabel(proj.started_at) 
+                        roleName: project.coll_description || 'MEMBER',
+                        startDateLabel: formatDayLabel(project.started_at),
                     }));
 
-                    //Normalization of the teams
-                    const teamRows = team.map((team) => ({
+                    const teamRows = team.map((memberTeam) => ({
+                        team_id: memberTeam.team_id,
                         team: {
-                            id: team.team_id,
-                            name: team.name,
+                            id: memberTeam.team_id,
+                            name: memberTeam.name,
                         },
-                        roleName: team.role || 'EMPLOYEE',
-                        startDateLabel: formatDayLabel(team.joined_at),
+                        roleName: memberTeam.role || 'EMPLOYEE',
+                        startDateLabel: formatDayLabel(memberTeam.joined_at),
                     }));
 
-                    //Normalization of the employee information.
                     const employee = {
+                        id: info[0].employee_id,
                         employee_id: info[0].employee_id,
                         full_name: info[0].full_name,
                         image: buildAvatarUrl(info[0].full_name),
                     };
 
-                    //! Required to make Report Implementation in render.
                     const reportSubjects = {
                         employees: [
-                            { id: employeeId, name: employee.full_name},
+                            {
+                                id: employeeId,
+                                name: employee.full_name,
+                            },
                         ],
                         teams: [],
-                        projects: []
+                        projects: [],
                     };
 
-                    
                     return response.render('pages/employeeDetails', {
                         csrfToken: request.csrfToken(),
                         isLoggedIn: request.session.isLoggedIn || '',
                         username: request.session.username || '',
                         pageTitle: `Employee ${info[0].full_name}`,
                         pageSubtitle: '',
-                        employee:employee,
-                        isOwnProfile: request.session.employeeId === info.employee_id,
+                        employee,
+                        isOwnProfile: currentEmployeeId === info[0].employee_id,
                         activitySections: buildActivitySections(activities),
-                        activityFilter: activityFilter,
+                        activityFilter,
                         activityError: activityFilter.error || '',
-                        teamRows:teamRows,
-                        projectRows:projectRows,
-                        defaultReportType:'EMPLOYEE',
-                        defaultSubjectId:employeeId,
-                        reportSubjects:reportSubjects,
-                        latestReports:'',
-                        quickReport:'',
+                        teamRows,
+                        projectRows,
+                        defaultReportType: 'EMPLOYEE',
+                        defaultSubjectId: employeeId,
+                        reportSubjects,
+                        latestReports: '',
+                        quickReport: '',
                     });
                 })
-                .catch((error)=>{
+                .catch((error) => {
                     console.log(error);
-                    request.session.error = `Error loading Employee ${employeeId}. Employee Projects not found.`;
-                    return response.redirect(`/employee`);
-                })
-                })
-                .catch((error)=>{
-                    console.log(error);
-                    request.session.error = `Error loading Employee ${employeeId}. Employee Activies not found.`;
-                    return response.redirect(`/employee`);
-                })
-            })
-        .catch((error)=>{
-            console.log(error);
-            request.session.error = `Error loading Employee ${employeeId}. Employee Information not found.`;
-            return response.redirect(`/employee`);
+                    request.session.error = `Error loading Employee ${employeeId}.`;
+                    return response.redirect('/employees');
+                });
         })
-    })
-    .catch((error)=>{
-        console.log(error);
-        request.session.error = `Error loading Employee ${employeeId}. Employee Teams not found.`;
-        return response.redirect(`/employee`);
-    })
-}
+        .catch((error) => {
+            console.log(error);
+            request.session.error = `Error validating access for Employee ${employeeId}.`;
+            return response.redirect('/employees');
+        });
+};
 
 

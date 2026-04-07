@@ -84,6 +84,28 @@ module.exports = class Account {
     static countAll(){
         return db.execute('SELECT COUNT(*) AS count FROM account;');
     }
+
+    /*updateStatus(account_id)
+    Function responsible for updating the role of an account based on id.*/
+
+    static updateStatus(status, account_id){
+        return db.execute(`
+            UPDATE account 
+            SET account.status=? 
+            WHERE account_id=?;`,
+            [status,account_id]);
+    }
+
+    /*fetchById(account_id)
+    Function responsible for returning all account data based on Id.*/
+
+    static fetchById(account_id){
+        return db.execute(`
+            SELECT * 
+            FROM account 
+            WHERE account_id=?`
+            ,[account_id]);
+    }
 };
 
 module.exports.AccountStatus = AccountStatus;
