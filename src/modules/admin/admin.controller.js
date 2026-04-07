@@ -168,3 +168,47 @@ exports.createRole = (request, response, next)=>{
         return response.redirect('admin/roles');
     })
 };
+
+/*getCreateAccount
+Function responsible for rendering the create account page from admin accounts.*/
+
+exports.getCreateAccount = (request, response, next) => {
+    Role.fetchAll().then(([roles]) => {
+        return response.render('pages/admin-createAccount', {
+            csrfToken: request.csrfToken(),
+            pageTitle: 'Create Account',
+            pageSubtitle: 'Page responsible for the creation of accounts in the Unitas System',
+            roles: roles.map((role) => ({
+                id: role.role_id,
+                name: role.name
+            })),
+            formData: {
+                fullName: '',
+                email: '',
+                slackUsername: '',
+                roleId: '',
+                image: ''
+            }
+        });
+    }).catch((error) => {
+        console.log(error);
+        request.session.error = 'We could not load the create account view right now.';
+        return response.redirect('/admin/accounts');
+    });
+};
+
+/*postCreateAccount
+Temporary placeholder while account creation backend is pending implementation.*/
+
+exports.postCreateAccount = (request, response, next) => {
+    request.session.error = 'Account creation backend is not implemented yet.';
+    return response.redirect('/admin/accounts/create');
+};
+
+/*deleteAccount
+Temporary placeholder while account deletion backend is pending implementation.*/
+
+exports.deleteAccount = (request, response, next) => {
+    request.session.error = 'Account deletion backend is not implemented yet.';
+    return response.redirect('/admin/accounts');
+};
