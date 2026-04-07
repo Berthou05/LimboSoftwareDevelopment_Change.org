@@ -36,46 +36,52 @@ const formatDateLabel = function formatDateLabel(value, fallback = '') {
 //------------------- Main Functions --------------------
 
 /*getAccounts
-Function responsible for the page render of the Account Administration page
-
-totalAccounts()
-
-account[
-    {
-        id:
-        employee{
-            fullName:
-        }
-        email:
-        slackUsername:
-        status:
-        createdAt:
-    }
-]
-
-roles[
-    {
-        id:
-        name:
-    }
-]
-
-
-*/
+Function responsible for the page render of the Account Administration page*/
 
 exports.getAccounts = (request, response, next) => {
+    const roleFilter   = request.query.role   || 'all';
+    const statusFilter = request.query.status || 'all';
+
     Promise.all([
-        
+        Account.fetchAll(roleFilter,statusFilter),
+        Account.countAll(),
         Role.fetchAll()
-    ])
+    ]).then(([
+        [accounts],
+        [totalAccounts],
+        [roles]
+    ])=>{
 
+        return response.render('pages/admin-accounts',{
+            csrfToken: request.csrfToken(),
+            pageTitle: 'Accounts Administration',
+            pageSubtitle: 'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
+            totalAccounts: totalAccounts[0].count,
+            accounts: accounts.map((account)=>({
+                id: account.account_id,
+                employee:{
+                    fullName:account.full_name 
+                },
+                email:account.email,
+                slackUsername: account.slack_username,
+                status: account.status,
+                createdAt:formatDateLabel(account.created_at)
+            })),
+            roles: roles.map((role)=>({
+                id: role.role_id,
+                name: role.name
+            })),
+            statusFilter:'all',
+            roleFilter:'all'
+        });
 
-    return response.render('pages/admin-accounts',{
-        csrfToken: request.csrfToken(),
-        pageTitle: 'Accounts Administration',
-        pageSubtitle: 'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
+    }).catch((error) => {
+        console.log(error);
+        request.flash('error',error);
+        return response.redirect('/home');
     });
 };
+
 
 
 /*getRoleAdmin

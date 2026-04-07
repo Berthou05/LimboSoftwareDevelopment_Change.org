@@ -9,18 +9,13 @@ FE 6. Creation of the  admin-roles.ejs page. Consider creation of roles popup an
 
 ---
 4. ADMIN-05-06 y AUTH-01
-FE 5. Creation of the admin-accounts.ejs page.
-	BE 5. Creation of the admin-accounts.ejs page render.
-	BE 7. Creation of the AJAX function that handles the role assignation per account.
-	*BE. Backend for the render and processing of the signin form have already been created in the auth.controller*
-	FE 7. Creation of the signIn.ejs form or aoth.ejs that is the signIn form page. 
+
+  *BE. Backend for the render and processing of the signin form have already been created in the auth.controller*
+
+  FE 7. Creation of the signIn.ejs form or aoth.ejs that is the signIn form page. 
 
 
 ## Backend requirements
-
-5. 
-In: **admin-accounts.ejs**
-Description: Creation of the admin account administration page render. 
 
 ---
 6. ADMIN-04
