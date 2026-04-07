@@ -3,6 +3,44 @@
 
 const db = require('../utils/database');
 
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DIRECTORY_QUERY = `SELECT DISTINCT
+    T.team_id,
+    T.name,
+    T.image,
+    T.description,
+    E.full_name,
+    CASE
+        WHEN ET.employee_id IS NOT NULL OR T.employee_responsible_id = ? THEN 1
+        ELSE 0
+    END AS is_member
+FROM team AS T
+INNER JOIN employee AS E
+    ON E.employee_id = T.employee_responsible_id
+LEFT JOIN employeeteam AS ET
+    ON ET.team_id = T.team_id
+    AND ET.employee_id = ?
+    AND ET.left_at IS NULL
+WHERE (
+        ? = ''
+        OR T.name LIKE ?
+        OR T.description LIKE ?
+        OR E.full_name LIKE ?
+    )
+ORDER BY is_member DESC, T.name ASC`;
+
+const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
+    const normalizedSearch = `%${searchTerm}%`;
+    return [
+        employeeId || '',
+        employeeId || '',
+        searchTerm,
+        normalizedSearch,
+        normalizedSearch,
+        normalizedSearch,
+    ];
+};
+
 module.exports = class Team {
     constructor(team_id, employee_responsible_id, name, description, created_at, image) {
         this.team_id = team_id;
@@ -42,6 +80,23 @@ module.exports = class Team {
     static fetchNotByEmployeeId(employee_id){
         return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL)',
             [employee_id]);
+    }
+
+    static searchDirectory(employee_id, searchTerm = '') {
+        return db.execute(
+            DIRECTORY_QUERY,
+            buildDirectoryQueryParameters(employee_id, searchTerm.trim()),
+        );
+    }
+
+    static getDirectorySuggestions(employee_id, searchTerm = '') {
+        return db.execute(
+            `${DIRECTORY_QUERY} LIMIT ?`,
+            [
+                ...buildDirectoryQueryParameters(employee_id, searchTerm.trim()),
+                DEFAULT_DIRECTORY_SUGGESTION_LIMIT,
+            ],
+        );
     }
 
     /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)

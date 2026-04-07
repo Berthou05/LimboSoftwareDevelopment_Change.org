@@ -1,0 +1,11 @@
+<% if (employees?.length) { %>
+    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <% for (const employee of employees) { %>
+            <%- include('./employeeCard', { employee }) %>
+        <% } %>
+    </div>
+<% } %>
+
+<% if (!employees?.length) { %>
+    <p class="text-sm text-brand-text/60">No employees found.</p>
+<% } %>
