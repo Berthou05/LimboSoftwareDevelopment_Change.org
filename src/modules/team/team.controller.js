@@ -494,7 +494,10 @@ exports.toggleTeamMembership = (request, response, next) => {
                 request.session[flashType] = flashMessage;
             }
 
-            return response.redirect(`/teams/${teamId}`);
+            return response.redirect(`/team/${teamId}`);
+        })
+        .then(() => {
+            return response.redirect(`/team`);
         })
         .catch((error) => {
             console.log(error);
