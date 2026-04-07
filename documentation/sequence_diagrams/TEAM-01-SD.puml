@@ -2,14 +2,16 @@
 skinparam style strictuml
 
 actor Lead as U
+boundary "app.js / multer" as APP
 boundary "team.routes" as RO
 boundary "view pages/teamNew.ejs" as V
 control "team.controller" as C
 entity "Team.model" as TM
+entity "EmployeeTeamMembership.model" as ETM
 database "unitas_system" as BD
 
 activate U
-U -> RO: GET /new
+U -> RO: GET /team/new
 deactivate U
 
 activate RO
@@ -26,15 +28,23 @@ deactivate V
 
 
 activate U
-U -> RO: POST /new
+U -> APP: POST /team/new\nmultipart/form-data\n{name, description, image}
 deactivate U
+
+activate APP
+APP -> APP: multer({ storage, fileFilter }).single('image')
+APP -> APP: store image in src/public/images/teams
+APP -> RO: request.body + request.file
+deactivate APP
 
 activate RO
 RO -> C: createTeam(request, response)
 deactivate RO
 
 activate C
-C -> C: validate(request.body)
+C -> C: teamForm = { name, description }
+C -> C: imagePath = '/images/teams/' + request.file.filename
+C -> C: validate(name, fileValidationError, mimetype)
 C -> TM: findByName(request.body.name)
 activate TM
 
@@ -46,17 +56,28 @@ deactivate BD
 TM --> C: exists/null
 deactivate TM
 
-C -> TM: new Team('', request.session.employeeId, request.body.name, request.body.description, new Date(), request.file.filename)
+C -> C: teamId = randomUUID()
+C -> TM: new Team(teamId, request.session.employeeId,\nrequest.body.name, request.body.description,\nnew Date(), imagePath, Team.Status.ACTIVE)
 activate TM
 
 C ->> TM: save()
-TM ->> BD: execute('INSERT INTO team(team_id, employee_responsible_id, name, description, created_at, image) VALUES(UUID(),?,?,?,?,?)',[request.session.employeeId, request.body.name, request.body.description, new Date(), request.file.filename])
+TM ->> BD: execute('INSERT INTO team(team_id, employee_responsible_id, name, description, created_at, image, status) VALUES(?,?,?,?,?,?,?)',[teamId, request.session.employeeId, request.body.name, request.body.description, new Date(), imagePath, 'ACTIVE'])
 activate BD
 BD --> TM: Query OK
 deactivate BD
 
 TM --> C: team saved
 deactivate TM
+
+C -> ETM: join(request.session.employeeId, teamId, new Date(), EmployeeRole.LEAD)
+activate ETM
+ETM -> BD: execute('INSERT INTO employeeteam(employee_id, team_id, joined_at, left_at, role) VALUES(?,?,?,?,?)',[request.session.employeeId, teamId, new Date(), null, 'LEAD'])
+activate BD
+BD --> ETM: Query OK
+deactivate BD
+
+ETM --> C: lead membership saved
+deactivate ETM
 
 C -> V: response.redirect('/team')
 deactivate C
@@ -67,7 +88,8 @@ deactivate V
 
 opt Invalid input
     activate C
-    C -> V: response.render('pages/teamNew', {errors})
+    C -> C: renderNewTeamPage(request, response, 422, {formErrors})
+    C -> V: response.render('pages/teamNew', {formErrors})
     deactivate C
 
     activate V
@@ -77,7 +99,8 @@ end
 
 opt Team already created
     activate C
-    C -> V: response.render('pages/teamNew', {error: "Team already exists"})
+    C -> C: renderNewTeamPage(request, response, 409, {formError})
+    C -> V: response.render('pages/teamNew', {error: "A team with that name already exists."})
     deactivate C
 
     activate V
@@ -87,7 +110,8 @@ end
 
 opt Team creation failed
     activate C
-    C -> V: response.render('pages/teamNew', {error: "The team could not be created right now"})
+    C -> C: renderNewTeamPage(request, response, 500, {formError})
+    C -> V: response.render('pages/teamNew', {error: "The team could not be created right now."})
     deactivate C
 
     activate V
