@@ -39,6 +39,7 @@ const normalizeTeam = function normalizeTeam(team) {
         name: team.name ?? 'Unnamed team',
         leadName:
             team.full_name ??
+            team.lead_name ??
             'Pending assignment',
         description: team.description ?? 'No team description has been added yet.',
         image: team.image || buildAvatarUrl(team.name),
@@ -598,10 +599,7 @@ exports.toggleTeamMembership = (request, response, next) => {
                 request.session[flashType] = flashMessage;
             }
 
-            return response.redirect(`/team/${teamId}`);
-        })
-        .then(() => {
-            return response.redirect(`/team`);
+            return response.redirect(`/teams/${teamId}`);
         })
         .catch((error) => {
             console.log(error);
@@ -710,15 +708,68 @@ exports.removeTeamMember = (request, response, next) => {
     });
 };
 
-//! Provisional function to load Team Intermediate
+/*searchTeams
+Function responsible for returning filtered team-directory HTML and autocomplete suggestions.*/
 
 exports.searchTeams = (request, response, next) => {
-    return response.json({
-                        query: '',
-                        resultsHtml: '',
-                        suggestions: '',
-                        totalTeams: '',
-                    });
+    const employeeId = request.session.employeeId || '';
+    const query = typeof request.query.q === 'string' ? request.query.q.trim() : '';
+
+    return Promise.all([
+        Team.searchDirectory(employeeId, query),
+        Team.getDirectorySuggestions(employeeId, query),
+    ]).then(([
+        [directoryTeams],
+        [suggestionTeams],
+    ]) => {
+        const myTeams = [];
+        const otherTeams = [];
+        const suggestions = suggestionTeams.map((team) => {
+            const normalizedTeam = normalizeTeam(team);
+            return {
+                id: normalizedTeam.id,
+                name: normalizedTeam.name,
+                leadName: normalizedTeam.leadName,
+                isMember: normalizedTeam.isMember,
+            };
+        });
+
+        directoryTeams.forEach((team) => {
+            const normalizedTeam = normalizeTeam(team);
+
+            if (normalizedTeam.isMember) {
+                myTeams.push(normalizedTeam);
+                return;
+            }
+
+            otherTeams.push(normalizedTeam);
+        });
+
+        return response.render('partials/teamDirectory/teamDirectoryResults', {
+            layout: false,
+            myTeams,
+            otherTeams,
+        }, (renderError, resultsHtml) => {
+            if (renderError) {
+                console.log(renderError);
+                return response.status(500).json({
+                    error: 'Unable to search teams right now.',
+                });
+            }
+
+            return response.json({
+                query,
+                resultsHtml,
+                suggestions,
+                totalTeams: directoryTeams.length,
+            });
+        });
+    }).catch((error) => {
+        console.log(error);
+        return response.status(500).json({
+            error: 'Unable to search teams right now.',
+        });
+    });
 };
 
 /*getTeamMembers
