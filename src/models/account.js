@@ -55,8 +55,34 @@ module.exports = class Account {
 
     /*fetchAll()
     Function responsible for returning all accounts of the application.*/
-    static fetchAll(){
-        return db.execute('SELECT * FROM account');
+    static fetchAll(role = null, status = null){
+        const conditions = ['WHERE A.account_id=A.account_id'];
+        const parameters = [];
+
+        if(role && role !== 'all'){
+            conditions.push('R.name=?');
+            parameters.push(role);
+        }
+
+        if(status && status !== 'all'){
+            conditions.push('A.status=?');
+            parameters.push(status);
+        }
+
+        return db.execute(`
+            SELECT A.account_id, E.full_name, A.email, A.created_at,A.slack_username, A.status, R.name FROM account AS A
+            INNER JOIN employee AS E ON E.employee_id=A.employee_id
+            INNER JOIN accountrole AS AR ON AR.account_id=A.account_id
+            INNER JOIN role as R ON R.role_id=AR.role_id
+            ${conditions.join(' AND ')}
+            ORDER BY E.full_name ASC;`,
+            parameters);
+    }
+
+    /*countAll()
+    Function responsible for counting all the accounts of the table*/
+    static countAll(){
+        return db.execute('SELECT COUNT(*) AS count FROM account;');
     }
 };
 

@@ -84,6 +84,7 @@
 
           <%# Select auto-submits to update role quickly without a separate "Save" button. %>
           <form action="/admin/accounts/<%= account.id %>/role" method="POST" class="min-w-0">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <select
               name="roleId"
               class="w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
@@ -97,6 +98,7 @@
 
           <%# Same inline update pattern for status to reduce admin clicks. %>
           <form action="/admin/accounts/<%= account.id %>/status" method="POST" class="min-w-0">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <select
               name="status"
               class="w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
