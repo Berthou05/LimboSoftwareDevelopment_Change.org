@@ -82,32 +82,36 @@
           <p class="truncate text-brand-text/80"><%= account.email %></p>
           <p class="font-medium text-brand-text/80"><%= account.slackUsername %></p>
 
-          <%# Select auto-submits to update role quickly without a separate "Save" button. %>
-          <form action="/admin/accounts/<%= account.id %>/role" method="POST" class="min-w-0">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <%# AJAX role update — no page reload, handles all server responses %>
+          <div class="min-w-0">
             <select
               name="roleId"
-              class="w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
-              onchange="this.form.submit()"
+              data-account-id="<%= account.id %>"
+              data-csrf="<%= csrfToken %>"
+              class="role-select w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
             >
               <% roles.forEach((role) => { %>
-                <option value="<%= role.id %>" <%= role.id === account.roleId ? 'selected' : '' %>><%= role.name %></option>
+                <option value="<%= role.id %>" <%= role.id === account.roleId ? 'selected' : '' %>>
+                  <%= role.name %>
+                </option>
               <% }) %>
             </select>
-          </form>
+            <%# Inline feedback appears here without reloading the page %>
+            <p class="role-feedback mt-1 hidden text-xs font-semibold"></p>
+          </div>
 
           <%# Same inline update pattern for status to reduce admin clicks. %>
-          <form action="/admin/accounts/<%= account.id %>/status" method="POST" class="min-w-0">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <select
-              name="status"
-              class="w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
-              onchange="this.form.submit()"
-            >
-              <option value="ACTIVE" <%= account.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
-              <option value="DISABLED" <%= account.status === 'DISABLED' ? 'selected' : '' %>>Disabled</option>
-            </select>
-          </form>
+          <select
+            name="status"
+            data-account-id="<%= account.id %>"
+            data-csrf="<%= csrfToken %>"
+            class="status-select w-full rounded-lg border border-brand-secondary px-2 py-1 text-xs font-semibold"
+          >
+            <option value="ACTIVE" <%= account.status === 'ACTIVE' ? 'selected' : '' %>>Active</option>
+            <option value="DISABLED" <%= account.status === 'DISABLED' ? 'selected' : '' %>>Disabled</option>
+          </select>
+
+          <p class="status-feedback mt-1 hidden text-xs font-semibold"></p>
 
           <p class="text-xs font-semibold text-brand-text/70">
             <%= account.createdAt ? new Date(account.createdAt).toLocaleDateString("en-US") : "10/12/2024" %>
@@ -117,3 +121,5 @@
     </div>
   </section>
 </div>
+
+<script src="/js/adminAccounts.js"></script>

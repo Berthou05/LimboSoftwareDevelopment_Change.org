@@ -60,6 +60,43 @@ module.exports = class AccountRole {
         ).then(([rows]) => rows.length > 0);
     }
 
+    /*countActiveAdminsExcluding
+    Function responsible for counting the number of admins excluding the account consulted*/
+
+    static countActiveAdminsExcluding(account_id){
+        return db.execute(
+            `SELECT COUNT(*) AS admin_count
+            FROM accountrole ar
+            INNER JOIN role r ON r.role_id = ar.role_id
+            WHERE r.name = ?
+            AND ar.account_id <> ?`,
+            ['ADMIN', account_id]);
+    }
+
+    /*updateRole(account_id, role_id)
+    Function responsible for updating a role into the AccountRole where the 
+    account_id = account_id*/
+
+    static updateRole(account_id, role_id){
+        return db.execute(`
+            UPDATE accountrole  
+            SET role_id = ?  
+            WHERE account_id = ?`,
+            [role_id, account_id]);
+    }
+
+    /*fetchRoleByAccount(account_id)
+    Function responsible for getting the account and role information from
+    the account with id=account_id*/
+
+    static fetchRoleByAccount(account_id){
+        return db.execute(`SELECT ar.account_id, r.role_id, r.name
+            FROM accountrole ar
+            INNER JOIN role r ON r.role_id = ar.role_id
+            WHERE ar.account_id = ?`
+            ,[account_id]);
+    }
+
     // Read assignments by role ID
     static fetchByRole(role_id) {
         // TODO: Implement database query to fetch all accounts with a role
