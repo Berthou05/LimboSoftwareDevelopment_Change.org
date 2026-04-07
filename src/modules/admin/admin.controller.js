@@ -9,6 +9,7 @@ const RolePrivilege = require('../../models/rolePrivilegeAssignment');
 const Privilege = require('../../models/privilege');
 const AccountRole = require('../../models/accountRoleAssignment');
 const Account = require('../../models/account');
+const req = require('express/lib/request');
 
 //------------ Auxiliar Functions -----------------
 
@@ -82,6 +83,16 @@ exports.getAccounts = (request, response, next) => {
     });
 };
 
+
+/*assignRole
+Function responsible for assigning a role to an account*/
+
+exports.assignRole = (request,response,next)=>{
+    const accountId = request.params.account_id;
+    const roleId = request.body.roleId 
+    AccountRole.countActiveAdminsExcluding(accountId)
+    
+}
 
 
 /*getRoleAdmin
