@@ -1,21 +1,82 @@
 /*
 Title: admin.controller.js
-Last modification: March 25,2026
+Last modification: April 6,2026
 Modified by: Hurtado, R.
 */
 
 const Role = require('../../models/role');
 const RolePrivilege = require('../../models/rolePrivilegeAssignment');
 const Privilege = require('../../models/privilege');
-const AccountRole = require('../../models/accountRoleAssignment')
+const AccountRole = require('../../models/accountRoleAssignment');
+const Account = require('../../models/account');
 
+//------------ Auxiliar Functions -----------------
+
+/*formatDateLabel
+Function responsible for giving a concrete format to the given data
+for normalization purposes*/
+
+const formatDateLabel = function formatDateLabel(value, fallback = '') {
+    if (!value) {
+        return fallback;
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return fallback;
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+//------------------- Main Functions --------------------
+
+/*getAccounts
+Function responsible for the page render of the Account Administration page
+
+totalAccounts()
+
+account[
+    {
+        id:
+        employee{
+            fullName:
+        }
+        email:
+        slackUsername:
+        status:
+        createdAt:
+    }
+]
+
+roles[
+    {
+        id:
+        name:
+    }
+]
+
+
+*/
 
 exports.getAccounts = (request, response, next) => {
+    Promise.all([
+        
+        Role.fetchAll()
+    ])
+
+
     return response.render('pages/admin-accounts',{
         csrfToken: request.csrfToken(),
         pageTitle: 'Accounts Administration',
+        pageSubtitle: 'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
     });
 };
+
 
 /*getRoleAdmin
 Function responsible for the page render of the Role Administration page*/

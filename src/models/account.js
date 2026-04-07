@@ -52,6 +52,12 @@ module.exports = class Account {
     static getPrivilegesFromAccountId(account_id){
         return db.execute('SELECT P.privilege_id FROM privilege AS P INNER JOIN roleprivilege AS RP ON RP.privilege_id=P.privilege_id INNER JOIN role AS R ON R.role_id=RP.role_id INNER JOIN accountrole AS AR ON R.role_id= AR.role_id INNER JOIN account AS A ON AR.account_id=A.account_id WHERE A.account_id=?;',[account_id])
     }
+
+    /*fetchAll()
+    Function responsible for returning all accounts of the application.*/
+    static fetchAll(){
+        return db.execute('SELECT * FROM account');
+    }
 };
 
 module.exports.AccountStatus = AccountStatus;
