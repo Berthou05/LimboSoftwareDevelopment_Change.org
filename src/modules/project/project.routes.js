@@ -31,6 +31,7 @@ router.post('/:project_id/teams/:team_id/remove', isAuth, projectController.remo
 router.post('/:project_id/join', isAuth, projectController.joinProject);
 router.post('/:project_id/leave', isAuth, projectController.leaveProject);
 router.post('/:project_id/toggle-membership', isAuth, projectController.toggleProjectMembership);
+router.delete('/:project_id/delete', isAuth, projectController.deleteProject);
 router.get('/:project_id', isAuth, projectController.getProjectPage);
 
 module.exports = router;

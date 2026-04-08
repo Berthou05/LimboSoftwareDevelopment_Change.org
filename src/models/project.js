@@ -50,7 +50,8 @@ const Status = {
     IN_PROGRESS: 'IN PROGRESS',
     ON_HOLD: 'ON HOLD',
     COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED'
+    CANCELLED: 'CANCELLED',
+    DISABLED: 'DISABLED',
 };
 
 module.exports = class Project {
@@ -237,6 +238,16 @@ module.exports = class Project {
                 end_date = ?
             WHERE project_id = ?`,
             [name, description, status, start_date, end_date, project_id],
+        );
+    }
+
+    /*disableProject(project_id)
+    Function responsible for soft deleting a project by marking it as disabled.*/
+
+    static disableProject(project_id) {
+        return db.execute(
+            'UPDATE project SET status = ? WHERE project_id = ?',
+            [Status.DISABLED, project_id],
         );
     }
 
