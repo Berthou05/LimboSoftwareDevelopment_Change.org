@@ -467,7 +467,7 @@ exports.getTeamPage = (request, response, next) => {
                 id: teamRow.team_id,
                 name: teamRow.name,
                 description: teamRow.description,
-                image: buildAvatarUrl(teamRow.name),
+                image: teamRow.image || buildAvatarUrl(teamRow.name),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,
