@@ -203,8 +203,41 @@ const submitDeleteTeamForm = async function submitDeleteTeamForm(form) {
     window.alert(payload?.error || form.dataset.errorMessage || 'The team could not be deleted right now.');
 };
 
+const initializeDeleteProjectForms = function initializeDeleteProjectForms() {
+    const forms = document.querySelectorAll('[data-project-delete-form]');
+
+    for (const form of forms) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            await submitDeleteProjectForm(form);
+        });
+    }
+};
+
+const submitDeleteProjectForm = async function submitDeleteProjectForm(form) {
+    const response = await fetch(form.action, {
+        method: 'DELETE',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(new FormData(form)).toString(),
+    });
+
+    const payload = await response.json().catch(() => null);
+
+    if (response.ok) {
+        window.location.href = payload?.redirectTo || '/projects';
+        return;
+    }
+
+    window.alert(payload?.error || form.dataset.errorMessage || 'The project could not be deleted right now.');
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeInlinePickers();
     initializeInlineSubmitForms();
     initializeDeleteTeamForms();
+    initializeDeleteProjectForms();
 });

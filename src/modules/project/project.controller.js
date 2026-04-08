@@ -1411,6 +1411,72 @@ exports.updateHighlight = (request, response, next) => {
         });
 };
 
+/*deleteProject
+Function responsible for disabling a project from the delete project popup.*/
+
+exports.deleteProject = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.session.employeeId || '';
+    const acceptHeader = request.get('Accept') || '';
+    const respondDeleteProject = function respondDeleteProject(statusCode, payload, redirectTo = '/projects') {
+        if (payload.successMessage) {
+            request.session.success = payload.successMessage;
+        } else if (payload.error) {
+            request.session.error = payload.error;
+        }
+
+        if (acceptHeader.includes('application/json')) {
+            return response.status(statusCode).json({
+                ...payload,
+                redirectTo,
+            });
+        }
+
+        return response.redirect(redirectTo);
+    };
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondDeleteProject(404, {
+                    success: false,
+                    error: 'Project not found.',
+                });
+            }
+
+            if (project.employee_responsible_id !== employeeId) {
+                return respondDeleteProject(403, {
+                    success: false,
+                    error: 'Only the project lead can delete this project.',
+                }, `/projects/${projectId}`);
+            }
+
+            return Project.disableProject(projectId)
+                .then(([result]) => {
+                    if (!result.affectedRows) {
+                        return respondDeleteProject(500, {
+                            success: false,
+                            error: 'The project could not be deleted right now.',
+                        }, `/projects/${projectId}`);
+                    }
+
+                    return respondDeleteProject(200, {
+                        success: true,
+                        successMessage: 'Project deleted successfully.',
+                    });
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondDeleteProject(500, {
+                success: false,
+                error: 'The project could not be deleted right now.',
+            });
+        });
+};
+
 /*deleteHighlight
 Function responsible for deleting a highlight from the "Delete Highlight" popup.*/
 
