@@ -24,7 +24,9 @@ module.exports = class Account {
 
     save() {
         return bcrypt.hash(this.password, 12).then((password_cifred)=>{
-            return db.execute('INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())',
+            return db.execute(`
+                INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) 
+                VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())`,
                 [this.employee_id, this.email,password_cifred, this.slack_username, AccountStatus.ACTIVE, 0,null, null]);
         });
     }

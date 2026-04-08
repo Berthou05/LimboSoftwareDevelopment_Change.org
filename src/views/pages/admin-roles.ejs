@@ -37,10 +37,16 @@
             <%# Cell loop: ON/OFF indicates whether the current role contains this privilege code. %>
             <% roles.forEach((role) => { const enabled = role.privilegeCodes.includes(privilege.code); %>
               <td class="px-3 py-3">
-                <form action="/admin/roles/<%= role.id %>/<%= privilege.code %>/toggle" method="POST">
+                <form 
+                  action="/admin/roles/<%= role.id %>/<%= privilege.code %>/toggle" 
+                  method="POST"
+                  class="toggle-form"
+                  data-role-id="<%= privilege.code %>"
+                >
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button
                     type="submit"
-                    class="inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold transition <%= enabled ? 'bg-brand-primary text-white' : 'bg-brand-secondary/50 text-brand-text/70 hover:bg-brand-secondary' %>"
+                    class="toggle-btn inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold transition <%= enabled ? 'bg-brand-primary text-white' : 'bg-brand-secondary/50 text-brand-text/70 hover:bg-brand-secondary' %>"
                   >
                     <%= enabled ? "ON" : "OFF" %>
                   </button>
@@ -53,3 +59,5 @@
     </table>
   </div>
 </section>
+
+<script src="/js/adminRoles.js"></script>

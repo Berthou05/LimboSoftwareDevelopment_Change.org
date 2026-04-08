@@ -20,9 +20,12 @@ router.delete('/roles/:roleId', isAuth, isAuth.requirePermission('ADMIN-03'), ad
 // ADMIN-02: create roles.
 router.get('/roles/newRole/:name', isAuth, isAuth.requirePermission('ADMIN-02'), adminController.createRole);
 router.post('/accounts/:account_id/role',isAuth, isAuth.requirePermission('ADMIN-05'), adminController.assignRole);
-// ADMIN-04: create accounts.
-router.get('/accounts/create', isAuth, isAuth.requirePermission('ADMIN-04'), adminController.getCreateAccount);
-router.post('/accounts/create', isAuth, isAuth.requirePermission('ADMIN-04'), adminController.postCreateAccount);
+// ADMIN-06: create accounts.
+router.get('/accounts/create', isAuth, isAuth.requirePermission('ADMIN-06'), adminController.getCreateAccount);
+router.post('/accounts/create', isAuth, isAuth.requirePermission('ADMIN-06'), adminController.postCreateAccount);
+// ADMIN-04: Assign privileges to roles
+router.post('/roles/:role_id/:privilege_id/toggle', isAuth, isAuth.requirePermission('ADMIN-04'), adminController.AssignPrivilege);
+
 // TODO: Implement account deletion.
 router.delete('/accounts/:accountId', isAuth, isAuth.requirePermission('ADMIN-06'), adminController.deleteAccount);
 module.exports = router;

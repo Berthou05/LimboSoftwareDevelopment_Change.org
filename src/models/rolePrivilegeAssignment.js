@@ -10,6 +10,14 @@ module.exports = class RolePrivilege {
         this.privilege_id = privilege_id;
     }
 
+    // Create or Update role-privilege assignment
+    save() {
+        return db.execute(`
+            INSERT INTO roleprivilege(role_id, privilege_id) 
+            VALUES(?,?);`,
+            [this.role_id, this.privilege_id]);
+    }
+
 
     /*fetchAll()
     Function responsible for obtaining all available RolePrivilege tuples in 
@@ -29,7 +37,7 @@ module.exports = class RolePrivilege {
     /*fetchIdByRole(role_id)
     Function responsible for obtaining all the privilege IDs of a rol*/
 
-    async fetchIdByRole(role_id) {
+    static fetchIdByRole(role_id) {
         return db.execute(`
             SELECT RP.privilege_id
             FROM roleprivilege AS RP
@@ -37,31 +45,38 @@ module.exports = class RolePrivilege {
             [role_id])
     }
 
-
-    // Create or Update role-privilege assignment
-    save() {
-        // TODO: Implement database logic
-        // If relationship exists, update; otherwise, insert new record
+    // Read specific assignment
+    static fetchByRoleAndPrivilege(role_id, privilege_id) {
+        return db.execute(`
+            SELECT COUNT(*) AS privilege_count
+            FROM roleprivilege AS RP
+            WHERE RP.role_id=? AND RP.privilege_id=?;`,
+            [role_id, privilege_id]);
     }
+
+        // Delete assignment
+    static delete(role_id, privilege_id) {
+        return db.execute(`
+            DELETE FROM roleprivilege as RP
+            WHERE RP.role_id=? AND RP.privilege_id=?;`,
+            [role_id, privilege_id])
+    }
+
+
+
 
     // Read assignments by privilege ID
     static fetchByPrivilege(privilege_id) {
         // TODO: Implement database query to fetch all roles with a privilege
     }
 
-    // Read specific assignment
-    static fetchByRoleAndPrivilege(role_id, privilege_id) {
-        // TODO: Implement database query to fetch specific assignment
-    }
+
 
     // Update assignment
     static update(role_id, privilege_id, updateData) {
         // TODO: Implement database update logic
     }
 
-    // Delete assignment
-    static delete(role_id, privilege_id) {
-        // TODO: Implement database delete logic
-    }
+
 
 };

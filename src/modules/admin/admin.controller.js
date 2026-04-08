@@ -200,6 +200,39 @@ exports.getRoleAdmin = (request, response, next) => {
     })
 };
 
+/*AssignPrivilege
+Function responsible for returning a status response that changes or maintains the intentioned toggle*/
+exports.AssignPrivilege = (request,response,next)=>{
+    const roleId = request.params.role_id; 
+    const privilegeId = request.params.privilege_id;
+    RolePrivilege.fetchByRoleAndPrivilege(roleId, privilegeId).then(([count,fieldData])=>{
+        if(count[0].privilege_count>0){
+            RolePrivilege.delete(roleId,privilegeId).then(()=>{
+                return response.status(200).json({enabled:false});
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.status(500).json({message: 'Privilege cound not be deleted from Role'});
+            })
+        }
+        else{
+            const privilegeRole = new RolePrivilege(roleId, privilegeId);
+            privilegeRole.save().then(()=>{
+                return response.status(200).json({enabled:true});
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.status(500).json({message: 'Privilege cound not be added to Role'});
+            })
+        }
+    })
+    .catch((error)=>{
+        console.log(error);
+        return response.status(500).json({message: 'Privilege/Role invalid'});
+    })
+}
+
+
 /*deleteRole
 Function responsible for a role deletion including:
 AccountRole tuples update, RolePrivilege tuples deletion and Role deletion*/
