@@ -28,6 +28,9 @@
                                 <span class="mx-1 text-brand-text/40">|</span>
                                 Since <%= team.joinedAtLabel || 'Date unavailable' %>
                             </p>
+                            <% if (team.assignmentDescription) { %>
+                                <p class="truncate text-[10px] text-brand-text/55">Description: <%= team.assignmentDescription %></p>
+                            <% } %>
                         </div>
                     </a>
                     <form class="js-inline-submit ml-2" action="/projects/<%= project.id || project.project_id %>/teams/<%= team.id %>/remove" method="POST" data-error-message="Failed to remove team.">
@@ -53,7 +56,17 @@
                     <input type="hidden" name="teamId" class="js-picker-id" required />
                 </div>
                 <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
-                <button type="submit" class="panel-action-button mt-2 w-full">Add to Project</button>
+                <label class="mt-3 block text-sm font-semibold text-brand-text" for="projectTeamDescription">Description:</label>
+                <input
+                    id="projectTeamDescription"
+                    name="description"
+                    type="text"
+                    maxlength="50"
+                    required
+                    placeholder="Describe this team's participation..."
+                    class="mt-1 w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 text-sm outline-none ring-brand-primary/30 focus:ring"
+                />
+                <button type="submit" class="panel-action-button mt-3 w-full">Add to Project</button>
             </form>
             <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableTeams || []).map((team) => ({ id: team.id, label: team.name }))) %></script>
         </div>

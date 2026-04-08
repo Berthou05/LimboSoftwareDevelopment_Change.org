@@ -1,16 +1,17 @@
 // Collaboration Model
-// Collaboration(collaboration_id, project_id, employee_id, description, started_at, ended_at)
+// Collaboration(collaboration_id, project_id, employee_id, description, started_at, ended_at, role)
 
 const db = require('../utils/database');
 
 module.exports = class Collaboration {
-    constructor(collaboration_id, project_id, employee_id, description, started_at, ended_at) {
+    constructor(collaboration_id, project_id, employee_id, description, started_at, ended_at, role) {
         this.collaboration_id = collaboration_id;
         this.project_id = project_id;
         this.employee_id = employee_id;
         this.description = description;
         this.started_at = started_at;
         this.ended_at = ended_at;
+        this.role = role;
     }
 
     // Read active collaborations by employee (ended_at IS NULL)
@@ -32,6 +33,7 @@ module.exports = class Collaboration {
                 C.description,
                 C.started_at,
                 C.ended_at,
+                C.role,
                 E.full_name
             FROM collaboration AS C
             LEFT JOIN employee AS E
@@ -54,7 +56,12 @@ module.exports = class Collaboration {
         );
     }
 
-    static joinProject(project_id, employee_id, description = 'Joined from project detail page.') {
+    static joinProject(
+        project_id,
+        employee_id,
+        description = 'Joined from project detail page.',
+        role = 'EMPLOYEE',
+    ) {
         return db.execute(
             `INSERT INTO collaboration (
                 collaboration_id,
@@ -62,9 +69,10 @@ module.exports = class Collaboration {
                 employee_id,
                 description,
                 started_at,
-                ended_at
-            ) VALUES (UUID(), ?, ?, ?, NOW(), NULL)`,
-            [project_id, employee_id, description],
+                ended_at,
+                role
+            ) VALUES (UUID(), ?, ?, ?, NOW(), NULL, ?)`,
+            [project_id, employee_id, description, role],
         );
     }
 
@@ -92,8 +100,8 @@ module.exports = class Collaboration {
         } else {
             // Insert new
             return db.execute(
-                'INSERT INTO collaboration (project_id, employee_id, description, started_at, ended_at) VALUES (?, ?, ?, ?, ?)',
-                [this.project_id, this.employee_id, this.description, this.started_at, this.ended_at]
+                'INSERT INTO collaboration (project_id, employee_id, description, started_at, ended_at, role) VALUES (?, ?, ?, ?, ?, ?)',
+                [this.project_id, this.employee_id, this.description, this.started_at, this.ended_at, this.role || 'EMPLOYEE']
             );
         }
     }

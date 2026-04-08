@@ -24,8 +24,9 @@ router.post('/:project_id/goals/:goal_id/remove', isAuth, projectController.dele
 router.post('/:project_id/highlights', isAuth, projectController.createHighlight);
 router.post('/:project_id/highlights/:highlight_id/edit', isAuth, projectController.updateHighlight);
 router.post('/:project_id/highlights/:highlight_id/remove', isAuth, projectController.deleteHighlight);
-router.post('/:project_id/members', isAuth, projectController.addProjectMember);
-router.post('/:project_id/members/:employee_id/remove', isAuth, projectController.removeProjectMember);
+router.post('/:project_id/members', isAuth, isAuth.requirePermission('PROJ-05-02'), projectController.addProjectMember);
+router.post('/:project_id/members/:employee_id/role', isAuth, isAuth.requirePermission('PROJ-06-02'), projectController.updateProjectMemberRole);
+router.post('/:project_id/members/:employee_id/remove', isAuth, isAuth.requirePermission('PROJ-06-02'), projectController.removeProjectMember);
 router.post('/:project_id/teams', isAuth, projectController.addProjectTeam);
 router.post('/:project_id/teams/:team_id/remove', isAuth, projectController.removeProjectTeam);
 router.post('/:project_id/join', isAuth, projectController.joinProject);
