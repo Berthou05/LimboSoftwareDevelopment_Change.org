@@ -26,17 +26,22 @@ module.exports = class RolePrivilege {
         return db.execute('DELETE FROM roleprivilege WHERE role_id=?',[delete_role_id]);
     }
 
+    /*fetchIdByRole(role_id)
+    Function responsible for obtaining all the privilege IDs of a rol*/
+
+    async fetchIdByRole(role_id) {
+        return db.execute(`
+            SELECT RP.privilege_id
+            FROM roleprivilege AS RP
+            WHERE RP.role_id=?;`,
+            [role_id])
+    }
 
 
     // Create or Update role-privilege assignment
     save() {
         // TODO: Implement database logic
         // If relationship exists, update; otherwise, insert new record
-    }
-
-    // Read assignments by role ID
-    static fetchByRole(role_id) {
-        // TODO: Implement database query to fetch all privileges for a role
     }
 
     // Read assignments by privilege ID

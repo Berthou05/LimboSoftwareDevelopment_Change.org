@@ -16,11 +16,14 @@ module.exports = class Role {
         return db.execute('INSERT INTO role(role_id, name) VALUES(UUID(),?)',[this.name]);
     }
 
-    /*fetchAll()
-    Function responsible for obtaining all available Roles in the table*/
+    /*fetchAllWithPrivileges()
+    Function responsible for obtaining all available Roles in the table and their privileges*/
 
-    static fetchAll() {
-        return db.execute('SELECT * FROM role');
+    static fetchAllWithPrivileges() {
+        return db.execute(`
+            SELECT R.role_id, R.name, RP.privilege_id
+            FROM role AS R
+            JOIN roleprivilege AS RP ON RP.role_id=R.role_id;`);
     }
 
     /*deleteByRoleId(delete_role_id)
@@ -31,7 +34,9 @@ module.exports = class Role {
     }
 
 
-
+    static fetchAll(){
+        return db.execute('SELECT * FROM role');
+    }
     
 
     // Read role by ID

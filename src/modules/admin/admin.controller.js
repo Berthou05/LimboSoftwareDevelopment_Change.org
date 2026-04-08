@@ -156,29 +156,47 @@ exports.assignStatus = (request,response,next)=>{
 Function responsible for the page render of the Role Administration page*/
 
 exports.getRoleAdmin = (request, response, next) => {
-    Role.fetchAll().then(([roles,fieldData])=>{
-        RolePrivilege.fetchAll().then(([role_privileges, fieldData])=>{
-            Privilege.fetchAll().then(([privileges, fieldData])=>{
-                return response.render('pages/admin-roles',{
-                    csrfToken: request.csrfToken(),
-                    roles: roles, 
-                    role_privileges:role_privileges,
-                    privileges:privileges,
-                });
-            })
-            .catch((error)=>{
-                console.log(error);
-                return response.redirect('/admin/roles');
-            })
+    Role.fetchAllWithPrivileges().then(([rolesInfo,fieldData])=>{
+        Privilege.fetchAll().then(([privileges, fieldData])=>{
+
+            const rolesMap = {};
+
+            rolesInfo.forEach(row => {
+                if (!rolesMap[row.role_id]) {
+                    rolesMap[row.role_id] = {
+                        id: row.role_id,
+                        name: row.name,
+                        privilegeCodes: []
+                    };
+                }
+
+                rolesMap[row.role_id].privilegeCodes.push(row.privilege_id);
+            });
+
+            const roles = Object.values(rolesMap);
+
+            const privilegesCatalog = privileges.map((privilege)=>({
+                code:privilege.privilege_id || 'Unknown id',
+                name: privilege.name || 'Unknown name',
+                description: privilege.description || ''
+            }))
+
+            return response.render('pages/admin-roles',{
+                pageTitle: 'Roles Administration',
+                pageSubtitle: 'Page responsible for the role and privilege administration',
+                csrfToken: request.csrfToken(),
+                roles: roles, 
+                privilegesCatalog:privilegesCatalog,
+            });
         })
         .catch((error)=>{
             console.log(error);
-            return response.redirect('/admin/roles');
+            return response.redirect('/home');
         })
     })
     .catch((error)=>{
         console.log(error);
-        return response.redirect('/admin/roles');
+        return response.redirect('/home');
     })
 };
 
