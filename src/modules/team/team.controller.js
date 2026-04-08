@@ -18,6 +18,10 @@ const TEAM_CREATE_PAGE_SUBTITLE = 'Register a new team and assign yourself as th
 const TEAM_CREATE_DUPLICATE_MESSAGE = 'A team with that name already exists.';
 const TEAM_CREATE_GENERIC_ERROR_MESSAGE = 'The team could not be created right now.';
 const TEAM_ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpg', 'image/jpeg'];
+const TEAM_MEMBER_ROLES = [
+    EmployeeTeamMembership.EmployeeRole.LEAD,
+    EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+];
 
 
 //--------------------------- Auxiliar Functions ---------------------------
@@ -45,6 +49,16 @@ const normalizeTeam = function normalizeTeam(team) {
         image: team.image || buildAvatarUrl(team.name),
         isMember: Boolean(team.isMember ?? team.is_member),
     };
+};
+
+const resolveTeamMemberRole = function resolveTeamMemberRole(rawRole) {
+    const normalizedRole = String(rawRole || '').trim().toUpperCase();
+
+    if (!TEAM_MEMBER_ROLES.includes(normalizedRole)) {
+        return null;
+    }
+
+    return normalizedRole;
 };
 
 /*formatDayLabel(value)
@@ -389,6 +403,9 @@ projects: projects,
 */
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
+    const privilegeMap = request.session?.user?.privilege || {};
+    const canAddTeamMembers = Boolean(privilegeMap['TEAM-06-02']);
+    const canManageTeamMembers = Boolean(privilegeMap['TEAM-07-02']);
     const activityFilter = resolveActivityFilter(request.query);
     const activityPromise = activityFilter.error
         ? Promise.resolve({
@@ -530,6 +547,8 @@ exports.getTeamPage = (request, response, next) => {
                 activityFilter,
                 activityError: activityFilter.error || activityError || '',
                 availableEmployees,
+                canAddTeamMembers,
+                canManageTeamMembers,
             });
         })
         .catch((error) => {
@@ -615,6 +634,7 @@ by creating a relationship between EmployeeTeam*/
 exports.addTeamMember = (request, response, next) => {
     const teamId = request.params.team_id;
     const employeeId = String(request.body.employeeId || '').trim();
+    const role = resolveTeamMemberRole(request.body.role);
 
     if (!employeeId) {
         return respondMembershipRequest(request, response, teamId, 400, {
@@ -622,11 +642,17 @@ exports.addTeamMember = (request, response, next) => {
         });
     }
 
+    if (!role) {
+        return respondMembershipRequest(request, response, teamId, 400, {
+            error: 'Select a valid team role for the member.',
+        });
+    }
+
     EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId).then(([memberships]) => {
         const membership = memberships[0];
 
         if (!membership) {
-            return EmployeeTeamMembership.join(employeeId, teamId).then(() => {
+            return EmployeeTeamMembership.join(employeeId, teamId, new Date(), role).then(() => {
                 return respondMembershipRequest(request, response, teamId, 200, {
                     success: true,
                     successMessage: 'Member added to the team.',
@@ -638,7 +664,7 @@ exports.addTeamMember = (request, response, next) => {
             return EmployeeTeamMembership.update(employeeId, teamId, {
                 joined_at: new Date(),
                 left_at: null,
-                role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                role,
             }).then(() => {
                 return respondMembershipRequest(request, response, teamId, 200, {
                     success: true,
@@ -657,6 +683,75 @@ exports.addTeamMember = (request, response, next) => {
             error: `Error adding a member to team ${teamId}.`,
         });
     });
+};
+
+/*updateTeamMemberRole
+Function responsible for updating the role of an active team member.*/
+
+exports.updateTeamMemberRole = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.params.employee_id;
+    const role = resolveTeamMemberRole(request.body.role);
+
+    if (!role) {
+        return respondMembershipRequest(request, response, teamId, 400, {
+            error: 'Select a valid role (LEAD or EMPLOYEE).',
+        });
+    }
+
+    return Promise.all([
+        Team.findById(teamId),
+        EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId),
+    ])
+        .then(([[teamRows], [memberships]]) => {
+            const teamRow = teamRows[0];
+            const membership = memberships[0];
+
+            if (!teamRow) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: `Team ${teamId} was not found.`,
+                });
+            }
+
+            if (!membership || membership.left_at) {
+                return respondMembershipRequest(request, response, teamId, 404, {
+                    error: 'Only active team members can have their role updated.',
+                });
+            }
+
+            if (
+                teamRow.employee_responsible_id === employeeId
+                && role !== EmployeeTeamMembership.EmployeeRole.LEAD
+            ) {
+                return respondMembershipRequest(request, response, teamId, 400, {
+                    error: 'The responsible team lead must keep LEAD role.',
+                });
+            }
+
+            if ((membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE) === role) {
+                return respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                    warningMessage: 'That member already has the selected role.',
+                });
+            }
+
+            return EmployeeTeamMembership.update(employeeId, teamId, {
+                joined_at: membership.joined_at,
+                left_at: membership.left_at,
+                role,
+            }).then(() => {
+                return respondMembershipRequest(request, response, teamId, 200, {
+                    success: true,
+                    successMessage: 'Team member role updated successfully.',
+                });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, teamId, 500, {
+                error: `Error updating role for team ${teamId}.`,
+            });
+        });
 };
 
 /*removeTeamMember
@@ -691,6 +786,12 @@ exports.removeTeamMember = (request, response, next) => {
         if (employeeId === request.session.employeeId) {
             return respondMembershipRequest(request, response, teamId, 400, {
                 error: 'Use the Leave Team action to remove yourself.',
+            });
+        }
+
+        if (!membership || membership.left_at) {
+            return respondMembershipRequest(request, response, teamId, 404, {
+                error: 'That employee is not an active member of this team.',
             });
         }
 
