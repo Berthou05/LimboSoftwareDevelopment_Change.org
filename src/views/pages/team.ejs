@@ -36,7 +36,9 @@
       team,
       csrfToken,
       currentEmployeeId: typeof currentEmployeeId !== 'undefined' ? currentEmployeeId : null,
-      availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : []
+      availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : [],
+      canAddTeamMembers: typeof canAddTeamMembers !== 'undefined' ? canAddTeamMembers : false,
+      canManageTeamMembers: typeof canManageTeamMembers !== 'undefined' ? canManageTeamMembers : false
     }) %>
     
     <%- include('../partials/teamDirectory/teamActivity', {

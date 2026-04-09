@@ -40,11 +40,19 @@ const formatDateLabel = function formatDateLabel(value, fallback = '') {
 Function responsible for the page render of the Account Administration page*/
 
 exports.getAccounts = (request, response, next) => {
-    const roleFilter   = request.query.role   || 'all';
-    const statusFilter = request.query.status || 'all';
+    const requestedRoleFilter = String(request.query.role || 'all').trim().toLowerCase();
+    const requestedStatusFilter = String(request.query.status || 'all').trim().toLowerCase();
+    const roleFilter = ['all', 'employee', 'lead'].includes(requestedRoleFilter)
+        ? requestedRoleFilter
+        : 'all';
+    const statusFilter = ['all', 'active', 'disabled'].includes(requestedStatusFilter)
+        ? requestedStatusFilter
+        : 'all';
+    const roleFilterForQuery = roleFilter === 'all' ? 'all' : roleFilter.toUpperCase();
+    const statusFilterForQuery = statusFilter === 'all' ? 'all' : statusFilter.toUpperCase();
 
     Promise.all([
-        Account.fetchAll(roleFilter,statusFilter),
+        Account.fetchAll(roleFilterForQuery, statusFilterForQuery),
         Account.countAll(),
         Role.fetchAll()
     ]).then(([
@@ -72,8 +80,8 @@ exports.getAccounts = (request, response, next) => {
                 id: role.role_id,
                 name: role.name
             })),
-            statusFilter:'all',
-            roleFilter:'all'
+            statusFilter,
+            roleFilter
         });
 
     }).catch((error) => {

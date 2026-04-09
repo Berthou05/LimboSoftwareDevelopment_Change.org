@@ -23,6 +23,32 @@ const PROJECT_CREATE_DUPLICATE_MESSAGE = 'A project with that name already exist
 const PROJECT_CREATE_GENERIC_ERROR_MESSAGE = 'The project could not be created right now.';
 const PROJECT_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
 const GOAL_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
+const PROJECT_MEMBER_ROLES = ['EMPLOYEE', 'LEAD'];
+const PROJECT_TEAM_DESCRIPTION_MAX_LENGTH = 50;
+
+const resolveProjectMemberRole = function resolveProjectMemberRole(rawRole) {
+    const normalizedRole = String(rawRole || '').trim().toUpperCase();
+
+    if (!PROJECT_MEMBER_ROLES.includes(normalizedRole)) {
+        return null;
+    }
+
+    return normalizedRole;
+};
+
+const resolveProjectTeamDescription = function resolveProjectTeamDescription(rawDescription) {
+    const normalizedDescription = String(rawDescription || '').trim();
+
+    if (!normalizedDescription) {
+        return null;
+    }
+
+    if (normalizedDescription.length > PROJECT_TEAM_DESCRIPTION_MAX_LENGTH) {
+        return null;
+    }
+
+    return normalizedDescription;
+};
 
 const formatDateLabel = function formatDateLabel(value, fallback = '') {
     if (!value) {
@@ -412,6 +438,9 @@ Function responsible for rendering the detailed view of a specific project.*/
 exports.getProjectPage = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
+    const privilegeMap = request.session?.user?.privilege || {};
+    const canAddProjectMembers = Boolean(privilegeMap['PROJ-05-02']);
+    const canManageProjectMembers = Boolean(privilegeMap['PROJ-06-02']);
     const activityFilter = resolveActivityFilter(request.query);
     const activityPromise = activityFilter.error
         ? Promise.resolve({
@@ -597,13 +626,14 @@ exports.getProjectPage = (request, response, next) => {
                     description: team.description || 'No team description available.',
                     image: team.image || null,
                     status: team.status || 'Unknown',
-                    role: team.team_role || 'CONTRIBUTOR',
+                    assignmentDescription: team.team_role || '',
                     memberCount: Number(team.member_count || 0),
                     joinedAtLabel: formatDateLabel(team.joined_at, 'Date unavailable'),
                 })),
                 membersDetailed: memberRows.map((member) => ({
                     id: member.employee_id || null,
                     fullName: member.full_name || 'Unknown',
+                    role: member.role || 'EMPLOYEE',
                     description: member.description || 'Active collaborator',
                     startedAtLabel: formatDateLabel(member.started_at, 'Date unavailable'),
                 })),
@@ -647,6 +677,8 @@ exports.getProjectPage = (request, response, next) => {
             currentEmployeeId: employeeId,
             availableEmployees,
             availableTeams,
+            canAddProjectMembers,
+            canManageProjectMembers,
         });
     }).catch((error) => {
         console.log(error);
@@ -657,10 +689,17 @@ exports.getProjectPage = (request, response, next) => {
 exports.addProjectMember = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = String(request.body.employeeId || '').trim();
+    const role = resolveProjectMemberRole(request.body.role);
 
     if (!employeeId) {
         return respondMembershipRequest(request, response, projectId, 400, {
             error: 'Select a valid employee to add to the project.',
+        });
+    }
+
+    if (!role) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: 'Select a valid project role for the member.',
         });
     }
 
@@ -701,10 +740,11 @@ exports.addProjectMember = (request, response, next) => {
                                     description: existingCollaboration.description || 'Added from project detail page.',
                                     started_at: new Date(),
                                     ended_at: null,
+                                    role,
                                 });
                             }
 
-                            return Collaboration.joinProject(projectId, employeeId, 'Added from project detail page.');
+                            return Collaboration.joinProject(projectId, employeeId, 'Added from project detail page.', role);
                         })
                         .then(() => respondMembershipRequest(request, response, projectId, 200, {
                             success: true,
@@ -716,6 +756,66 @@ exports.addProjectMember = (request, response, next) => {
             console.log(error);
             return respondMembershipRequest(request, response, projectId, 500, {
                 error: `Error adding a member to project ${projectId}.`,
+            });
+        });
+};
+
+exports.updateProjectMemberRole = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const employeeId = request.params.employee_id;
+    const role = resolveProjectMemberRole(request.body.role);
+
+    if (!role) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: 'Select a valid role (LEAD or EMPLOYEE).',
+        });
+    }
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            if (project.employee_responsible_id === employeeId && role !== 'LEAD') {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'The responsible project lead must keep LEAD role.',
+                });
+            }
+
+            return Collaboration.findActiveByProjectAndEmployee(projectId, employeeId)
+                .then(([memberships]) => {
+                    const membership = memberships[0];
+
+                    if (!membership) {
+                        return respondMembershipRequest(request, response, projectId, 404, {
+                            error: 'Only active project members can have their role updated.',
+                        });
+                    }
+
+                    if ((membership.role || 'EMPLOYEE') === role) {
+                        return respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            warningMessage: 'That member already has the selected role.',
+                        });
+                    }
+
+                    return Collaboration.update(membership.collaboration_id, {
+                        role,
+                    }).then(() => respondMembershipRequest(request, response, projectId, 200, {
+                        success: true,
+                        successMessage: 'Project member role updated successfully.',
+                    }));
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error updating member role in project ${projectId}.`,
             });
         });
 };
@@ -772,10 +872,17 @@ exports.removeProjectMember = (request, response, next) => {
 exports.addProjectTeam = (request, response, next) => {
     const projectId = request.params.project_id;
     const teamId = String(request.body.teamId || '').trim();
+    const teamDescription = resolveProjectTeamDescription(request.body.description);
 
     if (!teamId) {
         return respondMembershipRequest(request, response, projectId, 400, {
             error: 'Select a valid team to add to the project.',
+        });
+    }
+
+    if (!teamDescription) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: `Add a team description of up to ${PROJECT_TEAM_DESCRIPTION_MAX_LENGTH} characters.`,
         });
     }
 
@@ -810,7 +917,7 @@ exports.addProjectTeam = (request, response, next) => {
                         const projectTeam = new ProjectTeam(
                             teamId,
                             projectId,
-                            'CONTRIBUTOR',
+                            teamDescription,
                             new Date(),
                         );
 

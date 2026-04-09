@@ -10,7 +10,7 @@
   <div class="flex flex-wrap items-center justify-between gap-3">
     <a
       href="/admin/accounts/create"
-      class="rounded-xl border border-brand-primary px-5 py-2 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white"
+      class="rounded-xl border-2 border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:border-brand-accent hover:bg-brand-accent"
     >
       Create Account
     </a>
@@ -19,31 +19,40 @@
     <div class="flex flex-wrap gap-2 text-xs font-semibold">
       <a
         href="/admin/accounts?role=employee&status=<%= statusFilter %>"
-        class="rounded-full border px-3 py-1 transition <%= roleFilter === 'employee' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/20' %>"
+        data-filter-group="role"
+        data-filter-value="employee"
+        class="app-breadcrumb <%= roleFilter === 'employee' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>"
       >
         Employee
       </a>
       <a
         href="/admin/accounts?role=lead&status=<%= statusFilter %>"
-        class="rounded-full border px-3 py-1 transition <%= roleFilter === 'lead' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/20' %>"
+        data-filter-group="role"
+        data-filter-value="lead"
+        class="app-breadcrumb <%= roleFilter === 'lead' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>"
       >
         Lead
       </a>
       <a
         href="/admin/accounts?role=<%= roleFilter %>&status=active"
-        class="rounded-full border px-3 py-1 transition <%= statusFilter === 'active' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/20' %>"
+        data-filter-group="status"
+        data-filter-value="active"
+        class="app-breadcrumb <%= statusFilter === 'active' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>"
       >
         Active
       </a>
       <a
         href="/admin/accounts?role=<%= roleFilter %>&status=disabled"
-        class="rounded-full border px-3 py-1 transition <%= statusFilter === 'disabled' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/20' %>"
+        data-filter-group="status"
+        data-filter-value="disabled"
+        class="app-breadcrumb <%= statusFilter === 'disabled' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>"
       >
         Disabled
       </a>
       <a
         href="/admin/accounts?role=all&status=all"
-        class="rounded-full border px-3 py-1 transition <%= roleFilter === 'all' && statusFilter === 'all' ? 'border-brand-primary bg-brand-primary text-white' : 'border-brand-secondary text-brand-text/80 hover:bg-brand-secondary/20' %>"
+        data-filter-group="all"
+        class="app-breadcrumb <%= roleFilter === 'all' && statusFilter === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>"
       >
         All
       </a>
@@ -59,8 +68,7 @@
     </div>
 
     <div class="space-y-2 overflow-x-auto">
-      <div class="grid min-w-[980px] grid-cols-[1fr_1.7fr_1.7fr_1.3fr_0.9fr_0.9fr_0.9fr] gap-2 rounded-xl border border-brand-secondary bg-brand-bg px-3 py-2 text-xs font-bold uppercase tracking-wide text-brand-text/65">
-        <p>Account ID</p>
+      <div class="grid min-w-[860px] grid-cols-[1.7fr_1.7fr_1.3fr_0.9fr_0.9fr_0.9fr] gap-2 rounded-xl border border-brand-secondary bg-brand-bg px-3 py-2 text-xs font-bold uppercase tracking-wide text-brand-text/65">
         <p>Full Name</p>
         <p>Email</p>
         <p>Slack Username</p>
@@ -76,8 +84,7 @@
       <% } %>
 
       <% accounts.forEach((account) => { %>
-        <div class="grid min-w-[980px] grid-cols-[1fr_1.7fr_1.7fr_1.3fr_0.9fr_0.9fr_0.9fr] items-center gap-2 rounded-xl border border-brand-secondary px-3 py-2 text-sm">
-          <p class="font-semibold text-brand-text/80"><%= String(account.id || "").toUpperCase() %></p>
+        <div class="grid min-w-[860px] grid-cols-[1.7fr_1.7fr_1.3fr_0.9fr_0.9fr_0.9fr] items-center gap-2 rounded-xl border border-brand-secondary px-3 py-2 text-sm">
           <p class="font-medium"><%= account.employee?.fullName || "Unknown" %></p>
           <p class="truncate text-brand-text/80"><%= account.email %></p>
           <p class="font-medium text-brand-text/80"><%= account.slackUsername %></p>
@@ -122,4 +129,28 @@
   </section>
 </div>
 
+<script>
+  (function syncAccountFilterBreadcrumbs() {
+    const params = new URLSearchParams(window.location.search);
+    const role = String(params.get('role') || 'all').trim().toLowerCase();
+    const status = String(params.get('status') || 'all').trim().toLowerCase();
+
+    const setState = (element, active) => {
+      element.classList.toggle('app-breadcrumb--active', active);
+      element.classList.toggle('app-breadcrumb--interactive', !active);
+    };
+
+    document.querySelectorAll('[data-filter-group="role"]').forEach((element) => {
+      setState(element, element.getAttribute('data-filter-value') === role);
+    });
+
+    document.querySelectorAll('[data-filter-group="status"]').forEach((element) => {
+      setState(element, element.getAttribute('data-filter-value') === status);
+    });
+
+    document.querySelectorAll('[data-filter-group="all"]').forEach((element) => {
+      setState(element, role === 'all' && status === 'all');
+    });
+  })();
+</script>
 <script src="/js/adminAccounts.js"></script>

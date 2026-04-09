@@ -691,8 +691,8 @@
   .min-w-52 {
     min-width: calc(var(--spacing) * 52);
   }
-  .min-w-\[980px\] {
-    min-width: 980px;
+  .min-w-\[860px\] {
+    min-width: 860px;
   }
   .min-w-full {
     min-width: 100%;
@@ -721,8 +721,8 @@
   .grid-cols-7 {
     grid-template-columns: repeat(7, minmax(0, 1fr));
   }
-  .grid-cols-\[1fr_1\.7fr_1\.7fr_1\.3fr_0\.9fr_0\.9fr_0\.9fr\] {
-    grid-template-columns: 1fr 1.7fr 1.7fr 1.3fr 0.9fr 0.9fr 0.9fr;
+  .grid-cols-\[1\.7fr_1\.7fr_1\.3fr_0\.9fr_0\.9fr_0\.9fr\] {
+    grid-template-columns: 1.7fr 1.7fr 1.3fr 0.9fr 0.9fr 0.9fr;
   }
   .flex-col {
     flex-direction: column;
@@ -1233,6 +1233,12 @@
       color: color-mix(in oklab, var(--color-brand-text) 50%, transparent);
     }
   }
+  .text-brand-text\/55 {
+    color: color-mix(in srgb, #403A49 55%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-brand-text) 55%, transparent);
+    }
+  }
   .text-brand-text\/60 {
     color: color-mix(in srgb, #403A49 60%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -1524,13 +1530,6 @@
         @supports (color: color-mix(in lab, red, red)) {
           background-color: color-mix(in oklab, var(--color-brand-secondary) 30%, transparent);
         }
-      }
-    }
-  }
-  .hover\:bg-red-50 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-red-50);
       }
     }
   }

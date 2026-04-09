@@ -1,13 +1,23 @@
 <%# Team Participants - Sidebar %>
+<%
+    const canAddMembers = Boolean(canAddTeamMembers);
+    const canManageMembers = Boolean(canManageTeamMembers);
+    const teamLeadId = team?.lead?.id || null;
+%>
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
     <div class="js-inline-picker">
         <div class="flex items-center justify-between mb-3">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Team Participants</h2>
-            <button type="button" class="js-picker-toggle panel-action-button panel-action-button--small">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                Add
-            </button>
+            <% if (canAddMembers) { %>
+                <button type="button" class="js-picker-toggle panel-action-button panel-action-button--small">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    Add
+                </button>
+            <% } %>
         </div>
+        <% if (!canAddMembers && !canManageMembers) { %>
+            <p class="mb-3 text-xs text-brand-text/60">Only Leads and Admin can add, remove, or edit member roles.</p>
+        <% } %>
         <div class="mt-3 max-h-48 overflow-y-auto space-y-2 mb-4">
             <% const membersDetailed = team.membersDetailed || []; %>
             <% if (!membersDetailed.length) { %>
@@ -32,33 +42,83 @@
                             <p class="text-[10px] text-brand-text/50 truncate"><%= member.role %></p>
                         </div>
                     </a>
-                    <% if (member.employee?.id !== currentEmployeeId && member.role !== 'LEAD') { %>
-                        <form class="js-inline-submit remove-member-form ml-2" action="/teams/<%= team.id %>/members/<%= member.employee?.id %>/remove" method="POST" data-error-message="Failed to remove member.">
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from team">
-                                Remove
+                    <div class="ml-2 flex items-center gap-2">
+                        <% if (canManageMembers && member.employee?.id !== teamLeadId) { %>
+                            <% const editPopupId = `team-role-${team.id}-${member.employee?.id}`; %>
+                            <button
+                                type="button"
+                                data-popup-open="<%= editPopupId %>"
+                                class="rounded border border-brand-secondary px-2 py-1 text-xs text-brand-text/80 opacity-0 transition group-hover:opacity-100 hover:bg-brand-secondary/20"
+                                title="Edit team role"
+                            >
+                                Edit
                             </button>
-                        </form>
-                    <% } %>
+                        <% } %>
+                        <% if (canManageMembers && member.employee?.id !== currentEmployeeId && member.employee?.id !== teamLeadId) { %>
+                            <form class="js-inline-submit remove-member-form" action="/teams/<%= team.id %>/members/<%= member.employee?.id %>/remove" method="POST" data-error-message="Failed to remove member.">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from team">
+                                    Remove
+                                </button>
+                            </form>
+                        <% } %>
+                    </div>
                 </div>
+                <% if (canManageMembers && member.employee?.id !== teamLeadId) { %>
+                    <% const editPopupId = `team-role-${team.id}-${member.employee?.id}`; %>
+                    <%- include('../shared/actionPopup', {
+                        popupId: editPopupId,
+                        popupTitle: `Edit Role: ${member.employee?.fullName || 'Member'}`,
+                        popupDescription: 'Choose the team role for this member.',
+                        popupAction: `/teams/${team.id}/members/${member.employee?.id}/role`,
+                        popupMethod: 'POST',
+                        popupSubmitLabel: 'Save Role',
+                        popupErrorMessage: 'Failed to update member role.',
+                        csrfToken,
+                        popupFields: [
+                            {
+                                name: 'role',
+                                label: 'Role',
+                                type: 'select',
+                                value: member.role === 'LEAD' ? 'LEAD' : 'EMPLOYEE',
+                                options: [
+                                    { value: 'EMPLOYEE', label: 'EMPLOYEE' },
+                                    { value: 'LEAD', label: 'LEAD' },
+                                ],
+                            },
+                        ],
+                    }) %>
+                <% } %>
             <% }) %>
         </div>
-        <div class="js-picker-panel hidden mt-2">
-            <form class="js-picker-form relative" action="/teams/<%= team.id %>/members" method="POST" autocomplete="off" data-error-message="Failed to add member.">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <label class="block mb-2 text-sm font-semibold text-brand-text">Add member to team:</label>
-                <div class="flex items-center rounded-xl border border-brand-secondary bg-white px-3">
-                    <svg class="h-4 w-4 shrink-0 text-brand-text/50" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"></circle>
-                        <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-                    </svg>
-                    <input name="addMemberSearch" type="search" placeholder="Search for an employee..." class="js-picker-search w-full border-none bg-transparent px-3 py-2 text-sm outline-none" autocomplete="off" data-validation-message="Select a specific employee from the suggestions." />
-                    <input type="hidden" name="employeeId" class="js-picker-id" required />
-                </div>
-                <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
-                <button type="submit" class="panel-action-button mt-2 w-full">Add to Team</button>
-            </form>
-            <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableEmployees || []).map((emp) => ({ id: emp.id, label: emp.fullName }))) %></script>
-        </div>
+        <% if (canAddMembers) { %>
+            <div class="js-picker-panel hidden mt-2">
+                <form class="js-picker-form relative" action="/teams/<%= team.id %>/members" method="POST" autocomplete="off" data-error-message="Failed to add member.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <label class="block mb-2 text-sm font-semibold text-brand-text">Add member to team:</label>
+                    <div class="flex items-center rounded-xl border border-brand-secondary bg-white px-3">
+                        <svg class="h-4 w-4 shrink-0 text-brand-text/50" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"></circle>
+                            <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                        </svg>
+                        <input name="addMemberSearch" type="search" placeholder="Search for an employee..." class="js-picker-search w-full border-none bg-transparent px-3 py-2 text-sm outline-none" autocomplete="off" data-validation-message="Select a specific employee from the suggestions." />
+                        <input type="hidden" name="employeeId" class="js-picker-id" required />
+                    </div>
+                    <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
+                    <label class="mt-3 block text-sm font-semibold text-brand-text" for="teamMemberRole">Role:</label>
+                    <select
+                        id="teamMemberRole"
+                        name="role"
+                        required
+                        class="mt-1 w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 text-sm outline-none ring-brand-primary/30 focus:ring"
+                    >
+                        <option value="EMPLOYEE" selected>EMPLOYEE</option>
+                        <option value="LEAD">LEAD</option>
+                    </select>
+                    <button type="submit" class="panel-action-button mt-3 w-full">Add to Team</button>
+                </form>
+                <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableEmployees || []).map((emp) => ({ id: emp.id, label: emp.fullName }))) %></script>
+            </div>
+        <% } %>
     </div>
 </article>

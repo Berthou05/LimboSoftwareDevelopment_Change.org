@@ -1,14 +1,24 @@
+<%
+    const canAddMembers = Boolean(canAddProjectMembers);
+    const canManageMembers = Boolean(canManageProjectMembers);
+    const projectLeadId = project?.employee_responsible_id || null;
+%>
 <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
     <div class="js-inline-picker">
         <div class="mb-3 flex items-center justify-between gap-3">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Project Members</h2>
-            <button type="button" class="js-picker-toggle panel-action-button panel-action-button--small">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Add
-            </button>
+            <% if (canAddMembers) { %>
+                <button type="button" class="js-picker-toggle panel-action-button panel-action-button--small">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add
+                </button>
+            <% } %>
         </div>
+        <% if (!canAddMembers && !canManageMembers) { %>
+            <p class="mb-3 text-xs text-brand-text/60">Only Leads and Admin can add, remove, or edit member roles.</p>
+        <% } %>
         <div class="mb-4 mt-3 max-h-48 space-y-2 overflow-y-auto">
             <% const membersDetailed = project?.membersDetailed || []; %>
             <% if (!membersDetailed.length) { %>
@@ -22,36 +32,86 @@
                         </div>
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-xs font-semibold text-brand-text"><%= member.fullName || 'Unknown' %></p>
-                            <p class="truncate text-[10px] text-brand-text/50"><%= member.description || 'Collaborator' %></p>
+                            <p class="truncate text-[10px] text-brand-text/50"><%= member.role || 'EMPLOYEE' %></p>
                         </div>
                     </a>
-                    <% if (member.id !== currentEmployeeId) { %>
-                        <form class="js-inline-submit remove-member-form ml-2" action="/projects/<%= project.id || project.project_id %>/members/<%= member.id %>/remove" method="POST" data-error-message="Failed to remove member.">
-                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                            <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from project">
-                                Remove
+                    <div class="ml-2 flex items-center gap-2">
+                        <% if (canManageMembers && member.id !== projectLeadId) { %>
+                            <% const editPopupId = `project-role-${project.id || project.project_id}-${member.id}`; %>
+                            <button
+                                type="button"
+                                data-popup-open="<%= editPopupId %>"
+                                class="rounded border border-brand-secondary px-2 py-1 text-xs text-brand-text/80 opacity-0 transition group-hover:opacity-100 hover:bg-brand-secondary/20"
+                                title="Edit project role"
+                            >
+                                Edit
                             </button>
-                        </form>
-                    <% } %>
+                        <% } %>
+                        <% if (canManageMembers && member.id !== projectLeadId) { %>
+                            <form class="js-inline-submit remove-member-form" action="/projects/<%= project.id || project.project_id %>/members/<%= member.id %>/remove" method="POST" data-error-message="Failed to remove member.">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from project">
+                                    Remove
+                                </button>
+                            </form>
+                        <% } %>
+                    </div>
                 </div>
+                <% if (canManageMembers && member.id !== projectLeadId) { %>
+                    <% const editPopupId = `project-role-${project.id || project.project_id}-${member.id}`; %>
+                    <%- include('../shared/actionPopup', {
+                        popupId: editPopupId,
+                        popupTitle: `Edit Role: ${member.fullName || 'Member'}`,
+                        popupDescription: 'Choose the project role for this member.',
+                        popupAction: `/projects/${project.id || project.project_id}/members/${member.id}/role`,
+                        popupMethod: 'POST',
+                        popupSubmitLabel: 'Save Role',
+                        popupErrorMessage: 'Failed to update member role.',
+                        csrfToken,
+                        popupFields: [
+                            {
+                                name: 'role',
+                                label: 'Role',
+                                type: 'select',
+                                value: member.role === 'LEAD' ? 'LEAD' : 'EMPLOYEE',
+                                options: [
+                                    { value: 'EMPLOYEE', label: 'EMPLOYEE' },
+                                    { value: 'LEAD', label: 'LEAD' },
+                                ],
+                            },
+                        ],
+                    }) %>
+                <% } %>
             <% }) %>
         </div>
-        <div class="js-picker-panel hidden mt-2">
-            <form class="js-picker-form relative" action="/projects/<%= project.id || project.project_id %>/members" method="POST" autocomplete="off" data-error-message="Failed to add member.">
-                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                <label class="mb-2 block text-sm font-semibold text-brand-text">Add member to project:</label>
-                <div class="flex items-center rounded-xl border border-brand-secondary bg-white px-3">
-                    <svg class="h-4 w-4 shrink-0 text-brand-text/50" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"></circle>
-                        <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
-                    </svg>
-                    <input name="addMemberSearch" type="search" placeholder="Search for an employee..." class="js-picker-search w-full border-none bg-transparent px-3 py-2 text-sm outline-none" autocomplete="off" data-validation-message="Select a specific employee from the suggestions." />
-                    <input type="hidden" name="employeeId" class="js-picker-id" required />
-                </div>
-                <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
-                <button type="submit" class="panel-action-button mt-2 w-full">Add to Project</button>
-            </form>
-            <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableEmployees || []).map((emp) => ({ id: emp.id, label: emp.fullName }))) %></script>
-        </div>
+        <% if (canAddMembers) { %>
+            <div class="js-picker-panel hidden mt-2">
+                <form class="js-picker-form relative" action="/projects/<%= project.id || project.project_id %>/members" method="POST" autocomplete="off" data-error-message="Failed to add member.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <label class="mb-2 block text-sm font-semibold text-brand-text">Add member to project:</label>
+                    <div class="flex items-center rounded-xl border border-brand-secondary bg-white px-3">
+                        <svg class="h-4 w-4 shrink-0 text-brand-text/50" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                            <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5"></circle>
+                            <path d="M13.5 13.5L18 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                        </svg>
+                        <input name="addMemberSearch" type="search" placeholder="Search for an employee..." class="js-picker-search w-full border-none bg-transparent px-3 py-2 text-sm outline-none" autocomplete="off" data-validation-message="Select a specific employee from the suggestions." />
+                        <input type="hidden" name="employeeId" class="js-picker-id" required />
+                    </div>
+                    <div class="js-picker-results absolute z-30 mt-1 hidden w-full rounded-xl border border-brand-secondary bg-white p-1 shadow-panel"></div>
+                    <label class="mt-3 block text-sm font-semibold text-brand-text" for="projectMemberRole">Role:</label>
+                    <select
+                        id="projectMemberRole"
+                        name="role"
+                        required
+                        class="mt-1 w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 text-sm outline-none ring-brand-primary/30 focus:ring"
+                    >
+                        <option value="EMPLOYEE" selected>EMPLOYEE</option>
+                        <option value="LEAD">LEAD</option>
+                    </select>
+                    <button type="submit" class="panel-action-button mt-3 w-full">Add to Project</button>
+                </form>
+                <script type="application/json" class="js-picker-catalog"><%- JSON.stringify((availableEmployees || []).map((emp) => ({ id: emp.id, label: emp.fullName }))) %></script>
+            </div>
+        <% } %>
     </div>
 </article>
