@@ -986,7 +986,7 @@ INSERT INTO `projectteam` (`team_id`, `project_id`, `team_role`, `joined_at`) VA
 CREATE TABLE `prompt` (
   `prompt_id` char(36) NOT NULL,
   `name` varchar(50) NOT NULL,
-  `description` varchar(2500) NOT NULL,
+  `description` longtext NOT NULL,
   `type` enum('EMPLOYEE','TEAM','PROJECT') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

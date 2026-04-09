@@ -5,15 +5,13 @@ const db = require('../utils/database.js');
 
 module.exports = class Report {
 
-    constructor(report_id, generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
-        this.report_id = report_id;
+    constructor(generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
         this.generated_by_employee_id = generated_by_employee_id;
         this.content_id = content_id;
         this.content_type = content_type;
         this.prompt_id = prompt_id;
         this.period_start = period_start;
         this.period_end = period_end;
-        this.created_at = created_at;
         this.content_json = content_json;
         this.filters_json = filters_json;
         this.input_snapshot_json = input_snapshot_json;
@@ -24,8 +22,10 @@ module.exports = class Report {
 
     // Create or Update report
     save() {
-        // TODO: Implement database logic
-        // If report_id exists, update; otherwise, insert new record
+        return db.execute(`
+            INSERT INTO report(report_id,enerated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text)
+            VALUES(UUID(), ?,?,?,?,?,?,NOW(),?,?,?,?,?,?)`,
+            [this.generated_by_employee_id, this.content_id, this.content_type, this.prompt_id, this.period_start, this.period_end, this.content_json, this.filters_json, this.input_snapshot_json, this.model_name, this.model_version, this.ai_output_text])
     }
 
     // Read all reports
@@ -37,6 +37,18 @@ module.exports = class Report {
     static fetchById(report_id) {
         // TODO: Implement database query to fetch report by ID
     }
+
+    static fetchByContentId(employee_id, content_id){
+        return db.execute(
+            `SELECT *
+            FROM report
+            WHERE generated_by_employee_id = ?
+                AND content_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?;`,
+            [employee_id, content_id, limit],
+        );
+    };
 
     // Read reports by employee
     static fetchByEmployee(generated_by_employee_id) {
