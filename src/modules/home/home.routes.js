@@ -1,14 +1,9 @@
-/*
-Title: home.routes.js
-Last modification: March 24,2026
-Modified by: Hurtado, R.
-*/
-
 const express = require('express');
-const router = express.Router();
-const isAuth = require('../../middleware/isAuthenticated');
+const { requireAuth } = require('../../middlewares/auth.middleware');
+const { renderHome } = require('./home.controller');
 
-const homeController = require('./home.controller');
-router.get('/',isAuth,homeController.getHome);
+const router = express.Router();
+
+router.get('/home', requireAuth, renderHome);
 
 module.exports = router;
