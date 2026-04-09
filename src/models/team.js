@@ -57,6 +57,30 @@ module.exports = class Team {
         this.status = status;
     }
 
+    // Create or Update team
+    save() {
+        return db.execute(
+            `INSERT INTO team(
+                team_id,
+                employee_responsible_id,
+                name,
+                description,
+                created_at,
+                image,
+                status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+                this.team_id,
+                this.employee_responsible_id,
+                this.name,
+                this.description,
+                this.created_at,
+                this.image,
+                this.status,
+            ],
+        );
+    }
+
     /*findAll()
     Function responsible for returning all active teams.*/
 
@@ -125,38 +149,38 @@ module.exports = class Team {
         );
     }
 
+    // -------------------- Report Functions -------------------------------
+
     /*getEmployeeTeamsInfoBtw(employee_id, start_date, end_date)
     Function responsible for obtaining all active team information based on an
     employee_id and a date range*/
 
     static getEmployeeTeamsInfoBtw(employee_id, start_date, end_date){
-        return db.execute('SELECT name, description FROM team AS T INNER JOIN employeeteam as ET ON ET.team_id=T.team_id WHERE T.status=? AND ET.employee_id=? AND ET.joined_at >= ? AND (ET.left_at <= ? OR ET.left_at IS NULL);',
+        return db.execute(`
+            SELECT name, description 
+            FROM team AS T 
+            INNER JOIN employeeteam as ET ON ET.team_id=T.team_id 
+            WHERE T.status=? AND ET.employee_id=? 
+            AND ET.joined_at >= ? 
+            AND (ET.left_at <= ? OR ET.left_at IS NULL);`,
             [Status.ACTIVE, employee_id, start_date, end_date]);
     }
 
-    // Create or Update team
-    save() {
-        return db.execute(
-            `INSERT INTO team(
-                team_id,
-                employee_responsible_id,
-                name,
-                description,
-                created_at,
-                image,
-                status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [
-                this.team_id,
-                this.employee_responsible_id,
-                this.name,
-                this.description,
-                this.created_at,
-                this.image,
-                this.status,
-            ],
-        );
+    /*getTeamInfoFromProj(project_id, start_date, end_date)
+    Function responsible for obtaining all team information of teams
+    assigned to a project between a specified date range*/
+
+    static getTeamInfoFromProj(project_id, start_date, end_date){
+        return db.execute(`
+            SELECT T.name, T.description 
+            FROM team AS T 
+            INNER JOIN projectteam as PT ON T.team_id=PT.team_id 
+            WHERE PT.project_id=? AND PT.joined_at>=? AND PT.joined_at<=?;`,
+            [project_id, start_date, end_date])
     }
+
+
+    //-----------------------------------------------------------------------
 
     // Read all teams
     static fetchAll() {

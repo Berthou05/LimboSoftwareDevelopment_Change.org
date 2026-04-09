@@ -162,16 +162,6 @@ module.exports = class Project {
         );
     }
 
-    /*getEmployeeProjectsInfoBtw(employee_id, start_date, end_date)
-    Function responsible for obtaining all projects information 
-    where an employee whose id=employee_id between the provided date
-    range.*/
-
-    static getEmployeeProjectsInfoBtw(employee_id, start_date, end_date){
-        return db.execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date FROM project as P INNER JOIN collaboration as C ON C.project_id=P.project_id WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<=? OR C.ended_at IS NULL);',
-            [employee_id, start_date, end_date]);
-    }
-
     /*getProjectsByTeamId(team_id)
     Function responsible for returning all projects related to a team
     whose id=team_id*/
@@ -250,6 +240,50 @@ module.exports = class Project {
             [Status.DISABLED, project_id],
         );
     }
+
+
+    // ------------------------ Report Functions -----------------------
+
+    /*getEmployeeProjectsInfoBtw(employee_id, start_date, end_date)
+    Function responsible for obtaining all projects information 
+    where an employee whose id=employee_id between the provided date
+    range.*/
+
+    static getEmployeeProjectsInfoBtw(employee_id, start_date, end_date){
+        return db.execute(`
+            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
+            FROM project as P 
+            INNER JOIN collaboration as C ON C.project_id=P.project_id 
+            WHERE C.employee_id=? AND C.started_at>=? 
+            AND (C.ended_at<=? OR C.ended_at IS NULL);`,
+            [employee_id, start_date, end_date]);
+    }
+
+    /*getTeamProjectsInfoBtw(team_id, start_date)
+    FUnction responsible for retuning all the projects that a team got involved 
+    */
+
+    static getTeamProjectsInfoBtw(team_id, start_date, end_date){
+        return db.execute(`
+            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
+            FROM project as P 
+            INNER JOIN projectteam as PT ON P.project_id=PT.project_id 
+            WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;`,
+            [team_id, start_date, end_date]);
+    }
+
+    /*getProjectInfo(project_id)
+    Function responsible for obtaining the basic information of a project
+    based on its id.*/
+
+    static getProjectInfo(project_id){
+        return db.execute(`
+            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
+            FROM project as P 
+            WHERE P.project_id = ?;`,
+            [project_id]);
+    }
+
 
 };
 

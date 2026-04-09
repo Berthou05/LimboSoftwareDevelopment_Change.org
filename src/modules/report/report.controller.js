@@ -279,6 +279,7 @@ exports.generateReport = (request, response, next)=>{
     const { type, id, start_date, end_date, route } = normalizeReportRequest(request.body);
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
+    const reportType = normalizeReportType(type);
 
     if (!type || !id || !start_date || !end_date) {
         request.session.error = 'Complete the report type, subject, and date range before generating a report.';
@@ -294,6 +295,9 @@ exports.generateReport = (request, response, next)=>{
         request.session.error = 'The start date must be before the end date.';
         return response.redirect(route);
     }
+
+    
+
 
     //TODO: Review code
     request.session.error = `Report generation for ${type}:${id} is still under development.`;

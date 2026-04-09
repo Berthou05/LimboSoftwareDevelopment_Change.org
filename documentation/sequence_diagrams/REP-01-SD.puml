@@ -44,9 +44,9 @@ end note
 
 
             alt Employee Report
-            C->>E: getEmployeeInfo(employee_id)
+            C->>E: fetchById(employee_id)
                 activate E
-                E->>BD: execute('SELECT * FROM employee WHERE employee_id=?',[employee_id])
+                E->>BD: execute('SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email FROM employee AS E INNER JOIN account AS A ON E.employee_id=A.employee_id WHERE E.employee_id=?',[employee_id])
                     activate BD
                     BD-->E: info
                     deactivate BD
@@ -119,9 +119,9 @@ end note
 
             alt Team Report
 
-            C->>T: getTeamInfo(team_id)
+            C->>T: findById(team_id)
                 activate T
-                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nWHERE T.team_id=? ;',\n[team_id])
+                T->>BD: execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
                     activate BD
                     BD-->T: team_info
                     deactivate BD
@@ -137,7 +137,7 @@ end note
                 A-->C:team_activities
                 deactivate A
             
-            C->>E: getEmployeeInfoFromTeam(team_id)
+            C->>E: getEmployeeByTeamId(team_id)
                 activate E
                 E->>BD: execute('SELECT E.full_name, ET.role \nFROM employee AS E \nINNER JOIN employeeteam AS ET ON E.employee_id=ET.employee_id \nWHERE ET.team_id=?;'\n,[team_id])
                     activate BD

@@ -121,6 +121,50 @@ module.exports = class Goal {
 
         return db.execute('DELETE FROM goal WHERE goal_id = ?', [goal_id]);
     }
+
+    // ----------------------- Report Functions ---------------------------
+
+    /*getGoalsFromEmp(employee_id)
+    Function responsible for returning all the goals of an employee*/
+    static getGoalsFromEmp(employee_id){
+        return db.execute(`
+            SELECT G.title, G.description, G.due_date, G.status, G.project_id
+            FROM goal as G
+            INNER JOIN collaboration as C ON G.project_id=C.project_id
+            WHERE C.employee_id=? AND C.started_at>=?
+            AND (C.ended_at<=? OR C.ended_at IS NULL);`,
+            [employee_id, start_date, end_date]);
+    };
+
+    /*getGoalsFromTeam(team_id, start_date, end_date)
+    Function responsible for returning all goals related to projects where a team
+    was assigned between a date range*/
+
+    static getGoalsFromTeam(team_id, start_date, end_date){
+        return db.execute(`
+            SELECT G.title, G.description, G.due_date, G.status, G.project_id 
+            FROM goal as G 
+            INNER JOIN collaboration as C ON G.project_id=C.project_id 
+            WHERE C.project_id IN( 
+                SELECT PT.project_id 
+                FROM projectteam AS PT 
+                WHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);`,
+            [team_id, start_date, end_date]);    
+    }
+
+    /*getGoalsFromProj(project_id, start_date, end_date)
+    Function responsible for obtaining all goals of a project between a specified date
+    range*/
+
+    static getGoalsFromProj(project_id, start_date, end_date){
+        return db.execute(`
+            SELECT G.title, G.description, G.due_date, G.status, G.project_id 
+            FROM goal as G 
+            WHERE G.project_id=? AND G.created_at BETWEEN ? AND ?;`, 
+            [project_id, start_date, end_date])
+    }
+
+
 };
 
 module.exports.Status = Status;
