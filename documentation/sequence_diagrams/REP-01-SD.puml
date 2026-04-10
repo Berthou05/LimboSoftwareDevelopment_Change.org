@@ -137,7 +137,7 @@ end note
                 A-->C:team_activities
                 deactivate A
             
-            C->>E: getEmployeeByTeamId(team_id)
+            C->>E: getEmployeeInfoFromTeam(team_id)
                 activate E
                 E->>BD: execute('SELECT E.full_name, ET.role \nFROM employee AS E \nINNER JOIN employeeteam AS ET ON E.employee_id=ET.employee_id \nWHERE ET.team_id=?;'\n,[team_id])
                     activate BD
@@ -146,36 +146,36 @@ end note
                 E-->C:employees_info
                 deactivate E
             
-            C->>P: getTeamProjectsInfoBtw(team_id, start_date)
+            C->>P: getTeamProjectsInfoBtw(team_id, start_date, end_date)
                 activate P
-                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date \nFROM project as P \nINNER JOIN projectteam as PT ON P.project_id=PT.project_id \nWHERE PT.team_id=? AND PT.joined_at>=?;'\n,[team_id, start_date])
+                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date FROM project as P INNER JOIN projectteam as PT ON P.project_id=PT.project_id WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;'\n,[team_id, start_date, end_date])
                     activate BD
                     BD-->P: team_projects
                     deactivate BD
                 P-->C:team_projects
                 deactivate P
 
-            C->>A: getProjectActivitiesFromTeamBtw(team_id, start_date)
+            C->>A: getProjectActivitiesFromTeamBtw(team_id, start_date, end_date)
                 activate A
-                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam as PT \nWHERE PT.team_id = ? AND PT.joined_at>=?);',\n[team_id, start_date])
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam as PT \nWHERE PT.team_id = ? AND PT.joined_at>=? AND PT.joined_at<=?);',\n[team_id, start_date, end_date])
                     activate BD
                     BD-->A: project_activities
                     deactivate BD
                 A-->C:project_activities
                 deactivate A
 
-            C->>AC: getAchievementsFromTeam(team_id, start_date)
+            C->>AC: getAchievementsFromTeam(team_id, start_date, end_date)
                 activate AC
-                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',[team_id, start_date])
+                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);',[team_id, start_date, end_date])
                     activate BD
                     BD-->AC: project_achievements
                     deactivate BD
                 AC-->C:project_achievements
                 deactivate AC
 
-            C->>G: getGoalsFromEmp(team_id, start_date)
+            C->>G: getGoalsFromTeam(team_id, start_date, end_date)
                 activate G
-                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',\n[employee_id, start_date])
+                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);',\n[employee_id, start_date, end_date])
                     activate BD
                     BD-->G: project_goals
                     deactivate BD
@@ -214,7 +214,7 @@ end note
 
             C->>T: getTeamInfoFromProj(project_id, start_date, end_date)
                 activate T
-                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nINNER JOIN projectteam as PT ON T.team_id=PT.team_id \nWHERE PT.project_id=? AND PT.joined_at>=?;',\n[team_id, start_date])
+                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nINNER JOIN projectteam as PT ON T.team_id=PT.team_id \nWHERE PT.project_id=? AND PT.joined_at>=? AND PT.joined_at<=?;',\n[project_id, start_date, end_date])
                     activate BD
                     BD-->T: team_info
                     deactivate BD
@@ -280,7 +280,7 @@ end note
                 end note
                 W->W: integratePrompt(body, prompt);
                 W->W: getSchema(reportType);
-                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:reportSchema}), prompt})
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt})
                     activate AIProvider
                     AIProvider-->W: API response
                     deactivate AIProvider

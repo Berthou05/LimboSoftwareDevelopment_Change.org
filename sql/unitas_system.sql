@@ -987,6 +987,7 @@ CREATE TABLE `prompt` (
   `prompt_id` char(36) NOT NULL,
   `name` varchar(50) NOT NULL,
   `description` longtext NOT NULL,
+  `schema` longtext NOT NULL,
   `type` enum('EMPLOYEE','TEAM','PROJECT') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -994,10 +995,10 @@ CREATE TABLE `prompt` (
 -- Dumping data for table `prompt`
 --
 
-INSERT INTO `prompt` (`prompt_id`, `name`, `description`, `type`) VALUES
-('prompt-001', 'Employee Performance', 'Generates individual employee performance report', 'EMPLOYEE'),
-('prompt-002', 'Team Performance', 'Generates team performance report', 'TEAM'),
-('prompt-003', 'Project Performance', 'Generates project performance report', 'PROJECT');
+INSERT INTO `prompt` (`prompt_id`, `name`, `description`,`schema`,`type`) VALUES
+('prompt-001', 'Employee Performance', 'Generates individual employee performance report','schema_employee' ,'EMPLOYEE'),
+('prompt-002', 'Team Performance', 'Generates team performance report','schema_team' ,'TEAM'),
+('prompt-003', 'Project Performance', 'Generates project performance report','schema_project', 'PROJECT');
 
 -- --------------------------------------------------------
 
@@ -1010,13 +1011,11 @@ CREATE TABLE `report` (
   `generated_by_employee_id` char(36) NOT NULL,
   `content_id` varchar(36) NOT NULL,
   `content_type` enum('EMPLOYEE','TEAM','PROJECT') NOT NULL,
-  `prompt_id` char(36) NOT NULL,
   `period_start` date NOT NULL,
   `period_end` date NOT NULL,
   `created_at` datetime NOT NULL,
   `content_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`content_json`)),
   `filters_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`filters_json`)),
-  `input_snapshot_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`input_snapshot_json`)),
   `model_name` varchar(100) NOT NULL,
   `model_version` varchar(50) NOT NULL,
   `ai_output_text` text DEFAULT NULL
@@ -1026,58 +1025,219 @@ CREATE TABLE `report` (
 -- Dumping data for table `report`
 --
 
-INSERT INTO `report` (`report_id`, `generated_by_employee_id`, `content_id`, `content_type`, `prompt_id`, `period_start`, `period_end`, `created_at`, `content_json`, `filters_json`, `input_snapshot_json`, `model_name`, `model_version`, `ai_output_text`) VALUES
-('proj-020', 'emp-001', 'emp-001', 'EMPLOYEE', 'prompt-001', '2024-02-01', '2024-02-28', '2026-03-03 22:33:58', '{\"tickets_cerrados\": 12, \"horas_invertidas\": 40, \"eficiencia\": \"95%\"}', '{\"department\": \"Engineering\"}', '{\"raw_data_points\": 150}', 'GPT-4', 'Turbo-2024', 'El empleado ha mostrado un excelente desempeño este mes, superando la meta de tickets por un 20% y manteniendo bloqueos mínimos.'),
-('rep-001', 'emp-001', 'emp-001', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-01 10:00:00', '{\"employee_id\":\"emp-001\",\"projects\":[\"proj-001\",\"proj-010\",\"proj-017\"],\"goals_summary\":{\"completed\":2,\"in_progress\":1},\"highlights_count\":3,\"achievements_count\":1}', '{\"include_goals\":true,\"include_highlights\":true,\"include_achievements\":true,\"projects_filter\":[],\"teams_filter\":[]}', '{\"daily_entries_analyzed\":18,\"activities_generated\":124,\"collaborations_count\":3,\"period_start\":\"2026-02-01\",\"period_end\":\"2026-02-28\"}', 'gpt-4.1-mini', '1.0.2', 'During February 2026, the employee demonstrated consistent contribution across multiple strategic initiatives including Starter Share Optimization and Design System v2. The overall productivity metrics indicate strong engagement with daily operational tasks and cross-team collaboration. Two goals were successfully completed within the defined timeframe, contributing directly to measurable improvements in share conversion metrics. One ongoing objective remains aligned with Q1 growth targets. The employee also contributed to AI integration efforts, supporting experimentation workflows and improving internal component reuse. Communication and cross-functional coordination were noted as strong, particularly in collaborative validation efforts. Areas for improvement include documentation consistency and earlier risk flagging in cross-team dependencies.'),
-('rep-002', 'emp-002', 'team-002', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-01 11:00:00', '{\"team_id\":\"team-002\",\"projects\":[\"proj-004\",\"proj-015\"],\"members\":3,\"goals_active\":2,\"completed_milestones\":1}', '{\"include_member_summaries\":true,\"include_goal_progress\":true,\"include_velocity_metrics\":true}', '{\"aggregated_daily_entries\":42,\"aggregated_activities\":267,\"team_collaborations\":5,\"period\":\"2026-02\"}', 'gpt-4.1-mini', '1.0.2', 'Throughout February 2026, Vaquita Squad maintained steady progress across its primary engagement initiatives. The team contributed to improvements in notification systems and experiment validation frameworks. One milestone was completed ahead of schedule, reflecting effective coordination between backend and growth functions. Team velocity remained stable compared to January, with increased collaboration density across multiple projects. Areas identified for optimization include reducing dependency wait times and formalizing retrospective documentation. Overall performance aligns positively with quarterly objectives.'),
-('rep-003', 'emp-006', 'proj-002', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-01 12:00:00', '{\"project_id\":\"proj-002\",\"teams_involved\":[\"team-006\",\"team-018\"],\"active_collaborators\":2,\"goals\":{\"total\":3,\"completed\":1,\"in_progress\":2}}', '{\"include_team_breakdown\":true,\"include_goal_analysis\":true,\"include_risk_section\":true}', '{\"daily_entries\":31,\"activities_classified\":188,\"cross_team_dependencies\":4}', 'gpt-4.1', '2.1.0', 'The Recruit Share Growth initiative demonstrated measurable improvements in experiment coverage and analytical depth during February 2026. A total of 31 daily entries were analyzed, producing 188 classified activities that contributed to structured experimentation cycles. One strategic goal was completed, leading to a 3.2% increase in recruit share rate compared to the previous baseline. Two goals remain in progress and are forecasted to close within Q1. Identified risks include data latency issues in funnel attribution and temporary misalignment in UX messaging consistency. Overall project health is considered stable with upward momentum.'),
-('rep-004', 'emp-004', 'emp-004', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-01 13:00:00', '{\"employee_id\":\"emp-004\",\"projects\":[\"proj-003\",\"proj-010\",\"proj-016\"],\"goals_summary\":{\"completed\":1,\"in_progress\":2},\"highlight_count\":2}', '{\"include_goals\":true,\"include_highlights\":true,\"include_peer_feedback\":false}', '{\"daily_entries_analyzed\":21,\"activities_generated\":143,\"collaborations\":3}', 'gpt-4.1-mini', '1.0.2', 'The employee focused primarily on UI validation improvements and design system enhancements throughout February. One goal related to validation error messaging was completed successfully. Two additional goals remain active, including improvements in accessibility compliance and cross-device component consistency. Productivity metrics reflect a high activity density with structured task categorization. Collaboration with backend validation teams was consistent and constructive. Improvement opportunities include earlier UX testing cycles and increased cross-squad documentation alignment.'),
-('rep-005', 'emp-015', 'proj-015', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-01 14:00:00', '{\"project_id\":\"proj-015\",\"teams\":[\"team-015\",\"team-006\",\"team-012\"],\"active_experiments\":4,\"completed_experiments\":2}', '{\"include_experiment_metrics\":true,\"include_growth_impact\":true}', '{\"daily_entries\":37,\"activities\":221,\"collaborators\":3,\"risk_flags\":1}', 'gpt-4.1', '2.1.0', 'High Impact Growth Tests progressed significantly during February with four active experiments and two successful experiment closures. Data indicates early positive trends in petition share conversion and checkout completion rates. Cross-functional alignment between growth and analytics teams improved iteration speed. One minor risk was detected related to inconsistent segmentation tagging, currently under mitigation. Overall project trajectory remains positive with projected KPI uplift exceeding initial quarterly forecasts.'),
-('rep-006', 'emp-006', 'emp-006', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-02 09:00:00', '{\"employee_id\":\"emp-006\",\"projects\":[\"proj-001\",\"proj-002\",\"proj-015\",\"proj-018\"],\"goals_summary\":{\"completed\":1,\"in_progress\":2},\"collaboration_intensity\":\"high\"}', '{\"include_goals\":true,\"include_growth_metrics\":true,\"include_cross_project_analysis\":true}', '{\"daily_entries_analyzed\":24,\"activities_generated\":176,\"collaborations\":4,\"experiments_supported\":5}', 'gpt-4.1', '2.1.0', 'During February, the employee played a central role in multiple growth initiatives including Recruit Share Growth and High Impact Experiments. Analytical contributions directly influenced experiment prioritization and validation methodology. One goal was completed while two remain active and on track. Collaboration levels were significantly above team average, reflecting cross-functional leadership in experimentation workflows. Overall contribution is categorized as strategically impactful.'),
-('rep-007', 'emp-010', 'team-010', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-02 10:00:00', '{\"team_id\":\"team-010\",\"projects\":[\"proj-005\",\"proj-009\",\"proj-019\"],\"members\":3,\"analytics_requests\":14}', '{\"include_kpi_summary\":true,\"include_member_breakdown\":true}', '{\"daily_entries_aggregated\":39,\"activities_total\":233,\"performance_delta_vs_january\":\"+8%\"}', 'gpt-4.1-mini', '1.0.2', 'Búho Squad maintained consistent analytical support across three major initiatives. Dashboard performance improvements and content optimization metrics showed measurable gains compared to January. Activity classification density increased, and cross-team response times improved by approximately eight percent. Continued focus on data consistency and visualization standardization is recommended.'),
-('rep-008', 'emp-004', 'proj-016', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-02 11:00:00', '{\"project_id\":\"proj-016\",\"teams\":[\"team-016\",\"team-004\"],\"validation_rules_updated\":12,\"ui_updates\":7}', '{\"include_risk_section\":true,\"include_validation_metrics\":true}', '{\"daily_entries\":28,\"activities_classified\":165,\"bug_reports_closed\":9}', 'gpt-4.1', '2.1.0', 'The Petition Validation Engine project progressed steadily with twelve backend rule updates and seven UI adjustments deployed. Classification accuracy improved and validation feedback clarity increased for end users. Remaining risk involves rule overlap scenarios that require further automated testing. Overall project health is positive and aligned with roadmap expectations.'),
-('rep-009', 'emp-002', 'emp-002', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-02 12:00:00', '{\"employee_id\":\"emp-002\",\"projects\":[\"proj-001\",\"proj-004\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1},\"team_role\":\"LEAD\"}', '{\"include_goal_tracking\":true,\"include_team_influence\":true}', '{\"daily_entries\":20,\"activities\":138,\"collaborations\":3}', 'gpt-4.1-mini', '1.0.2', 'The employee maintained strong involvement in share optimization and notification redesign initiatives. Leadership responsibilities were evident in coordination tasks and milestone planning. One goal was successfully achieved, contributing to incremental performance improvements. Continued focus on documentation clarity will further enhance cross-squad efficiency.'),
-('rep-010', 'emp-014', 'team-014', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-02 13:00:00', '{\"team_id\":\"team-014\",\"projects\":[\"proj-014\",\"proj-005\"],\"members\":2,\"community_features_released\":3}', '{\"include_release_notes\":true,\"include_goal_alignment\":true}', '{\"daily_entries_aggregated\":26,\"activities_total\":149,\"engagement_delta\":\"+5%\"}', 'gpt-4.1-mini', '1.0.2', 'Mariposa Squad focused on community feed enhancements and cross-project support tasks. Three incremental feature updates were deployed, contributing to measurable engagement improvements. Collaboration with analytics ensured metric validation. Future attention should address scalability of ranking logic under increased traffic conditions.'),
-('rep-011', 'emp-007', 'proj-008', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-02 14:00:00', '{\"project_id\":\"proj-008\",\"security_patches\":6,\"infra_updates\":4,\"audit_findings_resolved\":3}', '{\"include_compliance_status\":true,\"include_security_metrics\":true}', '{\"daily_entries\":22,\"activities\":117,\"risk_level\":\"moderate\"}', 'gpt-4.1', '2.1.0', 'Security Audit 2026 advanced with six patches deployed and multiple infrastructure reinforcements. Three previously identified vulnerabilities were resolved. Audit progression remains on track, though moderate risk remains regarding dependency update timelines. Overall compliance posture has improved significantly.'),
-('rep-012', 'emp-011', 'emp-011', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-02 15:00:00', '{\"employee_id\":\"emp-011\",\"projects\":[\"proj-011\",\"proj-013\"],\"goals\":{\"completed\":0,\"in_progress\":2}}', '{\"include_goal_details\":true}', '{\"daily_entries\":19,\"activities\":121,\"collaborations\":2}', 'gpt-4.1-mini', '1.0.2', 'CRM synchronization and internal tool enhancements were the primary focus areas. Although no goals were fully completed during this period, consistent progress was recorded across both initiatives. Data consistency and error handling robustness improved measurably.'),
-('rep-013', 'emp-018', 'proj-018', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-02 16:00:00', '{\"project_id\":\"proj-018\",\"funnel_stages_optimized\":3,\"data_accuracy_delta\":\"+4%\"}', '{\"include_funnel_breakdown\":true}', '{\"daily_entries\":17,\"activities\":98}', 'gpt-4.1', '2.1.0', 'Recruit Funnel Analytics saw incremental improvements across three optimized stages. Data reliability increased and reporting latency decreased. Further work will focus on segmentation refinement and automated anomaly detection.'),
-('rep-014', 'emp-015', 'emp-015', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-02 17:00:00', '{\"employee_id\":\"emp-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1}}', '{\"include_growth_metrics\":true}', '{\"daily_entries\":23,\"activities\":162}', 'gpt-4.1-mini', '1.0.2', 'Growth experimentation leadership remained strong with one key milestone achieved in checkout optimization. Performance uplift trends indicate sustainable improvements. Continued monitoring of experiment maturity is recommended.'),
-('rep-015', 'emp-019', 'team-019', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-02 18:00:00', '{\"team_id\":\"team-019\",\"projects\":[\"proj-001\",\"proj-014\",\"proj-019\"],\"content_updates\":18}', '{\"include_content_metrics\":true}', '{\"daily_entries\":29,\"activities\":171}', 'gpt-4.1-mini', '1.0.2', 'Camaleón Squad delivered substantial content optimization efforts across multiple initiatives. Eighteen content updates were deployed, resulting in improved clarity and shareability metrics. Coordination with growth and analytics teams ensured measurable validation of improvements.'),
-('rep-016', 'emp-001', 'team-001', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-03 09:00:00', '{\"team_id\":\"team-001\",\"projects\":[\"proj-001\",\"proj-010\",\"proj-017\"],\"members\":3,\"velocity_index\":1.12}', '{\"include_member_performance\":true,\"include_goal_alignment\":true}', '{\"daily_entries_aggregated\":41,\"activities_total\":244,\"collaborations_detected\":6}', 'gpt-4.1-mini', '1.0.2', 'Axolotl Squad maintained strong delivery velocity throughout February, contributing across three strategic initiatives. Component reuse and AI integration tasks improved operational efficiency. Cross-squad alignment was particularly strong in design system adoption and share flow optimization. Minor coordination delays were detected but did not significantly impact milestones.'),
-('rep-017', 'emp-006', 'proj-001', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 09:45:00', '{\"project_id\":\"proj-001\",\"share_rate_delta\":\"+6%\",\"experiments_run\":3,\"teams_involved\":3}', '{\"include_experiment_metrics\":true,\"include_team_breakdown\":true}', '{\"daily_entries\":36,\"activities\":209,\"risk_flags\":0}', 'gpt-4.1', '2.1.0', 'Starter Share Optimization demonstrated measurable uplift during February, with a six percent increase in share conversion. Three structured experiments were executed and validated. Collaboration between frontend and growth functions significantly reduced iteration cycles. Overall risk profile remains low and performance momentum is positive.'),
-('rep-018', 'emp-004', 'emp-016', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-03 10:30:00', '{\"employee_id\":\"emp-016\",\"projects\":[\"proj-003\",\"proj-016\"],\"goals\":{\"completed\":0,\"in_progress\":2},\"bug_fixes\":14}', '{\"include_goal_tracking\":true,\"include_activity_density\":true}', '{\"daily_entries\":22,\"activities\":151,\"collaborations\":2}', 'gpt-4.1-mini', '1.0.2', 'The employee focused on backend validation logic and engine stability improvements. Although no formal goals were completed this period, measurable progress was achieved across rule refactoring tasks and bug resolution. Collaboration with design teams improved error clarity and reduced rework cycles.'),
-('rep-019', 'emp-010', 'proj-009', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 11:15:00', '{\"project_id\":\"proj-009\",\"query_latency_delta\":\"-18%\",\"dashboards_updated\":5}', '{\"include_performance_metrics\":true}', '{\"daily_entries\":25,\"activities\":140}', 'gpt-4.1', '2.1.0', 'Dashboard Performance optimization efforts reduced query latency by eighteen percent compared to baseline. Five high-traffic dashboards were updated and validated. Backend query tuning and index adjustments contributed significantly to performance gains. Monitoring will continue to ensure stability under peak load.'),
-('rep-020', 'emp-015', 'team-015', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-03 12:00:00', '{\"team_id\":\"team-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"active_experiments\":4}', '{\"include_growth_kpis\":true}', '{\"daily_entries\":33,\"activities\":198}', 'gpt-4.1-mini', '1.0.2', 'Tiburón Squad executed multiple growth experiments with structured validation cycles. Early signals suggest improvements in checkout conversion and petition engagement metrics. Experiment documentation practices improved, though statistical validation rigor can be enhanced further.'),
-('rep-021', 'emp-007', 'emp-007', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-03 13:00:00', '{\"employee_id\":\"emp-007\",\"projects\":[\"proj-007\",\"proj-008\"],\"goals\":{\"completed\":1,\"in_progress\":0}}', '{\"include_security_contributions\":true}', '{\"daily_entries\":18,\"activities\":103}', 'gpt-4.1-mini', '1.0.2', 'Infrastructure stabilization and security hardening were successfully delivered. One CI reliability goal was fully completed, reducing deployment rollback incidents. Security audit preparation tasks were executed efficiently with minimal disruption to production workflows.'),
-('rep-022', 'emp-012', 'proj-012', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 14:00:00', '{\"project_id\":\"proj-012\",\"checkout_conversion_delta\":\"+4.8%\",\"ab_tests\":2}', '{\"include_revenue_metrics\":true}', '{\"daily_entries\":27,\"activities\":166}', 'gpt-4.1', '2.1.0', 'Checkout Optimization resulted in a measurable four point eight percent improvement in conversion. Two A/B tests were executed, focusing on friction reduction and payment clarity. Cross-team alignment with analytics ensured statistically valid evaluation. Revenue impact projections remain favorable.'),
-('rep-023', 'emp-013', 'team-013', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-03 15:00:00', '{\"team_id\":\"team-013\",\"projects\":[\"proj-011\",\"proj-013\"],\"admin_features_added\":6}', '{\"include_internal_tool_metrics\":true}', '{\"daily_entries\":21,\"activities\":129}', 'gpt-4.1-mini', '1.0.2', 'Coyote Squad delivered six incremental enhancements to internal administrative tools. Improvements reduced manual configuration overhead and improved CRM synchronization stability. Internal adoption metrics increased steadily throughout the period.'),
-('rep-024', 'emp-017', 'proj-017', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 16:00:00', '{\"project_id\":\"proj-017\",\"classification_accuracy\":\"+7%\",\"models_tested\":3}', '{\"include_ai_metrics\":true}', '{\"daily_entries\":30,\"activities\":187}', 'gpt-4.1', '2.1.0', 'AI Assisted Classification improved accuracy metrics by seven percent during February. Three model configurations were evaluated and validated against historical daily entries. Automation reduced manual categorization effort and improved reporting consistency across teams.'),
-('rep-025', 'emp-020', 'emp-020', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-03 17:00:00', '{\"employee_id\":\"emp-020\",\"projects\":[\"proj-004\",\"proj-000\"],\"support_automation_tasks\":9}', '{\"include_support_metrics\":true}', '{\"daily_entries\":20,\"activities\":112}', 'gpt-4.1-mini', '1.0.2', 'Support tooling enhancements and operational automation tasks were prioritized. Nine automation adjustments reduced repetitive manual interventions. Collaboration with notification redesign teams improved ticket response time and workflow clarity.'),
-('rep-026', 'emp-003', 'proj-003', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 18:00:00', '{\"project_id\":\"proj-003\",\"validation_accuracy_delta\":\"+5%\",\"ui_updates\":4}', '{\"include_quality_metrics\":true}', '{\"daily_entries\":29,\"activities\":174}', 'gpt-4.1', '2.1.0', 'Quality Petition Improvement achieved a five percent accuracy increase in validation scoring. UI updates enhanced clarity of error feedback and improved user correction rates. Continued monitoring will ensure model consistency across edge cases.'),
-('rep-027', 'emp-014', 'emp-014', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-03 19:00:00', '{\"employee_id\":\"emp-014\",\"projects\":[\"proj-014\",\"proj-005\"],\"goals\":{\"completed\":1,\"in_progress\":1}}', '{\"include_engagement_metrics\":true}', '{\"daily_entries\":21,\"activities\":137}', 'gpt-4.1-mini', '1.0.2', 'Community feature enhancements progressed steadily, with one milestone achieved in ranking logic optimization. Engagement improvements were observed across new feature deployments. Cross-team collaboration strengthened experimentation alignment.'),
-('rep-028', 'emp-018', 'team-018', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-03 20:00:00', '{\"team_id\":\"team-018\",\"projects\":[\"proj-002\",\"proj-018\"],\"funnel_analysis_cycles\":4}', '{\"include_recruitment_metrics\":true}', '{\"daily_entries\":24,\"activities\":145}', 'gpt-4.1-mini', '1.0.2', 'Venado Squad conducted four funnel analysis cycles during February. Improvements in data clarity and stage attribution reduced reporting inconsistencies. Collaboration with growth teams improved experiment planning precision.'),
-('rep-029', 'emp-005', 'proj-005', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-03 21:00:00', '{\"project_id\":\"proj-005\",\"api_latency_delta\":\"-12%\",\"stability_improvements\":8}', '{\"include_backend_metrics\":true}', '{\"daily_entries\":26,\"activities\":158}', 'gpt-4.1', '2.1.0', 'Share Tracking Reliability improved backend stability with eight targeted fixes. API latency decreased by twelve percent, improving dashboard and reporting responsiveness. Continued log monitoring will ensure sustained reliability gains.'),
-('rep-030', 'emp-008', 'emp-008', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-03 22:00:00', '{\"employee_id\":\"emp-008\",\"projects\":[\"proj-008\",\"proj-010\"],\"security_reviews\":5}', '{\"include_security_contributions\":true}', '{\"daily_entries\":17,\"activities\":95}', 'gpt-4.1-mini', '1.0.2', 'Security review efforts were sustained across component upgrades and design system changes. Five targeted reviews identified minor vulnerabilities which were resolved within the same reporting period. Collaboration quality with frontend teams remained high.'),
-('rep-031', 'emp-012', 'team-012', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 09:00:00', '{\"team_id\":\"team-012\",\"projects\":[\"proj-012\"],\"conversion_delta\":\"+4.8%\",\"deployments\":3}', '{\"include_revenue_impact\":true,\"include_member_breakdown\":true}', '{\"daily_entries\":22,\"activities\":134,\"collaborations\":2}', 'gpt-4.1-mini', '1.0.2', 'Halcón Squad focused primarily on checkout optimization initiatives. Deployment cycles were stable and incremental improvements in payment clarity contributed to measurable gains in conversion. Cross-functional testing alignment reduced post-release regressions.'),
-('rep-032', 'emp-009', 'emp-009', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 09:40:00', '{\"employee_id\":\"emp-009\",\"projects\":[\"proj-006\",\"proj-009\"],\"goals\":{\"completed\":1,\"in_progress\":0}}', '{\"include_mobile_metrics\":true}', '{\"daily_entries\":18,\"activities\":102}', 'gpt-4.1-mini', '1.0.2', 'Mobile performance optimizations were successfully finalized. The employee contributed to latency reduction and UI responsiveness improvements, ensuring consistent experience across devices. Collaboration with analytics supported measurable validation.'),
-('rep-033', 'emp-016', 'proj-016', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 10:20:00', '{\"project_id\":\"proj-016\",\"engine_refactors\":5,\"test_coverage_delta\":\"+6%\"}', '{\"include_validation_metrics\":true}', '{\"daily_entries\":31,\"activities\":182}', 'gpt-4.1', '2.1.0', 'Validation engine refactors improved maintainability and increased automated test coverage by six percent. Backend stability improved and error feedback clarity was enhanced. Project health remains stable and technically sound.'),
-('rep-034', 'emp-014', 'team-014', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 11:00:00', '{\"team_id\":\"team-014\",\"engagement_delta\":\"+5%\",\"features_released\":3}', '{\"include_engagement_analysis\":true}', '{\"daily_entries\":25,\"activities\":141}', 'gpt-4.1-mini', '1.0.2', 'Community feed enhancements continued to drive engagement improvements. Feature rollouts were smooth and coordination with content optimization teams strengthened iteration cycles.'),
-('rep-035', 'emp-017', 'emp-017', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 11:40:00', '{\"employee_id\":\"emp-017\",\"projects\":[\"proj-017\",\"proj-018\"],\"models_tested\":3}', '{\"include_ai_metrics\":true}', '{\"daily_entries\":23,\"activities\":154}', 'gpt-4.1', '2.1.0', 'AI experimentation efforts expanded with multiple classification configurations evaluated. Automation improvements reduced manual tagging effort and increased reporting consistency.'),
-('rep-036', 'emp-005', 'proj-007', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 12:20:00', '{\"project_id\":\"proj-007\",\"deployment_success_rate\":\"99.2%\",\"pipeline_improvements\":4}', '{\"include_devops_metrics\":true}', '{\"daily_entries\":19,\"activities\":110}', 'gpt-4.1', '2.1.0', 'CI pipeline stabilization improved deployment reliability to over ninety-nine percent. Infrastructure updates reduced rollback events and enhanced monitoring visibility.'),
-('rep-037', 'emp-003', 'team-003', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 13:00:00', '{\"team_id\":\"team-003\",\"projects\":[\"proj-003\",\"proj-002\"],\"frontend_refactors\":6}', '{\"include_code_quality_metrics\":true}', '{\"daily_entries\":27,\"activities\":168}', 'gpt-4.1-mini', '1.0.2', 'Jaguar Squad executed targeted frontend refactors improving maintainability and reducing technical debt. Collaboration with validation teams enhanced UI clarity.'),
-('rep-038', 'emp-018', 'emp-018', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 13:40:00', '{\"employee_id\":\"emp-018\",\"projects\":[\"proj-002\",\"proj-018\"],\"goals\":{\"completed\":0,\"in_progress\":2}}', '{\"include_recruitment_metrics\":true}', '{\"daily_entries\":21,\"activities\":130}', 'gpt-4.1-mini', '1.0.2', 'Recruitment analytics initiatives progressed steadily. Funnel attribution clarity improved and experiment alignment strengthened cross-team communication.'),
-('rep-039', 'emp-015', 'proj-015', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 14:20:00', '{\"project_id\":\"proj-015\",\"experiments_active\":4,\"conversion_delta\":\"+3.5%\"}', '{\"include_growth_summary\":true}', '{\"daily_entries\":34,\"activities\":201}', 'gpt-4.1', '2.1.0', 'Growth experiments continued to deliver incremental conversion improvements. Statistical validation cycles improved reliability of insights and prioritization accuracy.'),
-('rep-040', 'emp-020', 'team-020', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 15:00:00', '{\"team_id\":\"team-020\",\"projects\":[\"proj-004\",\"proj-000\"],\"automation_updates\":7}', '{\"include_support_metrics\":true}', '{\"daily_entries\":20,\"activities\":118}', 'gpt-4.1-mini', '1.0.2', 'Hormiga Squad enhanced support tooling automation and reduced manual triage tasks. Operational efficiency improved measurably during the reporting period.'),
-('rep-041', 'emp-011', 'emp-011', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 15:40:00', '{\"employee_id\":\"emp-011\",\"projects\":[\"proj-011\",\"proj-013\"],\"sync_improvements\":5}', '{\"include_crm_metrics\":true}', '{\"daily_entries\":18,\"activities\":111}', 'gpt-4.1-mini', '1.0.2', 'CRM synchronization reliability improved through targeted fixes and logging enhancements. Internal administrative workflows became more predictable and stable.'),
-('rep-042', 'emp-004', 'proj-010', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 16:20:00', '{\"project_id\":\"proj-010\",\"components_updated\":12,\"design_tokens_refactored\":8}', '{\"include_design_metrics\":true}', '{\"daily_entries\":29,\"activities\":173}', 'gpt-4.1', '2.1.0', 'Design System v2 expanded component coverage and improved visual consistency. Twelve components were upgraded and design tokens standardized across projects.'),
-('rep-043', 'emp-002', 'team-002', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 17:00:00', '{\"team_id\":\"team-002\",\"notification_updates\":5,\"engagement_delta\":\"+3%\"}', '{\"include_engagement_analysis\":true}', '{\"daily_entries\":28,\"activities\":162}', 'gpt-4.1-mini', '1.0.2', 'Notification redesign tasks improved supporter engagement metrics. Iterative UX validation cycles strengthened clarity and reduced friction.'),
-('rep-044', 'emp-006', 'emp-006', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 17:40:00', '{\"employee_id\":\"emp-006\",\"projects\":[\"proj-001\",\"proj-002\",\"proj-015\"],\"experiments_supported\":6}', '{\"include_growth_impact\":true}', '{\"daily_entries\":26,\"activities\":180}', 'gpt-4.1', '2.1.0', 'Cross-project growth experimentation continued at high intensity. Analytical support accelerated experiment validation cycles and improved prioritization accuracy.'),
-('rep-045', 'emp-013', 'proj-013', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 18:20:00', '{\"project_id\":\"proj-013\",\"admin_features_added\":6,\"adoption_rate\":\"+9%\"}', '{\"include_internal_metrics\":true}', '{\"daily_entries\":24,\"activities\":139}', 'gpt-4.1', '2.1.0', 'Internal Admin Panel enhancements improved adoption rates and reduced manual configuration errors. Feature reliability remained stable during rollout.'),
-('rep-046', 'emp-001', 'proj-017', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 19:00:00', '{\"project_id\":\"proj-017\",\"ai_integration_tasks\":8,\"classification_delta\":\"+7%\"}', '{\"include_ai_metrics\":true}', '{\"daily_entries\":30,\"activities\":185}', 'gpt-4.1', '2.1.0', 'AI integration efforts supported classification accuracy improvements and streamlined reporting automation. Cross-functional adoption increased confidence in AI-assisted workflows.'),
-('rep-047', 'emp-010', 'emp-010', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 19:40:00', '{\"employee_id\":\"emp-010\",\"projects\":[\"proj-005\",\"proj-009\",\"proj-019\"],\"analytics_requests\":14}', '{\"include_dashboard_metrics\":true}', '{\"daily_entries\":20,\"activities\":126}', 'gpt-4.1-mini', '1.0.2', 'Analytics alignment efforts improved reporting consistency across projects. Dashboard latency reductions enhanced stakeholder visibility and trust in performance metrics.'),
-('rep-048', 'emp-019', 'proj-019', 'PROJECT', 'prompt-003', '2026-02-01', '2026-02-28', '2026-03-04 20:20:00', '{\"project_id\":\"proj-019\",\"content_updates\":18,\"completion_rate_delta\":\"+4%\"}', '{\"include_content_metrics\":true}', '{\"daily_entries\":28,\"activities\":167}', 'gpt-4.1', '2.1.0', 'Content Optimization 2026 delivered consistent improvements in clarity and petition completion rate. Iterative testing refined copy structure and readability.'),
-('rep-049', 'emp-008', 'team-008', 'TEAM', 'prompt-002', '2026-02-01', '2026-02-28', '2026-03-04 21:00:00', '{\"team_id\":\"team-008\",\"security_patches\":6,\"audit_findings_resolved\":3}', '{\"include_security_summary\":true}', '{\"daily_entries\":19,\"activities\":108}', 'gpt-4.1-mini', '1.0.2', 'Pantera Squad maintained strong security posture improvements with multiple vulnerability resolutions and infrastructure reviews completed.'),
-('rep-050', 'emp-015', 'emp-015', 'EMPLOYEE', 'prompt-001', '2026-02-01', '2026-02-28', '2026-03-04 21:40:00', '{\"employee_id\":\"emp-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1},\"experiment_cycles\":4}', '{\"include_growth_summary\":true}', '{\"daily_entries\":23,\"activities\":158}', 'gpt-4.1', '2.1.0', 'Growth experimentation leadership remained consistent with structured iteration cycles and measurable KPI uplift. Collaboration intensity and cross-team planning maturity increased during the reporting period.');
+INSERT INTO `report` (
+  `report_id`,
+  `generated_by_employee_id`,
+  `content_id`,
+  `content_type`,
+  `period_start`,
+  `period_end`,
+  `created_at`,
+  `content_json`,
+  `filters_json`,
+  `model_name`,
+  `model_version`,
+  `ai_output_text`
+) VALUES
+('rep-000','emp-001','emp-001','EMPLOYEE','2024-02-01','2024-02-28','2026-03-03 22:33:58','{\"tickets_cerrados\": 12, \"horas_invertidas\": 40, \"eficiencia\": \"95%\"}','{\"department\": \"Engineering\"}','GPT-4','Turbo-2024','El empleado ha mostrado un excelente desempeño este mes, superando la meta de tickets por un 20% y manteniendo bloqueos mínimos.'),
+('rep-001','emp-001','emp-001','EMPLOYEE','2026-02-01','2026-02-28','2026-03-01 10:00:00','{\"employee_id\":\"emp-001\",\"projects\":[\"proj-001\",\"proj-010\",\"proj-017\"],\"goals_summary\":{\"completed\":2,\"in_progress\":1},\"highlights_count\":3,\"achievements_count\":1}','{\"include_goals\":true,\"include_highlights\":true,\"include_achievements\":true,\"projects_filter\":[],\"teams_filter\":[]}','gpt-4.1-mini','1.0.2','During February 2026, the employee demonstrated consistent contribution across multiple strategic initiatives including Starter Share Optimization and Design System v2. The overall productivity metrics indicate strong engagement with daily operational tasks and cross-team collaboration. Two goals were successfully completed within the defined timeframe, contributing directly to measurable improvements in share conversion metrics. One ongoing objective remains aligned with Q1 growth targets. The employee also contributed to AI integration efforts, supporting experimentation workflows and improving internal component reuse. Communication and cross-functional coordination were noted as strong, particularly in collaborative validation efforts. Areas for improvement include documentation consistency and earlier risk flagging in cross-team dependencies.'),
+('rep-002','emp-002','team-002','TEAM','2026-02-01','2026-02-28','2026-03-01 11:00:00','{\"team_id\":\"team-002\",\"projects\":[\"proj-004\",\"proj-015\"],\"members\":3,\"goals_active\":2,\"completed_milestones\":1}','{\"include_member_summaries\":true,\"include_goal_progress\":true,\"include_velocity_metrics\":true}','gpt-4.1-mini','1.0.2','Throughout February 2026, Vaquita Squad maintained steady progress across its primary engagement initiatives. The team contributed to improvements in notification systems and experiment validation frameworks. One milestone was completed ahead of schedule, reflecting effective coordination between backend and growth functions. Team velocity remained stable compared to January, with increased collaboration density across multiple projects. Areas identified for optimization include reducing dependency wait times and formalizing retrospective documentation. Overall performance aligns positively with quarterly objectives.'),
+('rep-003','emp-006','proj-002','PROJECT','2026-02-01','2026-02-28','2026-03-01 12:00:00','{\"project_id\":\"proj-002\",\"teams_involved\":[\"team-006\",\"team-018\"],\"active_collaborators\":2,\"goals\":{\"total\":3,\"completed\":1,\"in_progress\":2}}','{\"include_team_breakdown\":true,\"include_goal_analysis\":true,\"include_risk_section\":true}','gpt-4.1','2.1.0','The Recruit Share Growth initiative demonstrated measurable improvements in experiment coverage and analytical depth during February 2026. A total of 31 daily entries were analyzed, producing 188 classified activities that contributed to structured experimentation cycles. One strategic goal was completed, leading to a 3.2% increase in recruit share rate compared to the previous baseline. Two goals remain in progress and are forecasted to close within Q1. Identified risks include data latency issues in funnel attribution and temporary misalignment in UX messaging consistency. Overall project health is considered stable with upward momentum.'),
+('rep-004','emp-004','emp-004','EMPLOYEE','2026-02-01','2026-02-28','2026-03-01 13:00:00','{\"employee_id\":\"emp-004\",\"projects\":[\"proj-003\",\"proj-010\",\"proj-016\"],\"goals_summary\":{\"completed\":1,\"in_progress\":2},\"highlight_count\":2}','{\"include_goals\":true,\"include_highlights\":true,\"include_peer_feedback\":false}','gpt-4.1-mini','1.0.2','The employee focused primarily on UI validation improvements and design system enhancements throughout February. One goal related to validation error messaging was completed successfully. Two additional goals remain active, including improvements in accessibility compliance and cross-device component consistency. Productivity metrics reflect a high activity density with structured task categorization. Collaboration with backend validation teams was consistent and constructive. Improvement opportunities include earlier UX testing cycles and increased cross-squad documentation alignment.'),
+('rep-005','emp-015','proj-015','PROJECT','2026-02-01','2026-02-28','2026-03-01 14:00:00','{\"project_id\":\"proj-015\",\"teams\":[\"team-015\",\"team-006\",\"team-012\"],\"active_experiments\":4,\"completed_experiments\":2}','{\"include_experiment_metrics\":true,\"include_growth_impact\":true}','gpt-4.1','2.1.0','High Impact Growth Tests progressed significantly during February with four active experiments and two successful experiment closures. Data indicates early positive trends in petition share conversion and checkout completion rates. Cross-functional alignment between growth and analytics teams improved iteration speed. One minor risk was detected related to inconsistent segmentation tagging, currently under mitigation. Overall project trajectory remains positive with projected KPI uplift exceeding initial quarterly forecasts.'),
+('rep-006','emp-006','emp-006','EMPLOYEE','2026-02-01','2026-02-28','2026-03-02 09:00:00','{\"employee_id\":\"emp-006\",\"projects\":[\"proj-001\",\"proj-002\",\"proj-015\",\"proj-018\"],\"goals_summary\":{\"completed\":1,\"in_progress\":2},\"collaboration_intensity\":\"high\"}','{\"include_goals\":true,\"include_growth_metrics\":true,\"include_cross_project_analysis\":true}','gpt-4.1','2.1.0','During February, the employee played a central role in multiple growth initiatives including Recruit Share Growth and High Impact Experiments. Analytical contributions directly influenced experiment prioritization and validation methodology. One goal was completed while two remain active and on track. Collaboration levels were significantly above team average, reflecting cross-functional leadership in experimentation workflows. Overall contribution is categorized as strategically impactful.'),
+('rep-007','emp-010','team-010','TEAM','2026-02-01','2026-02-28','2026-03-02 10:00:00','{\"team_id\":\"team-010\",\"projects\":[\"proj-005\",\"proj-009\",\"proj-019\"],\"members\":3,\"analytics_requests\":14}','{\"include_kpi_summary\":true,\"include_member_breakdown\":true}','gpt-4.1-mini','1.0.2','Búho Squad maintained consistent analytical support across three major initiatives. Dashboard performance improvements and content optimization metrics showed measurable gains compared to January. Activity classification density increased, and cross-team response times improved by approximately eight percent. Continued focus on data consistency and visualization standardization is recommended.'),
+('rep-008','emp-004','proj-016','PROJECT','2026-02-01','2026-02-28','2026-03-02 11:00:00','{\"project_id\":\"proj-016\",\"teams\":[\"team-016\",\"team-004\"],\"validation_rules_updated\":12,\"ui_updates\":7}','{\"include_risk_section\":true,\"include_validation_metrics\":true}','gpt-4.1','2.1.0','The Petition Validation Engine project progressed steadily with twelve backend rule updates and seven UI adjustments deployed. Classification accuracy improved and validation feedback clarity increased for end users. Remaining risk involves rule overlap scenarios that require further automated testing. Overall project health is positive and aligned with roadmap expectations.'),
+('rep-009','emp-002','emp-002','EMPLOYEE','2026-02-01','2026-02-28','2026-03-02 12:00:00','{\"employee_id\":\"emp-002\",\"projects\":[\"proj-001\",\"proj-004\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1},\"team_role\":\"LEAD\"}','{\"include_goal_tracking\":true,\"include_team_influence\":true}','gpt-4.1-mini','1.0.2','The employee maintained strong involvement in share optimization and notification redesign initiatives. Leadership responsibilities were evident in coordination tasks and milestone planning. One goal was successfully achieved, contributing to incremental performance improvements. Continued focus on documentation clarity will further enhance cross-squad efficiency.'),
+('rep-010','emp-014','team-014','TEAM','2026-02-01','2026-02-28','2026-03-02 13:00:00','{\"team_id\":\"team-014\",\"projects\":[\"proj-014\",\"proj-005\"],\"members\":2,\"community_features_released\":3}','{\"include_release_notes\":true,\"include_goal_alignment\":true}','gpt-4.1-mini','1.0.2','Mariposa Squad focused on community feed enhancements and cross-project support tasks. Three incremental feature updates were deployed, contributing to measurable engagement improvements. Collaboration with analytics ensured metric validation. Future attention should address scalability of ranking logic under increased traffic conditions.'),
+('rep-011','emp-007','proj-008','PROJECT','2026-02-01','2026-02-28','2026-03-02 14:00:00','{\"project_id\":\"proj-008\",\"security_patches\":6,\"infra_updates\":4,\"audit_findings_resolved\":3}','{\"include_compliance_status\":true,\"include_security_metrics\":true}','gpt-4.1','2.1.0','Security Audit 2026 advanced with six patches deployed and multiple infrastructure reinforcements. Three previously identified vulnerabilities were resolved. Audit progression remains on track, though moderate risk remains regarding dependency update timelines. Overall compliance posture has improved significantly.'),
+('rep-012','emp-011','emp-011','EMPLOYEE','2026-02-01','2026-02-28','2026-03-02 15:00:00','{\"employee_id\":\"emp-011\",\"projects\":[\"proj-011\",\"proj-013\"],\"goals\":{\"completed\":0,\"in_progress\":2}}','{\"include_goal_details\":true}','gpt-4.1-mini','1.0.2','CRM synchronization and internal tool enhancements were the primary focus areas. Although no goals were fully completed during this period, consistent progress was recorded across both initiatives. Data consistency and error handling robustness improved measurably.'),
+('rep-013','emp-018','proj-018','PROJECT','2026-02-01','2026-02-28','2026-03-02 16:00:00','{\"project_id\":\"proj-018\",\"funnel_stages_optimized\":3,\"data_accuracy_delta\":\"+4%\"}','{\"include_funnel_breakdown\":true}','gpt-4.1','2.1.0','Recruit Funnel Analytics saw incremental improvements across three optimized stages. Data reliability increased and reporting latency decreased. Further work will focus on segmentation refinement and automated anomaly detection.'),
+('rep-014','emp-015','emp-015','EMPLOYEE','2026-02-01','2026-02-28','2026-03-02 17:00:00','{\"employee_id\":\"emp-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1}}','{\"include_growth_metrics\":true}','gpt-4.1-mini','1.0.2','Growth experimentation leadership remained strong with one key milestone achieved in checkout optimization. Performance uplift trends indicate sustainable improvements. Continued monitoring of experiment maturity is recommended.'),
+('rep-015','emp-019','team-019','TEAM','2026-02-01','2026-02-28','2026-03-02 18:00:00','{\"team_id\":\"team-019\",\"projects\":[\"proj-001\",\"proj-014\",\"proj-019\"],\"content_updates\":18}','{\"include_content_metrics\":true}','gpt-4.1-mini','1.0.2','Camaleón Squad delivered substantial content optimization efforts across multiple initiatives. Eighteen content updates were deployed, resulting in improved clarity and shareability metrics. Coordination with growth and analytics teams ensured measurable validation of improvements.'),
+('rep-016','emp-001','team-001','TEAM','2026-02-01','2026-02-28','2026-03-03 09:00:00','{\"team_id\":\"team-001\",\"projects\":[\"proj-001\",\"proj-010\",\"proj-017\"],\"members\":3,\"velocity_index\":1.12}','{\"include_member_performance\":true,\"include_goal_alignment\":true}','gpt-4.1-mini','1.0.2','Axolotl Squad maintained strong delivery velocity throughout February, contributing across three strategic initiatives. Component reuse and AI integration tasks improved operational efficiency. Cross-squad alignment was particularly strong in design system adoption and share flow optimization. Minor coordination delays were detected but did not significantly impact milestones.'),
+('rep-017','emp-006','proj-001','PROJECT','2026-02-01','2026-02-28','2026-03-03 09:45:00','{\"project_id\":\"proj-001\",\"share_rate_delta\":\"+6%\",\"experiments_run\":3,\"teams_involved\":3}','{\"include_experiment_metrics\":true,\"include_team_breakdown\":true}','gpt-4.1','2.1.0','Starter Share Optimization demonstrated measurable uplift during February, with a six percent increase in share conversion. Three structured experiments were executed and validated. Collaboration between frontend and growth functions significantly reduced iteration cycles. Overall risk profile remains low and performance momentum is positive.'),
+('rep-018','emp-004','emp-016','EMPLOYEE','2026-02-01','2026-02-28','2026-03-03 10:30:00','{\"employee_id\":\"emp-016\",\"projects\":[\"proj-003\",\"proj-016\"],\"goals\":{\"completed\":0,\"in_progress\":2},\"bug_fixes\":14}','{\"include_goal_tracking\":true,\"include_activity_density\":true}','gpt-4.1-mini','1.0.2','The employee focused on backend validation logic and engine stability improvements. Although no formal goals were completed this period, measurable progress was achieved across rule refactoring tasks and bug resolution. Collaboration with design teams improved error clarity and reduced rework cycles.'),
+('rep-019','emp-010','proj-009','PROJECT','2026-02-01','2026-02-28','2026-03-03 11:15:00','{\"project_id\":\"proj-009\",\"query_latency_delta\":\"-18%\",\"dashboards_updated\":5}','{\"include_performance_metrics\":true}','gpt-4.1','2.1.0','Dashboard Performance optimization efforts reduced query latency by eighteen percent compared to baseline. Five high-traffic dashboards were updated and validated. Backend query tuning and index adjustments contributed significantly to performance gains. Monitoring will continue to ensure stability under peak load.'),
+('rep-020','emp-015','team-015','TEAM','2026-02-01','2026-02-28','2026-03-03 12:00:00','{\"team_id\":\"team-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"active_experiments\":4}','{\"include_growth_kpis\":true}','gpt-4.1-mini','1.0.2','Tiburón Squad executed multiple growth experiments with structured validation cycles. Early signals suggest improvements in checkout conversion and petition engagement metrics. Experiment documentation practices improved, though statistical validation rigor can be enhanced further.'),
+('rep-021', 'emp-007', 'emp-007', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-03 13:00:00',
+'{\"employee_id\":\"emp-007\",\"projects\":[\"proj-007\",\"proj-008\"],\"goals\":{\"completed\":1,\"in_progress\":0}}',
+'{\"include_security_contributions\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Infrastructure stabilization and security hardening were successfully delivered. One CI reliability goal was fully completed, reducing deployment rollback incidents. Security audit preparation tasks were executed efficiently with minimal disruption to production workflows.'),
+
+('rep-022', 'emp-012', 'proj-012', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-03 14:00:00',
+'{\"project_id\":\"proj-012\",\"checkout_conversion_delta\":\"+4.8%\",\"ab_tests\":2}',
+'{\"include_revenue_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Checkout Optimization resulted in a measurable four point eight percent improvement in conversion. Two A/B tests were executed, focusing on friction reduction and payment clarity. Cross-team alignment with analytics ensured statistically valid evaluation. Revenue impact projections remain favorable.'),
+
+('rep-023', 'emp-013', 'team-013', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-03 15:00:00',
+'{\"team_id\":\"team-013\",\"projects\":[\"proj-011\",\"proj-013\"],\"admin_features_added\":6}',
+'{\"include_internal_tool_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Coyote Squad delivered six incremental enhancements to internal administrative tools. Improvements reduced manual configuration overhead and improved CRM synchronization stability. Internal adoption metrics increased steadily throughout the period.'),
+
+('rep-024', 'emp-017', 'proj-017', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-03 16:00:00',
+'{\"project_id\":\"proj-017\",\"classification_accuracy\":\"+7%\",\"models_tested\":3}',
+'{\"include_ai_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'AI Assisted Classification improved accuracy metrics by seven percent during February. Three model configurations were evaluated and validated against historical daily entries. Automation reduced manual categorization effort and improved reporting consistency across teams.'),
+
+('rep-025', 'emp-020', 'emp-020', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-03 17:00:00',
+'{\"employee_id\":\"emp-020\",\"projects\":[\"proj-004\",\"proj-000\"],\"support_automation_tasks\":9}',
+'{\"include_support_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Support tooling enhancements and operational automation tasks were prioritized. Nine automation adjustments reduced repetitive manual interventions. Collaboration with notification redesign teams improved ticket response time and workflow clarity.'),
+
+('rep-026', 'emp-003', 'proj-003', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-03 18:00:00',
+'{\"project_id\":\"proj-003\",\"validation_accuracy_delta\":\"+5%\",\"ui_updates\":4}',
+'{\"include_quality_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Quality Petition Improvement achieved a five percent accuracy increase in validation scoring. UI updates enhanced clarity of error feedback and improved user correction rates. Continued monitoring will ensure model consistency across edge cases.'),
+
+('rep-027', 'emp-014', 'emp-014', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-03 19:00:00',
+'{\"employee_id\":\"emp-014\",\"projects\":[\"proj-014\",\"proj-005\"],\"goals\":{\"completed\":1,\"in_progress\":1}}',
+'{\"include_engagement_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Community feature enhancements progressed steadily, with one milestone achieved in ranking logic optimization. Engagement improvements were observed across new feature deployments. Cross-team collaboration strengthened experimentation alignment.'),
+
+('rep-028', 'emp-018', 'team-018', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-03 20:00:00',
+'{\"team_id\":\"team-018\",\"projects\":[\"proj-002\",\"proj-018\"],\"funnel_analysis_cycles\":4}',
+'{\"include_recruitment_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Venado Squad conducted four funnel analysis cycles during February. Improvements in data clarity and stage attribution reduced reporting inconsistencies. Collaboration with growth teams improved experiment planning precision.'),
+
+('rep-029', 'emp-005', 'proj-005', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-03 21:00:00',
+'{\"project_id\":\"proj-005\",\"api_latency_delta\":\"-12%\",\"stability_improvements\":8}',
+'{\"include_backend_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Share Tracking Reliability improved backend stability with eight targeted fixes. API latency decreased by twelve percent, improving dashboard and reporting responsiveness. Continued log monitoring will ensure sustained reliability gains.'),
+
+('rep-030', 'emp-008', 'emp-008', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-03 22:00:00',
+'{\"employee_id\":\"emp-008\",\"projects\":[\"proj-008\",\"proj-010\"],\"security_reviews\":5}',
+'{\"include_security_contributions\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Security review efforts were sustained across component upgrades and design system changes. Five targeted reviews identified minor vulnerabilities which were resolved within the same reporting period. Collaboration quality with frontend teams remained high.'),
+
+('rep-031', 'emp-012', 'team-012', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 09:00:00',
+'{\"team_id\":\"team-012\",\"projects\":[\"proj-012\"],\"conversion_delta\":\"+4.8%\",\"deployments\":3}',
+'{\"include_revenue_impact\":true,\"include_member_breakdown\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Halcón Squad focused primarily on checkout optimization initiatives. Deployment cycles were stable and incremental improvements in payment clarity contributed to measurable gains in conversion. Cross-functional testing alignment reduced post-release regressions.'),
+
+('rep-032', 'emp-009', 'emp-009', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 09:40:00',
+'{\"employee_id\":\"emp-009\",\"projects\":[\"proj-006\",\"proj-009\"],\"goals\":{\"completed\":1,\"in_progress\":0}}',
+'{\"include_mobile_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Mobile performance optimizations were successfully finalized. The employee contributed to latency reduction and UI responsiveness improvements, ensuring consistent experience across devices. Collaboration with analytics supported measurable validation.'),
+
+('rep-033', 'emp-016', 'proj-016', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 10:20:00',
+'{\"project_id\":\"proj-016\",\"engine_refactors\":5,\"test_coverage_delta\":\"+6%\"}',
+'{\"include_validation_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Validation engine refactors improved maintainability and increased automated test coverage by six percent. Backend stability improved and error feedback clarity was enhanced. Project health remains stable and technically sound.'),
+
+('rep-034', 'emp-014', 'team-014', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 11:00:00',
+'{\"team_id\":\"team-014\",\"engagement_delta\":\"+5%\",\"features_released\":3}',
+'{\"include_engagement_analysis\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Community feed enhancements continued to drive engagement improvements. Feature rollouts were smooth and coordination with content optimization teams strengthened iteration cycles.'),
+
+('rep-035', 'emp-017', 'emp-017', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 11:40:00',
+'{\"employee_id\":\"emp-017\",\"projects\":[\"proj-017\",\"proj-018\"],\"models_tested\":3}',
+'{\"include_ai_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'AI experimentation efforts expanded with multiple classification configurations evaluated. Automation improvements reduced manual tagging effort and increased reporting consistency.'),
+
+('rep-036', 'emp-005', 'proj-007', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 12:20:00',
+'{\"project_id\":\"proj-007\",\"deployment_success_rate\":\"99.2%\",\"pipeline_improvements\":4}',
+'{\"include_devops_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'CI pipeline stabilization improved deployment reliability to over ninety-nine percent. Infrastructure updates reduced rollback events and enhanced monitoring visibility.'),
+
+('rep-037', 'emp-003', 'team-003', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 13:00:00',
+'{\"team_id\":\"team-003\",\"projects\":[\"proj-003\",\"proj-002\"],\"frontend_refactors\":6}',
+'{\"include_code_quality_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Jaguar Squad executed targeted frontend refactors improving maintainability and reducing technical debt. Collaboration with validation teams enhanced UI clarity.'),
+
+('rep-038', 'emp-018', 'emp-018', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 13:40:00',
+'{\"employee_id\":\"emp-018\",\"projects\":[\"proj-002\",\"proj-018\"],\"goals\":{\"completed\":0,\"in_progress\":2}}',
+'{\"include_recruitment_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Recruitment analytics initiatives progressed steadily. Funnel attribution clarity improved and experiment alignment strengthened cross-team communication.'),
+
+('rep-039', 'emp-015', 'proj-015', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 14:20:00',
+'{\"project_id\":\"proj-015\",\"experiments_active\":4,\"conversion_delta\":\"+3.5%\"}',
+'{\"include_growth_summary\":true}',
+'gpt-4.1', '2.1.0',
+'Growth experiments continued to deliver incremental conversion improvements. Statistical validation cycles improved reliability of insights and prioritization accuracy.'),
+
+('rep-040', 'emp-020', 'team-020', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 15:00:00',
+'{\"team_id\":\"team-020\",\"projects\":[\"proj-004\",\"proj-000\"],\"automation_updates\":7}',
+'{\"include_support_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Hormiga Squad enhanced support tooling automation and reduced manual triage tasks. Operational efficiency improved measurably during the reporting period.'),
+('rep-041', 'emp-011', 'emp-011', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 15:40:00',
+'{\"employee_id\":\"emp-011\",\"projects\":[\"proj-011\",\"proj-013\"],\"sync_improvements\":5}',
+'{\"include_crm_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'CRM synchronization reliability improved through targeted fixes and logging enhancements. Internal administrative workflows became more predictable and stable.'),
+
+('rep-042', 'emp-004', 'proj-010', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 16:20:00',
+'{\"project_id\":\"proj-010\",\"components_updated\":12,\"design_tokens_refactored\":8}',
+'{\"include_design_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Design System v2 expanded component coverage and improved visual consistency. Twelve components were upgraded and design tokens standardized across projects.'),
+
+('rep-043', 'emp-002', 'team-002', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 17:00:00',
+'{\"team_id\":\"team-002\",\"notification_updates\":5,\"engagement_delta\":\"+3%\"}',
+'{\"include_engagement_analysis\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Notification redesign tasks improved supporter engagement metrics. Iterative UX validation cycles strengthened clarity and reduced friction.'),
+
+('rep-044', 'emp-006', 'emp-006', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 17:40:00',
+'{\"employee_id\":\"emp-006\",\"projects\":[\"proj-001\",\"proj-002\",\"proj-015\"],\"experiments_supported\":6}',
+'{\"include_growth_impact\":true}',
+'gpt-4.1', '2.1.0',
+'Cross-project growth experimentation continued at high intensity. Analytical support accelerated experiment validation cycles and improved prioritization accuracy.'),
+
+('rep-045', 'emp-013', 'proj-013', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 18:20:00',
+'{\"project_id\":\"proj-013\",\"admin_features_added\":6,\"adoption_rate\":\"+9%\"}',
+'{\"include_internal_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Internal Admin Panel enhancements improved adoption rates and reduced manual configuration errors. Feature reliability remained stable during rollout.'),
+
+('rep-046', 'emp-001', 'proj-017', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 19:00:00',
+'{\"project_id\":\"proj-017\",\"ai_integration_tasks\":8,\"classification_delta\":\"+7%\"}',
+'{\"include_ai_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'AI integration efforts supported classification accuracy improvements and streamlined reporting automation. Cross-functional adoption increased confidence in AI-assisted workflows.'),
+
+('rep-047', 'emp-010', 'emp-010', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 19:40:00',
+'{\"employee_id\":\"emp-010\",\"projects\":[\"proj-005\",\"proj-009\",\"proj-019\"],\"analytics_requests\":14}',
+'{\"include_dashboard_metrics\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Analytics alignment efforts improved reporting consistency across projects. Dashboard latency reductions enhanced stakeholder visibility and trust in performance metrics.'),
+
+('rep-048', 'emp-019', 'proj-019', 'PROJECT', '2026-02-01', '2026-02-28', '2026-03-04 20:20:00',
+'{\"project_id\":\"proj-019\",\"content_updates\":18,\"completion_rate_delta\":\"+4%\"}',
+'{\"include_content_metrics\":true}',
+'gpt-4.1', '2.1.0',
+'Content Optimization 2026 delivered consistent improvements in clarity and petition completion rate. Iterative testing refined copy structure and readability.'),
+
+('rep-049', 'emp-008', 'team-008', 'TEAM', '2026-02-01', '2026-02-28', '2026-03-04 21:00:00',
+'{\"team_id\":\"team-008\",\"security_patches\":6,\"audit_findings_resolved\":3}',
+'{\"include_security_summary\":true}',
+'gpt-4.1-mini', '1.0.2',
+'Pantera Squad maintained strong security posture improvements with multiple vulnerability resolutions and infrastructure reviews completed.'),
+
+('rep-050', 'emp-015', 'emp-015', 'EMPLOYEE', '2026-02-01', '2026-02-28', '2026-03-04 21:40:00',
+'{\"employee_id\":\"emp-015\",\"projects\":[\"proj-012\",\"proj-015\"],\"goals\":{\"completed\":1,\"in_progress\":1},\"experiment_cycles\":4}',
+'{\"include_growth_summary\":true}',
+'gpt-4.1', '2.1.0',
+'Growth experimentation leadership remained consistent with structured iteration cycles and measurable KPI uplift. Collaboration intensity and cross-team planning maturity increased during the reporting period.');
 
 -- --------------------------------------------------------
 
@@ -1382,7 +1542,6 @@ ALTER TABLE `prompt`
 --
 ALTER TABLE `report`
   ADD PRIMARY KEY (`report_id`),
-  ADD KEY `fk_rep_prompt` (`prompt_id`),
   ADD KEY `fk_generated_employee` (`generated_by_employee_id`);
 
 --
@@ -1489,9 +1648,7 @@ ALTER TABLE `projectteam`
 -- Constraints for table `report`
 --
 ALTER TABLE `report`
-  ADD CONSTRAINT `fk_rep_employee` FOREIGN KEY (`generated_by_employee_id`) REFERENCES `employee` (`employee_id`),
-  ADD CONSTRAINT `fk_rep_prompt` FOREIGN KEY (`prompt_id`) REFERENCES `prompt` (`prompt_id`);
-
+  ADD CONSTRAINT `fk_rep_employee` FOREIGN KEY (`generated_by_employee_id`) REFERENCES `employee` (`employee_id`);
 --
 -- Constraints for table `roleprivilege`
 --

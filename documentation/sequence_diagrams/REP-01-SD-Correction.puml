@@ -1,0 +1,265 @@
+@startuml
+skinparam style strictuml
+
+actor User as U
+boundary "default.ejs" as V
+boundary "report.routes" as RO
+control "report.controller" as C
+control "ai.wrapper" as W
+entity "employee.model" as E
+entity "project.model" as P
+entity "team.model" as T
+entity "activity.model" as A
+entity "achievement.model" as AC
+entity "goal.model" as G
+entity "prompt.model" as PR
+entity "report.model" as R
+entity "ai.provider" as AIProvider
+database "unitas_system" as BD
+
+autonumber
+
+activate U
+U->>V:Click "Generate Report" button
+note right
+The validation of the Report model
+are done within the inner JS of the
+view before User Case.
+
+Each modal is locked or open 
+which gives a content type. 
+
+end note
+    activate V
+    V->V:idenfityReportType();
+    V->>RO: fetch(`/report/generate`, {method: POST, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
+        note right
+        The data must contain all the filters of the report, 
+        the content_id, and the page it was sent from
+        end note
+        activate RO
+        RO->C: generateReport(request, response);
+        deactivate RO
+            activate C
+
+            C->C: normalizeReportRequest(request.body)
+            C->C: normalizeReportType(report_type)
+
+            alt Employee Report
+            C->>P:getEmployeeProjectIDsBtw(employee_id, start_date, end_date)
+                activate P
+                P->>BD:execute(`SELECT P.project_id \nFROM project as P \nINNER JOIN collaboration AS C ON C.project_id=P.project_id \nWHERE C.employee_id=? AND C.started_at>=? AND C.started_at<=?;`,\n[employee_id, start_date, end_date])
+                    activate BD
+                    BD-->P:project_ids
+                    deactivate BD
+                P-->C:project_ids
+                deactivate P
+            end
+            
+            alt Team Report
+            C->>P:getTeamProjectIDsBtw(team_id, start_date, end_date)
+                activate P
+                P->>BD:execute(`SELECT P.project_id FROM project as P INNER JOIN projectteam AS PT ON PT.project_id=P.project_id WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;`,[team_id, start_date, end_date])
+                    activate BD
+                    BD-->P:project_ids
+                    deactivate BD
+                P-->C:project_ids
+                deactivate P
+            end
+            
+            alt Project Report
+                note right
+                project_ids is already obtained 
+                as the content_id
+                end note
+            end
+
+            alt Employee or Project Report
+            C->>A:getProjectActivities(project_ids, start_date, end_date)
+                activate A
+                A->>BD:execute(`SELECT A.title, A.description, A.completed_at, A.employee_id, E.full_name \nFROM activity AS A \nINNER JOIN employee AS E ON A.employee_id=E.employee_id \nWHERE (completed_at BETWEEN ? AND ?) AND project_id IN ?;`,\n[start_date, end_date, project_ids])
+                    activate BD
+                    BD-->A:activities
+                    deactivate BD
+                A-->C:activities
+                deactivate A
+            end
+
+            alt Team Report
+            C->>A:getProjectActivitiesTeam(project_ids, team_id start_date, end_date)
+                activate A
+                A->>BD:execute(`SELECT A.title, A.description, A.completed_at, A.activity_id, E.employee_id,E.full_name \nFROM activity AS A \nINNER JOIN employee AS E ON A.employee_id=E.employee_id \nWHERE (A.completed_at BETWEEN ? AND ?) AND A.project_id IN ? AND A.employee_id IN(\nSELECT E.employee_id \nFROM employee AS E \nINNER JOIN employeeteam AS ET ON ET.employee_id=E.employee_id \nWHERE ET.team_id = ?);`,\n[start_date, end_date, project_ids, team_id])
+                    activate BD
+                    BD-->A:activities
+                    deactivate BD
+                A-->C:activities
+                deactivate A
+            end
+
+            C->>G:getProjectGoals(project_ids, start_date, end_date)
+                activate G
+                G->>BD:execute(`SELECT * FROM goal AS G WHERE (G.created_at BETWEEN ? AND ?) AND project_id IN ?;`,[start_date, end_date, project_ids])
+                    activate BD
+                    BD-->G:goals
+                    deactivate BD
+                G-->C:goals
+                deactivate G
+
+            C->>AC:getProjectAchievements(project_ids, start_date, end_date)
+                activate AC
+                AC->>BD:execute(`SELECT * FROM achievement AS AC WHERE (AC.achievement_date BETWEEN ? AND ?) AND project_id IN ?;`,[start_date, end_date, project_ids])
+                    activate BD
+                    BD-->AC:achievements
+                    deactivate BD
+                AC-->C:achievements
+                deactivate AC
+
+            C->>PR: fetchPrompts(report_type);
+                activate PR
+                    PR->>BD: execute(`SELECT * FROM prompt WHERE type=?;`,[report_type]);
+                        activate BD
+                        BD-->PR:prompts 
+                        deactivate BD
+                    PR-->C:prompts
+                deactivate PR
+
+alt Data Obtention Failed
+            C-->V: response.status(500).json({success:false, message:'Data obtention failed'})
+        V-->U: No change
+end
+
+            note right
+            Prompt dictionary is based on names.
+            Specific names to match.
+            end note
+
+            C->C:buildPromptMap(prompts);
+            C->C:groupByTwoLevels(activities, 'project_id', 'employee_id');
+            C->C:groupBy(goals,'project_id');
+            C->C:groupBy(achievements,'project_id');
+
+            note right
+            Normalization of projects into a 
+            greater object of projects.
+            end note
+
+            note right
+                Need to install ai & zod
+            end note
+
+            loop Per Each Project
+            C->>W: beBetterProject(project, prompt, schema);
+                activate W
+                
+                alt OpenAI usage
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt:prompt , input:project})
+                end
+                alt Gemini usage
+                W->>AIProvider:generateObject({schema: projectSectionSchema, prompt:prompt, input:project});
+                end
+                    activate AIProvider
+                    AIProvider-->W: API response
+                    deactivate AIProvider
+                W-->C: section
+                deactivate W
+            end
+
+            alt AI Response Failed
+            C-->V: response.status(500).json({success:false, message:'API error sections', error:error})
+    V-->U:View (no changes)
+            end
+
+            alt Team Report
+            C->>W: teamImpact(project, prompt, schema);
+                activate W
+                
+                alt OpenAI usage
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt:prompt , input:project})
+                end
+                alt Gemini usage
+                W->>AIProvider:generateObject({schema: projectSectionSchema, prompt:prompt, input:project});
+                end
+                    activate AIProvider
+                    AIProvider-->W: API response
+                    deactivate AIProvider
+                W-->C: section
+                deactivate W
+
+            alt AI Response Failed
+            C-->V: response.status(500).json({success:false, message:'API error team impact', error:error})
+    V-->U:View (no changes)
+            end
+
+            end
+
+            note right
+            Unification of sections.
+            end note
+
+            C->>W: whatToImprove(sections, prompt, schema);
+                activate W
+
+                alt OpenAI usage
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt:prompt , input:sections})
+                end
+                alt Gemini usage
+                W->>AIProvider:generateObject({schema: schema, prompt:prompt, input:sections});
+                end
+                    activate AIProvider
+                    AIProvider-->W: API response
+                    deactivate AIProvider
+                W-->C: whatToImprove
+                deactivate W
+
+            note right
+            Unification of the report format into
+            ai_output_text that follows the conventions
+            of the visualization of report
+            end note
+
+            alt AI Response Failed
+            C-->V: response.status(500).json({success:false, message:'API error what to improve', error:error})
+    V-->U:View (no changes)
+            end
+
+            create entity ReportObject as ReportObject
+            C->ReportObject**: new Report(generated_by_employee_id, content_id, content_type, period_start, period_end, content_json, filters_json, model_name, model_version ,ai_output_text)
+                activate ReportObject
+            C->>ReportObject:save()
+                ReportObject->>BD:  execute(`\nINSERT INTO report(report_id,generated_by_employee_id, content_id, \ncontent_type, period_start, period_end, created_at, content_json, filters_json \, model_name, model_version, ai_output_text) \nVALUES(UUID(),?,?,?,?,?,NOW(),?,?,?,?,?)`, \n[this.generated_by_employee_id, this.content_id, this.content_type, this.period_start,\n this.period_end, this.content_json, this.filters_json, this.model_name, this.model_version, this.ai_output_text])}
+                    activate BD
+                    BD-->ReportObject: Query OK
+                    deactivate BD
+                ReportObject-->C: Query OK
+                deactivate ReportObject
+            
+            alt Report Creation Failed
+            C-->V: response.status(500).json({success:false, message:'Report could not be created', error:error})
+    V-->U:View (no changes)
+            end
+
+            C->>R:fetchByContentId(employee_id, content_id)
+                activate R
+                R->>BD: execute(`SELECT *\nFROM report\nWHERE generated_by_employee_id = ?\nAND content_id = ?\nORDER BY created_at DESC\nLIMIT ?;`,\n[employee_id, content_id, limit],);
+                    activate BD
+                    BD-->R: latestReports
+                    deactivate BD
+                R-->C:latestReports
+                deactivate R
+            
+            C-->V:response.status(200).json({success:true, latestReports: latestReports})
+    V->V:updateLatestReports()
+    V-->U: Updated view + Latest Report
+
+            alt Report Obtention Failed
+            C-->V: response.status(500).json({success:false, message:'Report could not be obtained', error:error})
+    V-->U:View (no changes)
+            end
+
+            deactivate C
+    deactivate V
+deactivate U
+
+
+
+@enduml
