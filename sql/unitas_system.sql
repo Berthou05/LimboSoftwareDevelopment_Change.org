@@ -347,7 +347,7 @@ CREATE TABLE `collaboration` (
   `description` varchar(1000) NOT NULL,
   `started_at` datetime NOT NULL,
   `ended_at` datetime DEFAULT NULL,
-  `role` enum('EMPLOYEE','LEAD') NOT NULL
+  `role` varchar(150) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -660,7 +660,8 @@ INSERT INTO `employeeteam` (`employee_id`, `team_id`, `joined_at`, `left_at`, `r
 ('emp-001', 'team-001', '2026-01-01 00:00:00', NULL, 'LEAD'),
 ('emp-001', 'team-014', '2026-01-21 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-002', 'team-001', '2026-01-02 00:00:00', NULL, 'EMPLOYEE'),
-('emp-002', 'team-002', '2026-01-01 00:00:00', NULL, 'LEAD'),
+('emp-002', 'team-002', '2026-01-01 00:00:00', NULL, 'EMPLOYEE'),
+('emp-001', 'team-002', '2026-01-01 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-002', 'team-015', '2026-01-22 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-003', 'team-001', '2026-01-03 00:00:00', NULL, 'EMPLOYEE'),
 ('emp-003', 'team-003', '2026-01-01 00:00:00', NULL, 'LEAD'),
@@ -1249,7 +1250,7 @@ CREATE TABLE `team` (
 
 INSERT INTO `team` (`team_id`, `employee_responsible_id`, `name`, `description`, `created_at`, `image`, `status`) VALUES
 ('team-001', 'emp-001', 'Axolotl Squad', 'Starter Experience and onboarding flows', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/axolotl-squad.png', 'ACTIVE'),
-('team-002', 'emp-002', 'Vaquita Squad', 'Supporter Experience and engagement tools', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/vaquita-squad.png', 'ACTIVE'),
+('team-002', 'emp-001', 'Vaquita Squad', 'Supporter Experience and engagement tools', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/vaquita-squad.png', 'ACTIVE'),
 ('team-003', 'emp-003', 'Jaguar Squad', 'Frontend architecture and performance', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/jaguar-squad.png', 'ACTIVE'),
 ('team-004', 'emp-004', 'Colibrí Squad', 'Design system and UI consistency', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/colibri-squad.png', 'ACTIVE'),
 ('team-005', 'emp-005', 'Tortuga Squad', 'Backend APIs and stability', '2026-01-01 00:00:00', 'https://cdn.unitas-platform.com/teams/tortuga-squad.png', 'ACTIVE'),

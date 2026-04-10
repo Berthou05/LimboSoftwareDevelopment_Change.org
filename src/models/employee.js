@@ -34,21 +34,6 @@ FROM (
             T.employee_responsible_id = ?
             OR MyET.role = 'LEAD'
         )
-    UNION
-    SELECT C.employee_id
-    FROM collaboration AS C
-    WHERE C.ended_at IS NULL
-        AND C.project_id IN (
-            SELECT P.project_id
-            FROM project AS P
-            WHERE P.employee_responsible_id = ?
-                AND P.status = 'IN PROGRESS'
-        )
-    UNION
-    SELECT P.employee_responsible_id AS employee_id
-    FROM project AS P
-    WHERE P.employee_responsible_id = ?
-        AND P.status = 'IN PROGRESS'
 ) AS visible`;
 
 const DIRECTORY_QUERY = `SELECT DISTINCT
@@ -71,8 +56,6 @@ ORDER BY E.full_name ASC`;
 
 const buildLeadScopeParameters = function buildLeadScopeParameters(employeeId) {
     return [
-        employeeId || '',
-        employeeId || '',
         employeeId || '',
         employeeId || '',
         employeeId || '',

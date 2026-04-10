@@ -115,6 +115,107 @@ const buildActivitySections = function buildActivitySections(activities) {
         }));
 };
 
+/*formatProjectItemDateLabel(value)
+Auxiliar function responsible for formatting project item dates used in the
+team projects summary cards.*/
+
+const formatProjectItemDateLabel = function formatProjectItemDateLabel(value) {
+    if (!value) {
+        return 'No date';
+    }
+
+    return new Date(value).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+/*buildTeamProjectViewModel(project)
+Auxiliar function responsible for generating presentation-ready fields for
+team project cards, keeping UI calculations outside the template.*/
+
+const buildTeamProjectViewModel = function buildTeamProjectViewModel(project) {
+    const goals = project.goals || [];
+    const achievements = project.achievements || [];
+    const highlights = project.highlights || [];
+    const openGoals = goals.filter((goal) => String(goal.status || '').toUpperCase() !== 'COMPLETED');
+    const sortedOpenGoals = [...openGoals].sort((leftGoal, rightGoal) => {
+        const leftDate = new Date(leftGoal.dueDate || '2999-12-31');
+        const rightDate = new Date(rightGoal.dueDate || '2999-12-31');
+        return leftDate - rightDate;
+    });
+    const nextGoal = sortedOpenGoals[0] || null;
+    const nextDueDate = nextGoal?.dueDate ? new Date(nextGoal.dueDate) : null;
+    const today = new Date();
+    const daysUntilDue = nextDueDate
+        ? Math.ceil((nextDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        : null;
+
+    const projectStatus = String(project.status || '').toUpperCase();
+    let priorityLabel = 'Low';
+    let priorityTone = 'border-slate-200 bg-slate-50 text-slate-700';
+
+    if (projectStatus === 'ACTIVE' && daysUntilDue !== null && daysUntilDue <= 14) {
+        priorityLabel = 'High';
+        priorityTone = 'border-rose-200 bg-rose-50 text-rose-700';
+    } else if (projectStatus === 'ACTIVE' && (daysUntilDue === null || daysUntilDue <= 30)) {
+        priorityLabel = 'Medium';
+        priorityTone = 'border-amber-200 bg-amber-50 text-amber-700';
+    }
+
+    const statusTone = projectStatus === 'ACTIVE'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        : projectStatus === 'COMPLETED'
+            ? 'border-sky-200 bg-sky-50 text-sky-700'
+            : 'border-slate-200 bg-slate-50 text-slate-700';
+
+    const keyInformationItems = [
+        ...goals.map((goal) => ({
+            type: 'Goal',
+            title: goal.title,
+            body: goal.description,
+            dateValue: goal.dueDate || null,
+            dateLabel: formatProjectItemDateLabel(goal.dueDate),
+            tone: 'border-amber-200 bg-amber-50 text-amber-700',
+        })),
+        ...achievements.map((achievement) => ({
+            type: 'Achievement',
+            title: achievement.title,
+            body: achievement.description,
+            dateValue: achievement.achievementDate || null,
+            dateLabel: formatProjectItemDateLabel(achievement.achievementDate),
+            tone: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+        })),
+        ...highlights.map((highlight) => ({
+            type: 'Highlight',
+            title: highlight.title,
+            body: highlight.content,
+            dateValue: highlight.createdAt || null,
+            dateLabel: formatProjectItemDateLabel(highlight.createdAt),
+            tone: 'border-sky-200 bg-sky-50 text-sky-700',
+        })),
+    ];
+
+    const latestKeyInformationItems = keyInformationItems
+        .sort((leftItem, rightItem) => {
+            return new Date(rightItem.dateValue || 0) - new Date(leftItem.dateValue || 0);
+        })
+        .slice(0, 3);
+
+    return {
+        ...project,
+        projectStatus,
+        priorityLabel,
+        priorityTone,
+        statusTone,
+        goalsCount: goals.length,
+        achievementsCount: achievements.length,
+        highlightsCount: highlights.length,
+        latestKeyInformationItems,
+    };
+};
+
 const isValidDateInput = function isValidDateInput(value) {
     if (!value) {
         return true;
@@ -448,7 +549,7 @@ exports.getTeamPage = (request, response, next) => {
                 (member) => member.employee_id === teamRow.employee_responsible_id
             )?.full_name || 'Unknown';
 
-            const projectsDetailed = await Promise.all(
+            const projectsDetailedRaw = await Promise.all(
                 teamProjects.map(async (project) => {
                     const [[achievements], [goals]] = await Promise.all([
                         Achievement.fetchByProject(project.project_id),
@@ -479,6 +580,7 @@ exports.getTeamPage = (request, response, next) => {
                     };
                 })
             );
+            const projectsDetailed = projectsDetailedRaw.map(buildTeamProjectViewModel);
 
             const team = {
                 id: teamRow.team_id,

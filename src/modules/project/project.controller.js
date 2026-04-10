@@ -23,17 +23,25 @@ const PROJECT_CREATE_DUPLICATE_MESSAGE = 'A project with that name already exist
 const PROJECT_CREATE_GENERIC_ERROR_MESSAGE = 'The project could not be created right now.';
 const PROJECT_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
 const GOAL_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
-const PROJECT_MEMBER_ROLES = ['EMPLOYEE', 'LEAD'];
+const PROJECT_MEMBER_ROLE_MAX_LENGTH = 150;
 const PROJECT_TEAM_DESCRIPTION_MAX_LENGTH = 50;
 
 const resolveProjectMemberRole = function resolveProjectMemberRole(rawRole) {
-    const normalizedRole = String(rawRole || '').trim().toUpperCase();
+    const normalizedRole = String(rawRole || '').trim().replace(/\s+/g, ' ');
 
-    if (!PROJECT_MEMBER_ROLES.includes(normalizedRole)) {
+    if (!normalizedRole) {
+        return null;
+    }
+
+    if (normalizedRole.length > PROJECT_MEMBER_ROLE_MAX_LENGTH) {
         return null;
     }
 
     return normalizedRole;
+};
+
+const isLeadProjectRole = function isLeadProjectRole(role) {
+    return /\blead\b/i.test(String(role || '').trim());
 };
 
 const resolveProjectTeamDescription = function resolveProjectTeamDescription(rawDescription) {
@@ -633,7 +641,7 @@ exports.getProjectPage = (request, response, next) => {
                 membersDetailed: memberRows.map((member) => ({
                     id: member.employee_id || null,
                     fullName: member.full_name || 'Unknown',
-                    role: member.role || 'EMPLOYEE',
+                    role: member.role || '',
                     description: member.description || 'Active collaborator',
                     startedAtLabel: formatDateLabel(member.started_at, 'Date unavailable'),
                 })),
@@ -699,7 +707,7 @@ exports.addProjectMember = (request, response, next) => {
 
     if (!role) {
         return respondMembershipRequest(request, response, projectId, 400, {
-            error: 'Select a valid project role for the member.',
+            error: `Provide a role of up to ${PROJECT_MEMBER_ROLE_MAX_LENGTH} characters.`,
         });
     }
 
@@ -767,7 +775,7 @@ exports.updateProjectMemberRole = (request, response, next) => {
 
     if (!role) {
         return respondMembershipRequest(request, response, projectId, 400, {
-            error: 'Select a valid role (LEAD or EMPLOYEE).',
+            error: `Provide a role of up to ${PROJECT_MEMBER_ROLE_MAX_LENGTH} characters.`,
         });
     }
 
@@ -781,9 +789,9 @@ exports.updateProjectMemberRole = (request, response, next) => {
                 });
             }
 
-            if (project.employee_responsible_id === employeeId && role !== 'LEAD') {
+            if (project.employee_responsible_id === employeeId && !isLeadProjectRole(role)) {
                 return respondMembershipRequest(request, response, projectId, 400, {
-                    error: 'The responsible project lead must keep LEAD role.',
+                    error: 'The responsible project lead must keep a role containing "Lead".',
                 });
             }
 
@@ -797,7 +805,7 @@ exports.updateProjectMemberRole = (request, response, next) => {
                         });
                     }
 
-                    if ((membership.role || 'EMPLOYEE') === role) {
+                    if ((membership.role || '') === role) {
                         return respondMembershipRequest(request, response, projectId, 200, {
                             success: true,
                             warningMessage: 'That member already has the selected role.',

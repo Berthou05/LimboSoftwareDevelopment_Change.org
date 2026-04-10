@@ -5,27 +5,17 @@
 
 <div class="space-y-4">
     <div class="flex items-start justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-4">
-            <% if (projectImage) { %>
-                <img src="<%= projectImage %>" alt="<%= project?.name || 'Project' %>" class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover" />
-            <% } else { %>
-                <div class="app-directory-avatar flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold">
-                    <%= (project?.name || 'P').trim().charAt(0).toUpperCase() %>
-                </div>
-            <% } %>
-            <div class="min-w-0 flex-1">
-                <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= project?.name || 'Project' %></h1>
-                <p class="text-sm text-brand-text/70"><%= project?.description || 'No project description has been added yet.' %></p>
-            </div>
+        <h1 class="font-heading text-2xl font-bold text-brand-text"><%= project.name %></h1>
+        <div class="flex items-center gap-3">
+            <%- include('../shared/actionButton', {
+                buttonPopupOpen: 'project-edit-info',
+                buttonIcon: 'edit',
+                buttonLabel: 'Edit',
+                buttonVariant: 'small',
+                buttonClasses: 'shrink-0',
+                buttonAriaLabel: 'Edit project information',
+            }) %>
         </div>
-        <%- include('../shared/actionButton', {
-            buttonPopupOpen: 'project-edit-info',
-            buttonIcon: 'edit',
-            buttonLabel: 'Edit',
-            buttonVariant: 'small',
-            buttonClasses: 'shrink-0',
-            buttonAriaLabel: 'Edit project information',
-        }) %>
     </div>
     <div class="flex flex-wrap gap-2 text-xs text-brand-text/70">
         <span class="app-breadcrumb app-breadcrumb--static">
