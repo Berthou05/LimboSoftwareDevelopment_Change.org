@@ -72,7 +72,7 @@ module.exports = class Account {
         }
 
         return db.execute(`
-            SELECT A.account_id, E.full_name, A.email, A.created_at,A.slack_username, A.status, R.name FROM account AS A
+            SELECT A.account_id, E.full_name, A.email, A.created_at,A.slack_username, A.status, R.name, R.role_id FROM account AS A
             INNER JOIN employee AS E ON E.employee_id=A.employee_id
             INNER JOIN accountrole AS AR ON AR.account_id=A.account_id
             INNER JOIN role as R ON R.role_id=AR.role_id

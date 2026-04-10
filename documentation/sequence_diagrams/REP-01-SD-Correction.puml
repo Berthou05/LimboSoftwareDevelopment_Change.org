@@ -67,12 +67,10 @@ end note
                 deactivate P
             end
             
-            alt Project Report
                 note right
                 project_ids is already obtained 
                 as the content_id
                 end note
-            end
 
             alt Employee or Project Report
             C->>A:getProjectActivities(project_ids, start_date, end_date)
@@ -141,10 +139,8 @@ end
             note right
             Normalization of projects into a 
             greater object of projects.
-            end note
 
-            note right
-                Need to install ai & zod
+            Need to install ai & zod
             end note
 
             loop Per Each Project

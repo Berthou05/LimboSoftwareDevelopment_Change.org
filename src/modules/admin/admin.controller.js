@@ -40,19 +40,11 @@ const formatDateLabel = function formatDateLabel(value, fallback = '') {
 Function responsible for the page render of the Account Administration page*/
 
 exports.getAccounts = (request, response, next) => {
-    const requestedRoleFilter = String(request.query.role || 'all').trim().toLowerCase();
-    const requestedStatusFilter = String(request.query.status || 'all').trim().toLowerCase();
-    const roleFilter = ['all', 'employee', 'lead'].includes(requestedRoleFilter)
-        ? requestedRoleFilter
-        : 'all';
-    const statusFilter = ['all', 'active', 'disabled'].includes(requestedStatusFilter)
-        ? requestedStatusFilter
-        : 'all';
-    const roleFilterForQuery = roleFilter === 'all' ? 'all' : roleFilter.toUpperCase();
-    const statusFilterForQuery = statusFilter === 'all' ? 'all' : statusFilter.toUpperCase();
+    const roleFilter   = request.query.role   || 'all';
+    const statusFilter = request.query.status || 'all';
 
     Promise.all([
-        Account.fetchAll(roleFilterForQuery, statusFilterForQuery),
+        Account.fetchAll(roleFilter,statusFilter),
         Account.countAll(),
         Role.fetchAll()
     ]).then(([
@@ -74,14 +66,15 @@ exports.getAccounts = (request, response, next) => {
                 email:account.email,
                 slackUsername: account.slack_username,
                 status: account.status,
-                createdAt:formatDateLabel(account.created_at)
+                createdAt:formatDateLabel(account.created_at),
+                roleId:account.role_id
             })),
             roles: roles.map((role)=>({
                 id: role.role_id,
                 name: role.name
             })),
-            statusFilter,
-            roleFilter
+            statusFilter:'all',
+            roleFilter:'all'
         });
 
     }).catch((error) => {
@@ -90,6 +83,8 @@ exports.getAccounts = (request, response, next) => {
         return response.redirect('/home');
     });
 };
+
+
 
 
 /*assignRole

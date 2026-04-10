@@ -15,19 +15,18 @@ entity   "accountRoleAssignment.model" as AccountRoleModel
 database "unitas_system"               as DB
 
 activate Admin
-Admin -> AccountsView : Change role dropdown\n(Admin | Lead | Employee)
-deactivate Admin
+Admin ->> AccountsView : Change role dropdown\n(Admin | Lead | Employee)
 activate AccountsView
-AccountsView -> Client : onRoleChanged(account_id, role_name)
+AccountsView --> Client : onRoleChanged(account_id, role_name)
 activate Client
 Client -> Client : validateRoleSelection(role_name)
 
 alt Invalid role selection on client
-    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError('Invalid role')
+    Client --> AccountsView : revertRoleDropdown()\nshowRoleUpdateError('Invalid role')
     AccountsView --> Admin : Validation message
 end
 
-Client -> Routes : fetch('/admin/accounts/:account_id/role',\n{method:'PATCH', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({role_name, _csrf})})
+Client ->> Routes : fetch('/admin/accounts/:account_id/role',\n{method:'PATCH', headers:{'Accept':'application/json',\n'Content-Type':'application/json'},\nbody:JSON.stringify({role_name, _csrf})})
 activate Routes
 Routes -> Controller : updateAccountRole(request, response)
 activate Controller
@@ -36,17 +35,17 @@ deactivate Routes
 Controller -> Controller : hasPrivilege('ADMIN-05', request.session.privileges)
 
 alt Missing privilege ADMIN-05
-    Controller ->> Routes : res.status(403).json\n({ error: 'You do not have permission to update account roles.' })
+    Controller --> Routes : res.status(403).json\n({ error: 'You do not have permission to update account roles.' })
     activate Routes
-    Routes ->> Client : HTTP 403 Forbidden
+    Routes --> Client : HTTP 403 Forbidden
     deactivate Routes
     Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
     AccountsView --> Admin : Permission error
 end
 
-Controller -> AccountRoleModel : countActiveAdminsExcluding(account_id)
+Controller ->> AccountRoleModel : countActiveAdminsExcluding(account_id)
 activate AccountRoleModel
-AccountRoleModel -> DB : execute(\n  'SELECT COUNT(*) AS admin_count\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE r.name = ?\n   AND ar.account_id <> ?',\n  ['ADMIN', account_id]\n)
+AccountRoleModel ->> DB : execute(\n  'SELECT COUNT(*) AS admin_count\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE r.name = ?\n   AND ar.account_id <> ?',\n  ['ADMIN', account_id]\n)
 activate DB
 DB --> AccountRoleModel : adminCount
 deactivate DB
@@ -54,37 +53,37 @@ AccountRoleModel --> Controller : adminCount
 deactivate AccountRoleModel
 
 alt Attempt to remove last Admin
-    Controller ->> Routes : res.status(409).json\n({ error: 'At least one Admin account is required.' })
+    Controller --> Routes : res.status(409).json\n({ error: 'At least one Admin account is required.' })
     activate Routes
-    Routes ->> Client : HTTP 409 Conflict
+    Routes --> Client : HTTP 409 Conflict
     deactivate Routes
-    Client -> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
+    Client --> AccountsView : revertRoleDropdown()\nshowRoleUpdateError(error)
     AccountsView --> Admin : Business-rule warning
 end
 
-Controller -> AccountRoleModel : updateRole(account_id, role_id)
+Controller ->> AccountRoleModel : updateRole(account_id, role_id)
 activate AccountRoleModel
-AccountRoleModel -> DB : execute(\n  'UPDATE accountrole\n   SET role_id = ?\n   WHERE account_id = ?',\n  [role_id, account_id]\n)
+AccountRoleModel ->> DB : execute(\n  'UPDATE accountrole\n   SET role_id = ?\n   WHERE account_id = ?',\n  [role_id, account_id]\n)
 activate DB
 DB --> AccountRoleModel : update result
 deactivate DB
 AccountRoleModel --> Controller : roleUpdated
 deactivate AccountRoleModel
 
-Controller -> AccountRoleModel : fetchRoleByAccount(account_id)
+Controller ->> AccountRoleModel : fetchRoleByAccount(account_id)
 activate AccountRoleModel
-AccountRoleModel -> DB : execute(\n  'SELECT ar.account_id, r.role_id, r.name\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE ar.account_id = ?',\n  [account_id]\n)
+AccountRoleModel ->> DB : execute(\n  'SELECT ar.account_id, r.role_id, r.name\n   FROM accountrole ar\n   INNER JOIN role r ON r.role_id = ar.role_id\n   WHERE ar.account_id = ?',\n  [account_id]\n)
 activate DB
 DB --> AccountRoleModel : accountRoleRow
 deactivate DB
 AccountRoleModel --> Controller : accountRoleRow
 deactivate AccountRoleModel
 
-Controller ->> Routes : res.status(200).json\n({ success: true,\n  message: 'Role updated successfully.',\n  data: { account_id, role_name } })
+Controller --> Routes : res.status(200).json\n({ success: true,\n  message: 'Role updated successfully.',\n  data: { account_id, role_name } })
 activate Routes
-Routes ->> Client : HTTP 200 OK application/json
+Routes --> Client : HTTP 200 OK application/json
 deactivate Routes
-Client -> AccountsView : updateRoleCell(data)\nshowRoleUpdateSuccess(message)
+Client --> AccountsView : updateRoleCell(data)\nshowRoleUpdateSuccess(message)
 AccountsView --> Admin : Updated role shown in row
 
 alt Unexpected error (catch)
@@ -96,6 +95,7 @@ alt Unexpected error (catch)
     AccountsView --> Admin : Generic error message
 end
 
+deactivate Admin
 deactivate Controller
 deactivate Client
 deactivate AccountsView
