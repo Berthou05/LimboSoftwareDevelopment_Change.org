@@ -5,21 +5,22 @@ actor User as U
 boundary "default.ejs" as V
 boundary "report.routes" as RO
 control "report.controller" as C
-control "openaiapi.wrapper" as W
+control "ai.wrapper" as W
 entity "employee.model" as E
 entity "project.model" as P
 entity "team.model" as T
 entity "activity.model" as A
 entity "achievement.model" as AC
 entity "goal.model" as G
+entity "prompt.model" as PR
 entity "report.model" as R
-boundary "Open AI API" as OP
+entity "ai.provider" as AIProvider
 database "unitas_system" as BD
 
 autonumber
 
 activate U
-U->V:Click "Generate Report" button
+U->>V:Click "Generate Report" button
 note right
 The validation of the Report model
 are done within the inner JS of the
@@ -29,11 +30,13 @@ Each modal is locked or open
 which gives a content type. 
 
 end note
-deactivate U
     activate V
     V->V:idenfityReportType();
-    V->RO: fetch(`/report/generate`, {method: POST, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
-    deactivate V
+    V->>RO: fetch(`/report/generate`, {method: POST, headers:{'Accept': 'application/json'}, body: JSON.stringify(data)})
+        note right
+        The data must contain all the filters of the report, 
+        the content_id, and the page it was sent from
+        end note
         activate RO
         RO->C: generateReport(request, response);
         deactivate RO
@@ -41,9 +44,9 @@ deactivate U
 
 
             alt Employee Report
-            C->>E: getEmployeeInfo(employee_id)
+            C->>E: fetchById(employee_id)
                 activate E
-                E->>BD: execute('SELECT * FROM employee WHERE employee_id=?',[employee_id])
+                E->>BD: execute('SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email FROM employee AS E INNER JOIN account AS A ON E.employee_id=A.employee_id WHERE E.employee_id=?',[employee_id])
                     activate BD
                     BD-->E: info
                     deactivate BD
@@ -116,9 +119,9 @@ deactivate U
 
             alt Team Report
 
-            C->>T: getTeamInfo(team_id)
+            C->>T: findById(team_id)
                 activate T
-                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nWHERE T.team_id=? ;',\n[team_id])
+                T->>BD: execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
                     activate BD
                     BD-->T: team_info
                     deactivate BD
@@ -143,36 +146,36 @@ deactivate U
                 E-->C:employees_info
                 deactivate E
             
-            C->>P: getTeamProjectsInfoBtw(team_id, start_date)
+            C->>P: getTeamProjectsInfoBtw(team_id, start_date, end_date)
                 activate P
-                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date \nFROM project as P \nINNER JOIN projectteam as PT ON P.project_id=PT.project_id \nWHERE PT.team_id=? AND PT.joined_at>=?;'\n,[team_id, start_date])
+                P->>BD: execute('SELECT P.name, P.description, P.status, P.start_date, P.end_date FROM project as P INNER JOIN projectteam as PT ON P.project_id=PT.project_id WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;'\n,[team_id, start_date, end_date])
                     activate BD
                     BD-->P: team_projects
                     deactivate BD
                 P-->C:team_projects
                 deactivate P
 
-            C->>A: getProjectActivitiesFromTeamBtw(team_id, start_date)
+            C->>A: getProjectActivitiesFromTeamBtw(team_id, start_date, end_date)
                 activate A
-                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam as PT \nWHERE PT.team_id = ? AND PT.joined_at>=?);',\n[team_id, start_date])
+                A->>BD: execute('SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id \nFROM activity as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam as PT \nWHERE PT.team_id = ? AND PT.joined_at>=? AND PT.joined_at<=?);',\n[team_id, start_date, end_date])
                     activate BD
                     BD-->A: project_activities
                     deactivate BD
                 A-->C:project_activities
                 deactivate A
 
-            C->>AC: getAchievementsFromTeam(team_id, start_date)
+            C->>AC: getAchievementsFromTeam(team_id, start_date, end_date)
                 activate AC
-                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',[team_id, start_date])
+                AC->>BD: execute('SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id \nFROM achievement as A \nINNER JOIN collaboration as C ON A.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);',[team_id, start_date, end_date])
                     activate BD
                     BD-->AC: project_achievements
                     deactivate BD
                 AC-->C:project_achievements
                 deactivate AC
 
-            C->>G: getGoalsFromEmp(team_id, start_date)
+            C->>G: getGoalsFromTeam(team_id, start_date, end_date)
                 activate G
-                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=?);',\n[employee_id, start_date])
+                G->>BD: execute('SELECT G.title, G.description, G.due_date, G.status, G.project_id \nFROM goal as G \nINNER JOIN collaboration as C ON G.project_id=C.project_id \nWHERE C.project_id IN( \nSELECT PT.project_id \nFROM projectteam AS PT \nWHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);',\n[employee_id, start_date, end_date])
                     activate BD
                     BD-->G: project_goals
                     deactivate BD
@@ -211,7 +214,7 @@ deactivate U
 
             C->>T: getTeamInfoFromProj(project_id, start_date, end_date)
                 activate T
-                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nINNER JOIN projectteam as PT ON T.team_id=PT.team_id \nWHERE PT.project_id=? AND PT.joined_at>=?;',\n[team_id, start_date])
+                T->>BD: execute('SELECT T.name, T.description \nFROM team AS T \nINNER JOIN projectteam as PT ON T.team_id=PT.team_id \nWHERE PT.project_id=? AND PT.joined_at>=? AND PT.joined_at<=?;',\n[project_id, start_date, end_date])
                     activate BD
                     BD-->T: team_info
                     deactivate BD
@@ -246,22 +249,84 @@ deactivate U
                 deactivate G
             end
 
+            alt Data Obtention Failed
+            C-->V: response.status(500).json({success:false, message:'Data could not be obtained', error:error})
+    V-->U:View (no changes)
+            end
+
+            note right
+            body creation developed through the union of 
+            the obtained queries and normalization.
+            end note
+
+            C->>PR: getPromptByType(report_type);
+                activate PR
+                    PR->>BD: execute(`SELECT P.description FROM prompt as P WHERE P.type=?`,[report_type])
+                        activate BD
+                        BD-->PR:prompt 
+                        deactivate BD
+                    PR-->C:prompt
+                deactivate PR
+
+            alt Data Obtention Failed
+            C-->V: response.status(500).json({success:false, message:'Prompt could not be obtained', error:error})
+    V-->U:View (no changes)
+            end
+
             C->>W: generateReport(body, prompt);
                 activate W
                 note right
-                Need to install axios
+                Need to install ai & zod
                 end note
                 W->W: integratePrompt(body, prompt);
-                W->>OP:axios.post('https://api.openai.com/v1/responses',{model: 'gpt-5.3', input:integrated_prompt, temperature:0.2}, {headers:{Authorization: `Bearer ${process.env.OPEN_API_KEY}`, 'Content-Type':'application/json'}});
-                    activate OP
-                    OP-->W: API response
-                    deactivate OP
+                W->W: getSchema(reportType);
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt})
+                    activate AIProvider
+                    AIProvider-->W: API response
+                    deactivate AIProvider
                 W-->C: Report object
                 deactivate W
+
+            alt AI Response Failed
+            C-->V: response.status(500).json({success:false, message:'API error', error:error})
+    V-->U:View (no changes)
+            end
+
+            create entity ReportObject as ReportObject
+            C->ReportObject**: new Report(generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, content_json, filters_json, input_snapshop_json, model_name, model_version, ai_output_text)
+                activate ReportObject
+            C->>ReportObject:save()
+                ReportObject->>BD:  execute(`\nINSERT INTO report(report_id,enerated_by_employee_id, content_id, \ncontent_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, \ninput_snapshot_json, model_name, model_version, ai_output_text) \nVALUES(UUID(), ?,?,?,?,?,?,NOW(),?,?,?,?,?,?)`, \n[this.generated_by_employee_id, this.content_id, this.content_type, this.prompt_id, this.period_start,\n this.period_end, this.content_json, this.filters_json, this.input_snapshot_json, this.model_name, this.model_version, this.ai_output_text])}
+                    activate BD
+                    BD-->ReportObject: Query OK
+                    deactivate BD
+                ReportObject-->C: Query OK
+                deactivate ReportObject
             
-            C->>R
+            alt Report Creation Failed
+            C-->V: response.status(500).json({success:false, message:'Report could not be created', error:error})
+    V-->U:View (no changes)
+            end
 
+            C->>R:fetchByContentId(employee_id, content_id)
+                activate R
+                R->>BD: execute(`SELECT *\nFROM report\nWHERE generated_by_employee_id = ?\nAND content_id = ?\nORDER BY created_at DESC\nLIMIT ?;`,\n[employee_id, content_id, limit],);
+                    activate BD
+                    BD-->R: latestReports
+                    deactivate BD
+                R-->C:latestReports
+                deactivate R
+            
+            C-->V:response.status(200).json({success:true, latestReports: latestReports})
+    V->V:updateLatestReports()
+    V-->U: Updated view + Latest Report
 
+            alt Report Obtention Failed
+            C-->V: response.status(500).json({success:false, message:'Report could not be obtained', error:error})
+    V-->U:View (no changes)
+            end
             deactivate C
+    deactivate V
+deactivate U
 
 @enduml

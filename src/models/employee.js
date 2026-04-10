@@ -110,7 +110,12 @@ module.exports = class Employee {
     on employee_id*/
 
     static fetchById(employee_id) {
-        return db.execute('SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email FROM employee AS E INNER JOIN account AS A ON E.employee_id=A.employee_id WHERE E.employee_id=?',[employee_id]);
+        return db.execute(`
+            SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email 
+            FROM employee AS E 
+            INNER JOIN account AS A ON E.employee_id=A.employee_id 
+            WHERE E.employee_id=?`,
+            [employee_id]);
     }
 
     /*getEmployeeByTeamId(team_id)
@@ -162,6 +167,37 @@ module.exports = class Employee {
         );
     }
 
+    // ---------------- Report Functions ------------------------
+
+    /*getEmployeeInfoFromTeam(team_id)
+    Function responsible for obtaining the information of employees based on a team
+    id*/
+
+    static getEmployeeInfoFromTeam(team_id){
+        return db.execute(`
+            SELECT E.full_name, ET.role 
+            FROM employee AS E 
+            INNER JOIN employeeteam AS ET ON E.employee_id=ET.employee_id 
+            WHERE ET.team_id=?;`,
+            [team_id]);
+    }
+
+    /*getEmployeeInfoFromTeam(project_id, start_date, end_date)
+    Function responsible for obtaining all employee information of collaborators
+    in a project between the dates*/
+
+    static getEmployeeInfoFromTeam(project_id, start_date, end_date){
+        return db.execute(`
+            SELECT E.full_name, C.description 
+            FROM employee AS E 
+            INNER JOIN collaboration AS C ON E.employee_id=C.employee_id 
+            WHERE C.project_id=? AND C.started_at>=? 
+            AND (C.ended_at<=? OR C.ended_at IS NULL);`,
+            [project_id, start_date, end_date]);
+    }
+
+
+    //------------------------------------------------------------
 
     // Read all employees
     static fetchAll() {
