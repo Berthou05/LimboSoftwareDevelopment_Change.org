@@ -108,45 +108,22 @@ module.exports = class Achievement {
 
     //------------------------- Report Functions -----------------------
 
-        /*getAchievementsFromEmp(employee_id, start_date, end_date)
-    Function responsible for obtaining all the achievements from
-    all projects where employee whose id=employee_id collaborated
-    at between provided date range*/
+    /*getProjectAchievements(project_ids, start_date, end_date)
+    Function responsible for returning all achivements information 
+    from the projects entered as a parameter and the specified date 
+    range*/
 
-    getAchievementsFromEmp(employee_id, start_date, end_date){
-        return db.execute( `
-            SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id 
-            FROM achievement as A 
-            INNER JOIN collaboration as C ON A.project_id=C.project_id 
-            WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<= ? OR C.ended_at IS NULL);`,
-            [employee_id, start_date, end_date]);
-    }
-
-    /*getAchievementsFromTeam(team_id, start_date, end_date)
-    Function responsible for obtaining a all project achievements where a team
-    was assigned between a date range*/
-
-    getAchievementsFromTeam(team_id, start_date){
+    static getProjectAchievements(project_ids, start_date, end_date){
+        if(!project_ids.length){
+            return Promise.resolve([[]]);
+        }
+        const placeholders = project_ids.map(() => '?').join(',');
+    
         return db.execute(`
-            SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id
-            FROM achievement as A 
-            INNER JOIN collaboration as C ON A.project_id=C.project_id 
-            WHERE C.project_id IN( 
-                SELECT PT.project_id 
-                FROM projectteam AS PT 
-                WHERE PT.team_id =? AND PT.joined_at>=? AND PT.joined_at<=?);`,
-            [team_id, start_date, end_date]);
-    }
-
-    /*getAchievementsFromProj(project_id, start_date, end_date)
-    Function responsible for obtaining all achievements of a project between a specified date range*/
-
-    static getAchievementsFromProj(project_id, start_date, end_date){
-        return db.execute(`
-            SELECT A.title, A.description, A.achievement_date, A.evidence_link, A.project_id 
-            FROM achievement as A 
-            WHERE A.project_id=? AND A.achievement_date BETWEEN ? AND ?;`,
-            [project_id, start_date, end_date])
+            SELECT * 
+            FROM achievement AS AC 
+            WHERE (AC.achievement_date BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
+            [start_date, end_date, ...project_ids]);
     }
 
     

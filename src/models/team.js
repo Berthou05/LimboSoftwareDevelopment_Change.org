@@ -93,7 +93,12 @@ module.exports = class Team {
     based on team_id*/
 
     static findById(team_id) {
-        return db.execute('SELECT * FROM team WHERE team_id = ?', [team_id]);
+        return db.execute(`
+            SELECT * ,E.full_name
+            FROM team as T 
+            INNER JOIN employee AS E ON E.employee_id=T.employee_responsible_id
+            WHERE team_id = ?`, 
+            [team_id]);
     }
 
     /*disableTeam(team_id)
