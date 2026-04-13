@@ -1,54 +1,34 @@
-const { getHomeByEmployeeId } = require('./home.service');
-const { renderModule } = require('../shared/view.util');
-const { buildReportPeriodContext } = require('../shared/page-context.util');
-const { groupActivitiesByDay } = require('../shared/activity-sections.util');
-const { findFilteredSubjectOptions } = require('../shared/subject-options.service');
-const { getLatestReportsByType } = require('../reports/reports.service');
+const Project = require('../../models/project');
+const Report = require('../../models/report');
+const Employee = require('../../models/employee'); 
+const Team = require('../../models/team');
 
-/*
- * Home page flow:
- * 1) Load employee-scoped home data from service.
- * 2) Pre-group activity so view can render without data manipulation.
- */
-const renderHome = function renderHome(req, res) {
-    const employeeId = req.session.user.employeeId;
-    const roleName = req.session.user.roleName;
-    const homeData = getHomeByEmployeeId(employeeId);
+exports.getHome = async (request, response, next) => {
+    const userId = request.session.user.id;
 
-    if (!homeData) {
-        req.session.flash = {
-            type: 'danger',
-            message: 'Unable to load home data.',
-        };
+    try {
+        const [userProjects] = await Project.fetchByEmployeeId(userId);
+        const [otherProjects] = await Project.fetchNotByEmployeeId(userId);
+        const allVisibleProjects = [...userProjects, ...otherProjects];
 
-        return res.redirect('/login');
+        return response.render('pages/home', {
+            csrfToken: request.csrfToken(),
+            pageTitle: 'Home',
+            path: '/home',
+            user: request.session.user,
+            reportSubjects: {
+                employees: [],
+                teams: [],
+                projects: allVisibleProjects
+            },
+            myProjects: userProjects,
+
+            // Exponer explícitamente para el view
+            account: request.session.user,   // para account.image
+            employee: request.session.user,  // para employee.names
+        });
+    } catch (error) {
+        console.log("Error en Home Controller:", error);
+        next(error);
     }
-
-    const { quickReport } = buildReportPeriodContext();
-
-    const latestActivitySections = groupActivitiesByDay(homeData.latestActivity);
-    const teamActivitySections = groupActivitiesByDay(homeData.teamActivity);
-
-    // Home sidebar uses a single project for compact summary cards.
-    const primaryProject = (homeData.projectPanels || [])[0] || null;
-
-    return renderModule(res, 'pages/home', {
-        activeRoute: '/home',
-        pageTitle: 'Home',
-        pageSubtitle: 'Latest activity, team activity, and project highlights.',
-        latestActivitySections,
-        teamActivitySections,
-        primaryProject,
-        projectPanels: homeData.projectPanels,
-        employee: homeData.employee,
-        reportSubjects: findFilteredSubjectOptions(employeeId, roleName),
-        defaultReportType: 'EMPLOYEE',
-        defaultSubjectId: employeeId,
-        quickReport,
-        latestReports: getLatestReportsByType(),
-    });
-};
-
-module.exports = {
-    renderHome,
 };
