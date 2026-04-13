@@ -28,4 +28,6 @@ module.exports = class Prompt {
             [report_type]);
     }
 
+    
+
 }

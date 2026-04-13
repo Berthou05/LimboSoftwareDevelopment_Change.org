@@ -145,7 +145,7 @@ end note
                 AC-->C:achievements
                 deactivate AC
 
-            C->>PR: fetchPrompts(report_type);
+            C->>PR: getPromptByType(report_type);
                 activate PR
                     PR->>BD: execute(`SELECT * FROM prompt WHERE type=?;`,[report_type]);
                         activate BD

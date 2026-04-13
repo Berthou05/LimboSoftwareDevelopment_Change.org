@@ -10,6 +10,7 @@ const Team = require('../../models/team');
 const Activity = require('../../models/activity');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
 const { end } = require('../../utils/database');
 
@@ -429,11 +430,14 @@ async function getContext(reportType, id, start_date, end_date, route){
         const ids = projectIds.map(p => p.project_id);
 
         //Obtention of remaining data depending on projectIds
-        const [activities, goals, achievements] = await Promise.all([
+        const [activities, goals, achievements,prompts] = await Promise.all([
             Activity.getProjectActivities(ids,start_date,end_date),
             Goal.getProjectGoals(ids, start_date, end_date),
-            Achievement.getProjectAchievements(ids, start_date, end_date)
+            Achievement.getProjectAchievements(ids, start_date, end_date),
+            Prompt.getPromptByType(reportType)
         ]);
+
+        console.log(prompts[0]);
 
         let normalizedActivities = '';
 
