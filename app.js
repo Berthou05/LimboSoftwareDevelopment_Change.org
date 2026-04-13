@@ -45,13 +45,21 @@ app.use(express.urlencoded({
 }));
 app.use(bodyParser.urlencoded({extended: false}));
 
+//fileStorage: configuration for storing uploaded images.
 const fileStorage = multer.diskStorage({
     destination: (request, file, callback) => {
-        callback(null, path.join(__dirname, 'src', 'public', 'images', 'teams'));
+        let uploadFolder = 'accounts';
+
+        if (request.originalUrl.startsWith('/team') || request.originalUrl.startsWith('/teams')) {
+            uploadFolder = 'teams';
+        }
+
+        callback(null, path.join(__dirname, 'src', 'public', 'images', uploadFolder));
     },
     filename: (request, file, callback) => {
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
         const safeOriginalName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '-');
-        callback(null, `${Date.now()}-${safeOriginalName}`);
+        callback(null, `${timestamp}-${safeOriginalName}`);
     },
 });
 
@@ -65,11 +73,14 @@ const fileFilter = (request, file, callback) => {
         return;
     }
 
-    request.fileValidationError = 'Team image must be a PNG or JPG file.';
+    request.fileValidationError = request.originalUrl.startsWith('/account')
+        || request.originalUrl.startsWith('/admin/accounts')
+        ? 'Profile image must be a PNG or JPG file.'
+        : 'Team image must be a PNG or JPG file.';
     callback(null, false);
 };
 
-app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
+app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 
 /*Configuracion de Environment Variables*/
 require('dotenv').config();

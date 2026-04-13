@@ -2,95 +2,118 @@
 skinparam style strictuml
 
 actor User as U
-boundary "routes" as RO
-boundary "vista accountEdit.ejs" as V
+boundary "view account.ejs" as AV
+boundary "account.routes" as RO
+boundary "view account.ejs" as EV
 control "account.controller" as C
 entity "Account.model" as AM
+entity "Employee.model" as EM
 database "unitas_system" as BD
 
-activate U
-U -> RO:GET /accounts/:id/edit
-deactivate U
-    activate RO
-    RO -> C:edit(request, response)
-    deactivate RO
-        activate C
-        C ->> AM:findById(id)
-            activate AM
-            AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [id])
-                activate BD
-                BD --> AM:account
-                deactivate BD
-            AM --> C:account
-            deactivate AM
-        C -> V:response.render('accounts/edit.ejs', {account: account})
-        deactivate C
-    activate V
-    V -> U:HTML form
-    deactivate V
+autonumber
 
 activate U
-U -> RO:PUT /accounts/:id
+U -> AV: Clicks "Edit" button
 deactivate U
-    activate RO
-    RO -> C:update(request, response)
-    deactivate RO
-        activate C
-        C -> C:validate(request.body)
-        
-        alt invalid data
-            C -> V:response.render('accounts/edit.ejs', {errors: errors})
-            deactivate C
-                activate V
-                V -> U:HTML + Error messages
-                deactivate V
-        
-        else valid data
-            C ->> AM:update(id, data)
-                activate AM
-                AM ->> BD:execute('UPDATE accounts SET ... WHERE id=?', [data, id])
-                    activate BD
-                    
-                    alt success
-                        BD --> AM:Query OK
-                        deactivate BD
-                        AM --> C:updated
-                        deactivate AM
-                        
-                        C -> RO:response.redirect('/accounts/' + id)
-                        deactivate C
-                            activate RO
-                            RO -> C:show(request, response)
-                            deactivate RO
-                                activate C
-                                C ->> AM:findById(id)
-                                    activate AM
-                                    AM ->> BD:execute('SELECT * FROM accounts WHERE id=?', [id])
-                                        activate BD
-                                        BD --> AM:account
-                                        deactivate BD
-                                    AM --> C:account
-                                    deactivate AM
-                                C -> V:response.render('accounts/show.ejs', {account: account, success: "Account updated successfully"})
-                                deactivate C
-                                    activate V
-                                    V -> U:HTML + Success message
-                                    deactivate V
-                    
-                    else fail
-                        BD --> AM:error
-                        deactivate BD
-                        AM --> C:error
-                        deactivate AM
-                        
-                        C -> V:response.render('accounts/edit.ejs', {error: "Account could not be updated"})
-                        deactivate C
-                            activate V
-                            V -> U:HTML + Error message
-                            deactivate V
-                    end
-        end
+activate AV
+AV -> RO: GET /account/:id/edit
+deactivate AV
+activate RO
+RO -> C: getEditAccount(request, response)
+deactivate RO
+activate C
+C ->> AM: fetchById(account_id)
+activate AM
+AM ->> BD: execute('SELECT account_id, employee_id, email, slack_username, image\nFROM account WHERE account_id=?', [account_id])
+activate BD
+BD --> AM: account
+deactivate BD
+AM --> C: account
+deactivate AM
+C ->> EM: fetchNamePartsById(employee_id)
+activate EM
+EM ->> BD: execute('SELECT employee_id, full_name, names, lastnames\nFROM employee WHERE employee_id=?', [employee_id])
+activate BD
+BD --> EM: employee
+deactivate BD
+EM --> C: employee
+deactivate EM
+C -> EV: response.render('pages/account', {account, isEditing: true, csrfToken})
+deactivate C
+activate EV
+EV -> U: HTML edit form
+deactivate EV
+
+alt User clicks "Cancel" button or closes popup
+    activate U
+    U -> EV: Clicks "Cancel" / closes popup
+    deactivate U
+    activate EV
+    EV -> AV: Close edit view without submitting
+    deactivate EV
+    activate AV
+    AV -> U: HTML account view without changes
+    deactivate AV
+end
 
 activate U
+U -> EV: Clicks "Save" button
+deactivate U
+activate EV
+EV -> RO: POST /account/:id/edit
+deactivate EV
+activate RO
+RO -> C: postEditAccount(request, response)
+deactivate RO
+activate C
+C -> C: validate(request.body)
+
+alt Invalid form data
+    C -> EV: response.redirect('/account/:id/edit')
+    activate EV
+    EV -> U: HTML edit form + Error messages
+    deactivate EV
+end
+
+C ->> AM: fetchById(account_id)
+activate AM
+AM ->> BD: execute('SELECT account_id, employee_id, email, slack_username, image\nFROM account WHERE account_id=?', [account_id])
+activate BD
+BD --> AM: account
+deactivate BD
+AM --> C: account
+deactivate AM
+
+C -> C: full_name = names + " " + lastnames
+C ->> EM: updateNames(employee_id, names, lastnames, full_name)
+activate EM
+EM ->> BD: execute('UPDATE employee SET names=?, lastnames=?, full_name=?\nWHERE employee_id=?', [names, lastnames, full_name, employee_id])
+activate BD
+BD --> EM: Query OK
+deactivate BD
+EM --> C: employee updated
+deactivate EM
+
+C ->> AM: updateProfile(account_id, email, slack_username, image)
+activate AM
+AM ->> BD: execute('UPDATE account SET email=?, slack_username=?, image=?\nWHERE account_id=?', [email, slack_username, image, account_id])
+activate BD
+BD --> AM: Query OK
+deactivate BD
+AM --> C: account updated
+deactivate AM
+
+alt Update failed
+    C -> EV: response.redirect('/account/:id/edit')
+    activate EV
+    EV -> U: HTML edit form + Error message
+    deactivate EV
+end
+
+C -> AV: response.redirect('/account')
+deactivate C
+activate AV
+AV -> U: HTML account view + Success message
+deactivate AV
 
 @enduml

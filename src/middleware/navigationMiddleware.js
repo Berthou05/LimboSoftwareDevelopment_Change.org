@@ -10,6 +10,7 @@ function navigationMiddleware(req, res, next) {
     ? {
       id: sessionUser.id || null,
       name: sessionUser.username || 'Unitas User',
+      image: sessionUser.image || '',
       role: isAdmin ? 'admin' : 'employee',
       roleName: isAdmin ? 'Admin' : 'Employee',
     }
@@ -20,6 +21,7 @@ function navigationMiddleware(req, res, next) {
   res.locals.layoutActiveRoute = req.path;
   res.locals.layoutCurrentUser = user || {
     name: 'Unitas User',
+    image: '',
     roleName: 'Employee',
   };
   res.locals.layoutTodayLabel = todayLabel;

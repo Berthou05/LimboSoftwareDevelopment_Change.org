@@ -122,6 +122,19 @@ module.exports = class Account {
             WHERE account_id=?`
             ,[account_id]);
     }
+
+    /*updateProfile(account_id, email, slack_username, image)
+    Function responsible for updating editable account profile fields.*/
+
+    static updateProfile(account_id, email, slack_username, image){
+        return db.execute(`
+            UPDATE account
+            SET email = ?,
+                slack_username = ?,
+                image = ?
+            WHERE account_id = ?`,
+            [email, slack_username, image, account_id]);
+    }
 };
 
 module.exports.AccountStatus = AccountStatus;

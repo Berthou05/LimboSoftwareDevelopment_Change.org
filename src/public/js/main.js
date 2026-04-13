@@ -45,11 +45,25 @@ const initializeAccountMenu = function initializeAccountMenu() {
     const accountMenuPanel = document.querySelector('[data-account-menu-panel]');
 
     if (accountMenu && accountMenuToggle && accountMenuPanel) {
+        const openAccountMenu = function openAccountMenu() {
+            accountMenuPanel.classList.remove('hidden');
+            accountMenuToggle.setAttribute('aria-expanded', 'true');
+        };
+
+        const closeAccountMenu = function closeAccountMenu() {
+            accountMenuPanel.classList.add('hidden');
+            accountMenuToggle.setAttribute('aria-expanded', 'false');
+        };
+
         accountMenuToggle.addEventListener('click', () => {
             const isHidden = accountMenuPanel.classList.contains('hidden');
 
-            accountMenuPanel.classList.toggle('hidden', !isHidden);
-            accountMenuToggle.setAttribute('aria-expanded', String(isHidden));
+            if (isHidden) {
+                openAccountMenu();
+                return;
+            }
+
+            closeAccountMenu();
         });
 
         document.addEventListener('click', (event) => {
@@ -57,8 +71,7 @@ const initializeAccountMenu = function initializeAccountMenu() {
                 return;
             }
 
-            accountMenuPanel.classList.add('hidden');
-            accountMenuToggle.setAttribute('aria-expanded', 'false');
+            closeAccountMenu();
         });
     }
 };
