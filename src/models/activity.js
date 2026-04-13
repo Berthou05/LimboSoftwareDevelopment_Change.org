@@ -15,6 +15,57 @@ module.exports = class Activity {
         this.completed_at = completed_at;
     }
 
+    /*findProjectMatch(project_hint)
+    Function responsible for finding an active project that matches a
+    provided hint text.*/
+
+    static findProjectMatch(project_hint) {
+        const normalizedHint = String(project_hint || '').trim();
+
+        if (!normalizedHint) {
+            return Promise.resolve([[]]);
+        }
+
+        return db.execute(
+            `SELECT project_id
+            FROM project
+            WHERE (
+                name LIKE ?
+                OR ? LIKE CONCAT('%', name, '%')
+            )
+            AND status <> ?
+            ORDER BY created_at DESC
+            LIMIT 1`,
+            [`%${normalizedHint}%`, normalizedHint, 'DISABLED'],
+        );
+    }
+
+    /*create(entry_id, employee_id, project_id, title, description, completed_at)
+    Function responsible for storing a generated activity linked to a
+    daily entry.*/
+
+    static create(entry_id, employee_id, project_id, title, description, completed_at = null) {
+        return db.execute(
+            `INSERT INTO activity(
+                activity_id,
+                project_id,
+                employee_id,
+                entry_id,
+                title,
+                description,
+                completed_at
+            ) VALUES(UUID(), ?, ?, ?, ?, ?, ?)`,
+            [
+                project_id || null,
+                employee_id,
+                entry_id,
+                title,
+                description,
+                completed_at,
+            ],
+        );
+    }
+
     /*getTeamMembersActivities(team_id)
     Function responsible for returning all activies from Team members
     whose id=team_id*/

@@ -47,6 +47,20 @@ module.exports = class Account {
         return db.execute('SELECT * FROM account WHERE email=?',[email]);
     }
 
+    /*findBySlackUsername(slack_username)
+    Function responsible for obtaining account information based on
+    slack_username.*/
+
+    static findBySlackUsername(slack_username) {
+        return db.execute(
+            `SELECT account_id, employee_id, status, slack_username
+            FROM account
+            WHERE slack_username = ?
+            LIMIT 1`,
+            [slack_username],
+        );
+    }
+
     /*getPrivilegesFromAccountId(account_id)
     Function responsible for obtaining an account privileges based on
     account_id*/

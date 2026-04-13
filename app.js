@@ -12,7 +12,20 @@ const flashMessage = require('./src/middleware/flashMessage');
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-app.use(express.json());
+
+/*captureRawBody(request, response, buffer)
+Function responsible for preserving request raw payload for webhook
+signature validation (Slack).*/
+
+const captureRawBody = function captureRawBody(request, response, buffer) {
+    if (buffer && buffer.length > 0) {
+        request.rawBody = buffer.toString('utf8');
+    }
+};
+
+app.use(express.json({
+    verify: captureRawBody,
+}));
 
 //Creation of static folder
 const path = require('path');
@@ -26,7 +39,10 @@ app.use(expressLayouts);
 
 //bodyParser declaration.
 const bodyParser = require('body-parser');
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({
+    extended: false,
+    verify: captureRawBody,
+}));
 app.use(bodyParser.urlencoded({extended: false}));
 
 const fileStorage = multer.diskStorage({
@@ -72,7 +88,18 @@ app.use(flashMessage);
 /*Instalacion de csurf*/
 const csrf = require('csurf');
 const csrfProtection = csrf();
-app.use(csrfProtection); 
+
+/*Middleware responsible for bypassing CSRF validation only for Slack
+webhook endpoint, while preserving CSRF for the rest of the app.*/
+
+app.use((request, response, next) => {
+    if (request.path.startsWith('/daily-entries/slack')) {
+        next();
+        return;
+    }
+
+    csrfProtection(request, response, next);
+}); 
 
 //Uso de Auth middleware
 const isAuth = require('./src/middleware/isAuthenticated');
@@ -87,6 +114,10 @@ app.use('/', routesAuth);
 //routesHome
 const routesHome = require('./src/modules/home/home.routes');
 app.use('/home', routesHome);
+
+//DailyEntry
+const routesDailyEntry = require('./src/modules/dailyentry/dailyentry.routes');
+app.use('/daily-entries', routesDailyEntry);
 
 //Search
 const routesSearch = require('./src/modules/search/search.routes');
