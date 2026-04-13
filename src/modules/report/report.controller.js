@@ -504,17 +504,15 @@ async function getContext(reportType, id, start_date, end_date, route){
                 activities: normalizedActivities[project.project_id] || []
             }));
         }
-
-
-
-        //Data Obtention Completed Successfully
-
+        
+        //Prompts normalization
         const promptsOrdered = prompts[0].map(prompt => ({
             name: prompt.name,
             prompt:prompt.description,
             schema:prompt.schema
         }))
         
+        //Return of the information
         return{
             context: context,
             projects: enrichedProjects,
@@ -576,46 +574,48 @@ exports.generateReport = async (request, response, next)=>{
     const limit = pLimit(3);
     const promises = [];
 
-    let promptBeBetter = prompts.find(p => p.name === "BeBetter");
+    // let promptBeBetter = prompts.find(p => p.name === "BeBetter");
 
-    for (const [projectId, projectData] of Object.entries(projects)) {
-        let collective = {
-            context: context,
-            project: projectData,
-        };
-        console.log(projectData);
+    // for (const [projectId, projectData] of Object.entries(projects)) {
+    //     let collective = {
+    //         context: context,
+    //         project: projectData,
+    //     };
+    //     console.log(projectData);
 
-        const promise = limit(async () => {
-            const section = AiWrapper.beBetterProject(
-                collective, 
-                promptBeBetter.prompt, 
-                promptBeBetter.schema);
-            return { projectId, section};
-        });
+    //     const promise = limit(async () => {
+    //         const section = await AiWrapper.beBetterProject(
+    //             collective, 
+    //             promptBeBetter.prompt, 
+    //             promptBeBetter.schema);
+    //         return { projectId, section};
+    //     });
 
-        promises.push(promise);
-    }
-
-    const results = await Promise.all(promises);
-    const hasGoneWell = {};
-    for (const { projectId, section } of results) {
-    hasGoneWell[projectId] = section;
-    }
-
-    console.log(JSON.stringify(hasGoneWell, null, 2));
-
-    //Team Impact Section
-    // if(reportType == 'TEAM'){
-    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
-    //     const TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    //     promises.push(promise);
     // }
 
-    // //What can be improved SEction
+    // const results = await Promise.all(promises);
+    // const hasGoneWell = {};
+    // for (const { projectId, section } of results) {
+    // hasGoneWell[projectId] = section;
+    // }
+
+    // // Team Impact Section
+    // let TeamImpact = false;
+
+    // if(reportType == 'TEAM'){
+    //     console.log('TEAM HERE');
+    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+    //     TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    // }
+
+
+    // // What can be improved SEction
     // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
     // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
 
-    // //Assembly of the report object
+    // // Assembly of the report object
     // const sections = [];
 
     // sections.push(buildWhatWentWellSection(wentWell));
@@ -629,9 +629,13 @@ exports.generateReport = async (request, response, next)=>{
     //     sections, 
     // };
 
-    // console.log(JSON.stringify(report, null, 2));
 
-    //TODO: Review code
+    //TODO: Report Object creation
+    //TODO: LatestReports obtention
+    //TODO: Implement AJAX reload. Modification of the generateReport modal.
+    //TODO: Implement AJAX reload mechanism here.
+
+
     request.session.error = `Report generation for ${type}:${id} is still under development.`;
     return response.redirect(route);
 };

@@ -3,7 +3,7 @@
 
 const db = require('../utils/database.js');
 
-const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY = `SELECT DISTINCT visible.employee_id
 FROM (
     SELECT ET.employee_id
@@ -116,6 +116,17 @@ module.exports = class Employee {
             INNER JOIN account AS A ON E.employee_id=A.employee_id 
             WHERE E.employee_id=?`,
             [employee_id]);
+    }
+
+    static fetchNamePartsById(employee_id) {
+        return db.execute('SELECT employee_id, full_name, names, lastnames FROM employee WHERE employee_id=?', [employee_id]);
+    }
+
+    static updateNames(employee_id, names, lastnames, full_name) {
+        return db.execute(
+            'UPDATE employee SET names=?, lastnames=?, full_name=? WHERE employee_id=?',
+            [names, lastnames, full_name, employee_id]
+        );
     }
 
     /*getEmployeeByTeamId(team_id)

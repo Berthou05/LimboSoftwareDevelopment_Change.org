@@ -1,101 +1,187 @@
+/'
 @startuml
 skinparam style strictuml
 
-actor User as U
-boundary "auth.routes" as RO
-boundary "view signin.ejs" as V
-control "auth.controller" as C
-entity "Employee.model" as EM
-entity "Account.model" as AM
-entity "AccountRole.model" as ARM
-control "bcrypt" as B
+actor Lead as L
+boundary "project.routes" as RO
+boundary "vista projectNew.ejs" as VN
+boundary "vista projectDirectory.ejs" as VD
+control "project.controller" as C
+entity "Project.model" as PM
 database "unitas_system" as BD
 autonumber
-activate U
-U -> RO: GET /new
-deactivate U
+
+activate L
+L -> RO: GET /projects/new
+deactivate L
     activate RO
-    RO -> C: getSignin(request, response)
+    RO -> C: getNewProjectPage(request, response)
     deactivate RO
         activate C
-        C -> V: response.render('signin', {csrfToken: request.csrfToken()})
+        C -> VN: response.render('pages/projectNew',\n{ empty projectForm, formErrors: [], formError: '' })
         deactivate C
-    activate V
-    V -> U: HTML form
-    deactivate V
+    activate VN
+    VN -> L: HTML form
+    deactivate VN
 
-activate U
-U -> RO: POST /new
-deactivate U
+activate L
+L -> RO: POST /projects
+deactivate L
     activate RO
-    RO -> C: postSignin(request, response)
+    RO -> C: createProject(request, response)
     deactivate RO
         activate C
-        C -> C: fullname = request.body.name + " " + request.body.lastname
-        C -> C: const employee_id = ''
-        C -> C: const account_id = ''
-        C -> EM: new Employee(fullname, request.body.names, request.body.lastnames)
-            activate EM
-            C ->> EM: save()
-                EM ->> BD: execute('INSERT INTO employee(employee_id, full_name, names, lastnames) VALUES(UUID(),?,?,?)',[fullname, request.body.names, request.body.lastnames])
-                    activate BD
-                    BD --> EM: Query OK
-                    deactivate BD
-            EM --> C: employee saved
-            deactivate EM
-        C ->> EM: getEmployeeIdByFullname(fullname)
-            activate EM
-            EM ->> BD: execute('SELECT employee_id FROM employee WHERE full_name=?',[fullname])
-                activate BD
-                BD --> EM: employee_id
-                deactivate BD
-            EM --> C: Promise employee_id
-            deactivate EM
-        C -> C: employee_id = Employee.getEmployeeIdByFullname(fullname)
-        C -> AM: new Account(employee_id, request.body.email, request.body.password, request.body.slack_username)
-            activate AM
-            C ->> AM: save()
-                AM ->> B: hash(this.password, 12)
-                    activate B
-                    B --> AM: password_cifred
-                    deactivate B
-                AM ->> BD: execute('INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())',[employee_id, request.body.email, password_cifred, request.body.slack_username, AccountStatus.ACTIVE, 0, null, null])
-                    activate BD
-                    BD --> AM: Query OK
-                    deactivate BD
-            AM --> C: account saved
-            deactivate AM
-        C ->> AM: getAccountIdByEmailSlack(request.body.email, request.body.slack_username)
-            activate AM
-            AM ->> BD: execute('SELECT account_id FROM account WHERE email=? AND slack_username=?',[request.body.email, request.body.slack_username])
-                activate BD
-                BD --> AM: account_id
-                deactivate BD
-            AM --> C: Promise account_id
-            deactivate AM
-        C -> C: account_id = Account.getAccountIdByEmailSlack(request.body.email, request.body.slack_username)
-        C -> ARM: new AccountRole(account_id, request.body.role_id)
-            activate ARM
-            C ->> ARM: save()
-                ARM ->> BD: execute('INSERT INTO accountrole(account_id, role_id) VALUES (?,?)',[account_id, request.body.role_id])
-                    activate BD
-                    BD --> ARM: Query OK
-                    deactivate BD
-            ARM --> C: account role saved
-            deactivate ARM
-        C -> V: response.redirect('/accountAdmin')
-        deactivate C
-    activate V
-    V -> U: Redirect /accountAdmin
-    deactivate V
+        C -> C: trim body fields\n(name, description, startDate, endDate)
+        C -> C: validate required fields\n(name, startDate)
 
-    opt Employee, Account or AccountRole creation failed
-            activate C
-            C -> V: response.redirect('/')
+        alt missing required fields
+            C -> VN: response.render('pages/projectNew',\n{ projectForm, formErrors })
             deactivate C
-        activate V
-        V -> U: Redirect /
-        deactivate V
-    end
+            activate VN
+            VN -> L: HTML form + validationErrors list
+            deactivate VN
+        end
+
+        C ->> PM: findByName(projectForm.name)
+            activate PM
+            PM ->> BD: execute('SELECT project_id, name FROM project WHERE name = ?', [projectForm.name])
+                activate BD
+                BD --> PM: projects[]
+                deactivate BD
+            PM --> C: [projects]
+            deactivate PM
+
+        alt duplicate name
+            C -> VN: response.render('pages/projectNew',\n{ projectForm, formError })
+            deactivate C
+            activate VN
+            VN -> L: HTML form + duplicate error
+            deactivate VN
+        end
+
+        C -> C: build new Project('', employeeId,\nprojectForm.name, projectForm.description || null,\nProject.Status.IN_PROGRESS,\nprojectForm.startDate || null,\nprojectForm.endDate || null, new Date())
+        C ->> PM: save()
+            activate PM
+            PM ->> BD: execute('INSERT INTO project(project_id,\nemployee_responsible_id, name, description,\nstatus, start_date, end_date, created_at)\nVALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)',\n[employeeId, projectForm.name,\nprojectForm.description || null,\n'IN PROGRESS', projectForm.startDate || null,\nprojectForm.endDate || null, new Date()])
+                activate BD
+                BD --> PM: success
+                deactivate BD
+            PM --> C: success
+            deactivate PM
+
+        C -> C: request.session.success =\n`Project ${projectForm.name} was created successfully.`
+        C -> RO: response.redirect('/projects')
+        deactivate C
+            activate RO
+            RO -> C: getProjects(request, response)
+            deactivate RO
+                activate C
+                C ->> PM: fetchByEmployeeId(employeeId)
+                    activate PM
+                    PM ->> BD: execute('SELECT ...', [employeeId, employeeId])
+                        activate BD
+                        BD --> PM: myProjects[]
+                        deactivate BD
+                    PM --> C: [myProjects]
+                    deactivate PM
+                C ->> PM: fetchNotByEmployeeId(employeeId)
+                    activate PM
+                    PM ->> BD: execute('SELECT ...', [employeeId, employeeId])
+                        activate BD
+                        BD --> PM: otherProjects[]
+                        deactivate BD
+                    PM --> C: [otherProjects]
+                    deactivate PM
+                C -> VD: response.render('pages/projectDirectory', { myProjects, otherProjects })
+                deactivate C
+            activate VD
+            VD -> L: HTML project directory
+            deactivate VD
+
+@enduml
+'/
+
+@startuml
+skinparam style strictuml
+
+actor Lead as L
+boundary "project.routes" as RO
+boundary "vista projectNew.ejs" as VN
+boundary "vista projectDirectory.ejs" as VD
+control "project.controller" as C
+entity "Project.model" as PM
+database "unitas_system" as BD
+autonumber
+
+activate L
+L -> RO: GET /projects/new
+deactivate L
+    activate RO
+    RO -> C: getNewProjectPage(request, response)
+    deactivate RO
+        activate C
+        C -> VN: response.render('pages/projectNew',\n{ empty projectForm, formErrors: [], formError: '' })
+        deactivate C
+    activate VN
+    VN -> L: HTML form
+    deactivate VN
+
+activate L
+L -> RO: POST /projects
+deactivate L
+    activate RO
+    RO -> C: createProject(request, response)
+    deactivate RO
+        activate C
+        C -> C: trim body fields\n(name, description, startDate, endDate)
+        C -> C: validate required fields\n(name, startDate)
+
+        alt missing required fields
+            C -> VN: response.render('pages/projectNew',\n{ projectForm, formErrors })
+            deactivate C
+            activate VN
+            VN -> L: HTML form + validationErrors list
+            deactivate VN
+        end
+
+        C ->> PM: findByName(projectForm.name)
+            activate PM
+            PM ->> BD: execute('SELECT project_id, name FROM project WHERE name = ?', [projectForm.name])
+                activate BD
+                BD --> PM: projects[]
+                deactivate BD
+            PM --> C: [projects]
+            deactivate PM
+
+        alt duplicate name
+            C -> VN: response.render('pages/projectNew',\n{ projectForm, formError })
+            deactivate C
+            activate VN
+            VN -> L: HTML form + duplicate error
+            deactivate VN
+        end
+
+        C -> C: build new Project('', employeeId,\nprojectForm.name, projectForm.description || null,\nProject.Status.IN_PROGRESS,\nprojectForm.startDate || null,\nprojectForm.endDate || null, new Date())
+        C ->> PM: save()
+            activate PM
+            PM ->> BD: execute('INSERT INTO project(project_id,\nemployee_responsible_id, name, description,\nstatus, start_date, end_date, created_at)\nVALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)',\n[employeeId, projectForm.name,\nprojectForm.description || null,\n'IN PROGRESS', projectForm.startDate || null,\nprojectForm.endDate || null, new Date()])
+                activate BD
+                BD --> PM: success
+                deactivate BD
+            PM --> C: success
+            deactivate PM
+
+        C -> C: request.session.success =\n`Project ${projectForm.name} was created successfully.`
+        C -> RO: response.redirect('/projects')
+        deactivate C
+            activate RO
+            RO -> C: getProjects(request, response)
+            deactivate RO
+                activate C
+                C -> VD: response.render('pages/projectDirectory')
+                deactivate C
+            activate VD
+            VD -> L: HTML project directory
+            deactivate VD
 
 @enduml

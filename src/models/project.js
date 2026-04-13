@@ -3,7 +3,7 @@
 
 const db = require('../utils/database.js');
 
-const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const DIRECTORY_QUERY = `SELECT DISTINCT
     P.project_id,
     P.name,

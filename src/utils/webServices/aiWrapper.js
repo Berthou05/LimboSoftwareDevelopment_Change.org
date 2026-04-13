@@ -69,12 +69,6 @@ const WhatWentWellTeamSectionSchema = z.object({
     .string()
     .min(1)
     .describe("Project title"),
-  items: z
-    .array(z.string().min(1)
-      .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
-    .max(0)
-    .optional()
-    .describe("Not used in this context"),
   subgroups: z
     .array(z.object({
       title: z.string().min(1)
@@ -141,25 +135,25 @@ const openai = createOpenAI({
 /*beBetterProject(project, prompt, schema)
 Auxiliar function to collect the report "What went well?" section*/
 
-const beBetterProject = async function beBetterProject(project, prompt, schema) {
-  return generateReportSection(project, prompt, schema);
-};
+export async function beBetterProject(project, prompt, schema){
+  return  await generateReportSection(project, prompt, schema);
+}
 
 
 /*teamImpact(projects, prompt, schema)
 Auxiliar function to collect the report "Team Impact" section*/
 
-const teamImpact = async function teamImpact(projects, prompt, schema) {
-  return generateReportSection(projects, prompt, schema);
-};
+export async function teamImpact(projects, prompt, schema){
+  return await generateReportSection(projects, prompt, schema);
+}
 
 
 /*whatToImprove(sections, prompt, schema)
 Auxiliar function to collect the report "What to improve?" section*/
 
-const whatToImprove = async function whatToImprove(sections, prompt, schema) {
-  return generateReportSection(sections, prompt, schema);
-};
+export async function whatToImprove(sections, prompt, schema){
+  return await generateReportSection(sections, prompt, schema);
+}
 
 
 /*generateReportSection(body, prompt, schema)
@@ -199,39 +193,34 @@ const getResponse = async function getResponse(prompt) {
   });
   console.log(totalUsage.totalTokens);
   return text;
-};
+}
 
-const extractActivities = async function extractActivities(payload = {}) {
-  const activitySchema = z.object({
-    activities: z.array(z.object({
-      title: z.string().min(1),
-      description: z.string().min(1),
-      project_hint: z.string().optional().default(''),
-      worked_on_project: z.boolean(),
-    })).max(40),
-  });
+export function extractActivities(payload = {}) {
+    const activities = [];
+    const sections = [
+        { label: 'Done', value: payload.done, workedOnProject: true },
+        { label: 'To Do', value: payload.toDo, workedOnProject: true },
+        { label: 'Blockers', value: payload.blockers, workedOnProject: false },
+    ];
 
-  const prompt = `Extract activities from the standup text.
-Return up to 40 items with title, description, project_hint, worked_on_project.
-Text:
-DONE: ${payload.done || ''}
-TODO: ${payload.toDo || ''}
-BLOCKERS: ${payload.blockers || ''}`;
+    sections.forEach((section) => {
+        String(section.value || '')
+            .split('\n')
+            .map((line) => String(line || '').replace(/^\s*[-*]\s*/, '').trim())
+            .filter(Boolean)
+            .forEach((line) => {
+                const normalizedTitle = line.slice(0, 150);
+                const normalizedDescription = `${section.label}: ${line}`.slice(0, 1000);
+                const projectHint = line.slice(0, 120);
 
-  const { output } = await generateText({
-    model: openai('gpt-4o-mini'),
-    output: Output.object({ schema: activitySchema }),
-    messages: [{ role: 'user', content: prompt }],
-  });
+                activities.push({
+                    title: normalizedTitle || `${section.label} activity`,
+                    description: normalizedDescription,
+                    project_hint: projectHint,
+                    worked_on_project: section.workedOnProject,
+                });
+            });
+    });
 
-  return output.activities || [];
-};
-
-module.exports = {
-  beBetterProject,
-  teamImpact,
-  whatToImprove,
-  generateReportSection,
-  getResponse,
-  extractActivities,
+    return Promise.resolve(activities.slice(0, 40));
 };

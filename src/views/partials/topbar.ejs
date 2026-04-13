@@ -15,15 +15,27 @@
     <%- include("./searchbar") %>
 
     <div class="flex items-center gap-2 sm:gap-3">
+      <%
+        const avatarImage = currentUser?.image || "";
+        const avatarInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U";
+      %>
       <div class="relative" data-account-menu>
         <button
           type="button"
-          class="app-avatar-button flex h-10 w-10 items-center justify-center rounded-full font-heading font-bold"
+          class="app-avatar-button flex h-10 w-10 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-brand-secondary p-0 font-heading font-bold"
           data-account-menu-toggle
           aria-label="Open account menu"
           aria-expanded="false"
         >
-          <%= currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U" %>
+          <% if (avatarImage) { %>
+            <img
+              src="<%= avatarImage %>"
+              alt="<%= currentUser?.name || "User" %>"
+              class="h-full w-full object-cover"
+            />
+          <% } else { %>
+            <span><%= avatarInitial %></span>
+          <% } %>
         </button>
 
         <div
