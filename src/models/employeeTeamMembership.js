@@ -49,6 +49,22 @@ module.exports = class EmployeeTeam {
         );
     }
 
+    /*fetchActiveByEmployeeAndTeam(employee_id, team_id)
+    Function responsible for returning the active membership tuple between
+    employee and team (left_at IS NULL).*/
+
+    static fetchActiveByEmployeeAndTeam(employee_id, team_id) {
+        return db.execute(
+            `SELECT *
+            FROM employeeteam
+            WHERE employee_id = ?
+            AND team_id = ?
+            AND left_at IS NULL
+            LIMIT 1`,
+            [employee_id, team_id],
+        );
+    }
+
     /*update(employee_id, team_id, updateData)
     Function responsible for updating all data
     related to a tuple of employeeTeam*/

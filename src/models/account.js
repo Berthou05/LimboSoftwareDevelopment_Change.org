@@ -47,6 +47,20 @@ module.exports = class Account {
         return db.execute('SELECT * FROM account WHERE email=?',[email]);
     }
 
+    /*findBySlackUsername(slack_username)
+    Function responsible for obtaining account information based on
+    slack_username.*/
+
+    static findBySlackUsername(slack_username) {
+        return db.execute(
+            `SELECT account_id, employee_id, status, slack_username
+            FROM account
+            WHERE slack_username = ?
+            LIMIT 1`,
+            [slack_username],
+        );
+    }
+
     /*getPrivilegesFromAccountId(account_id)
     Function responsible for obtaining an account privileges based on
     account_id*/
@@ -107,6 +121,19 @@ module.exports = class Account {
             FROM account 
             WHERE account_id=?`
             ,[account_id]);
+    }
+
+    /*updateProfile(account_id, email, slack_username, image)
+    Function responsible for updating editable account profile fields.*/
+
+    static updateProfile(account_id, email, slack_username, image){
+        return db.execute(`
+            UPDATE account
+            SET email = ?,
+                slack_username = ?,
+                image = ?
+            WHERE account_id = ?`,
+            [email, slack_username, image, account_id]);
     }
 };
 

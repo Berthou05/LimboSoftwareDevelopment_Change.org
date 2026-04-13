@@ -4,18 +4,21 @@ skinparam sequenceArrowThickness 1.2
 skinparam roundcorner 6
 autonumber
 
-actor    "Slack Automation"       as Slack
-boundary "dailyentry.routes"      as Routes
-control  "dailyentry.controller"  as Controller
-entity   "account.model"          as AccountModel
-entity   "dailyentry.model"       as DailyEntryModel
-entity   "activity.model"         as ActivityModel
-control  "ai.wrapper"             as AIWrapper
-entity   "ai.provider"            as AIProvider
-database "unitas_system"          as DB
+actor    "Slack Automation"             as Slack
+boundary "dailyentry.routes"            as Routes
+control  "dailyentry.controller"        as Controller
+entity   "account.model"                as AccountModel
+entity   "team.model"                   as TeamModel
+entity   "employeeTeamMembership.model" as EmployeeTeamModel
+entity   "dailyentry.model"             as DailyEntryModel
+entity   "activity.model"               as ActivityModel
+entity   "collaboration.model"          as CollaborationModel
+control  "ai.wrapper"                   as AIWrapper
+entity   "ai.provider"                  as AIProvider
+database "unitas_system"                as DB
 
 activate Slack
-Slack ->> Routes : POST /daily-entries/slack\n{slack_username, entry_date,\ndone, to_do, blockers,\nslack_standup_URL}
+Slack ->> Routes : POST /daily-entries/slack\n{slack_username, entry_date,\ndone, to_do, blockers,\nslack_standup_URL, slack_teams[]}
 activate Routes
 Routes -> Controller : submitFromSlack(req, res)
 deactivate Routes
@@ -65,11 +68,52 @@ deactivate DailyEntryModel
 Controller -->> Slack : HTTP 202 Accepted
 deactivate Slack
 
-Controller ->> AIWrapper : extractActivities\n(entry_id, done, to_do, blockers)
+loop for each slack_team_name in slack_teams[]
+
+    Controller ->> TeamModel : findActiveByName(slack_team_name)
+    activate TeamModel
+    TeamModel ->> DB : execute(\n  'SELECT team_id, name, status\n   FROM team\n   WHERE name = ?\n   AND status = ?',\n  [slack_team_name, 'ACTIVE']\n)
+    activate DB
+    DB -->> TeamModel : team | null
+    deactivate DB
+    TeamModel -->> Controller : team | null
+    deactivate TeamModel
+
+    alt Team not found in catalog
+        Controller -> Controller : logUnknownSlackTeam(slack_team_name)
+    end
+
+    Controller ->> EmployeeTeamModel : fetchActiveByEmployeeAndTeam\n(employee_id, team_id)\n[when team_id was found]
+    activate EmployeeTeamModel
+    EmployeeTeamModel ->> DB : execute(\n  'SELECT employee_id, team_id\n   FROM employeeteam\n   WHERE employee_id = ?\n   AND team_id = ?\n   AND left_at IS NULL\n   LIMIT 1',\n  [employee_id, team_id]\n)
+    activate DB
+    DB -->> EmployeeTeamModel : membership | null
+    deactivate DB
+    EmployeeTeamModel -->> Controller : membership | null
+    deactivate EmployeeTeamModel
+
+    alt Employee already active team member
+        Controller -> Controller : skipTeamAutoJoin(team_id)
+    end
+
+    alt Employee is not active team member
+        Controller ->> EmployeeTeamModel : join(employee_id, team_id,\nNOW(), 'EMPLOYEE')
+        activate EmployeeTeamModel
+        EmployeeTeamModel ->> DB : execute(\n  'INSERT INTO employeeteam\n   (employee_id, team_id, joined_at, left_at, role)\n   VALUES (?, ?, ?, NULL, ?)',\n  [employee_id, team_id, NOW(), 'EMPLOYEE']\n)
+        activate DB
+        DB -->> EmployeeTeamModel : joined
+        deactivate DB
+        EmployeeTeamModel -->> Controller : membership created
+        deactivate EmployeeTeamModel
+    end
+
+end
+
+Controller ->> AIWrapper : extractActivities\n(entry_id, done, to_do, blockers,\nslack_standup_URL)
 activate AIWrapper
 AIWrapper ->> AIProvider : POST /completions\n{ model, messages:\n  [{ role: 'user',\n     content: done + to_do + blockers }] }
 activate AIProvider
-AIProvider -->> AIWrapper : activities[] | error
+AIProvider -->> AIWrapper : activities[] | error\n(each item: {title, description,\nproject_hint, worked_on_project})
 deactivate AIProvider
 
 alt AI extraction failed
@@ -87,12 +131,40 @@ loop for each extracted activity
 
     Controller ->> ActivityModel : findProjectMatch\n(activity.project_hint)
     activate ActivityModel
-    ActivityModel ->> DB : execute(\n  'SELECT project_id FROM project\n   WHERE name LIKE ?\n   AND status <> ?',\n  [activity.project_hint, 'DISABLED']\n)
+    ActivityModel ->> DB : execute(\n  'SELECT project_id\n   FROM project\n   WHERE (name LIKE ? OR ? LIKE CONCAT("%", name, "%"))\n   AND status <> ?\n   LIMIT 1',\n  [activity.project_hint, activity.project_hint,\n   'DISABLED']\n)
     activate DB
     DB -->> ActivityModel : project_id | null
     deactivate DB
     ActivityModel -->> Controller : project_id | null
     deactivate ActivityModel
+
+    alt Project not detected or activity.worked_on_project = false
+        Controller -> Controller : keepActivityWithoutProject()
+    end
+
+    Controller ->> CollaborationModel : findActiveByProjectAndEmployee\n(project_id, employee_id)\n[when project_id exists and worked_on_project = true]
+    activate CollaborationModel
+    CollaborationModel ->> DB : execute(\n  'SELECT collaboration_id\n   FROM collaboration\n   WHERE project_id = ?\n   AND employee_id = ?\n   AND ended_at IS NULL\n   LIMIT 1',\n  [project_id, employee_id]\n)
+    activate DB
+    DB -->> CollaborationModel : collaboration | null
+    deactivate DB
+    CollaborationModel -->> Controller : collaboration | null
+    deactivate CollaborationModel
+
+    alt Employee already active project collaborator
+        Controller -> Controller : skipProjectAutoJoin(project_id)
+    end
+
+    alt Employee is not active project collaborator
+        Controller ->> CollaborationModel : joinProject(project_id, employee_id,\n'Auto-joined from Slack standup.', 'EMPLOYEE')
+        activate CollaborationModel
+        CollaborationModel ->> DB : execute(\n  'INSERT INTO collaboration\n   (collaboration_id, project_id, employee_id,\n    description, started_at, ended_at, role)\n   VALUES (UUID(), ?, ?, ?, NOW(), NULL, ?)',\n  [project_id, employee_id,\n   'Auto-joined from Slack standup.', 'EMPLOYEE']\n)
+        activate DB
+        DB -->> CollaborationModel : joined
+        deactivate DB
+        CollaborationModel -->> Controller : collaboration created
+        deactivate CollaborationModel
+    end
 
     Controller ->> ActivityModel : create(entry_id, employee_id,\nproject_id, title, description)
     activate ActivityModel

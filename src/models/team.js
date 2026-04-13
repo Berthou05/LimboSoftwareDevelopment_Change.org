@@ -121,6 +121,20 @@ module.exports = class Team {
         );
     }
 
+    /*findActiveByName(name)
+    Function responsible for obtaining an active team based on name.*/
+
+    static findActiveByName(name) {
+        return db.execute(
+            `SELECT team_id, name, status
+            FROM team
+            WHERE LOWER(name) = LOWER(?)
+            AND status = ?
+            LIMIT 1`,
+            [name, Status.ACTIVE],
+        );
+    }
+
     /*fetchByEmployeeId(employee_id)
     Function responsible for returning all teams an employee is part of*/
 

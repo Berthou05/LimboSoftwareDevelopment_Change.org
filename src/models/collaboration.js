@@ -47,11 +47,12 @@ module.exports = class Collaboration {
 
     static findActiveByProjectAndEmployee(project_id, employee_id) {
         return db.execute(
-            `SELECT *
+            `SELECT collaboration_id
             FROM collaboration
             WHERE project_id = ?
                 AND employee_id = ?
-                AND ended_at IS NULL`,
+                AND ended_at IS NULL
+            LIMIT 1`,
             [project_id, employee_id],
         );
     }

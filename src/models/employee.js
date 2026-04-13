@@ -118,6 +118,17 @@ module.exports = class Employee {
             [employee_id]);
     }
 
+    static fetchNamePartsById(employee_id) {
+        return db.execute('SELECT employee_id, full_name, names, lastnames FROM employee WHERE employee_id=?', [employee_id]);
+    }
+
+    static updateNames(employee_id, names, lastnames, full_name) {
+        return db.execute(
+            'UPDATE employee SET names=?, lastnames=?, full_name=? WHERE employee_id=?',
+            [names, lastnames, full_name, employee_id]
+        );
+    }
+
     /*getEmployeeByTeamId(team_id)
     Function responsible for returning all employee information of the selected team
     whose id=team_id*/
