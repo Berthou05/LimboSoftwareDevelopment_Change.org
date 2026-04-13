@@ -574,60 +574,60 @@ exports.generateReport = async (request, response, next)=>{
     const limit = pLimit(3);
     const promises = [];
 
-    let promptBeBetter = prompts.find(p => p.name === "BeBetter");
+    // let promptBeBetter = prompts.find(p => p.name === "BeBetter");
 
-    for (const [projectId, projectData] of Object.entries(projects)) {
-        let collective = {
-            context: context,
-            project: projectData,
-        };
-        console.log(projectData);
+    // for (const [projectId, projectData] of Object.entries(projects)) {
+    //     let collective = {
+    //         context: context,
+    //         project: projectData,
+    //     };
+    //     console.log(projectData);
 
-        const promise = limit(async () => {
-            const section = await AiWrapper.beBetterProject(
-                collective, 
-                promptBeBetter.prompt, 
-                promptBeBetter.schema);
-            return { projectId, section};
-        });
+    //     const promise = limit(async () => {
+    //         const section = await AiWrapper.beBetterProject(
+    //             collective, 
+    //             promptBeBetter.prompt, 
+    //             promptBeBetter.schema);
+    //         return { projectId, section};
+    //     });
 
-        promises.push(promise);
-    }
+    //     promises.push(promise);
+    // }
 
-    const results = await Promise.all(promises);
-    const hasGoneWell = {};
-    for (const { projectId, section } of results) {
-    hasGoneWell[projectId] = section;
-    }
+    // const results = await Promise.all(promises);
+    // const hasGoneWell = {};
+    // for (const { projectId, section } of results) {
+    // hasGoneWell[projectId] = section;
+    // }
 
-    // Team Impact Section
-    let TeamImpact = false;
+    // // Team Impact Section
+    // let TeamImpact = false;
 
-    if(reportType == 'TEAM'){
-        console.log('TEAM HERE');
-        let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
-        TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
-    }
-
-
-    // What can be improved SEction
-    let promptWhatToImprove = prompts.find(p => p.name === "Improve");
-    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+    // if(reportType == 'TEAM'){
+    //     console.log('TEAM HERE');
+    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+    //     TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    // }
 
 
-    // Assembly of the report object
-    const sections = [];
+    // // What can be improved SEction
+    // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
-    sections.push(buildWhatWentWellSection(wentWell));
-    if (TeamImpact) {
-    sections.push(normalizeSection(TeamImpact));
-    }
-    sections.push(normalizeSection(whatToImprove));
 
-    const report = {
-        title: context.name,
-        sections, 
-    };
+    // // Assembly of the report object
+    // const sections = [];
+
+    // sections.push(buildWhatWentWellSection(wentWell));
+    // if (TeamImpact) {
+    // sections.push(normalizeSection(TeamImpact));
+    // }
+    // sections.push(normalizeSection(whatToImprove));
+
+    // const report = {
+    //     title: context.name,
+    //     sections, 
+    // };
 
 
     //TODO: Report Object creation
