@@ -504,17 +504,15 @@ async function getContext(reportType, id, start_date, end_date, route){
                 activities: normalizedActivities[project.project_id] || []
             }));
         }
-
-
-
-        //Data Obtention Completed Successfully
-
+        
+        //Prompts normalization
         const promptsOrdered = prompts[0].map(prompt => ({
             name: prompt.name,
             prompt:prompt.description,
             schema:prompt.schema
         }))
         
+        //Return of the information
         return{
             context: context,
             projects: enrichedProjects,
@@ -626,16 +624,18 @@ exports.generateReport = async (request, response, next)=>{
     }
     sections.push(normalizeSection(whatToImprove));
 
-    console.log(JSON.stringify(TeamImpact, null, 2));
+    const report = {
+        title: context.name,
+        sections, 
+    };
 
-    // const report = {
-    //     title: context.name,
-    //     sections, 
-    // };
 
-    // console.log(JSON.stringify(report, null, 2));
+    //TODO: Report Object creation
+    //TODO: LatestReports obtention
+    //TODO: Implement AJAX reload. Modification of the generateReport modal.
+    //TODO: Implement AJAX reload mechanism here.
 
-    //TODO: Review code
+
     request.session.error = `Report generation for ${type}:${id} is still under development.`;
     return response.redirect(route);
 };
