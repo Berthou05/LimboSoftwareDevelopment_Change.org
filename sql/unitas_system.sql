@@ -13,7 +13,7 @@
 /*!40101 SET NAMES utf8mb4 */;
 
 
---
+-
 -- Database: `unitas_system`
 --
 CREATE DATABASE IF NOT EXISTS `unitas_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

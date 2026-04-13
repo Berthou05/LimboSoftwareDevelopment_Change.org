@@ -13,6 +13,8 @@ const Goal = require('../../models/goal');
 const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
 const { end } = require('../../utils/database');
+const AiWrapper = require('../../utils/webServices/aiWrapper');
+
 
 const REPORT_FORMATS = {
     EMPLOYEE: {
@@ -242,6 +244,30 @@ function groupByThreeLevels(array, key1, key2, key3) {
 
         return acc;
     }, {});
+
+function normalizeSection(section) {
+    return {
+        title: section.title,
+        items: section.items ?? [],
+        groups: section.groups ?? [],
+    };
+};
+
+function buildWhatWentWellSection(wentWell) {
+    const groups = Object.values(wentWell).map(project => {
+        return {
+        title: project.title,
+        items: project.items ?? [],
+        subgroups: project.subgroups ?? [],
+        };
+    });
+
+    return {
+        title: "What went well?",
+        groups,
+    };
+    }
+
 }
 
 
@@ -490,10 +516,8 @@ async function getContext(reportType, id, start_date, end_date, route){
         }))
         
         return{
-            projects: {
-                context: context,
-                projects: enrichedProjects
-            },
+            context: context,
+            projects: enrichedProjects,
             prompts: promptsOrdered
         }
         
@@ -543,15 +567,69 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Context + Data Obtention
-    const {projects, prompts} = await getContext(reportType, id, start_date, end_date, route);   
-    
-    /*
-    Method to look for a concrete prompt and schema
-    
-    const prompt = promptsOrdered.find(p => p.name === "BeBetter");
+    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);   
 
-    */
+    //Report Generation
+    //What went well? section
 
+    const pLimit = (await import("p-limit")).default;
+    const limit = pLimit(3);
+    const promises = [];
+
+    let promptBeBetter = prompts.find(p => p.name === "BeBetter");
+
+    for (const [projectId, projectData] of Object.entries(projects)) {
+        let collective = {
+            context: context,
+            project: projectData,
+        };
+        console.log(projectData);
+
+        const promise = limit(async () => {
+            const section = AiWrapper.beBetterProject(
+                collective, 
+                promptBeBetter.prompt, 
+                promptBeBetter.schema);
+            return { projectId, section};
+        });
+
+        promises.push(promise);
+    }
+
+    const results = await Promise.all(promises);
+    const hasGoneWell = {};
+    for (const { projectId, section } of results) {
+    hasGoneWell[projectId] = section;
+    }
+
+    console.log(JSON.stringify(hasGoneWell, null, 2));
+
+    //Team Impact Section
+    // if(reportType == 'TEAM'){
+    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+    //     const TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    // }
+
+    // //What can be improved SEction
+    // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+
+
+    // //Assembly of the report object
+    // const sections = [];
+
+    // sections.push(buildWhatWentWellSection(wentWell));
+    // if (TeamImpact) {
+    // sections.push(normalizeSection(TeamImpact));
+    // }
+    // sections.push(normalizeSection(whatToImprove));
+
+    // const report = {
+    //     title: context.name,
+    //     sections, 
+    // };
+
+    // console.log(JSON.stringify(report, null, 2));
 
     //TODO: Review code
     request.session.error = `Report generation for ${type}:${id} is still under development.`;

@@ -1,4 +1,4 @@
-import { generateText, streamText, Output } from "ai";
+import { generateText, streamText, Output} from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
@@ -39,20 +39,15 @@ Do not include any information outside the schema.
 Defined schema for the employee report, section what went well?*/
 
 const WhatWentWellEmployeeSectionSchema = z.object({
-  title: z.literal("What went well?"),
-  groups: z
-    .array(z.object({
-      title: z
-        .string()
-        .min(1)
-        .describe("Project title"),
-      items: z
-        .array(z.string().min(1)
-          .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
-        .max(8, "Maximum of 8 bullet points per project")
-        .describe("Up to 8 bullet points describing the employee's impact in this project"),
-    }))
-    .describe("Projects where the employee contributed, each with up to 8 bullet points"),
+  title: z
+    .string()
+    .min(1)
+    .describe("Project title"),
+  items: z
+    .array(z.string().min(1)
+      .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
+    .max(8, "Maximum of 8 bullet points per project")
+    .describe("Up to 8 bullet points describing the employee's impact in this project"),
 });
 
 
@@ -60,32 +55,27 @@ const WhatWentWellEmployeeSectionSchema = z.object({
 Defined schema for the team and project resports, section what went well?*/
 
 const WhatWentWellTeamSectionSchema = z.object({
-  title: z.literal("What went well?"),
-  groups: z
+  title: z
+    .string()
+    .min(1)
+    .describe("Project title"),
+  items: z
+    .array(z.string().min(1)
+      .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
+    .max(0)
+    .optional()
+    .describe("Not used in this context"),
+  subgroups: z
     .array(z.object({
-      title: z
-        .string()
-        .min(1)
-        .describe("Project title"),
+      title: z.string().min(1)
+        .describe("Employee name"),
       items: z
         .array(z.string().min(1)
           .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
-        .max(0)
-        .optional()
-        .describe("Not used in this context"),
-      subgroups: z
-        .array(z.object({
-          title: z.string().min(1)
-            .describe("Employee name"),
-          items: z
-            .array(z.string().min(1)
-              .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
-            .max(5, "Maximum of 5 bullet points per employee")
-            .describe("Exactly 5 bullet points describing the employee's contributions within the project"),
-        }))
-        .describe("List of employees contributing to the project, each with their own bullet points"),
+        .max(5, "Maximum of 5 bullet points per employee")
+        .describe("Exactly 5 bullet points describing the employee's contributions within the project"),
     }))
-    .describe("Projects where the team contributed, each containing employees as subgroups with their contributions"),
+    .describe("List of employees contributing to the project, each with their own bullet points"),
 });
 
 /*TeamImpactGroupSchema
@@ -138,20 +128,34 @@ const openai = createOpenAI({
 });
 
 
+/*beBetterProject(project, prompt, schema)
+Auxiliar function to collect the report "What went well?" section*/
+
 export async function beBetterProject(project, prompt, schema){
-  return generateReport(project, prompt, schema);
+  return generateReportSection(project, prompt, schema);
 }
 
+
+/*teamImpact(projects, prompt, schema)
+Auxiliar function to collect the report "Team Impact" section*/
 
 export async function teamImpact(projects, prompt, schema){
-  return generateReport(projects, prompt, schema);
+  return generateReportSection(projects, prompt, schema);
 }
 
+
+/*whatToImprove(sections, prompt, schema)
+Auxiliar function to collect the report "What to improve?" section*/
 
 export async function whatToImprove(sections, prompt, schema){
-  return generateReport(sections, prompt, schema);
+  return generateReportSection(sections, prompt, schema);
 }
 
+
+/*generateReportSection(body, prompt, schema)
+Function responsible for obtaining a section of the report based on the given
+prompt, schema and information.
+Main function all remaining functions are integrated to*/
 
 export async function generateReportSection(body, prompt, schema){
   let reportSchema = reportSchemas[schema];
@@ -162,12 +166,29 @@ export async function generateReportSection(body, prompt, schema){
     { role: "user", content: prompt }
   ]);
 
-  await streamObject({
+  const {output} = await generateText({
     model: openai("gpt-4o-mini"),
-    schema: reportSchema,
+    output: Output.object({schema: reportSchema}),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt)
   });
+
+  console.log(output);
+
+  return output
+}
+
+
+/*getResponse(prompt)
+Funcion de prueba del uso del servicio web de IA.*/
+
+export async function getResponse(prompt){
+  const {text, totalUsage} = await generateText({
+    model: openai("gpt-4o-mini"),
+    prompt,
+  });
+  console.log(totalUsage.totalTokens);
+  return text;
 }
 
 
