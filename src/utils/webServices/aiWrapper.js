@@ -8,9 +8,9 @@ Modified by: Alexis Berthou
 Function responsible for extracting normalized activities from a standup
 payload. This wrapper can later be replaced with an external AI provider.*/
 
-import { generateText, streamText, Output} from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-import { z } from "zod";
+const { generateText, streamText, Output } = require('ai');
+const { createOpenAI } = require('@ai-sdk/openai');
+const { z } = require('zod');
 
 // --------------------- System Message --------------------------------
 
@@ -141,25 +141,25 @@ const openai = createOpenAI({
 /*beBetterProject(project, prompt, schema)
 Auxiliar function to collect the report "What went well?" section*/
 
-export async function beBetterProject(project, prompt, schema){
+const beBetterProject = async function beBetterProject(project, prompt, schema) {
   return generateReportSection(project, prompt, schema);
-}
+};
 
 
 /*teamImpact(projects, prompt, schema)
 Auxiliar function to collect the report "Team Impact" section*/
 
-export async function teamImpact(projects, prompt, schema){
+const teamImpact = async function teamImpact(projects, prompt, schema) {
   return generateReportSection(projects, prompt, schema);
-}
+};
 
 
 /*whatToImprove(sections, prompt, schema)
 Auxiliar function to collect the report "What to improve?" section*/
 
-export async function whatToImprove(sections, prompt, schema){
+const whatToImprove = async function whatToImprove(sections, prompt, schema) {
   return generateReportSection(sections, prompt, schema);
-}
+};
 
 
 /*generateReportSection(body, prompt, schema)
@@ -167,7 +167,7 @@ Function responsible for obtaining a section of the report based on the given
 prompt, schema and information.
 Main function all remaining functions are integrated to*/
 
-export async function generateReportSection(body, prompt, schema){
+const generateReportSection = async function generateReportSection(body, prompt, schema) {
   let reportSchema = reportSchemas[schema];
 
   const buildMessages = (body, prompt) => ([
@@ -186,47 +186,52 @@ export async function generateReportSection(body, prompt, schema){
   console.log(output);
 
   return output
-}
+};
 
 
 /*getResponse(prompt)
 Funcion de prueba del uso del servicio web de IA.*/
 
-export async function getResponse(prompt){
+const getResponse = async function getResponse(prompt) {
   const {text, totalUsage} = await generateText({
     model: openai("gpt-4o-mini"),
     prompt,
   });
   console.log(totalUsage.totalTokens);
   return text;
-}
+};
 
-exports.extractActivities = function extractActivities(payload = {}) {
-    const activities = [];
-    const sections = [
-        { label: 'Done', value: payload.done, workedOnProject: true },
-        { label: 'To Do', value: payload.toDo, workedOnProject: true },
-        { label: 'Blockers', value: payload.blockers, workedOnProject: false },
-    ];
+const extractActivities = async function extractActivities(payload = {}) {
+  const activitySchema = z.object({
+    activities: z.array(z.object({
+      title: z.string().min(1),
+      description: z.string().min(1),
+      project_hint: z.string().optional().default(''),
+      worked_on_project: z.boolean(),
+    })).max(40),
+  });
 
-    sections.forEach((section) => {
-        String(section.value || '')
-            .split('\n')
-            .map((line) => String(line || '').replace(/^\s*[-*]\s*/, '').trim())
-            .filter(Boolean)
-            .forEach((line) => {
-                const normalizedTitle = line.slice(0, 150);
-                const normalizedDescription = `${section.label}: ${line}`.slice(0, 1000);
-                const projectHint = line.slice(0, 120);
+  const prompt = `Extract activities from the standup text.
+Return up to 40 items with title, description, project_hint, worked_on_project.
+Text:
+DONE: ${payload.done || ''}
+TODO: ${payload.toDo || ''}
+BLOCKERS: ${payload.blockers || ''}`;
 
-                activities.push({
-                    title: normalizedTitle || `${section.label} activity`,
-                    description: normalizedDescription,
-                    project_hint: projectHint,
-                    worked_on_project: section.workedOnProject,
-                });
-            });
-    });
+  const { output } = await generateText({
+    model: openai('gpt-4o-mini'),
+    output: Output.object({ schema: activitySchema }),
+    messages: [{ role: 'user', content: prompt }],
+  });
 
-    return Promise.resolve(activities.slice(0, 40));
+  return output.activities || [];
+};
+
+module.exports = {
+  beBetterProject,
+  teamImpact,
+  whatToImprove,
+  generateReportSection,
+  getResponse,
+  extractActivities,
 };

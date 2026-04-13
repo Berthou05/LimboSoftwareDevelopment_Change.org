@@ -74,12 +74,7 @@ exports.submitFromSlack = async (request, response) => {
         const done = String(body.done || '').trim().slice(0, MAX_TEXT_LENGTH);
         const blockers = String(body.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
         const slackStandupURL = String(body.slack_standup_URL || '').trim().slice(0, MAX_URL_LENGTH);
-        const slackTeams = Array.isArray(body.slack_teams)
-            ? body.slack_teams.map((value) => String(value || '').trim()).filter(Boolean)
-            : String(body.slack_teams || '')
-                .split(',')
-                .map((value) => value.trim())
-                .filter(Boolean);
+        const slackTeams = String(body.slack_teams || '').trim() ? [String(body.slack_teams).trim()] : [];
         const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(entryDate)
             && !Number.isNaN(new Date(`${entryDate}T00:00:00`).getTime());
 
