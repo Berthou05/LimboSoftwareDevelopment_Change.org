@@ -59,12 +59,6 @@ const WhatWentWellTeamSectionSchema = z.object({
     .string()
     .min(1)
     .describe("Project title"),
-  items: z
-    .array(z.string().min(1)
-      .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
-    .max(0)
-    .optional()
-    .describe("Not used in this context"),
   subgroups: z
     .array(z.object({
       title: z.string().min(1)
@@ -132,7 +126,7 @@ const openai = createOpenAI({
 Auxiliar function to collect the report "What went well?" section*/
 
 export async function beBetterProject(project, prompt, schema){
-  return generateReportSection(project, prompt, schema);
+  return  await generateReportSection(project, prompt, schema);
 }
 
 
@@ -140,7 +134,7 @@ export async function beBetterProject(project, prompt, schema){
 Auxiliar function to collect the report "Team Impact" section*/
 
 export async function teamImpact(projects, prompt, schema){
-  return generateReportSection(projects, prompt, schema);
+  return await generateReportSection(projects, prompt, schema);
 }
 
 
@@ -148,7 +142,7 @@ export async function teamImpact(projects, prompt, schema){
 Auxiliar function to collect the report "What to improve?" section*/
 
 export async function whatToImprove(sections, prompt, schema){
-  return generateReportSection(sections, prompt, schema);
+  return await generateReportSection(sections, prompt, schema);
 }
 
 

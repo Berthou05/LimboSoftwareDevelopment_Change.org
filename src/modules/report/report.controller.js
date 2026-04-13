@@ -586,7 +586,7 @@ exports.generateReport = async (request, response, next)=>{
         console.log(projectData);
 
         const promise = limit(async () => {
-            const section = AiWrapper.beBetterProject(
+            const section = await AiWrapper.beBetterProject(
                 collective, 
                 promptBeBetter.prompt, 
                 promptBeBetter.schema);
@@ -602,27 +602,31 @@ exports.generateReport = async (request, response, next)=>{
     hasGoneWell[projectId] = section;
     }
 
-    console.log(JSON.stringify(hasGoneWell, null, 2));
+    // Team Impact Section
+    let TeamImpact = false;
 
-    //Team Impact Section
-    // if(reportType == 'TEAM'){
-    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
-    //     const TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
-    // }
-
-    // //What can be improved SEction
-    // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
-    // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+    if(reportType == 'TEAM'){
+        console.log('TEAM HERE');
+        let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+        TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    }
 
 
-    // //Assembly of the report object
-    // const sections = [];
+    // What can be improved SEction
+    let promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
-    // sections.push(buildWhatWentWellSection(wentWell));
-    // if (TeamImpact) {
-    // sections.push(normalizeSection(TeamImpact));
-    // }
-    // sections.push(normalizeSection(whatToImprove));
+
+    // Assembly of the report object
+    const sections = [];
+
+    sections.push(buildWhatWentWellSection(wentWell));
+    if (TeamImpact) {
+    sections.push(normalizeSection(TeamImpact));
+    }
+    sections.push(normalizeSection(whatToImprove));
+
+    console.log(JSON.stringify(TeamImpact, null, 2));
 
     // const report = {
     //     title: context.name,
