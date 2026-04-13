@@ -180,113 +180,24 @@ module.exports = class Activity {
         );
     }
 
-    //-------------- Report Queries--------------------
+//-------------- Report Queries--------------------
 
-    /*fetchByEmployeeBtw(employee_id, start_date, end_date)
-    Function responsible for returning all employee activities between
-    start and end date*/
-    
-    static fetchByEmployeeBtw(employee_id, start_date, end_date) {
+    /*getProjectActivities(project_ids, start_date, end_date)
+    Function responsible for returning all project information
+    related to the project_ids passed as a parameter.*/
+
+    static getProjectActivities(project_ids, start_date, end_date){
+        if(project_ids.length===0){
+            return Promise.resolve([[]]);
+        }
+        const placeholders = project_ids.map(() => '?').join(',');
+
         return db.execute(`
-            SELECT title, description, completed_at, project_id 
-            FROM activity 
-            WHERE employee_id=? AND completed_at BETWEEN ? AND ?`,
-            [employee_id, start_date, end_date]);
-    }
-
-    /*getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date)
-    Function responsible for obtaining all the team member activies 
-    from all teams of the employee with id=employee_id*/
-
-    static getTeamActivitiesFromEmpBtw(employee_id,start_date, end_date){
-        return db.execute(`
-            SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id 
-            FROM activity as A 
-            WHERE (A.completed_at BETWEEN ? AND ?) AND employee_id IN (
-                SELECT ET.employee_id 
-                FROM employeeteam as ET 
-                WHERE ET.team_id IN( 
-                    SELECT ET.team_id 
-                    FROM employeeteam as ET 
-                    WHERE ET.employee_id = ?));`,
-            [start_date, end_date, employee_id]);
-    }
-
-    /*getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date)
-    Function responsible for obtainig all activities related to the
-    projects where the employee with id=employee_id has collaborated
-    between the provided date range*/
-    
-    static getProjectActivitiesFromEmpBtw(employee_id, start_date, end_date){
-        return db.execute(`
-            SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id 
-            FROM activity as A 
-            INNER JOIN collaboration as C ON A.project_id=C.project_id 
-            WHERE C.project_id IN(
-                SELECT C.project_id 
-                FROM collaboration as C 
-                WHERE C.employee_id=? AND C.started_at>=? AND (C.ended_at<= ? OR C.ended_at IS NULL))`,
-            [employee_id, start_date, end_date]);
-    }
-
-    /*getEmployeeActivitiesFromTeamBtw(team_id,start_date, end_date)
-    Function responsible of obtaining all the activities of the members
-    of a team.*/
-
-    static getEmployeeActivitiesFromTeamBtw(team_id,start_date, end_date){
-        return db.execute(`
-            SELECT A.title, A.description, A.completed_at, A.employee_id, A.project_id
-            FROM activity as A 
-            WHERE (A.completed_at BETWEEN ? AND ?) 
-            AND employee_id IN (
-                SELECT ET.employee_id 
-                FROM employeeteam as ET
-                WHERE ET.team_id =?);`,
-            [start_date, end_date, team_id]);
-    }
-
-    /*getProjectActivitiesFromTeamBtw(team_id, start_date, end_date)
-    Function respomsible for obtaining all project activities based on a team_id and
-    a date range.*/
-
-    static getProjectActivitiesFromTeamBtw(team_id, start_date, end_date){
-        return db.execute( `
-            SELECT A.title, A.description, A.completed_at, A.project_id, A.employee_id 
-            FROM activity as A 
-            INNER JOIN collaboration as C ON A.project_id=C.project_id
-            WHERE C.project_id IN(
-                SELECT PT.project_id 
-                FROM projectteam as PT 
-                WHERE PT.team_id = ? AND PT.joined_at>=? AND PT.joined_at<=?);`,
-            [team_id, start_date, end_date]);
-    }
-
-    /*getEmployeeActivitiesFromProjBtw(project_id, start_date, end_date)
-    Function responsible for obtaining all employee activities related to a project
-    between a specific date range*/
-
-    static getEmployeeActivitiesFromProjBtw(project_id, start_date, end_date){
-        return db.execute(`
-            SELECT DISTINCT A.title, A.description, A.completed_at, A.employee_id, A.project_id 
-            FROM activity as A 
-            INNER JOIN collaboration AS C ON A.project_id=C.project_id 
-            WHERE (A.completed_at BETWEEN ? AND ?) 
-            AND C.project_id =?;`,
-            [start_date, end_date, project_id]);
-    }
-
-    /*getTeamActivitiesFromProjectBtw(project_id, start_date, end_date)
-    Function responsible for obtaining all activities related to a project
-    made by a team between a specific date range*/
-
-    static getTeamActivitiesFromProjectBtw(project_id, start_date, end_date){
-        return db.execute(`
-            SELECT DISTINCT A.title, A.description, A.completed_at, A.project_id, A.employee_id 
-            FROM activity as A 
-            INNER JOIN projectteam AS PT ON PT.project_id=A.project_id 
-            WHERE (A.completed_at BETWEEN ? AND ?) 
-            AND PT.project_id=?;`,
-            [start_date, end_date, project_id])
+            SELECT A.title, A.description, A.completed_at, A.employee_id, A.team_id,A.project_id, E.full_name 
+            FROM activity AS A 
+            INNER JOIN employee AS E ON A.employee_id=E.employee_id 
+            WHERE (completed_at BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
+            [start_date, end_date, ...project_ids]);
     }
 
 //-------------------------------------------------------

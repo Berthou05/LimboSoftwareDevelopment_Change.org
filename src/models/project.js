@@ -244,44 +244,30 @@ module.exports = class Project {
 
     // ------------------------ Report Functions -----------------------
 
-    /*getEmployeeProjectsInfoBtw(employee_id, start_date, end_date)
-    Function responsible for obtaining all projects information 
-    where an employee whose id=employee_id between the provided date
-    range.*/
+    /*getEmployeeProjectIDsBtw(employee_id, start_date, end_date)
+    Function responsible for returning all project ids of projects related to an 
+    employee btw the given date range.*/
 
-    static getEmployeeProjectsInfoBtw(employee_id, start_date, end_date){
+    static getEmployeeProjectIDsBtw(employee_id, start_date, end_date){
         return db.execute(`
-            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
+            SELECT P.project_id 
             FROM project as P 
-            INNER JOIN collaboration as C ON C.project_id=P.project_id 
-            WHERE C.employee_id=? AND C.started_at>=? 
-            AND (C.ended_at<=? OR C.ended_at IS NULL);`,
-            [employee_id, start_date, end_date]);
+            INNER JOIN collaboration AS C ON C.project_id=P.project_id 
+            WHERE C.employee_id=? AND C.started_at>=? AND C.started_at<=?;`,
+            [employee_id, start_date, end_date])
     }
 
-    /*getTeamProjectsInfoBtw(team_id, start_date)
-    FUnction responsible for retuning all the projects that a team got involved 
-    */
+    /*getTeamProjectIDsBtw(team_id, start_date, end_date)
+    Fucntion responsible for returning all project ids of the projects related
+    to the given team_id between the specified date range*/
 
-    static getTeamProjectsInfoBtw(team_id, start_date, end_date){
+    static getTeamProjectIDsBtw(team_id, start_date, end_date){
         return db.execute(`
-            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
+            SELECT P.project_id 
             FROM project as P 
-            INNER JOIN projectteam as PT ON P.project_id=PT.project_id 
+            INNER JOIN projectteam AS PT ON PT.project_id=P.project_id 
             WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;`,
             [team_id, start_date, end_date]);
-    }
-
-    /*getProjectInfo(project_id)
-    Function responsible for obtaining the basic information of a project
-    based on its id.*/
-
-    static getProjectInfo(project_id){
-        return db.execute(`
-            SELECT P.name, P.description, P.status, P.start_date, P.end_date 
-            FROM project as P 
-            WHERE P.project_id = ?;`,
-            [project_id]);
     }
 
 

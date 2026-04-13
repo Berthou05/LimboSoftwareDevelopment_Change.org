@@ -46,6 +46,19 @@ end note
             C->C: normalizeReportType(report_type)
 
             alt Employee Report
+            C->>E:fetchById(employee_id)
+                activate E
+                E->>BD:execute(`SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email \nFROM employee AS E \nINNER JOIN account AS A ON E.employee_id=A.employee_id \nWHERE E.employee_id=?`,\n[employee_id]);
+                    activate BD
+                    BD-->E:employee_info
+                    deactivate BD
+                E-->C:employee_info
+                deactivate E
+
+            note right
+            Normalize the employee information
+            end note
+
             C->>P:getEmployeeProjectIDsBtw(employee_id, start_date, end_date)
                 activate P
                 P->>BD:execute(`SELECT P.project_id \nFROM project as P \nINNER JOIN collaboration AS C ON C.project_id=P.project_id \nWHERE C.employee_id=? AND C.started_at>=? AND C.started_at<=?;`,\n[employee_id, start_date, end_date])
@@ -57,6 +70,21 @@ end note
             end
             
             alt Team Report
+
+            C->>T:findById(team_id)
+                activate T
+                T->>BD: execute(`SELECT * ,E.full_name \nFROM team as T \nINNER JOIN employee AS E ON E.employee_id=T.employee_responsible_id\nWHERE team_id = ?`, \n[team_id]);
+                    activate BD
+                    BD-->T:team_info
+                    deactivate BD
+                T-->C:team_info
+                deactivate T
+
+            
+            note right
+            Normalize the team information
+            end note
+
             C->>P:getTeamProjectIDsBtw(team_id, start_date, end_date)
                 activate P
                 P->>BD:execute(`SELECT P.project_id FROM project as P INNER JOIN projectteam AS PT ON PT.project_id=P.project_id WHERE PT.team_id=? AND PT.joined_at>=? AND PT.joined_at<=?;`,[team_id, start_date, end_date])
@@ -66,33 +94,38 @@ end note
                 P-->C:project_ids
                 deactivate P
             end
+
+            alt Project Report
+
+            C->>P:findById(project_id)
+                activate P
+                P->>BD:execute(`SELECT P.project_id,P.employee_responsible_id,P.name,P.description,P.status,P.start_date,P.end_date,P.created_at,NULL AS image,E.full_name AS lead_name\nFROM project AS P\nINNER JOIN employee AS E ON E.employee_id = P.employee_responsible_id\nWHERE P.project_id = ?`,[project_id]);
+                    activate BD
+                    BD-->P:project_info
+                    deactivate BD
+                P-->C:project_info
+                deactivate P
+
+            
+            note right
+            Normalize the project information
+            end note
+
+            end
             
                 note right
                 project_ids is already obtained 
                 as the content_id
                 end note
 
-            alt Employee or Project Report
             C->>A:getProjectActivities(project_ids, start_date, end_date)
                 activate A
-                A->>BD:execute(`SELECT A.title, A.description, A.completed_at, A.employee_id, E.full_name \nFROM activity AS A \nINNER JOIN employee AS E ON A.employee_id=E.employee_id \nWHERE (completed_at BETWEEN ? AND ?) AND project_id IN ?;`,\n[start_date, end_date, project_ids])
+                A->>BD:execute(`SELECT A.title, A.description, A.completed_at, A.employee_id, A.team_id, E.full_name \nFROM activity AS A \nINNER JOIN employee AS E ON A.employee_id=E.employee_id \nWHERE (completed_at BETWEEN ? AND ?) AND project_id IN ?;`,\n[start_date, end_date, project_ids])
                     activate BD
                     BD-->A:activities
                     deactivate BD
                 A-->C:activities
                 deactivate A
-            end
-
-            alt Team Report
-            C->>A:getProjectActivitiesTeam(project_ids, team_id start_date, end_date)
-                activate A
-                A->>BD:execute(`SELECT A.title, A.description, A.completed_at, A.activity_id, E.employee_id,E.full_name \nFROM activity AS A \nINNER JOIN employee AS E ON A.employee_id=E.employee_id \nWHERE (A.completed_at BETWEEN ? AND ?) AND A.project_id IN ? AND A.employee_id IN(\nSELECT E.employee_id \nFROM employee AS E \nINNER JOIN employeeteam AS ET ON ET.employee_id=E.employee_id \nWHERE ET.team_id = ?);`,\n[start_date, end_date, project_ids, team_id])
-                    activate BD
-                    BD-->A:activities
-                    deactivate BD
-                A-->C:activities
-                deactivate A
-            end
 
             C->>G:getProjectGoals(project_ids, start_date, end_date)
                 activate G
@@ -112,7 +145,7 @@ end note
                 AC-->C:achievements
                 deactivate AC
 
-            C->>PR: fetchPrompts(report_type);
+            C->>PR: getPromptByType(report_type);
                 activate PR
                     PR->>BD: execute(`SELECT * FROM prompt WHERE type=?;`,[report_type]);
                         activate BD
@@ -132,7 +165,12 @@ end
             end note
 
             C->C:buildPromptMap(prompts);
+            alt Project & Employee Report
             C->C:groupByTwoLevels(activities, 'project_id', 'employee_id');
+            end
+            alt Team Report
+            C->C:groupByThreeLevels(activities, 'project_id','team_id','employee_id');
+            end
             C->C:groupBy(goals,'project_id');
             C->C:groupBy(achievements,'project_id');
 
@@ -166,14 +204,14 @@ end
             end
 
             alt Team Report
-            C->>W: teamImpact(project, prompt, schema);
+            C->>W: teamImpact(projects, prompt, schema);
                 activate W
                 
                 alt OpenAI usage
-                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt:prompt , input:project})
+                W->>AIProvider: streamText({model: openai("gpt-4o-mini"), output: Output.object({schema:schema}), prompt:prompt , input:projects})
                 end
                 alt Gemini usage
-                W->>AIProvider:generateObject({schema: projectSectionSchema, prompt:prompt, input:project});
+                W->>AIProvider:generateObject({schema: projectSectionSchema, prompt:prompt, input:projects});
                 end
                     activate AIProvider
                     AIProvider-->W: API response

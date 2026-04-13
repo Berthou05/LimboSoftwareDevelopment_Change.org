@@ -22,8 +22,10 @@
   },
   "homepage": "https://github.com/Berthou05/LimboSoftwareDevelopment_Change.org#readme",
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.52",
     "@tailwindcss/cli": "^4.2.2",
     "@tailwindcss/node": "^4.2.2",
+    "ai": "^6.0.158",
     "bcrypt": "^6.0.0",
     "body-parser": "^2.2.2",
     "csurf": "^1.11.0",
@@ -36,7 +38,9 @@
     "lightningcss": "^1.32.0",
     "multer": "^2.1.1",
     "mysql2": "^3.20.0",
-    "tailwindcss": "^4.2.2"
+    "p-limit": "^7.3.0",
+    "tailwindcss": "^4.2.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "daisyui": "^5.5.19"

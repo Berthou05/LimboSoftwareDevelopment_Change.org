@@ -10,8 +10,11 @@ const Team = require('../../models/team');
 const Activity = require('../../models/activity');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
 const { end } = require('../../utils/database');
+const AiWrapper = require('../../utils/webServices/aiWrapper');
+
 
 const REPORT_FORMATS = {
     EMPLOYEE: {
@@ -199,6 +202,78 @@ const REPORT_FORMATS = {
     },
 };
 
+//---------------------- Auxiliar functions ---------------------------
+
+function groupBy(array, key) {
+    return array.reduce((acc, item) => {
+        const groupKey = item[key];
+        if (!acc[groupKey]) acc[groupKey] = [];
+        acc[groupKey].push(item);
+        return acc;
+    }, {});
+}
+
+
+
+function groupByTwoLevels(array, key1, key2) {
+    return array.reduce((acc, item) => {
+        const k1 = item[key1];
+        const k2 = item[key2];
+
+        if (!acc[k1]) acc[k1] = {};
+        if (!acc[k1][k2]) acc[k1][k2] = [];
+
+        acc[k1][k2].push(item);
+
+        return acc;
+    }, {});
+}
+
+
+function groupByThreeLevels(array, key1, key2, key3) {
+    return array.reduce((acc, item) => {
+        const k1 = item[key1]; // project
+        const k2 = item[key2]; // team
+        const k3 = item[key3]; // employee
+
+        if (!acc[k1]) acc[k1] = {};
+        if (!acc[k1][k2]) acc[k1][k2] = {};
+        if (!acc[k1][k2][k3]) acc[k1][k2][k3] = [];
+
+        acc[k1][k2][k3].push(item);
+
+        return acc;
+    }, {});
+
+function normalizeSection(section) {
+    return {
+        title: section.title,
+        items: section.items ?? [],
+        groups: section.groups ?? [],
+    };
+};
+
+function buildWhatWentWellSection(wentWell) {
+    const groups = Object.values(wentWell).map(project => {
+        return {
+        title: project.title,
+        items: project.items ?? [],
+        subgroups: project.subgroups ?? [],
+        };
+    });
+
+    return {
+        title: "What went well?",
+        groups,
+    };
+    }
+
+}
+
+
+//---------------------------------------------------------------------
+
+
 /*normalizeReportRequest(body)
 Function responsible for normalizing report generator payloads coming from
 legacy and current views.*/
@@ -264,6 +339,199 @@ exports.getReport = (request, response, next) => {
     });
 };
 
+
+// ------------- Handler functions -------------
+
+
+/*getEmployeeContext(employee_id, start_date, end_date)
+Asyncronous function responsible for obtaining the employee information, 
+normalization and project_ids of related projects.*/
+
+async function getEmployeeContext(employee_id, start_date, end_date){
+    try {
+        const [employee_info] = await Employee.fetchById(employee_id);
+
+        const context = {
+            id: employee_info[0].employee_id,
+            fullName: employee_info[0].full_name,
+            slackUsername: employee_info[0].slack_username,
+            email: employee_info[0].email
+        };
+
+        const [project_ids] = await Project.getEmployeeProjectIDsBtw(employee_id,start_date,end_date);
+
+        return {
+            context,
+            projectIds:project_ids
+        };
+
+    } catch (error) {
+        throw error;
+    }
+}
+
+/*getTeamContext(team_id, start_date, end_date)
+Ayncronous function responsible for obtaining the team informacion,
+normalization and project_ids of projects related to the team.*/
+
+async function getTeamContext(team_id, start_date, end_date){
+    try{
+        [team_info] = await Team.findById(team_id);
+
+        const context = {
+            id:team_info[0].team_id,
+            name: team_info[0].name,
+            responsible: team_info[0].full_name,
+            description: team_info[0].description,
+            createdAt: team_info[0].created_at,
+            status:team_info[0].status,
+        };
+
+        [project_ids] = await Project.getTeamProjectIDsBtw(team_id, start_date, end_date);
+
+        return {
+            context,
+            projectIds:project_ids
+        }
+
+    }catch(error){
+        throw error;
+    }
+};
+
+
+/*getProjectContext(project_id, start_date, end_date)
+Asyncronous function responsinble for obtaining the project information
+and normalization.*/
+
+async function getProjectContext(project_id, start_date, end_date){
+    try{
+        [project_info] = await Project.findById(project_id);
+
+        const context = {
+            id:project_info[0].project_id,
+            name: project_info[0].name,
+            responsible:project_info[0].lead_name,
+            description:project_info[0].description,
+            status: project_info[0].status,
+            startDate:project_info[0].start_date,
+            endDate:project_info[0].end_date
+        }
+
+        return {
+            context,
+            projectIds: [project_id]
+        }
+    }catch(error){
+        throw error;
+    }
+};
+
+
+/*handlers
+Dictionary that stores the multiple variants of getting the context and project
+ids*/
+
+const handlers = {
+    'EMPLOYEE':getEmployeeContext,
+    'TEAM': getTeamContext,
+    'PROJECT': getProjectContext
+};
+
+/*getContext(reportType, id, start_date, end_date, route)
+Asyncronous function responsible foe obtaining context and common project
+elements as activities, goals and achievements*/
+
+async function getContext(reportType, id, start_date, end_date, route){
+    try{
+        const handler = handlers[reportType];
+        if(!handler){
+            return response.status(400).json({success:false, message:'Data type incorrect'});
+        }
+
+        //Obtention of context and projectIds depending on report type
+        const{context,projectIds} = await handler(id, start_date, end_date);
+        let ids;
+
+        if(reportType == 'PROJECT'){
+            ids = projectIds; 
+        }
+        else{
+            ids = projectIds.map(p => p.project_id);
+        }        
+
+        console.log(ids);
+
+        //Obtention of remaining data depending on projectIds
+        const [activities, goals, achievements,prompts] = await Promise.all([
+            Activity.getProjectActivities(ids,start_date,end_date),
+            Goal.getProjectGoals(ids, start_date, end_date),
+            Achievement.getProjectAchievements(ids, start_date, end_date),
+            Prompt.getPromptByType(reportType)
+        ]);
+
+        let normalizedActivities = '';
+
+        //Normalization of activities
+        switch (reportType){
+            case 'TEAM':
+                normalizedActivities = groupByThreeLevels(activities[0], 'project_id','team_id','employee_id');
+            break;
+
+            default:
+                normalizedActivities = groupByTwoLevels(activities[0],'project_id','employee_id');
+            break;
+        }
+
+        //Normalization of goals and achievements
+        const normalizedGoals = groupBy(goals[0], 'project_id');
+        const normalizedAchievements = groupBy(achievements[0], 'project_id');
+
+        let enrichedProjects;
+
+        if(reportType == 'PROJECT'){
+            enrichedProjects = {
+                goals: normalizedGoals,
+                achievements: normalizedAchievements,
+                activities: normalizedActivities
+            }
+        }
+        else{
+            enrichedProjects = projectIds.map(project => ({
+                ...project,
+                goals: normalizedGoals[project.project_id] || [],
+                achievements: normalizedAchievements[project.project_id] || [],
+                activities: normalizedActivities[project.project_id] || []
+            }));
+        }
+
+
+
+        //Data Obtention Completed Successfully
+
+        const promptsOrdered = prompts[0].map(prompt => ({
+            name: prompt.name,
+            prompt:prompt.description,
+            schema:prompt.schema
+        }))
+        
+        return{
+            context: context,
+            projects: enrichedProjects,
+            prompts: promptsOrdered
+        }
+        
+
+    }
+    catch(error){
+        console.log(error);
+        return response.status(500).json({success:false, message:'Data obtention failed'});
+    }
+}
+
+//----------------------------------------------
+
+
 /*generateReport
 Function responsible for generating a report based on obtained
 filters and content in the body.
@@ -275,8 +543,10 @@ Information obtained through body:
 - route: route where the report generator was invoked
 */
 
-exports.generateReport = (request, response, next)=>{
+exports.generateReport = async (request, response, next)=>{
     const { type, id, start_date, end_date, route } = normalizeReportRequest(request.body);
+    console.log(start_date);
+    console.log(end_date);
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     const reportType = normalizeReportType(type);
@@ -296,8 +566,70 @@ exports.generateReport = (request, response, next)=>{
         return response.redirect(route);
     }
 
-    
+    //Context + Data Obtention
+    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);   
 
+    //Report Generation
+    //What went well? section
+
+    const pLimit = (await import("p-limit")).default;
+    const limit = pLimit(3);
+    const promises = [];
+
+    let promptBeBetter = prompts.find(p => p.name === "BeBetter");
+
+    for (const [projectId, projectData] of Object.entries(projects)) {
+        let collective = {
+            context: context,
+            project: projectData,
+        };
+        console.log(projectData);
+
+        const promise = limit(async () => {
+            const section = AiWrapper.beBetterProject(
+                collective, 
+                promptBeBetter.prompt, 
+                promptBeBetter.schema);
+            return { projectId, section};
+        });
+
+        promises.push(promise);
+    }
+
+    const results = await Promise.all(promises);
+    const hasGoneWell = {};
+    for (const { projectId, section } of results) {
+    hasGoneWell[projectId] = section;
+    }
+
+    console.log(JSON.stringify(hasGoneWell, null, 2));
+
+    //Team Impact Section
+    // if(reportType == 'TEAM'){
+    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+    //     const TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    // }
+
+    // //What can be improved SEction
+    // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+
+
+    // //Assembly of the report object
+    // const sections = [];
+
+    // sections.push(buildWhatWentWellSection(wentWell));
+    // if (TeamImpact) {
+    // sections.push(normalizeSection(TeamImpact));
+    // }
+    // sections.push(normalizeSection(whatToImprove));
+
+    // const report = {
+    //     title: context.name,
+    //     sections, 
+    // };
+
+    // console.log(JSON.stringify(report, null, 2));
 
     //TODO: Review code
     request.session.error = `Report generation for ${type}:${id} is still under development.`;
