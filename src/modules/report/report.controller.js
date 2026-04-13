@@ -394,9 +394,8 @@ async function getProjectContext(project_id, start_date, end_date){
 
         return {
             context,
-            projectIds: project_id
+            projectIds: [project_id]
         }
-
     }catch(error){
         throw error;
     }
@@ -426,8 +425,16 @@ async function getContext(reportType, id, start_date, end_date, route){
 
         //Obtention of context and projectIds depending on report type
         const{context,projectIds} = await handler(id, start_date, end_date);
+        let ids;
 
-        const ids = projectIds.map(p => p.project_id);
+        if(reportType == 'PROJECT'){
+            ids = projectIds; 
+        }
+        else{
+            ids = projectIds.map(p => p.project_id);
+        }        
+
+        console.log(ids);
 
         //Obtention of remaining data depending on projectIds
         const [activities, goals, achievements,prompts] = await Promise.all([
@@ -436,8 +443,6 @@ async function getContext(reportType, id, start_date, end_date, route){
             Achievement.getProjectAchievements(ids, start_date, end_date),
             Prompt.getPromptByType(reportType)
         ]);
-
-        console.log(prompts[0]);
 
         let normalizedActivities = '';
 
@@ -456,24 +461,42 @@ async function getContext(reportType, id, start_date, end_date, route){
         const normalizedGoals = groupBy(goals[0], 'project_id');
         const normalizedAchievements = groupBy(achievements[0], 'project_id');
 
-        console.log(normalizedActivities, normalizedGoals);
-        console.log("Achievements");
-        console.log(normalizedAchievements);
+        let enrichedProjects;
 
-        const enrichedProjects = projectIds.map(project => ({
-            ...project,
-            goals: normalizedGoals[project.project_id] || [],
-            achievements: normalizedAchievements[project.project_id] || [],
-            activities: normalizedActivities[project.project_id] || []
-        }));
+        if(reportType == 'PROJECT'){
+            enrichedProjects = {
+                goals: normalizedGoals,
+                achievements: normalizedAchievements,
+                activities: normalizedActivities
+            }
+        }
+        else{
+            enrichedProjects = projectIds.map(project => ({
+                ...project,
+                goals: normalizedGoals[project.project_id] || [],
+                achievements: normalizedAchievements[project.project_id] || [],
+                activities: normalizedActivities[project.project_id] || []
+            }));
+        }
+
 
 
         //Data Obtention Completed Successfully
 
+        const promptsOrdered = prompts[0].map(prompt => ({
+            name: prompt.name,
+            prompt:prompt.description,
+            schema:prompt.schema
+        }))
         
-
-
-        //TODO: Data normalization
+        return{
+            projects: {
+                context: context,
+                projects: enrichedProjects
+            },
+            prompts: promptsOrdered
+        }
+        
 
     }
     catch(error){
@@ -520,7 +543,15 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Context + Data Obtention
-    const {projects, prompts} = await getContext(reportType, id, start_date, end_date, route);    
+    const {projects, prompts} = await getContext(reportType, id, start_date, end_date, route);   
+    
+    /*
+    Method to look for a concrete prompt and schema
+    
+    const prompt = promptsOrdered.find(p => p.name === "BeBetter");
+
+    */
+
 
     //TODO: Review code
     request.session.error = `Report generation for ${type}:${id} is still under development.`;
