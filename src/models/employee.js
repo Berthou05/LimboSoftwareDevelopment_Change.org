@@ -124,7 +124,11 @@ module.exports = class Employee {
 
     static getEmployeeByTeamId(team_id){
         return db.execute(
-            'SELECT E.employee_id, E.full_name, ET.joined_at, ET.role FROM employee as E INNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id WHERE ET.team_id=? AND ET.left_at IS NULL ORDER BY E.full_name ASC;',
+            `SELECT E.employee_id, E.full_name, ET.joined_at, ET.role 
+            FROM employee as E 
+            INNER JOIN employeeteam as ET ON E.employee_id=ET.employee_id 
+            WHERE ET.team_id=? AND ET.left_at IS NULL 
+            ORDER BY E.full_name ASC;`,
             [team_id]
         );
     };

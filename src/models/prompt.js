@@ -22,10 +22,12 @@ module.exports = class Prompt {
 
     static getPromptByType(report_type){
         return db.execute(`
-            SELECT P.description 
+            SELECT * 
             FROM prompt as P 
             WHERE P.type=?`,
             [report_type]);
     }
+
+    
 
 }
