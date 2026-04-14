@@ -198,7 +198,6 @@ const getResponse = async function getResponse(prompt) {
   return text;
 }
 
-
 // ====================== Daily Entry Processing =============================
 
 const ActivityItemSchema = z.object({
@@ -235,12 +234,9 @@ sections so they can be stored as activity rows.*/
 export async function extractActivities(payload = {}) {
   const normalizedPayload = {
     done: String(payload.done || '').trim(),
-    toDo: String(payload.toDo || '').trim(),
-    blockers: String(payload.blockers || '').trim(),
-    slackStandupURL: String(payload.slackStandupURL || '').trim(),
   };
 
-  if (!normalizedPayload.done && !normalizedPayload.toDo && !normalizedPayload.blockers) {
+  if (!normalizedPayload.done) {
     return [];
   }
 
@@ -254,22 +250,12 @@ Use these rules:
 - Put a fuller explanation in "description".
 - If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
 - Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
-- doingTomorrow and blockers do not become activities, ignore them.
 - Ignore greetings, filler text, and generic statements with no actionable work.
 - If there are no valid activities, return an empty array.
 
 Standup content:
 didToday:
 ${normalizedPayload.done}
-
-doingTomorrow:
-${normalizedPayload.toDo}
-
-blockers:
-${normalizedPayload.blockers}
-
-slackStandupURL:
-${normalizedPayload.slackStandupURL}
 `;
 
   const { output } = await generateText({

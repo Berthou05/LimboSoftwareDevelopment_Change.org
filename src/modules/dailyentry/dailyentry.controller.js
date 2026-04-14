@@ -12,13 +12,20 @@ const Activity = require('../../models/activity');
 const DailyEntry = require('../../models/dailyentry');
 const Collaboration = require('../../models/collaboration');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
-const aiWrapper = require('../../utils/webServices/aiWrapper');
 
 const MAX_TEXT_LENGTH = 500;
 const MAX_URL_LENGTH = 2048;
 const SLACK_MAX_SIGNATURE_AGE_SECONDS = 300;
 const AUTO_JOIN_ROLE = 'EMPLOYEE';
 const AUTO_JOIN_PROJECT_DESCRIPTION = 'Auto-joined from Slack standup.';
+
+/*getAiWrapper()
+Function responsible for loading the AI wrapper ESM module from a
+CommonJS controller.*/
+
+const getAiWrapper = async function getAiWrapper() {
+    return import('../../utils/webServices/aiWrapper.js');
+};
 
 /*validateSlackSignature(request)
 Function responsible for validating Slack signature and replay window
@@ -147,8 +154,9 @@ exports.submitFromSlack = async (request, response) => {
 
         // Asynchronously extract activities, handle project memberships and create activity records
         (async () => {
+            const aiWrapper = await getAiWrapper();
             const activities = await aiWrapper.extractActivities({
-                
+                done,
             });
 
             for (const activity of activities) {
