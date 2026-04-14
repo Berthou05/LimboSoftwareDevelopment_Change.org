@@ -2,6 +2,12 @@
 
 @import "flowbite";
 
+/* Hide browser-native password reveal button to avoid duplicating the custom toggle */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
 @theme {
     --color-brand-text: #403A49;
     --color-brand-bg: #ffffff;

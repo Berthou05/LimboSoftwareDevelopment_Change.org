@@ -17,5 +17,7 @@ router.get('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.
 router.post('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.postSignin);
 router.get('/reset', authController.getReset);
 router.post('/reset', authController.postReset);
+router.get('/reset/confirm', authController.getResetConfirm);
+router.post('/reset/confirm', authController.postResetConfirm);
 
 module.exports = router;

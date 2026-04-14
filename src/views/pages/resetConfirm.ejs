@@ -1,0 +1,108 @@
+<%# Template: pages/resetConfirm.ejs
+   Purpose: Password reset confirmation screen.
+   Expected locals: flash is handled by layout.
+   Data flow: auth.controller validates the reset code and updates the password.
+%>
+
+<header class="mb-6">
+  <h1 class="mt-1 font-heading text-3xl font-extrabold">Reset password</h1>
+  <p class="mt-2 text-sm text-brand-text/70">
+    Enter the code sent to <%= maskedResetEmail || 'your email' %> and choose a new password.
+  </p>
+</header>
+
+<form action="/reset/confirm" method="POST" class="space-y-4">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Reset code</span>
+    <input
+      type="text"
+      name="token"
+      required
+      autocomplete="one-time-code"
+      inputmode="numeric"
+      pattern="[0-9]{6}"
+      maxlength="6"
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-nav/30 focus:ring"
+      placeholder="123456"
+    />
+  </label>
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">New password</span>
+    <span class="relative block">
+      <input
+        type="password"
+        name="password"
+        id="resetPassword"
+        required
+        autocomplete="new-password"
+        class="w-full rounded-xl border border-brand-secondary px-3 py-2 pr-10 outline-none ring-brand-nav/30 focus:ring"
+        placeholder="New password"
+      />
+      <button
+        type="button"
+        class="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-brand-text/55 transition hover:text-brand-text focus:outline-none focus:ring-2 focus:ring-brand-nav/30"
+        data-password-toggle="resetPassword"
+        aria-label="Show password"
+      >
+        <svg data-password-eye class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" />
+          <circle cx="12" cy="12" r="2.25" />
+        </svg>
+        <svg data-password-eye-off class="hidden h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2.25 2.25 0 0 0 2.84 2.84" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.48A8.96 8.96 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a16.65 16.65 0 0 1-2.22 2.99" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.34 6.88C3.76 8.63 2.25 12 2.25 12s3.75 6.75 9.75 6.75c1.63 0 3.08-.5 4.32-1.22" />
+        </svg>
+      </button>
+    </span>
+  </label>
+
+  <div id="passwordRequirements" class="space-y-1 text-xs text-brand-text/70">
+    <p data-password-requirement="length" class="flex items-center gap-2">
+      <span data-requirement-status class="inline-flex w-4 justify-center">x</span>
+      <span>At least 8 characters</span>
+    </p>
+    <p data-password-requirement="uppercase" class="flex items-center gap-2">
+      <span data-requirement-status class="inline-flex w-4 justify-center">x</span>
+      <span>One uppercase letter</span>
+    </p>
+    <p data-password-requirement="number" class="flex items-center gap-2">
+      <span data-requirement-status class="inline-flex w-4 justify-center">x</span>
+      <span>One number</span>
+    </p>
+    <p data-password-requirement="special" class="flex items-center gap-2">
+      <span data-requirement-status class="inline-flex w-4 justify-center">x</span>
+      <span>One special character</span>
+    </p>
+  </div>
+
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Confirm new password</span>
+    <input
+      type="password"
+      name="confirmPassword"
+      id="resetConfirmPassword"
+      required
+      autocomplete="new-password"
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-nav/30 focus:ring"
+      placeholder="Confirm new password"
+    />
+  </label>
+
+  <input
+    type="submit"
+    class="app-cta-button app-cta-button--highlight w-full"
+    value="Change Password"/>
+
+  <div class="flex justify-between text-sm">
+    <a href="/reset" class="font-semibold text-brand-nav hover:underline">Send another code</a>
+    <a href="/" class="font-semibold text-brand-nav hover:underline">Back to login</a>
+  </div>
+</form>
+
+<script src="/js/passwordVisibility.js"></script>
+<script src="/js/resetPasswordRequirements.js"></script>

@@ -14,13 +14,48 @@ const resendService = require('../../utils/webServices/resendService');
 const RESET_TOKEN_EXPIRATION_MINUTES = 8;
 
 const createResetToken = function createResetToken() {
-    return crypto.randomBytes(8).toString('hex').toUpperCase();
+    return String(crypto.randomInt(100000, 1000000));
+};
+
+const hashResetToken = function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
 };
 
 const getResetExpiration = function getResetExpiration() {
     const expirationDate = new Date();
     expirationDate.setMinutes(expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES);
     return expirationDate;
+};
+
+const getPasswordValidationError = function getPasswordValidationError(password) {
+    if (password.length < 8) {
+        return 'Password must be at least 8 characters.';
+    }
+
+    if (!/[A-Z]/.test(password)) {
+        return 'Password must include at least one uppercase letter.';
+    }
+
+    if (!/[0-9]/.test(password)) {
+        return 'Password must include at least one number.';
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password)) {
+        return 'Password must include at least one special character.';
+    }
+
+    return '';
+};
+
+const maskEmail = function maskEmail(email) {
+    const [name, domain] = email.split('@');
+
+    if (!name || !domain) {
+        return email;
+    }
+
+    const visibleName = name.length <= 2 ? name[0] : name.slice(0, 2);
+    return `${visibleName}***@${domain}`;
 };
 
 /*getSignin
@@ -176,6 +211,8 @@ exports.getLogout = (request, response, next)=>{
 }
 
 exports.getReset = (request, response, next)=>{
+    request.session.resetEmail = null;
+
     return response.render('pages/reset', {
         csrfToken: request.csrfToken(),
         isLoginPage: true,
@@ -199,24 +236,116 @@ exports.postReset = (request, response, next) => {
     return Account.fetchByEmail(email)
         .then(([accounts]) => {
             if (!accounts.length) {
+                request.session.resetEmail = null;
                 request.session.success = 'If an account exists for that email, a reset message will be sent.';
                 return response.redirect('/reset');
             }
 
             const account = accounts[0];
             const resetToken = createResetToken();
+            const resetTokenHash = hashResetToken(resetToken);
             const resetExpiresAt = getResetExpiration();
 
-            return Account.saveResetToken(account.account_id, resetToken, resetExpiresAt)
-                .then(() => resendService.sendResetEmail(email, resetToken, RESET_TOKEN_EXPIRATION_MINUTES))
+            return Account.saveResetToken(account.account_id, resetTokenHash, resetExpiresAt)
                 .then(() => {
+                    return resendService.sendResetEmail(email, resetToken, RESET_TOKEN_EXPIRATION_MINUTES)
+                        .catch((error) => {
+                            return Account.clearResetToken(account.account_id)
+                                .catch(() => {})
+                                .then(() => {
+                                    throw error;
+                                });
+                        });
+                })
+                .then(() => {
+                    request.session.resetEmail = email;
                     request.session.success = 'A password reset email has been sent.';
-                    return response.redirect('/reset');
+                    return response.redirect('/reset/confirm');
                 });
         })
         .catch((error) => {
             console.log(error);
             request.session.error = 'We could not send the reset email right now.';
             return response.redirect('/reset');
+        });
+};
+
+exports.getResetConfirm = (request, response, next) => {
+    if (!request.session.resetEmail) {
+        request.session.error = 'Request a reset code first.';
+        return response.redirect('/reset');
+    }
+
+    return response.render('pages/resetConfirm', {
+        csrfToken: request.csrfToken(),
+        isLoginPage: true,
+        pageTitle: 'Confirm Reset',
+        resetEmail: request.session.resetEmail || '',
+        maskedResetEmail: request.session.resetEmail ? maskEmail(request.session.resetEmail) : '',
+    });
+};
+
+exports.postResetConfirm = (request, response, next) => {
+    const email = request.session.resetEmail || '';
+    const token = typeof request.body.token === 'string' ? request.body.token.trim() : '';
+    const password = request.body.password;
+    const confirmPassword = request.body.confirmPassword;
+
+    if (!email) {
+        request.session.error = 'Request a reset code first.';
+        return response.redirect('/reset');
+    }
+
+    if (!token || !password || !confirmPassword) {
+        request.session.error = 'Complete all fields.';
+        return response.redirect('/reset/confirm');
+    }
+
+    if (password !== confirmPassword) {
+        request.session.error = 'Password does not meet the requirements.';
+        return response.redirect('/reset/confirm');
+    }
+
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+        request.session.error = 'Password does not meet the requirements.';
+        return response.redirect('/reset/confirm');
+    }
+
+    const tokenHash = hashResetToken(token);
+
+    return Account.fetchByEmailAndResetToken(email, tokenHash)
+        .then(([accounts]) => {
+            if (!accounts.length) {
+                request.session.error = 'Invalid reset code.';
+                return response.redirect('/reset/confirm');
+            }
+
+            const account = accounts[0];
+            const expiresAt = new Date(account.reset_token_expires_at);
+
+            if (expiresAt < new Date()) {
+                return Account.clearResetToken(account.account_id)
+                    .then(() => {
+                        request.session.resetEmail = null;
+                        request.session.error = 'Reset code has expired. Request a new one.';
+                        return response.redirect('/reset');
+                    });
+            }
+
+            return bcrypt.hash(password, 12)
+                .then((passwordHash) => {
+                    return Account.updatePasswordAndClearResetToken(account.account_id, passwordHash);
+                })
+                .then(() => {
+                    request.session.resetEmail = null;
+                    request.session.success = 'Your password has been changed.';
+                    return response.redirect('/');
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            request.session.error = 'We could not reset your password right now.';
+            return response.redirect('/reset/confirm');
         });
 };
