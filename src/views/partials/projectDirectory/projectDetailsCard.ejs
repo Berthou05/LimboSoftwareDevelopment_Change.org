@@ -17,6 +17,9 @@
             }) %>
         </div>
     </div>
+    <p class="text-sm leading-6 text-brand-text/70">
+        <%= project?.description || 'No project description has been added yet.' %>
+    </p>
     <div class="flex flex-wrap gap-2 text-xs text-brand-text/70">
         <span class="app-breadcrumb app-breadcrumb--static">
             <%= project?.status || 'Unknown' %>
