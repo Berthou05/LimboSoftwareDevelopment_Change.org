@@ -73,7 +73,6 @@ validation: existance of account, password matching, privilege loading.
 Available without authentication*/
 
 exports.postLogin = (request, response, next)=>{
-    console.log("BODY:", request.body);
     Account.fetchByEmail(request.body.email).then(([rows,fieldData])=>{
         if(rows.length<1){
             request.session.error = 'Email not found';

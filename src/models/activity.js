@@ -40,23 +40,25 @@ module.exports = class Activity {
         );
     }
 
-    /*create(entry_id, employee_id, project_id, title, description, completed_at)
+    /*create(entry_id, employee_id, team_id, project_id, title, description, completed_at)
     Function responsible for storing a generated activity linked to a
     daily entry.*/
 
-    static create(entry_id, employee_id, project_id, title, description, completed_at = null) {
+    static create(entry_id, employee_id, team_id, project_id, title, description, completed_at = null) {
         return db.execute(
             `INSERT INTO activity(
                 activity_id,
                 project_id,
+                team_id,
                 employee_id,
                 entry_id,
                 title,
                 description,
                 completed_at
-            ) VALUES(UUID(), ?, ?, ?, ?, ?, ?)`,
+            ) VALUES(UUID(), ?, ?, ?, ?, ?, ?, ?)`,
             [
                 project_id || null,
+                team_id,
                 employee_id,
                 entry_id,
                 title,

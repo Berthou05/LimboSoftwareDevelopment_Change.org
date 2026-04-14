@@ -1,6 +1,6 @@
 /*
 Title: aiWrapper.js
-Last modification: April 12,2026
+Last modification: April 14,2026
 Modified by: Alexis Berthou
 */
 
@@ -8,9 +8,9 @@ Modified by: Alexis Berthou
 Function responsible for extracting normalized activities from a standup
 payload. This wrapper can later be replaced with an external AI provider.*/
 
-const { generateText, streamText, Output } = require('ai');
-const { createOpenAI } = require('@ai-sdk/openai');
-const { z } = require('zod');
+import { generateText, streamText, Output} from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 
 // --------------------- System Message --------------------------------
 
@@ -42,6 +42,9 @@ When suggesting improvements:
 Always structure your output strictly according to the provided schema.
 Do not include any information outside the schema.
 `;
+
+const VERSION = "4o";
+const MODEL = `gpt-${VERSION}-nano`;
 
 //---------------------- Report Schemas ---------------------------------
 
@@ -195,32 +198,19 @@ const getResponse = async function getResponse(prompt) {
   return text;
 }
 
+
+// ====================== Daily Entry Processing =============================
+
+// Schemas for activity extraction from standup entries
+
+const ActivityExtractionSchema = z.object({
+  entryId: z.number().describe("ID of the daily entry being processed"),
+  toDo: z.string().describe("The 'To Do' section of the daily entry"),
+  done: z.string().describe("The 'Done' section of the daily entry"),
+  blockers: z.string().describe("The 'Blockers' section of the daily entry"),
+  slackStandupURL: z.string().url().describe("The URL of the original Slack standup message"),
+});
+
 export function extractActivities(payload = {}) {
-    const activities = [];
-    const sections = [
-        { label: 'Done', value: payload.done, workedOnProject: true },
-        { label: 'To Do', value: payload.toDo, workedOnProject: true },
-        { label: 'Blockers', value: payload.blockers, workedOnProject: false },
-    ];
 
-    sections.forEach((section) => {
-        String(section.value || '')
-            .split('\n')
-            .map((line) => String(line || '').replace(/^\s*[-*]\s*/, '').trim())
-            .filter(Boolean)
-            .forEach((line) => {
-                const normalizedTitle = line.slice(0, 150);
-                const normalizedDescription = `${section.label}: ${line}`.slice(0, 1000);
-                const projectHint = line.slice(0, 120);
-
-                activities.push({
-                    title: normalizedTitle || `${section.label} activity`,
-                    description: normalizedDescription,
-                    project_hint: projectHint,
-                    worked_on_project: section.workedOnProject,
-                });
-            });
-    });
-
-    return Promise.resolve(activities.slice(0, 40));
 };
