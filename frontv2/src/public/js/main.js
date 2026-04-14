@@ -849,6 +849,55 @@ const initAccountImageUpload = function initAccountImageUpload() {
     });
 };
 
+const initCreateAccountPasswordGenerator = function initCreateAccountPasswordGenerator() {
+    const passwordInput = document.querySelector('#createAccountPassword');
+    const generateButton = document.querySelector('#generateAccountPasswordBtn');
+    const hint = document.querySelector('#generateAccountPasswordHint');
+
+    if (!passwordInput || !generateButton || !hint) {
+        return;
+    }
+
+    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%_-';
+    const passwordLength = 14;
+
+    const getRandomIndex = (max) => {
+        if (window.crypto && window.crypto.getRandomValues) {
+            const randomArray = new Uint32Array(1);
+            window.crypto.getRandomValues(randomArray);
+            return randomArray[0] % max;
+        }
+
+        return Math.floor(Math.random() * max);
+    };
+
+    const buildPassword = () => {
+        let generatedPassword = '';
+
+        for (let index = 0; index < passwordLength; index += 1) {
+            generatedPassword += charset[getRandomIndex(charset.length)];
+        }
+
+        return generatedPassword;
+    };
+
+    generateButton.addEventListener('click', async () => {
+        const generatedPassword = buildPassword();
+
+        passwordInput.value = generatedPassword;
+        hint.textContent = `Generated: ${generatedPassword}`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(generatedPassword);
+                hint.textContent = `Generated and copied: ${generatedPassword}`;
+            } catch (_error) {
+                // Clipboard can fail if browser permissions are denied; value remains filled in input.
+            }
+        }
+    });
+};
+
 const initTopbarAccountMenu = function initTopbarAccountMenu() {
     const menuRoot = document.querySelector('[data-account-menu]');
 
@@ -902,4 +951,5 @@ initReportTypeSubjectSelects();
 initEnhancedReportsSubjectSearch();
 initReportsDateRangePicker();
 initAccountImageUpload();
+initCreateAccountPasswordGenerator();
 initTopbarAccountMenu();

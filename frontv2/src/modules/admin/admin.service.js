@@ -1,7 +1,8 @@
-﻿const {
+const {
     privilegesCatalog,
     getAccounts,
     getRoles,
+    createAccount,
     updateAccountRole,
     updateAccountStatus,
     toggleRolePrivilege,
@@ -17,6 +18,10 @@ const listRoles = function listRoles() {
 
 const listPrivilegesCatalog = function listPrivilegesCatalog() {
     return privilegesCatalog;
+};
+
+const createManagedAccount = function createManagedAccount(payload) {
+    return createAccount(payload);
 };
 
 const setAccountRole = function setAccountRole(accountId, roleId) {
@@ -35,6 +40,7 @@ module.exports = {
     listAccounts,
     listRoles,
     listPrivilegesCatalog,
+    createManagedAccount,
     setAccountRole,
     setAccountStatus,
     setRolePrivilege,

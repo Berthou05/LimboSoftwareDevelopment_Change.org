@@ -966,6 +966,108 @@ const getAccounts = function getAccounts() {
     return accountsWithContext;
 };
 
+const buildNextAccountId = function buildNextAccountId() {
+    let highestNumericSuffix = 0;
+
+    for (const account of accounts) {
+        const numericSuffix = Number.parseInt(String(account.id || '').replace('acc-', ''), 10);
+
+        if (!Number.isNaN(numericSuffix) && numericSuffix > highestNumericSuffix) {
+            highestNumericSuffix = numericSuffix;
+        }
+    }
+
+    return `acc-${highestNumericSuffix + 1}`;
+};
+
+const buildNextEmployeeId = function buildNextEmployeeId() {
+    let highestNumericSuffix = 0;
+
+    for (const employee of employees) {
+        const numericSuffix = Number.parseInt(String(employee.id || '').replace('emp-', ''), 10);
+
+        if (!Number.isNaN(numericSuffix) && numericSuffix > highestNumericSuffix) {
+            highestNumericSuffix = numericSuffix;
+        }
+    }
+
+    return `emp-${highestNumericSuffix + 1}`;
+};
+
+const createAccount = function createAccount(payload) {
+    const fullName = String(payload.fullName || '').trim();
+    const email = String(payload.email || '').trim().toLowerCase();
+    const password = String(payload.password || '').trim();
+    const slackUsername = String(payload.slackUsername || '').trim();
+    const roleId = String(payload.roleId || '').trim();
+    const image = String(payload.image || '').trim();
+
+    if (!fullName || !email || !password || !roleId) {
+        return {
+            ok: false,
+            reason: 'MISSING_FIELDS',
+        };
+    }
+
+    if (!getRoleById(roleId)) {
+        return {
+            ok: false,
+            reason: 'INVALID_REFERENCE',
+        };
+    }
+
+    for (const account of accounts) {
+        if (String(account.email || '').toLowerCase() === email) {
+            return {
+                ok: false,
+                reason: 'EMAIL_ALREADY_EXISTS',
+            };
+        }
+    }
+
+    if (slackUsername) {
+        for (const account of accounts) {
+            if (String(account.slackUsername || '').toLowerCase() === slackUsername.toLowerCase()) {
+                return {
+                    ok: false,
+                    reason: 'SLACK_ALREADY_EXISTS',
+                };
+            }
+        }
+    }
+
+    const avatarSeed = encodeURIComponent(String(fullName || email).replace(/\s+/g, '_'));
+    const employeeId = buildNextEmployeeId();
+    const employee = {
+        id: employeeId,
+        fullName,
+        timezone: 'America/Mexico_City',
+        title: 'Employee',
+        bio: 'Newly created account.',
+        teams: [],
+        projects: [],
+        avatar: image || `https://api.dicebear.com/9.x/adventurer/svg?seed=${avatarSeed}`,
+    };
+    const account = {
+        id: buildNextAccountId(),
+        employeeId,
+        email,
+        password,
+        slackUsername,
+        status: 'ACTIVE',
+        image: image || `https://api.dicebear.com/9.x/adventurer/svg?seed=${avatarSeed}`,
+        roleId,
+    };
+
+    employees.push(employee);
+    accounts.push(account);
+
+    return {
+        ok: true,
+        account,
+    };
+};
+
 const updateAccountRole = function updateAccountRole(accountId, roleId) {
     const account = getAccountById(accountId);
 
@@ -1105,6 +1207,7 @@ module.exports = {
     authenticate,
     getHomeData,
     generateReport,
+    createAccount,
     updateAccountRole,
     updateAccountStatus,
     toggleRolePrivilege,
