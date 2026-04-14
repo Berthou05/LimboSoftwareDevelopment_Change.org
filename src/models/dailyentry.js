@@ -30,11 +30,11 @@ module.exports = class DailyEntry {
         );
     }
 
-    /*create(employee_id, entry_date, to_do, done, blockers, slack_standup_URL)
+    /*create(employee_id, team_id, entry_date, to_do, done, blockers, slack_standup_URL)
     Function responsible for storing a daily entry and returning the
     generated entry_id.*/
 
-    static create(employee_id, entry_date, to_do, done, blockers, slack_standup_URL) {
+    static create(employee_id, team_id, entry_date, to_do, done, blockers, slack_standup_URL) {
         let createdEntryId = '';
 
         return db.execute('SELECT UUID() AS entry_id')
@@ -44,15 +44,17 @@ module.exports = class DailyEntry {
                     `INSERT INTO dailyentry(
                         entry_id,
                         employee_id,
+                        team_id,
                         entry_date,
                         to_do,
                         done,
                         blockers,
                         slack_standup_URL
-                    ) VALUES(?, ?, ?, ?, ?, ?, ?)`,
+                    ) VALUES(?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         createdEntryId,
                         employee_id,
+                        team_id,
                         entry_date,
                         to_do,
                         done,

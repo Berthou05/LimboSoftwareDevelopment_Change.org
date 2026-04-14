@@ -14,7 +14,14 @@ const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
 const Search = require('../../models/search');
 const { end } = require('../../utils/database');
-const AiWrapper = require('../../utils/webServices/aiWrapper');
+
+/*getAiWrapper()
+Function responsible for loading the AI wrapper ESM module from a
+CommonJS controller.*/
+
+const getAiWrapper = async function getAiWrapper() {
+    return import('../../utils/webServices/aiWrapper.mjs');
+};
 
 
 const REPORT_FORMATS = {
@@ -536,6 +543,7 @@ Information obtained through body:
 
 exports.generateReport = async (request, response, next)=>{
     const { type, id, start_date, end_date, route } = normalizeReportRequest(request.body);
+    const AiWrapper = await getAiWrapper();
     console.log(start_date);
     console.log(end_date);
     const startDate = new Date(start_date);

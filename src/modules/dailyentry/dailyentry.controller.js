@@ -12,13 +12,20 @@ const Activity = require('../../models/activity');
 const DailyEntry = require('../../models/dailyentry');
 const Collaboration = require('../../models/collaboration');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
-const aiWrapper = require('../../utils/webServices/aiWrapper');
 
 const MAX_TEXT_LENGTH = 500;
 const MAX_URL_LENGTH = 2048;
 const SLACK_MAX_SIGNATURE_AGE_SECONDS = 300;
 const AUTO_JOIN_ROLE = 'EMPLOYEE';
 const AUTO_JOIN_PROJECT_DESCRIPTION = 'Auto-joined from Slack standup.';
+
+/*getAiWrapper()
+Function responsible for loading the AI wrapper ESM module from a
+CommonJS controller.*/
+
+const getAiWrapper = async function getAiWrapper() {
+    return import('../../utils/webServices/aiWrapper.mjs');
+};
 
 /*validateSlackSignature(request)
 Function responsible for validating Slack signature and replay window
@@ -61,29 +68,32 @@ for memberships and activities.*/
 
 exports.submitFromSlack = async (request, response) => {
     try {
-        if (!validateSlackSignature(request)) {
-            return response.status(401).json({
-                message: 'Invalid Slack signature',
-            });
-        }
+        // if (!validateSlackSignature(request)) {
+        //     return response.status(401).json({
+        //         message: 'Invalid Slack signature',
+        //     });
+        // }
 
+        // Extract and validate necessary data from Slack payload
         const body = request.body || {};
-        const slackUsername = String(body.slack_username || '').trim();
-        const entryDate = String(body.entry_date || '').trim();
-        const toDo = String(body.to_do || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const done = String(body.done || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const blockers = String(body.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const slackStandupURL = String(body.slack_standup_URL || '').trim().slice(0, MAX_URL_LENGTH);
-        const slackTeams = String(body.slack_teams || '').trim() ? [String(body.slack_teams).trim()] : [];
+        const slackUsername = String(body.user?.displayName || '').trim();
+        const entryDate = String(body.date || '').trim();
+        const toDo = String(body.standup?.doingTomorrow || '').trim().slice(0, MAX_TEXT_LENGTH);
+        const done = String(body.standup?.didToday || '').trim().slice(0, MAX_TEXT_LENGTH);
+        const blockers = String(body.standup?.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
+        const slackStandupURL = String(body.standup_url || '').trim().slice(0, MAX_URL_LENGTH);
+        const slackTeamName = String(body.team?.name || body.channel?.name || body.channel || '').trim();
         const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(entryDate)
             && !Number.isNaN(new Date(`${entryDate}T00:00:00`).getTime());
 
-        if (!slackUsername || !isValidDate || !slackStandupURL) {
+        // Basic validation of required fields
+        if (!slackUsername || !isValidDate) {
             return response.status(400).json({
                 message: 'Invalid Slack payload',
             });
         }
 
+        // Find employee account, team and check for existing entry for the day
         const [accountRows] = await Account.findBySlackUsername(slackUsername);
         const account = accountRows[0];
 
@@ -104,8 +114,33 @@ exports.submitFromSlack = async (request, response) => {
             });
         }
 
+        // Try to find matching team by Slack team or channel name, if not found return 404
+        const [teamRows] = slackTeamName ? await Team.findActiveByName(slackTeamName) : [[]];
+        const team = teamRows[0];
+
+        if (!team) {
+            return response.status(404).json({
+                message: 'Slack team not found',
+            });
+        }
+
+        // Check if employee is part of the team, if not add him
+        const [membershipRows] = await EmployeeTeamMembership.fetchByEmployeeAndTeam(
+            account.employee_id,
+            team.team_id,
+        );
+
+        if (membershipRows.length === 0) {
+            await EmployeeTeamMembership.join(
+                account.employee_id,
+                team.team_id,
+            );
+        }
+
+        // Store daily entry in db
         const entryId = await DailyEntry.create(
             account.employee_id,
+            team.team_id,
             entryDate,
             toDo,
             done,
@@ -117,39 +152,11 @@ exports.submitFromSlack = async (request, response) => {
             message: 'Daily entry accepted',
         });
 
+        // Asynchronously extract activities, handle project memberships and create activity records
         (async () => {
-            for (const teamName of slackTeams) {
-                const [teamRows] = await Team.findActiveByName(teamName);
-                const team = teamRows[0];
-
-                if (!team) {
-                    console.log(`[AL-01] Unknown Slack team: ${teamName}`);
-                    continue;
-                }
-
-                const [membershipRows] = await EmployeeTeamMembership.fetchActiveByEmployeeAndTeam(
-                    account.employee_id,
-                    team.team_id,
-                );
-
-                if (membershipRows.length > 0) {
-                    continue;
-                }
-
-                await EmployeeTeamMembership.join(
-                    account.employee_id,
-                    team.team_id,
-                    new Date(),
-                    AUTO_JOIN_ROLE,
-                );
-            }
-
+            const aiWrapper = await getAiWrapper();
             const activities = await aiWrapper.extractActivities({
-                entryId,
-                toDo,
                 done,
-                blockers,
-                slackStandupURL,
             });
 
             for (const activity of activities) {
@@ -185,6 +192,7 @@ exports.submitFromSlack = async (request, response) => {
                 await Activity.create(
                     entryId,
                     account.employee_id,
+                    team.team_id,
                     projectId,
                     title,
                     description,

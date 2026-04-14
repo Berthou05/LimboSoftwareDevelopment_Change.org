@@ -1,6 +1,6 @@
 /*
 Title: aiWrapper.js
-Last modification: April 12,2026
+Last modification: April 14,2026
 Modified by: Alexis Berthou
 */
 
@@ -8,9 +8,9 @@ Modified by: Alexis Berthou
 Function responsible for extracting normalized activities from a standup
 payload. This wrapper can later be replaced with an external AI provider.*/
 
-const { generateText, streamText, Output } = require('ai');
-const { createOpenAI } = require('@ai-sdk/openai');
-const { z } = require('zod');
+import { generateText, streamText, Output} from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 
 // --------------------- System Message --------------------------------
 
@@ -199,32 +199,83 @@ const getResponse = async function getResponse(prompt) {
   return text;
 }
 
-export function extractActivities(payload = {}) {
-    const activities = [];
-    const sections = [
-        { label: 'Done', value: payload.done, workedOnProject: true },
-        { label: 'To Do', value: payload.toDo, workedOnProject: true },
-        { label: 'Blockers', value: payload.blockers, workedOnProject: false },
-    ];
+// ====================== Daily Entry Processing =============================
 
-    sections.forEach((section) => {
-        String(section.value || '')
-            .split('\n')
-            .map((line) => String(line || '').replace(/^\s*[-*]\s*/, '').trim())
-            .filter(Boolean)
-            .forEach((line) => {
-                const normalizedTitle = line.slice(0, 150);
-                const normalizedDescription = `${section.label}: ${line}`.slice(0, 1000);
-                const projectHint = line.slice(0, 120);
+const ActivityItemSchema = z.object({
+  title: z
+    .string()
+    .min(1)
+    .max(150)
+    .describe("Short action title that can be stored in activity.title"),
+  description: z
+    .string()
+    .min(1)
+    .max(1000)
+    .describe("Clear summary that can be stored in activity.description"),
+  project_hint: z
+    .string()
+    .max(150)
+    .describe("Project name or hint mentioned in the activity. Empty string when none is detected"),
+  worked_on_project: z
+    .boolean()
+    .describe("True only when the activity clearly refers to concrete work on a project"),
+});
 
-                activities.push({
-                    title: normalizedTitle || `${section.label} activity`,
-                    description: normalizedDescription,
-                    project_hint: projectHint,
-                    worked_on_project: section.workedOnProject,
-                });
-            });
-    });
+const ActivityExtractionSchema = z.object({
+  activities: z
+    .array(ActivityItemSchema)
+    .max(40)
+    .describe("Normalized activities extracted from the standup"),
+});
 
-    return Promise.resolve(activities.slice(0, 40));
+/*extractActivities(payload)
+Function responsible for extracting normalized activities from standup
+sections so they can be stored as activity rows.*/
+
+export async function extractActivities(payload = {}) {
+  const normalizedPayload = {
+    done: String(payload.done || '').trim(),
+  };
+
+  if (!normalizedPayload.done) {
+    return [];
+  }
+
+  const prompt = `
+Extract concrete work activities only from the didToday section of this standup.
+
+Return only activities that are meaningful enough to persist in the activity table.
+Use these rules:
+- Keep each activity atomic and concise.
+- Put the main work item in "title".
+- Put a fuller explanation in "description".
+- If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
+- Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
+- Ignore greetings, filler text, and generic statements with no actionable work.
+- If there are no valid activities, return an empty array.
+
+Standup content:
+didToday:
+${normalizedPayload.done}
+`;
+
+  console.log("Extracting activities with prompt");
+
+  const { output } = await generateText({
+    model: openai(MODEL),
+    output: Output.object({ schema: ActivityExtractionSchema }),
+    messages: [
+      {
+        role: "system",
+        content: "You extract normalized engineering activities only from completed work already done.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  console.log("Extracted activities:", output.activities);
+  return output.activities || [];
 };
