@@ -8,6 +8,14 @@ input[type="password"]::-ms-clear {
     display: none;
 }
 
+@layer base {
+    input::placeholder,
+    textarea::placeholder {
+        color: #9ca3af;
+        opacity: 1;
+    }
+}
+
 @theme {
     --color-brand-text: #403A49;
     --color-brand-bg: #ffffff;

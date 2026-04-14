@@ -9953,6 +9953,12 @@
 input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear {
   display: none;
 }
+@layer base {
+  input::placeholder, textarea::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+}
 @layer components {
   .panel-action-button {
     display: inline-flex;
