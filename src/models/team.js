@@ -8,7 +8,7 @@ const Status = {
     DISABLED: 'DISABLED'
 };
 
-const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const DIRECTORY_QUERY = `SELECT DISTINCT
     T.team_id,
     T.name,

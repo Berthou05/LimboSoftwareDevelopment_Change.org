@@ -3,7 +3,7 @@
 
 const db = require('../utils/database.js');
 
-const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = 5;
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY = `SELECT DISTINCT visible.employee_id
 FROM (
     SELECT ET.employee_id
