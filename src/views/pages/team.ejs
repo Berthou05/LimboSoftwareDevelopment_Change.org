@@ -14,6 +14,15 @@
     </div>
 
     <%- include('../partials/teamDirectory/teamProjects', { team }) %>
+
+    <%- include('../partials/teamDirectory/teamActivity', {
+      team,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      activityError: typeof activityError !== 'undefined' ? activityError : '',
+      activitySections: typeof activitySections !== 'undefined' ? activitySections : []
+    }) %>
   </section>
 
   <section class="space-y-4">
@@ -41,32 +50,6 @@
       canManageTeamMembers: typeof canManageTeamMembers !== 'undefined' ? canManageTeamMembers : false
     }) %>
     
-    <%- include('../partials/teamDirectory/teamActivity', {
-      team,
-      activityFilter: typeof activityFilter !== 'undefined'
-        ? activityFilter
-        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
-      activityError: typeof activityError !== 'undefined' ? activityError : '',
-      activitySections: typeof activitySections !== 'undefined' ? activitySections : []
-    }) %>
-    <div class="flex justify-end">
-      <a href="/teams" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
-        Back to teams
-      </a>
-    </div>
-
-    <% if (canDeleteTeam) { %>
-      <div class="flex justify-end">
-        <button
-          type="button"
-          data-popup-open="delete-team-<%= team?.id || '' %>"
-          class="panel-action-button panel-action-button--danger"
-          aria-label="Delete team"
-        >
-          Delete team
-        </button>
-      </div>
-    <% } %>
   </section>
 </div>
 

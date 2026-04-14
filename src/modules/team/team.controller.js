@@ -236,10 +236,10 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
 
         rangeStart.setHours(0, 0, 0, 0);
         rangeEnd.setHours(23, 59, 59, 999);
-        rangeStart.setDate(rangeStart.getDate() - 29);
+        rangeStart.setDate(rangeStart.getDate() - 6);
 
         return {
-            preset: 'month',
+            preset: 'week',
             startDate: '',
             endDate: '',
             hasManualRange: false,
