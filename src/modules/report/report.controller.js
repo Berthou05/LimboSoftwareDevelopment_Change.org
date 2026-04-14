@@ -19,7 +19,7 @@ Function responsible for loading the AI wrapper ESM module from a
 CommonJS controller.*/
 
 const getAiWrapper = async function getAiWrapper() {
-    return import('../../utils/webServices/aiWrapper.js');
+    return import('../../utils/webServices/aiWrapper.mjs');
 };
 
 

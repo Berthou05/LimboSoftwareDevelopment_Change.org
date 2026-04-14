@@ -44,7 +44,7 @@ Do not include any information outside the schema.
 `;
 
 const VERSION = "4o";
-const MODEL = `gpt-${VERSION}-nano`;
+const MODEL = `gpt-${VERSION}-mini`;
 
 //---------------------- Report Schemas ---------------------------------
 
@@ -258,6 +258,8 @@ didToday:
 ${normalizedPayload.done}
 `;
 
+  console.log("Extracting activities with prompt");
+
   const { output } = await generateText({
     model: openai(MODEL),
     output: Output.object({ schema: ActivityExtractionSchema }),
@@ -273,5 +275,6 @@ ${normalizedPayload.done}
     ],
   });
 
+  console.log("Extracted activities:", output.activities);
   return output.activities || [];
 };

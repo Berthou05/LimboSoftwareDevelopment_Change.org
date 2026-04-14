@@ -24,7 +24,7 @@ Function responsible for loading the AI wrapper ESM module from a
 CommonJS controller.*/
 
 const getAiWrapper = async function getAiWrapper() {
-    return import('../../utils/webServices/aiWrapper.js');
+    return import('../../utils/webServices/aiWrapper.mjs');
 };
 
 /*validateSlackSignature(request)
@@ -82,7 +82,7 @@ exports.submitFromSlack = async (request, response) => {
         const done = String(body.standup?.didToday || '').trim().slice(0, MAX_TEXT_LENGTH);
         const blockers = String(body.standup?.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
         const slackStandupURL = String(body.standup_url || '').trim().slice(0, MAX_URL_LENGTH);
-        const slackTeamName = String(body.team?.name || body.channel?.name || '').trim();
+        const slackTeamName = String(body.team?.name || body.channel?.name || body.channel || '').trim();
         const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(entryDate)
             && !Number.isNaN(new Date(`${entryDate}T00:00:00`).getTime());
 
@@ -127,11 +127,11 @@ exports.submitFromSlack = async (request, response) => {
         // Check if employee is part of the team, if not add him
         const [membershipRows] = await EmployeeTeamMembership.fetchByEmployeeAndTeam(
             account.employee_id,
-            Team.findByName(slackTeamName).then(([rows]) => rows[0]?.team_id)
+            team.team_id,
         );
 
         if (membershipRows.length === 0) {
-            await EmployeeTeamMembership.addMember(
+            await EmployeeTeamMembership.join(
                 account.employee_id,
                 team.team_id,
             );
