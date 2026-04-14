@@ -5,16 +5,14 @@ const db = require('../utils/database.js');
 
 module.exports = class Report {
 
-    constructor(generated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text) {
+    constructor(generated_by_employee_id, content_id, content_type, period_start, period_end, content_json, filters_json, model_name, model_version, ai_output_text) {
         this.generated_by_employee_id = generated_by_employee_id;
         this.content_id = content_id;
         this.content_type = content_type;
-        this.prompt_id = prompt_id;
         this.period_start = period_start;
         this.period_end = period_end;
         this.content_json = content_json;
         this.filters_json = filters_json;
-        this.input_snapshot_json = input_snapshot_json;
         this.model_name = model_name;
         this.model_version = model_version;
         this.ai_output_text = ai_output_text;
@@ -74,9 +72,38 @@ module.exports = class Report {
                 AND content_id = ?
             ORDER BY created_at DESC
             LIMIT ?;`,
-            [project_id, employee_id, limit],
+            [employee_id, project_id, limit],
         );
     }
+
+    /*fetchLatestReport(employee_id, content_id, limit);
+    Function responsible for obtaining the last created reports of the content_id by
+    the employee with id=employee_id*/
+
+    static fetchLatestReport(employee_id, content_id, limit = '5') {
+        return db.execute(
+            `SELECT
+                report_id,
+                generated_by_employee_id,
+                content_id,
+                content_type,
+                period_start,
+                period_end,
+                created_at,
+                model_name,
+                model_version,
+                ai_output_text
+            FROM report
+            WHERE generated_by_employee_id = ?
+                AND content_id = ?
+            ORDER BY created_at DESC
+            LIMIT ?;`,
+            [employee_id, content_id, limit],
+        );
+    }
+
+
+
 
     // Read reports by prompt
     static fetchByPrompt(prompt_id) {

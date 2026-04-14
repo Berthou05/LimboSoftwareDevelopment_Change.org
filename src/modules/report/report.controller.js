@@ -12,6 +12,7 @@ const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
+const Search = require('../../models/search');
 const { end } = require('../../utils/database');
 const AiWrapper = require('../../utils/webServices/aiWrapper');
 
@@ -253,9 +254,9 @@ function normalizeSection(section) {
     };
 };
 
-function buildWhatWentWellSection(wentWell) {
+function buildWhatWentWellSection(wentWell){
     const groups = Object.values(wentWell).map(project => {
-        return {
+    return {
         title: project.title,
         items: project.items ?? [],
         subgroups: project.subgroups ?? [],
@@ -266,8 +267,7 @@ function buildWhatWentWellSection(wentWell) {
         title: "What went well?",
         groups,
     };
-    }
-
+    };
 }
 
 
@@ -574,68 +574,119 @@ exports.generateReport = async (request, response, next)=>{
     const limit = pLimit(3);
     const promises = [];
 
-    // let promptBeBetter = prompts.find(p => p.name === "BeBetter");
+    let promptBeBetter = prompts.find(p => p.name === "BeBetter");
 
-    // for (const [projectId, projectData] of Object.entries(projects)) {
-    //     let collective = {
-    //         context: context,
-    //         project: projectData,
-    //     };
-    //     console.log(projectData);
+    for (const [projectId, projectData] of Object.entries(projects)) {
+        let collective = {
+            context: context,
+            project: projectData,
+        };
 
-    //     const promise = limit(async () => {
-    //         const section = await AiWrapper.beBetterProject(
-    //             collective, 
-    //             promptBeBetter.prompt, 
-    //             promptBeBetter.schema);
-    //         return { projectId, section};
-    //     });
+        const promise = limit(async () => {
+            const section = await AiWrapper.beBetterProject(
+                collective, 
+                promptBeBetter.prompt, 
+                promptBeBetter.schema);
+            return { projectId, section};
+        });
 
-    //     promises.push(promise);
-    // }
+        promises.push(promise);
+    }
 
-    // const results = await Promise.all(promises);
-    // const hasGoneWell = {};
-    // for (const { projectId, section } of results) {
-    // hasGoneWell[projectId] = section;
-    // }
+    const results = await Promise.all(promises);
+    const hasGoneWell = {};
+    for (const { projectId, section } of results) {
+    hasGoneWell[projectId] = section;
+    }
 
-    // // Team Impact Section
-    // let TeamImpact = false;
+    // Team Impact Section
+    let TeamImpact = false;
 
-    // if(reportType == 'TEAM'){
-    //     console.log('TEAM HERE');
-    //     let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
-    //     TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
-    // }
-
-
-    // // What can be improved SEction
-    // let promptWhatToImprove = prompts.find(p => p.name === "Improve");
-    // const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+    if(reportType == 'TEAM'){
+        console.log('TEAM HERE');
+        let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
+        TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+    }
 
 
-    // // Assembly of the report object
-    // const sections = [];
-
-    // sections.push(buildWhatWentWellSection(wentWell));
-    // if (TeamImpact) {
-    // sections.push(normalizeSection(TeamImpact));
-    // }
-    // sections.push(normalizeSection(whatToImprove));
-
-    // const report = {
-    //     title: context.name,
-    //     sections, 
-    // };
+    // What can be improved SEction
+    let promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
 
-    //TODO: Report Object creation
-    //TODO: LatestReports obtention
-    //TODO: Implement AJAX reload. Modification of the generateReport modal.
-    //TODO: Implement AJAX reload mechanism here.
+    // Assembly of the report object
+    const sections = [];
 
+    sections.push(buildWhatWentWellSection(wentWell));
+    if (TeamImpact) {
+    sections.push(normalizeSection(TeamImpact));
+    }
+    sections.push(normalizeSection(whatToImprove));
 
-    request.session.error = `Report generation for ${type}:${id} is still under development.`;
-    return response.redirect(route);
+    const reportObject = {
+        title: context.name,
+        sections, 
+    };
+
+    console.log(reportObject);
+
+    const {model, version} = AiWrapper.getModelDetails();
+
+    const content_json = {
+        context: context,
+        projects: projects
+    }
+
+    const filters_json = {
+        startDate: start_date,
+        endDate: end_date,
+        id: id,
+        type: reportType
+    }
+
+    //Report Object creation
+
+    const report = new Report(request.session.employeeId, id, reportType,start_date, end_date, content_json, filters_json, model, version, reportObject);
+    report.save().then(()=>{
+        //LatestReports obtention
+        Report.fetchLatestReport(request.session.employeeId, id).then(([reports, fieldData])=>{
+            console.log(reports[0].ai_output_text);
+
+            //TODO: Implement AJAX reload. Modification of the generateReport modal.
+
+            Search.getNameFromId(reports[0].content_id).then(([name, fieldData])=>{
+
+                const responsePayload = {
+                    id: reports[0].report_id,
+                    subjectLabel: name[0],
+                    createdAt: reports[0].created_at,
+                    periodStart: reports[0].period_start,
+                    periodEnd: reports[0].period_end,
+                    type: reports[0].content_type
+                };
+
+                console.log(responsePayload);
+
+                if (request.xhr || request.headers.accept?.includes('json')) {
+                    return response.status(200).json(responsePayload);
+                }
+                else{
+                    return res.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}`);
+                }
+
+            }).catch((error)=>{
+
+            })
+
+        })  
+        .catch((error)=>{
+            console.log(error);
+            return response.status(500).json({success:false, message: 'Latest report obtention failed. Try again.'});    
+        })
+
+    })
+    .catch((error)=>{
+        console.log(error);
+        return response.status(500).json({success:false, message: 'Report object could not be stores successfully, Try again.'});
+    })
 };

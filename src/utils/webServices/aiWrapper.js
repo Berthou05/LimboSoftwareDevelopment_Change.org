@@ -43,6 +43,9 @@ Always structure your output strictly according to the provided schema.
 Do not include any information outside the schema.
 `;
 
+const VERSION = "4o";
+const MODEL = `gpt-${VERSION}-nano`;
+
 //---------------------- Report Schemas ---------------------------------
 
 /*WhatWentWellEmployeeSectionSchema
@@ -131,6 +134,16 @@ const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/*getModelDetails
+Function responsible for returning the model and version of the
+AI applied*/
+
+export function getModelDetails(){
+  return {
+    model: MODEL,
+    version: VERSION
+  }
+}
 
 /*beBetterProject(project, prompt, schema)
 Auxiliar function to collect the report "What went well?" section*/
@@ -170,15 +183,14 @@ export async function generateReportSection(body, prompt, schema){
     { role: "user", content: prompt }
   ]);
 
-  const {output} = await generateText({
-    model: openai("gpt-4o-mini"),
+  const {output, totalUsage} = await generateText({
+    model: openai(MODEL),
     output: Output.object({schema: reportSchema}),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt)
   });
 
-  console.log(output);
-
+  console.log(totalUsage.totalTokens);  
   return output
 }
 
@@ -188,7 +200,7 @@ Funcion de prueba del uso del servicio web de IA.*/
 
 export async function getResponse(prompt){
   const {text, totalUsage} = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: openai(MODEL),
     prompt,
   });
   console.log(totalUsage.totalTokens);
