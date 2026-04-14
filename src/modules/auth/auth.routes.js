@@ -15,7 +15,7 @@ router.post('/logout', isAuth, authController.getLogout);
 // ADMIN-03: only privileged admins can provision new accounts through this route.
 router.get('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.getSignin);
 router.post('/new', isAuth, isAuth.requirePermission('ADMIN-03'), authController.postSignin);
-
-//? Need to implement recover route '/recover'.
+router.get('/reset', authController.getReset);
+router.post('/reset', authController.postReset);
 
 module.exports = router;

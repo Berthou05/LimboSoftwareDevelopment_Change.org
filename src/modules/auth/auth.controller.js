@@ -8,7 +8,20 @@ const Account = require('../../models/account');
 const Employee = require('../../models/employee');
 const AccountRole = require('../../models/accountRoleAssignment');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const resendService = require('../../utils/webServices/resendService');
 
+const RESET_TOKEN_EXPIRATION_MINUTES = 8;
+
+const createResetToken = function createResetToken() {
+    return crypto.randomBytes(8).toString('hex').toUpperCase();
+};
+
+const getResetExpiration = function getResetExpiration() {
+    const expirationDate = new Date();
+    expirationDate.setMinutes(expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES);
+    return expirationDate;
+};
 
 /*getSignin
 Function that renders the sign in form.
@@ -162,6 +175,48 @@ exports.getLogout = (request, response, next)=>{
     });
 }
 
-/*
-? Function for handling /recover is missing
-*/
+exports.getReset = (request, response, next)=>{
+    return response.render('pages/reset', {
+        csrfToken: request.csrfToken(),
+        isLoginPage: true,
+        pageTitle: 'Reset Password'
+    });
+}
+
+exports.postReset = (request, response, next) => {
+    const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
+
+    if (!email) {
+        request.session.error = 'Enter your account email.';
+        return response.redirect('/reset');
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+        request.session.error = 'Email reset service is not configured.';
+        return response.redirect('/reset');
+    }
+
+    return Account.fetchByEmail(email)
+        .then(([accounts]) => {
+            if (!accounts.length) {
+                request.session.success = 'If an account exists for that email, a reset message will be sent.';
+                return response.redirect('/reset');
+            }
+
+            const account = accounts[0];
+            const resetToken = createResetToken();
+            const resetExpiresAt = getResetExpiration();
+
+            return Account.saveResetToken(account.account_id, resetToken, resetExpiresAt)
+                .then(() => resendService.sendResetEmail(email, resetToken, RESET_TOKEN_EXPIRATION_MINUTES))
+                .then(() => {
+                    request.session.success = 'A password reset email has been sent.';
+                    return response.redirect('/reset');
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            request.session.error = 'We could not send the reset email right now.';
+            return response.redirect('/reset');
+        });
+};

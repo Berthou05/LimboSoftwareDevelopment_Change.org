@@ -13,7 +13,7 @@
 <form action="/" method="POST" class="space-y-4">
   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
   <label class="block text-sm">
-    <span class="mb-1 block text-brand-text/70">Username or email</span>
+    <span class="mb-1 block text-brand-text/70">Email</span>
     <input
       type="text"
       name="email"
@@ -40,10 +40,6 @@
     value="Log In"/>
 
   <div class="flex justify-end text-sm">
-    <a href="/recover" class="font-semibold text-brand-nav hover:underline">Recover Password</a>
+    <a href="/reset" class="font-semibold text-brand-nav hover:underline">Reset Password</a>
   </div>
 </form>
-
-<div class="mt-6 rounded-xl bg-brand-bg p-3 text-xs text-brand-text/70">
-  Demo account: <span class="font-semibold">emp001@unitas.com / 123</span>
-</div>

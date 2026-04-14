@@ -135,6 +135,18 @@ module.exports = class Account {
             WHERE account_id = ?`,
             [email, slack_username, image, account_id]);
     }
+
+    /*saveResetToken(account_id, reset_token, reset_token_expires_at)
+    Function responsible for saving password reset token information.*/
+
+    static saveResetToken(account_id, reset_token, reset_token_expires_at) {
+        return db.execute(`
+            UPDATE account
+            SET recovery_token = ?,
+                recovery_token_expires_at = ?
+            WHERE account_id = ?`,
+            [reset_token, reset_token_expires_at, account_id]);
+    }
 };
 
 module.exports.AccountStatus = AccountStatus;

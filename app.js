@@ -161,6 +161,15 @@ app.use('/reports', routesReport);
 const routesAdmin = require('./src/modules/admin/admin.routes');
 app.use('/admin', routesAdmin);
 
+app.use((error, request, response, next) => {
+    if (error.code !== 'EBADCSRFTOKEN') {
+        next(error);
+        return;
+    }
+
+    request.session.error = 'Your form expired. Please try again.';
+    response.redirect(request.get('Referrer') || '/');
+});
 
 //Any additional route outside our domain
 app.listen(PORT, '0.0.0.0', () => {

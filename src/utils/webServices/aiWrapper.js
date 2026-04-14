@@ -201,7 +201,7 @@ export async function getResponse(prompt){
   return text;
 }
 
-exports.extractActivities = function extractActivities(payload = {}) {
+export function extractActivities(payload = {}) {
     const activities = [];
     const sections = [
         { label: 'Done', value: payload.done, workedOnProject: true },
