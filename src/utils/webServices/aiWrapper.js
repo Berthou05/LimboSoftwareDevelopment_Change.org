@@ -18,30 +18,25 @@ const { z } = require('zod');
 in order to give a role to Open AI to work with, leading to more precise results.*/
 
 const SYSTEM_MESSAGE = `
-You are a senior performance analyst specialized in evaluating organizational effectiveness across employees, teams, and projects.
+You are a senior performance analyst.
+Analyze structured data (activities, goals, achievements) and produce concise, evidence-based insights.
+Guidelines:
+- Focus on impact over activity volume
+- Identify patterns, not isolated events
+- Compare performance within context when possible
+- Avoid vague or generic statements
+Evaluation:
+- Highlight drivers of success
+- Identify gaps vs. expected standards
+- Ground all insights in the data
+Improvements:
+- Provide actionable, realistic recommendations
+- Align with values: Ambition, Responsibility, Openness, Candor, Connection
+Strictly follow the provided schema. Output only schema-compliant content.
+`
 
-Your role is to analyze structured data about activities, goals, and achievements, and extract clear, objective, and actionable insights.
-
-You must:
-- Focus on impact, not just activity volume
-- Compare performance relative to context when possible
-- Identify meaningful patterns, not isolated events
-- Be concise, specific, and evidence-based
-- Avoid vague statements and generic feedback
-
-When evaluating performance:
-- Highlight what drives success and positive outcomes
-- Identify gaps between current behavior and desired standards
-- Ground all insights in the provided data
-
-When suggesting improvements:
-- Align recommendations with the organization's core values:
-  Ambition, Responsibility, Openness, Candor, and Connection
-- Ensure suggestions are realistic, actionable, and relevant
-
-Always structure your output strictly according to the provided schema.
-Do not include any information outside the schema.
-`;
+const VERSION = "4o";
+const MODEL = `gpt-${VERSION}-mini`;
 
 //---------------------- Report Schemas ---------------------------------
 
@@ -131,6 +126,16 @@ const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/*getModelDetails
+Function responsible for returning the model and version of the
+AI applied*/
+
+export function getModelDetails(){
+  return {
+    model: MODEL,
+    version: VERSION
+  }
+}
 
 /*beBetterProject(project, prompt, schema)
 Auxiliar function to collect the report "What went well?" section*/
@@ -170,15 +175,14 @@ const generateReportSection = async function generateReportSection(body, prompt,
     { role: "user", content: prompt }
   ]);
 
-  const {output} = await generateText({
-    model: openai("gpt-4o-mini"),
+  const {output, totalUsage} = await generateText({
+    model: openai(MODEL),
     output: Output.object({schema: reportSchema}),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt)
   });
 
-  console.log(output);
-
+  console.log(totalUsage);  
   return output
 };
 
@@ -188,10 +192,10 @@ Funcion de prueba del uso del servicio web de IA.*/
 
 const getResponse = async function getResponse(prompt) {
   const {text, totalUsage} = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: openai(MODEL),
     prompt,
   });
-  console.log(totalUsage.totalTokens);
+  console.log(totalUsage);
   return text;
 }
 

@@ -35,7 +35,7 @@ Description: Creation of the page for the new password creation.
 
 12. AUTH-03
 In: **pages/login.ejs**
-Description: Implement the backend functionality that renders the first page of AUTH-03 responsible for the email confirmation, asnwers to the route '/recover'.
+Description: Implement the backend functionality that renders the first page of AUTH-03 responsible for the email confirmation, answers to the route '/reset'.
 
 ---
 

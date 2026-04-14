@@ -136,7 +136,7 @@ module.exports = class Goal {
         
 
         return db.execute(`
-            SELECT * 
+            SELECT G.title, G.description, G.status, G.project_id as 'p' 
             FROM goal AS G 
             WHERE (G.created_at BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
             [start_date, end_date, ...project_ids]);

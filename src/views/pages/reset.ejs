@@ -1,0 +1,33 @@
+<%# Template: pages/reset.ejs
+   Purpose: Password reset request screen.
+   Expected locals: flash is handled by layout.
+   Data flow: auth.controller receives an email, stores a reset token, and sends the code through Resend.
+%>
+
+<header class="mb-6">
+  <h1 class="mt-1 font-heading text-3xl font-extrabold">Reset password</h1>
+  <p class="mt-2 text-sm text-brand-text/70">Enter your email to reset your password</p>
+</header>
+
+<form action="/reset" method="POST" class="space-y-4">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+  <label class="block text-sm">
+    <span class="mb-1 block text-brand-text/70">Email</span>
+    <input
+      type="email"
+      name="email"
+      required
+      class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-nav/30 focus:ring"
+      placeholder="account@unitas.dev"
+    />
+  </label>
+
+  <input
+    type="submit"
+    class="app-cta-button app-cta-button--highlight w-full"
+    value="Reset Password"/>
+
+  <div class="flex justify-end text-sm">
+    <a href="/" class="font-semibold text-brand-nav hover:underline">Back to login</a>
+  </div>
+</form>

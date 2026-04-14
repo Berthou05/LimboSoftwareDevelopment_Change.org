@@ -72,10 +72,6 @@
       canManageProjectMembers: typeof canManageProjectMembers !== 'undefined' ? canManageProjectMembers : false
     }) %>
 
-    <a href="/projects" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
-      Back to projects
-    </a>
-
     <% if (canDeleteProject) { %>
       <div class="flex justify-end">
         <button

@@ -57,8 +57,8 @@ module.exports = class RolePrivilege {
         // Delete assignment
     static delete(role_id, privilege_id) {
         return db.execute(`
-            DELETE FROM roleprivilege as RP
-            WHERE RP.role_id=? AND RP.privilege_id=?;`,
+            DELETE FROM roleprivilege
+            WHERE role_id=? AND privilege_id=?;`,
             [role_id, privilege_id])
     }
 

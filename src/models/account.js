@@ -135,6 +135,47 @@ module.exports = class Account {
             WHERE account_id = ?`,
             [email, slack_username, image, account_id]);
     }
+
+    /*saveResetToken(account_id, reset_token_hash, reset_token_expires_at)
+    Function responsible for saving password reset token information.*/
+
+    static saveResetToken(account_id, reset_token_hash, reset_token_expires_at) {
+        return db.execute(`
+            UPDATE account
+            SET reset_token_hash = ?,
+                reset_token_expires_at = ?
+            WHERE account_id = ?`,
+            [reset_token_hash, reset_token_expires_at, account_id]);
+    }
+
+    static fetchByEmailAndResetToken(email, reset_token_hash) {
+        return db.execute(`
+            SELECT account_id, reset_token_expires_at
+            FROM account
+            WHERE email = ?
+            AND reset_token_hash = ?
+        `, [email, reset_token_hash]);
+    }
+
+    static clearResetToken(account_id) {
+        return db.execute(`
+            UPDATE account
+            SET reset_token_hash = NULL,
+                reset_token_expires_at = NULL
+            WHERE account_id = ?
+        `, [account_id]);
+    }
+
+    static updatePasswordAndClearResetToken(account_id, password_hash) {
+        return db.execute(`
+            UPDATE account
+            SET password_hash = ?,
+                reset_token_hash = NULL,
+                reset_token_expires_at = NULL
+            WHERE account_id = ?
+        `, [password_hash, account_id]);
+    }
+
 };
 
 module.exports.AccountStatus = AccountStatus;

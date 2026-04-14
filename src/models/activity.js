@@ -193,8 +193,8 @@ module.exports = class Activity {
         const placeholders = project_ids.map(() => '?').join(',');
 
         return db.execute(`
-            SELECT A.title, A.description, A.completed_at, A.employee_id, A.team_id,A.project_id, E.full_name 
-            FROM activity AS A 
+            SELECT A.title, A.description, A.completed_at, A.employee_id AS 'e', A.team_id AS 't', A.project_id AS 'p', E.full_name 
+            FROM activity AS A
             INNER JOIN employee AS E ON A.employee_id=E.employee_id 
             WHERE (completed_at BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
             [start_date, end_date, ...project_ids]);

@@ -35,8 +35,8 @@ CREATE TABLE `account` (
   `first_login` tinyint(1) NOT NULL,
   `last_login` datetime DEFAULT NULL,
   `image` varchar(1024) DEFAULT NULL,
-  `recovery_token` varchar(16) DEFAULT NULL,
-  `recovery_token_expires_at` datetime DEFAULT NULL,
+  `reset_token_hash` varchar(64) DEFAULT NULL,
+  `reset_token_expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -47,27 +47,27 @@ CREATE TABLE `account` (
 INSERT INTO `account` (
   `account_id`, `employee_id`, `email`, `password_hash`,
   `slack_username`, `status`, `first_login`, `last_login`,
-  `image`, `recovery_token`, `recovery_token_expires_at`, `created_at`
+  `image`, `reset_token_hash`, `reset_token_expires_at`, `created_at`
 ) VALUES
 ('a1b2c3d4-0001-4000-8000-000000000001', 'emp-001', 'emp001@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@axolotl.lead', 'ACTIVE', 1, '2026-02-20 09:15:22', 'https://cdn.unitas-platform.com/profiles/emp-001.png', NULL, NULL, '2026-01-01 08:00:00'),
-('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', 'A1B2C3D4E5F6G7H8', '2026-03-02 11:05:12', '2026-01-01 08:05:00'),
+('a1b2c3d4-0002-4000-8000-000000000002', 'emp-002', 'emp002@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@vaquita.dev', 'ACTIVE', 1, '2026-02-18 10:05:12', 'https://cdn.unitas-platform.com/profiles/emp-002.png', NULL, NULL, '2026-01-01 08:05:00'),
 ('a1b2c3d4-0003-4000-8000-000000000003', 'emp-003', 'emp003@unitas.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@jaguar.dev', 'ACTIVE', 1, '2026-02-19 11:20:44', 'https://cdn.unitas-platform.com/profiles/emp-003.png', NULL, NULL, '2026-01-01 08:10:00'),
-('a1b2c3d4-0004-4000-8000-000000000004', 'emp-004', 'emp004@unitas.com', '$2b$12$L8sdfg8sdfg8sdfg8sdFWEweYxZp4', '@colibri.design', 'ACTIVE', 1, '2026-02-17 08:44:11', 'https://cdn.unitas-platform.com/profiles/emp-004.png', 'ZXCVBNM123456789', '2026-03-01 09:44:11', '2026-01-01 08:15:00'),
+('a1b2c3d4-0004-4000-8000-000000000004', 'emp-004', 'emp004@unitas.com', '$2b$12$L8sdfg8sdfg8sdfg8sdFWEweYxZp4', '@colibri.design', 'ACTIVE', 1, '2026-02-17 08:44:11', 'https://cdn.unitas-platform.com/profiles/emp-004.png', NULL, NULL, '2026-01-01 08:15:00'),
 ('a1b2c3d4-0005-4000-8000-000000000005', 'emp-005', 'emp005@unitas.com', '$2b$12$Z7sdfg8sdfg8sdfg8sdQAZweYxZp5', '@tortuga.backend', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-005.png', NULL, NULL, '2026-01-01 08:20:00'),
-('a1b2c3d4-0006-4000-8000-000000000006', 'emp-006', 'emp006@unitas.com', '$2b$12$X9sdfg8sdfg8sdfg8sdRTYweYxZp6', '@aguila.growth', 'ACTIVE', 1, '2026-02-20 13:55:09', 'https://cdn.unitas-platform.com/profiles/emp-006.png', 'QWERTYUIOPASDFGH', '2026-03-02 14:55:09', '2026-01-01 08:25:00'),
+('a1b2c3d4-0006-4000-8000-000000000006', 'emp-006', 'emp006@unitas.com', '$2b$12$X9sdfg8sdfg8sdfg8sdRTYweYxZp6', '@aguila.growth', 'ACTIVE', 1, '2026-02-20 13:55:09', 'https://cdn.unitas-platform.com/profiles/emp-006.png', NULL, NULL, '2026-01-01 08:25:00'),
 ('a1b2c3d4-0007-4000-8000-000000000007', 'emp-007', 'emp007@unitas.com', '$2b$12$V1sdfg8sdfg8sdfg8sdUIOweYxZp7', '@lobo.devops', 'ACTIVE', 1, '2026-02-16 07:55:10', 'https://cdn.unitas-platform.com/profiles/emp-007.png', NULL, NULL, '2026-01-01 08:30:00'),
-('a1b2c3d4-0008-4000-8000-000000000008', 'emp-008', 'emp008@unitas.com', '$2b$12$B2sdfg8sdfg8sdfg8sdPASweYxZp8', '@pantera.sec', 'ACTIVE', 1, '2026-02-22 09:02:33', 'https://cdn.unitas-platform.com/profiles/emp-008.png', 'LKJHGFDSAZXCVBNM', '2026-03-02 10:02:33', '2026-01-01 08:35:00'),
+('a1b2c3d4-0008-4000-8000-000000000008', 'emp-008', 'emp008@unitas.com', '$2b$12$B2sdfg8sdfg8sdfg8sdPASweYxZp8', '@pantera.sec', 'ACTIVE', 1, '2026-02-22 09:02:33', 'https://cdn.unitas-platform.com/profiles/emp-008.png', NULL, NULL, '2026-01-01 08:35:00'),
 ('a1b2c3d4-0009-4000-8000-000000000009', 'emp-009', 'emp009@unitas.com', '$2b$12$N3sdfg8sdfg8sdfg8sdLKJweYxZp9', '@delfin.mobile', 'ACTIVE', 1, '2026-02-21 14:12:01', 'https://cdn.unitas-platform.com/profiles/emp-009.png', NULL, NULL, '2026-01-01 08:40:00'),
-('a1b2c3d4-0010-4000-8000-000000000010', 'emp-010', 'emp010@unitas.com', '$2b$12$M4sdfg8sdfg8sdfg8sdPOIweYxZp0', '@buho.analytics', 'ACTIVE', 1, '2026-02-19 16:33:45', 'https://cdn.unitas-platform.com/profiles/emp-010.png', 'MNBVCXZLKJHGFDSA', '2026-03-02 17:33:45', '2026-01-01 08:45:00'),
+('a1b2c3d4-0010-4000-8000-000000000010', 'emp-010', 'emp010@unitas.com', '$2b$12$M4sdfg8sdfg8sdfg8sdPOIweYxZp0', '@buho.analytics', 'ACTIVE', 1, '2026-02-19 16:33:45', 'https://cdn.unitas-platform.com/profiles/emp-010.png', NULL, NULL, '2026-01-01 08:45:00'),
 ('a1b2c3d4-0011-4000-8000-000000000011', 'emp-011', 'emp011@unitas.com', '$2b$12$Q5sdfg8sdfg8sdfg8sdZXCweYxZp1', '@ocelote.crm', 'ACTIVE', 1, '2026-02-18 12:22:22', 'https://cdn.unitas-platform.com/profiles/emp-011.png', NULL, NULL, '2026-01-01 08:50:00'),
-('a1b2c3d4-0012-4000-8000-000000000012', 'emp-012', 'emp012@unitas.com', '$2b$12$R6sdfg8sdfg8sdfg8sdVBNweYxZp2', '@halcon.payments', 'ACTIVE', 1, '2026-02-24 11:11:11', 'https://cdn.unitas-platform.com/profiles/emp-012.png', 'POIUYTREWQLKJHGF', '2026-03-02 12:11:11', '2026-01-01 08:55:00'),
+('a1b2c3d4-0012-4000-8000-000000000012', 'emp-012', 'emp012@unitas.com', '$2b$12$R6sdfg8sdfg8sdfg8sdVBNweYxZp2', '@halcon.payments', 'ACTIVE', 1, '2026-02-24 11:11:11', 'https://cdn.unitas-platform.com/profiles/emp-012.png', NULL, NULL, '2026-01-01 08:55:00'),
 ('a1b2c3d4-0013-4000-8000-000000000013', 'emp-013', 'emp013@unitas.com', '$2b$12$T7sdfg8sdfg8sdfg8sdGHJweYxZp3', '@coyote.internal', 'ACTIVE', 1, '2026-02-23 10:09:09', 'https://cdn.unitas-platform.com/profiles/emp-013.png', NULL, NULL, '2026-01-01 09:00:00'),
-('a1b2c3d4-0014-4000-8000-000000000014', 'emp-014', 'emp014@unitas.com', '$2b$12$Y8sdfg8sdfg8sdfg8sdWERweYxZp4', '@mariposa.community', 'ACTIVE', 1, '2026-02-20 17:17:17', 'https://cdn.unitas-platform.com/profiles/emp-014.png', 'ASDFGHJKLQWERTYU', '2026-03-02 18:17:17', '2026-01-01 09:05:00'),
+('a1b2c3d4-0014-4000-8000-000000000014', 'emp-014', 'emp014@unitas.com', '$2b$12$Y8sdfg8sdfg8sdfg8sdWERweYxZp4', '@mariposa.community', 'ACTIVE', 1, '2026-02-20 17:17:17', 'https://cdn.unitas-platform.com/profiles/emp-014.png', NULL, NULL, '2026-01-01 09:05:00'),
 ('a1b2c3d4-0015-4000-8000-000000000015', 'emp-015', 'emp015@unitas.com', '$2b$12$U9sdfg8sdfg8sdfg8sdTYUweYxZp5', '@tiburon.growth', 'ACTIVE', 1, '2026-02-27 15:30:30', 'https://cdn.unitas-platform.com/profiles/emp-015.png', NULL, NULL, '2026-01-01 09:10:00'),
-('a1b2c3d4-0016-4000-8000-000000000016', 'emp-016', 'emp016@unitas.com', '$2b$12$I0sdfg8sdfg8sdfg8sdQWEweYxZp6', '@armadillo.validation', 'ACTIVE', 1, '2026-03-01 09:45:00', 'https://cdn.unitas-platform.com/profiles/emp-016.png', 'ZXCASDQWEPLMOKNI', '2026-03-02 10:45:00', '2026-01-01 09:15:00'),
+('a1b2c3d4-0016-4000-8000-000000000016', 'emp-016', 'emp016@unitas.com', '$2b$12$I0sdfg8sdfg8sdfg8sdQWEweYxZp6', '@armadillo.validation', 'ACTIVE', 1, '2026-03-01 09:45:00', 'https://cdn.unitas-platform.com/profiles/emp-016.png', NULL, NULL, '2026-01-01 09:15:00'),
 ('a1b2c3d4-0017-4000-8000-000000000017', 'emp-017', 'emp017@unitas.com', '$2b$12$O1sdfg8sdfg8sdfg8sdASDweYxZp7', '@mapache.ai', 'ACTIVE', 1, '2026-03-02 13:13:13', 'https://cdn.unitas-platform.com/profiles/emp-017.png', NULL, NULL, '2026-01-01 09:20:00'),
 ('a1b2c3d4-0018-4000-8000-000000000018', 'emp-018', 'emp018@unitas.com', '$2b$12$P2sdfg8sdfg8sdfg8sdFGHweYxZp8', '@venado.recruit', 'ACTIVE', 0, NULL, 'https://cdn.unitas-platform.com/profiles/emp-018.png', NULL, NULL, '2026-01-01 09:25:00'),
-('a1b2c3d4-0019-4000-8000-000000000019', 'emp-019', 'emp019@unitas.com', '$2b$12$A3sdfg8sdfg8sdfg8sdJKLweYxZp9', '@camaleon.content', 'DISABLED', 1, '2026-02-22 08:08:08', 'https://cdn.unitas-platform.com/profiles/emp-019.png', 'EXPIREDTOKEN1234', '2026-02-22 09:08:08', '2026-01-01 09:30:00'),
+('a1b2c3d4-0019-4000-8000-000000000019', 'emp-019', 'emp019@unitas.com', '$2b$12$A3sdfg8sdfg8sdfg8sdJKLweYxZp9', '@camaleon.content', 'DISABLED', 1, '2026-02-22 08:08:08', 'https://cdn.unitas-platform.com/profiles/emp-019.png', NULL, NULL, '2026-01-01 09:30:00'),
 ('a1b2c3d4-0020-4000-8000-000000000020', 'emp-020', 'emp020@unitas.com', '$2b$12$S4sdfg8sdfg8sdfg8sdZXCweYxZp0', '@hormiga.support', 'ACTIVE', 1, '2026-02-28 18:18:18', 'https://cdn.unitas-platform.com/profiles/emp-020.png', NULL, NULL, '2026-01-01 09:35:00');
 -- --------------------------------------------------------
 
@@ -1000,49 +1000,41 @@ CREATE TABLE `prompt` (
 
 INSERT INTO `prompt` (`prompt_id`, `name`, `description`,`schema`,`type`) VALUES
 ('b3cceb1b-507e-4989-8729-5e16e9bf314a', 'BeBetter', '
-Analyze the provided data and identify what went well for the employee within each project.
-Focus on evaluating the employee’s performance in the context of each project.
+Analyze employee performance per project and identify impactful positive contributions.
 Guidelines:
-- Identify specific activities, goals, or achievements where the employee had a positive impact
-- Explain how the employee’s contributions supported project success or progress
+- Focus on actions with clear positive impact on project outcomes
+- Prioritize meaningful contributions (avoid trivial tasks)
 - Highlight efficiency, consistency, ownership, or initiative when evident
-- Compare the employee’s contributions to others when possible to emphasize strengths
-- Focus only on meaningful and impactful contributions (avoid trivial tasks)
-- If the employee acted as a collaborator (not officially assigned to the project), explicitly highlight this and emphasize the value of their voluntary or cross-team contribution
+- Compare with peers when useful to emphasize strengths
+- Detect cross-project collaboration and explicitly note when the employee contributed without being officially assigned
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each insight must clearly describe both the action and its positive impact
-- When applicable, clearly state that the employee contributed as a collaborator and not as an official project member
-Output format:
-- Exactly 8 bullet points
-- Each bullet must refer to a specific project context
-- Follow strictly the provided schema
-- Do not include any extra text
+- Each insight must link action → impact
+- Avoid vague or generic praise
+- Clearly indicate collaborator role when applicable
+Output:
+- Strictly follow the schema
+- No extra text
 ', 'whatWentWellEmployee', 'EMPLOYEE'),
 
 ('b9c2a462-9955-43a5-bc24-b650cc426599', 'BeBetter', '
-Analyze the provided project data and identify what went well for each employee within the specified team.
-Focus only on the team represented in the data. Evaluate each employee’s contributions in the context of the team’s overall performance within the project.
+Analyze team-level project data and identify impactful positive contributions per employee.
 Guidelines:
-- For each employee, identify 5 key positive contributions
-- Base insights on activities, goals, and achievements
-- Explain why each contribution was significant for the team (not just the individual)
-- Highlight collaboration, reliability, initiative, and impact on team outcomes
-- Consider how each employee’s work supported team efficiency, coordination, or success
-- When possible, reflect how an employee’s contributions complemented others
+- Focus only on the specified team
+- For each employee, extract 5 meaningful contributions with clear impact on team outcomes
+- Prioritize collaboration, reliability, initiative, and support to team efficiency or coordination
+- Consider how contributions complemented others when relevant
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each bullet point must include:
-  (1) what the employee did
-  (2) why it was valuable for the team
-Output format:
-- Group results by employee
-- Each employee must have exactly 5 bullet points
-- Follow strictly the provided schema
-- Do not include any extra text
+- Each point must link action → team impact
+- Avoid vague or generic praise
+Output:
+- Group by employee
+- Exactly 5 bullet points per employee
+- Strictly follow the schema
+- No extra text
 ', 'whatWentWellTeam', 'TEAM'),
+
 ('585ce299-218f-4fcf-a47a-b6ae14db0e93','BeBetter', '
 Analyze the provided project data and identify what went well within the project, focusing on each employee’s contribution.
 Evaluate how each employee’s activities, goals, and achievements positively impacted the overall success, progress, or quality of the project.
@@ -1065,123 +1057,85 @@ Output format:
 - Follow strictly the provided schema
 - Do not include any extra text'
 , 'whatWentWellTeam', 'PROJECT'),
+
 ('19b70127-c179-46c7-a754-6e4f7391187b', 'TeamImpact','
+Analyze the team’s performance across projects and identify their most impactful contributions.
 Guidelines:
-- Identify the most significant contributions of the team across all projects they participated in
-- Analyze how the team’s collective activities impacted overall project outcomes (delivery, quality, timelines, coordination)
-- Highlight how team members’ efforts complement each other to produce meaningful results
-- Compare the team’s contributions against other teams when possible to emphasize relative impact
-- Focus on cross-project patterns (consistency, reliability, scalability, adaptability)
-- Emphasize high-impact contributions rather than isolated or low-value tasks
-- Consider both direct contributions (deliverables, implementations) and indirect impact (support, coordination, unblocking others)
+- Focus on high-impact contributions affecting delivery, quality, timelines, or coordination
+- Identify cross-project patterns (consistency, reliability, scalability, adaptability)
+- Include both direct (deliverables) and indirect (support, unblocking) impact
+- Highlight how team members’ efforts complement each other
+- Compare with other teams when useful to emphasize relative impact
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each insight must clearly describe both the team’s actions and their measurable or observable impact
-- Reflect contributions across multiple projects or clearly justify focus on the most impactful ones
-- Ensure insights demonstrate how the team adds value compared to others when possible
-Output format:
+- Each insight must link team action → observable impact
+- Avoid vague or generic statements
+- Reflect cross-project contributions or justify project-specific focus
+Output:
 - Exactly 8 bullet points
-- Each bullet must reference a specific project or clearly defined cross-project contribution
-- Follow strictly the provided schema
-- Do not include any extra text'
-,'teamImpact','TEAM'),
-('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','Guidelines:
-- Compare the employee’s “what went well” contributions against each of the company values
-- For each value, identify clear evidence of alignment based on the employee’s actions and impact
-- Highlight strong alignment areas as well as partial or emerging alignment when applicable
-- Base all insights strictly on observed behaviors and contributions (no assumptions)
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Focus on how the employee’s actions reflect the intent of each value in practice
+- Each tied to a project or clear cross-project contribution
+- Strictly follow the schema
+- No extra text
+','teamImpact','TEAM'),
+
+('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','
+Evaluate the employee’s “what went well” contributions against company values.
+Guidelines:
+- For each value, identify evidence of alignment based on actions and impact
+- Include strong or partial alignment where applicable
+- Base insights only on observed behavior (no assumptions)
+- Reflect how actions demonstrate the intent of each value
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them.
-- Be specific and evidence-based, referencing relevant contributions from the “what went well” section
-- Avoid generic praise or vague statements
-- Each insight must clearly connect an action to a specific value and explain the alignment
-- Ensure balanced evaluation (not all values must be equally strong if evidence differs)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior contributions)
+- Each insight must link action → value → alignment explanation
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on available evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) observed behavior/action, (2) corresponding value, (3) explanation of alignment
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','EMPLOYEE'),
-('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','Guidelines:
-- Compare the team’s “what went well” contributions against each of the company values to identify gaps or improvement areas
-- For each value, highlight where alignment is partial, inconsistent, or missing based on the team’s collective behavior
-- Focus on observable patterns across team members and projects rather than isolated individual actions
-- Identify opportunities where the team could improve its impact by better aligning with the values
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Emphasize constructive insights that point toward improvement, not criticism without direction
+
+('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','
+Evaluate the team’s “what went well” contributions against company values to identify gaps and improvement areas.
+Guidelines:
+- For each value, detect partial, inconsistent, or missing alignment based on team-level patterns
+- Focus on collective behavior across projects (not isolated actions)
+- Identify opportunities to improve impact through better alignment
+- Keep insights constructive and improvement-oriented
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them)
-- Be specific and evidence-based, referencing relevant contributions from the “what went well” sections
-- Avoid generic statements or vague feedback
-- Each insight must clearly describe: (1) observed gap or inconsistency, (2) corresponding value, (3) actionable improvement direction
-- Ensure balanced evaluation (not all values must have the same level of misalignment)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior contributions)
+- Each insight must link gap → value → improvement direction
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) identified gap, (2) corresponding value, (3) explanation, (4) suggested improvement direction
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','TEAM'),
-('831c0fc3-dac9-4264-975c-98f880766052','Improve','Guidelines:
-- Compare the project’s “what went well” outcomes against each of the company values
-- For each value, identify clear evidence of alignment based on project results, team interactions, and delivery patterns
-- Focus on how the project execution (across teams and contributors) reflects the values in practice
-- Highlight strong alignment areas driven by collaboration, coordination, and overall project dynamics
-- Base all insights strictly on observed outcomes and contributions (no assumptions)
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Emphasize meaningful project-level impact rather than isolated actions
+
+('831c0fc3-dac9-4264-975c-98f880766052','Improve','
+Evaluate the project’s “what went well” outcomes against company values.
+Guidelines:
+- For each value, identify alignment based on project outcomes, team interactions, and delivery patterns
+- Focus on project-level impact across teams (not isolated actions)
+- Highlight alignment driven by collaboration, coordination, and execution quality
+- Base insights only on observed outcomes (no assumptions)
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them)
-- Be specific and evidence-based, referencing relevant outcomes from the “what went well” section
-- Avoid generic praise or vague statements
-- Each insight must clearly connect a project outcome or behavior to a specific value and explain the alignment
-- Ensure balanced evaluation (not all values must be equally strong if evidence differs)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior outcomes)
+- Each insight must link outcome → value → alignment explanation
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) project-level outcome/action, (2) corresponding value, (3) explanation of alignment
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','PROJECT');
 
 -- --------------------------------------------------------
@@ -1198,11 +1152,11 @@ CREATE TABLE `report` (
   `period_start` date NOT NULL,
   `period_end` date NOT NULL,
   `created_at` datetime NOT NULL,
-  `content_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`content_json`)),
-  `filters_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`filters_json`)),
+  `content_json` longtext NOT NULL,
+  `filters_json` longtext NOT NULL,
   `model_name` varchar(100) NOT NULL,
   `model_version` varchar(50) NOT NULL,
-  `ai_output_text` text DEFAULT NULL
+  `ai_output_text` longtext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

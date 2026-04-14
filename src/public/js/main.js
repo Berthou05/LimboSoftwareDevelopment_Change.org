@@ -189,8 +189,30 @@ const initializePopups = function initializePopups() {
     });
 };
 
+const initializePasswordToggles = function initializePasswordToggles() {
+    const pairs = [
+        { toggleId: 'toggleLoginPassword', inputId: 'loginPassword' },
+    ];
+
+    pairs.forEach(({ toggleId, inputId }) => {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
+
+        if (!toggle || !input) {
+            return;
+        }
+
+        toggle.addEventListener('click', () => {
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            toggle.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+        });
+    });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeSidebar();
     initializeAccountMenu();
     initializePopups();
+    initializePasswordToggles();
 });
