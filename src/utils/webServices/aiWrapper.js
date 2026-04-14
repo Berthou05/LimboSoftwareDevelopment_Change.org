@@ -201,16 +201,91 @@ const getResponse = async function getResponse(prompt) {
 
 // ====================== Daily Entry Processing =============================
 
-// Schemas for activity extraction from standup entries
-
-const ActivityExtractionSchema = z.object({
-  entryId: z.number().describe("ID of the daily entry being processed"),
-  toDo: z.string().describe("The 'To Do' section of the daily entry"),
-  done: z.string().describe("The 'Done' section of the daily entry"),
-  blockers: z.string().describe("The 'Blockers' section of the daily entry"),
-  slackStandupURL: z.string().url().describe("The URL of the original Slack standup message"),
+const ActivityItemSchema = z.object({
+  title: z
+    .string()
+    .min(1)
+    .max(150)
+    .describe("Short action title that can be stored in activity.title"),
+  description: z
+    .string()
+    .min(1)
+    .max(1000)
+    .describe("Clear summary that can be stored in activity.description"),
+  project_hint: z
+    .string()
+    .max(150)
+    .describe("Project name or hint mentioned in the activity. Empty string when none is detected"),
+  worked_on_project: z
+    .boolean()
+    .describe("True only when the activity clearly refers to concrete work on a project"),
 });
 
-export function extractActivities(payload = {}) {
+const ActivityExtractionSchema = z.object({
+  activities: z
+    .array(ActivityItemSchema)
+    .max(40)
+    .describe("Normalized activities extracted from the standup"),
+});
 
+/*extractActivities(payload)
+Function responsible for extracting normalized activities from standup
+sections so they can be stored as activity rows.*/
+
+export async function extractActivities(payload = {}) {
+  const normalizedPayload = {
+    done: String(payload.done || '').trim(),
+    toDo: String(payload.toDo || '').trim(),
+    blockers: String(payload.blockers || '').trim(),
+    slackStandupURL: String(payload.slackStandupURL || '').trim(),
+  };
+
+  if (!normalizedPayload.done && !normalizedPayload.toDo && !normalizedPayload.blockers) {
+    return [];
+  }
+
+  const prompt = `
+Extract concrete work activities only from the didToday section of this standup.
+
+Return only activities that are meaningful enough to persist in the activity table.
+Use these rules:
+- Keep each activity atomic and concise.
+- Put the main work item in "title".
+- Put a fuller explanation in "description".
+- If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
+- Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
+- doingTomorrow and blockers do not become activities, ignore them.
+- Ignore greetings, filler text, and generic statements with no actionable work.
+- If there are no valid activities, return an empty array.
+
+Standup content:
+didToday:
+${normalizedPayload.done}
+
+doingTomorrow:
+${normalizedPayload.toDo}
+
+blockers:
+${normalizedPayload.blockers}
+
+slackStandupURL:
+${normalizedPayload.slackStandupURL}
+`;
+
+  const { output } = await generateText({
+    model: openai(MODEL),
+    output: Output.object({ schema: ActivityExtractionSchema }),
+    messages: [
+      {
+        role: "system",
+        content: "You extract normalized engineering activities only from completed work already done.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  return output.activities || [];
 };

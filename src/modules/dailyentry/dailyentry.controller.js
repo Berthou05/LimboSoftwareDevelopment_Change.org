@@ -148,10 +148,7 @@ exports.submitFromSlack = async (request, response) => {
         // Asynchronously extract activities, handle project memberships and create activity records
         (async () => {
             const activities = await aiWrapper.extractActivities({
-                toDo,
-                done,
-                blockers,
-                slackStandupURL,
+                
             });
 
             for (const activity of activities) {
