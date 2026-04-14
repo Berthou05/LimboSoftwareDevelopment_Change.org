@@ -120,7 +120,7 @@ module.exports = class Achievement {
         const placeholders = project_ids.map(() => '?').join(',');
     
         return db.execute(`
-            SELECT * 
+            SELECT AC.title, AC.description, AC.project_id AS 'p' 
             FROM achievement AS AC 
             WHERE (AC.achievement_date BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
             [start_date, end_date, ...project_ids]);

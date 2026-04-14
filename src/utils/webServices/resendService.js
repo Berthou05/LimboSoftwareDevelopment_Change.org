@@ -2,7 +2,6 @@
 Title: resendService.js
 Purpose: Wrapper for transactional emails sent with Resend.
 */
-
 const { Resend } = require('resend');
 
 const sendResetEmail = async function sendResetEmail(email, token, expirationMinutes) {

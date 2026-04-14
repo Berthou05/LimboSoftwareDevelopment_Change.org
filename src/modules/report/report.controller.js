@@ -245,6 +245,7 @@ function groupByThreeLevels(array, key1, key2, key3) {
 
         return acc;
     }, {});
+}
 
 function normalizeSection(section) {
     return {
@@ -267,8 +268,7 @@ function buildWhatWentWellSection(wentWell){
         title: "What went well?",
         groups,
     };
-    };
-}
+};
 
 
 //---------------------------------------------------------------------
@@ -354,8 +354,6 @@ async function getEmployeeContext(employee_id, start_date, end_date){
         const context = {
             id: employee_info[0].employee_id,
             fullName: employee_info[0].full_name,
-            slackUsername: employee_info[0].slack_username,
-            email: employee_info[0].email
         };
 
         const [project_ids] = await Project.getEmployeeProjectIDsBtw(employee_id,start_date,end_date);
@@ -383,8 +381,6 @@ async function getTeamContext(team_id, start_date, end_date){
             name: team_info[0].name,
             responsible: team_info[0].full_name,
             description: team_info[0].description,
-            createdAt: team_info[0].created_at,
-            status:team_info[0].status,
         };
 
         [project_ids] = await Project.getTeamProjectIDsBtw(team_id, start_date, end_date);
@@ -413,9 +409,6 @@ async function getProjectContext(project_id, start_date, end_date){
             name: project_info[0].name,
             responsible:project_info[0].lead_name,
             description:project_info[0].description,
-            status: project_info[0].status,
-            startDate:project_info[0].start_date,
-            endDate:project_info[0].end_date
         }
 
         return {
@@ -475,17 +468,17 @@ async function getContext(reportType, id, start_date, end_date, route){
         //Normalization of activities
         switch (reportType){
             case 'TEAM':
-                normalizedActivities = groupByThreeLevels(activities[0], 'project_id','team_id','employee_id');
+                normalizedActivities = groupByThreeLevels(activities[0], 'p','t','e');
             break;
 
             default:
-                normalizedActivities = groupByTwoLevels(activities[0],'project_id','employee_id');
+                normalizedActivities = groupByTwoLevels(activities[0],'p','t');
             break;
         }
 
         //Normalization of goals and achievements
-        const normalizedGoals = groupBy(goals[0], 'project_id');
-        const normalizedAchievements = groupBy(achievements[0], 'project_id');
+        const normalizedGoals = groupBy(goals[0], 'p');
+        const normalizedAchievements = groupBy(achievements[0], 'p');
 
         let enrichedProjects;
 
@@ -617,7 +610,7 @@ exports.generateReport = async (request, response, next)=>{
     // Assembly of the report object
     const sections = [];
 
-    sections.push(buildWhatWentWellSection(wentWell));
+    sections.push(buildWhatWentWellSection(hasGoneWell));
     if (TeamImpact) {
     sections.push(normalizeSection(TeamImpact));
     }
@@ -627,8 +620,6 @@ exports.generateReport = async (request, response, next)=>{
         title: context.name,
         sections, 
     };
-
-    console.log(reportObject);
 
     const {model, version} = AiWrapper.getModelDetails();
 
@@ -646,11 +637,10 @@ exports.generateReport = async (request, response, next)=>{
 
     //Report Object creation
 
-    const report = new Report(request.session.employeeId, id, reportType,start_date, end_date, content_json, filters_json, model, version, reportObject);
+    const report = new Report(request.session.employeeId, id, reportType, start_date, end_date, content_json, filters_json, model, version, reportObject);
     report.save().then(()=>{
         //LatestReports obtention
         Report.fetchLatestReport(request.session.employeeId, id).then(([reports, fieldData])=>{
-            console.log(reports[0].ai_output_text);
 
             //TODO: Implement AJAX reload. Modification of the generateReport modal.
 
@@ -665,8 +655,6 @@ exports.generateReport = async (request, response, next)=>{
                     type: reports[0].content_type
                 };
 
-                console.log(responsePayload);
-
                 if (request.xhr || request.headers.accept?.includes('json')) {
                     return response.status(200).json(responsePayload);
                 }
@@ -675,7 +663,8 @@ exports.generateReport = async (request, response, next)=>{
                 }
 
             }).catch((error)=>{
-
+                console.log(error);
+                return response.status(500).json({success:false, message: 'Report name obtention failed. Try again.'});
             })
 
         })  

@@ -21,9 +21,9 @@ module.exports = class Report {
     // Create or Update report
     save() {
         return db.execute(`
-            INSERT INTO report(report_id,enerated_by_employee_id, content_id, content_type, prompt_id, period_start, period_end, created_at, content_json, filters_json, input_snapshot_json, model_name, model_version, ai_output_text)
-            VALUES(UUID(), ?,?,?,?,?,?,NOW(),?,?,?,?,?,?)`,
-            [this.generated_by_employee_id, this.content_id, this.content_type, this.prompt_id, this.period_start, this.period_end, this.content_json, this.filters_json, this.input_snapshot_json, this.model_name, this.model_version, this.ai_output_text])
+            INSERT INTO report(report_id, generated_by_employee_id, content_id, content_type, period_start, period_end, created_at, content_json, filters_json, model_name, model_version, ai_output_text)
+            VALUES(UUID(),?,?,?,?,?,NOW(),?,?,?,?,?)`,
+            [this.generated_by_employee_id, this.content_id, this.content_type, this.period_start, this.period_end, this.content_json, this.filters_json, this.model_name, this.model_version, this.ai_output_text])
     }
 
     // Read all reports

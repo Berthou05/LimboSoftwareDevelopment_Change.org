@@ -1000,49 +1000,41 @@ CREATE TABLE `prompt` (
 
 INSERT INTO `prompt` (`prompt_id`, `name`, `description`,`schema`,`type`) VALUES
 ('b3cceb1b-507e-4989-8729-5e16e9bf314a', 'BeBetter', '
-Analyze the provided data and identify what went well for the employee within each project.
-Focus on evaluating the employee’s performance in the context of each project.
+Analyze employee performance per project and identify impactful positive contributions.
 Guidelines:
-- Identify specific activities, goals, or achievements where the employee had a positive impact
-- Explain how the employee’s contributions supported project success or progress
+- Focus on actions with clear positive impact on project outcomes
+- Prioritize meaningful contributions (avoid trivial tasks)
 - Highlight efficiency, consistency, ownership, or initiative when evident
-- Compare the employee’s contributions to others when possible to emphasize strengths
-- Focus only on meaningful and impactful contributions (avoid trivial tasks)
-- If the employee acted as a collaborator (not officially assigned to the project), explicitly highlight this and emphasize the value of their voluntary or cross-team contribution
+- Compare with peers when useful to emphasize strengths
+- Detect cross-project collaboration and explicitly note when the employee contributed without being officially assigned
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each insight must clearly describe both the action and its positive impact
-- When applicable, clearly state that the employee contributed as a collaborator and not as an official project member
-Output format:
-- Exactly 8 bullet points
-- Each bullet must refer to a specific project context
-- Follow strictly the provided schema
-- Do not include any extra text
+- Each insight must link action → impact
+- Avoid vague or generic praise
+- Clearly indicate collaborator role when applicable
+Output:
+- Strictly follow the schema
+- No extra text
 ', 'whatWentWellEmployee', 'EMPLOYEE'),
 
 ('b9c2a462-9955-43a5-bc24-b650cc426599', 'BeBetter', '
-Analyze the provided project data and identify what went well for each employee within the specified team.
-Focus only on the team represented in the data. Evaluate each employee’s contributions in the context of the team’s overall performance within the project.
+Analyze team-level project data and identify impactful positive contributions per employee.
 Guidelines:
-- For each employee, identify 5 key positive contributions
-- Base insights on activities, goals, and achievements
-- Explain why each contribution was significant for the team (not just the individual)
-- Highlight collaboration, reliability, initiative, and impact on team outcomes
-- Consider how each employee’s work supported team efficiency, coordination, or success
-- When possible, reflect how an employee’s contributions complemented others
+- Focus only on the specified team
+- For each employee, extract 5 meaningful contributions with clear impact on team outcomes
+- Prioritize collaboration, reliability, initiative, and support to team efficiency or coordination
+- Consider how contributions complemented others when relevant
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each bullet point must include:
-  (1) what the employee did
-  (2) why it was valuable for the team
-Output format:
-- Group results by employee
-- Each employee must have exactly 5 bullet points
-- Follow strictly the provided schema
-- Do not include any extra text
+- Each point must link action → team impact
+- Avoid vague or generic praise
+Output:
+- Group by employee
+- Exactly 5 bullet points per employee
+- Strictly follow the schema
+- No extra text
 ', 'whatWentWellTeam', 'TEAM'),
+
 ('585ce299-218f-4fcf-a47a-b6ae14db0e93','BeBetter', '
 Analyze the provided project data and identify what went well within the project, focusing on each employee’s contribution.
 Evaluate how each employee’s activities, goals, and achievements positively impacted the overall success, progress, or quality of the project.
@@ -1065,123 +1057,85 @@ Output format:
 - Follow strictly the provided schema
 - Do not include any extra text'
 , 'whatWentWellTeam', 'PROJECT'),
+
 ('19b70127-c179-46c7-a754-6e4f7391187b', 'TeamImpact','
+Analyze the team’s performance across projects and identify their most impactful contributions.
 Guidelines:
-- Identify the most significant contributions of the team across all projects they participated in
-- Analyze how the team’s collective activities impacted overall project outcomes (delivery, quality, timelines, coordination)
-- Highlight how team members’ efforts complement each other to produce meaningful results
-- Compare the team’s contributions against other teams when possible to emphasize relative impact
-- Focus on cross-project patterns (consistency, reliability, scalability, adaptability)
-- Emphasize high-impact contributions rather than isolated or low-value tasks
-- Consider both direct contributions (deliverables, implementations) and indirect impact (support, coordination, unblocking others)
+- Focus on high-impact contributions affecting delivery, quality, timelines, or coordination
+- Identify cross-project patterns (consistency, reliability, scalability, adaptability)
+- Include both direct (deliverables) and indirect (support, unblocking) impact
+- Highlight how team members’ efforts complement each other
+- Compare with other teams when useful to emphasize relative impact
 Requirements:
 - Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each insight must clearly describe both the team’s actions and their measurable or observable impact
-- Reflect contributions across multiple projects or clearly justify focus on the most impactful ones
-- Ensure insights demonstrate how the team adds value compared to others when possible
-Output format:
+- Each insight must link team action → observable impact
+- Avoid vague or generic statements
+- Reflect cross-project contributions or justify project-specific focus
+Output:
 - Exactly 8 bullet points
-- Each bullet must reference a specific project or clearly defined cross-project contribution
-- Follow strictly the provided schema
-- Do not include any extra text'
-,'teamImpact','TEAM'),
-('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','Guidelines:
-- Compare the employee’s “what went well” contributions against each of the company values
-- For each value, identify clear evidence of alignment based on the employee’s actions and impact
-- Highlight strong alignment areas as well as partial or emerging alignment when applicable
-- Base all insights strictly on observed behaviors and contributions (no assumptions)
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Focus on how the employee’s actions reflect the intent of each value in practice
+- Each tied to a project or clear cross-project contribution
+- Strictly follow the schema
+- No extra text
+','teamImpact','TEAM'),
+
+('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','
+Evaluate the employee’s “what went well” contributions against company values.
+Guidelines:
+- For each value, identify evidence of alignment based on actions and impact
+- Include strong or partial alignment where applicable
+- Base insights only on observed behavior (no assumptions)
+- Reflect how actions demonstrate the intent of each value
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them.
-- Be specific and evidence-based, referencing relevant contributions from the “what went well” section
-- Avoid generic praise or vague statements
-- Each insight must clearly connect an action to a specific value and explain the alignment
-- Ensure balanced evaluation (not all values must be equally strong if evidence differs)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior contributions)
+- Each insight must link action → value → alignment explanation
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on available evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) observed behavior/action, (2) corresponding value, (3) explanation of alignment
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','EMPLOYEE'),
-('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','Guidelines:
-- Compare the team’s “what went well” contributions against each of the company values to identify gaps or improvement areas
-- For each value, highlight where alignment is partial, inconsistent, or missing based on the team’s collective behavior
-- Focus on observable patterns across team members and projects rather than isolated individual actions
-- Identify opportunities where the team could improve its impact by better aligning with the values
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Emphasize constructive insights that point toward improvement, not criticism without direction
+
+('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','
+Evaluate the team’s “what went well” contributions against company values to identify gaps and improvement areas.
+Guidelines:
+- For each value, detect partial, inconsistent, or missing alignment based on team-level patterns
+- Focus on collective behavior across projects (not isolated actions)
+- Identify opportunities to improve impact through better alignment
+- Keep insights constructive and improvement-oriented
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them)
-- Be specific and evidence-based, referencing relevant contributions from the “what went well” sections
-- Avoid generic statements or vague feedback
-- Each insight must clearly describe: (1) observed gap or inconsistency, (2) corresponding value, (3) actionable improvement direction
-- Ensure balanced evaluation (not all values must have the same level of misalignment)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior contributions)
+- Each insight must link gap → value → improvement direction
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) identified gap, (2) corresponding value, (3) explanation, (4) suggested improvement direction
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','TEAM'),
-('831c0fc3-dac9-4264-975c-98f880766052','Improve','Guidelines:
-- Compare the project’s “what went well” outcomes against each of the company values
-- For each value, identify clear evidence of alignment based on project results, team interactions, and delivery patterns
-- Focus on how the project execution (across teams and contributors) reflects the values in practice
-- Highlight strong alignment areas driven by collaboration, coordination, and overall project dynamics
-- Base all insights strictly on observed outcomes and contributions (no assumptions)
-- Maintain a fair and direct comparison without reinterpreting or modifying the values
-- Emphasize meaningful project-level impact rather than isolated actions
+
+('831c0fc3-dac9-4264-975c-98f880766052','Improve','
+Evaluate the project’s “what went well” outcomes against company values.
+Guidelines:
+- For each value, identify alignment based on project outcomes, team interactions, and delivery patterns
+- Focus on project-level impact across teams (not isolated actions)
+- Highlight alignment driven by collaboration, coordination, and execution quality
+- Base insights only on observed outcomes (no assumptions)
 Requirements:
-- Use the values exactly as written (do not paraphrase or modify them)
-- Be specific and evidence-based, referencing relevant outcomes from the “what went well” section
-- Avoid generic praise or vague statements
-- Each insight must clearly connect a project outcome or behavior to a specific value and explain the alignment
-- Ensure balanced evaluation (not all values must be equally strong if evidence differs)
-Output format:
+- Use values exactly as defined
+- Be specific and evidence-based (reference prior outcomes)
+- Each insight must link outcome → value → alignment explanation
+- Avoid vague or generic statements
+- Ensure balanced evaluation based on evidence
+Output:
 - Exactly 5 bullet points (one per value)
-- Each bullet must explicitly name the value and include its short label in parentheses
-- Each bullet must include: (1) project-level outcome/action, (2) corresponding value, (3) explanation of alignment
-- Follow strictly the provided schema
-- Do not include any extra text
-Values to use (do not modify):
-# Our Values
-## We drive ambitious change (Ambition)
-We match the size of the problem we are addressing by being radically ambitious, with an urgency to make progress in driving systemic impact.
-## We take responsibility (Responsibility)
-We each take responsibility for bringing our best selves to work, building a great culture, and owning the outcomes needed to achieve our mission.
-## We embrace openness (Openness)
-We are open to a wide diversity of perspectives from our colleagues and users, and are actively curious about what we might learn about others, our work, and ourselves. 
-## We are courageously candid (Candor)
-We are committed to courageous, constructive, and candid communication in order to get the best out of our individual and team performance. 
-## We build connection (Connection)
-We value and invest in interpersonal connection and understanding to build trusting relationships, effective teams, and a healthy organizational culture.
+- Each must name the value and include its short label
+- Strictly follow the schema
+- No extra text
 ','whatCanBeImproved','PROJECT');
 
 -- --------------------------------------------------------
@@ -1198,11 +1152,11 @@ CREATE TABLE `report` (
   `period_start` date NOT NULL,
   `period_end` date NOT NULL,
   `created_at` datetime NOT NULL,
-  `content_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`content_json`)),
-  `filters_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`filters_json`)),
+  `content_json` longtext NOT NULL,
+  `filters_json` longtext NOT NULL,
   `model_name` varchar(100) NOT NULL,
   `model_version` varchar(50) NOT NULL,
-  `ai_output_text` text DEFAULT NULL
+  `ai_output_text` longtext DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
