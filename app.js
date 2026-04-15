@@ -3,15 +3,24 @@ Title: app.js
 Last modification: March 24,2026
 Modified by: Hurtado, R.
 */
-
+const https = require("https");
+const fs = require("fs");
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
 const multer = require('multer');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const flashMessage = require('./src/middleware/flashMessage');
+const compression = require("compression");
 const PORT = process.env.PORT || 3000;
 
+const certificate = fs.readFileSync('server.cert');
+const privateKey = fs.readFileSync('server.key');
+
 const app = express();
+
+/* Compression middleware to optimize response sizes for faster load times and reduced bandwidth usage.*/
+
+app.use(compression());
 
 /*captureRawBody(request, response, buffer)
 Function responsible for preserving request raw payload for webhook
@@ -172,6 +181,4 @@ app.use((error, request, response, next) => {
 });
 
 //Any additional route outside our domain
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+https.createServer({ key: privateKey, cert: certificate }, app).listen(process.env.PORT || 3000);
