@@ -22,6 +22,7 @@ exports.getHome = async (request, response, next) => {
                 projects: allVisibleProjects
             },
             myProjects: userProjects,
+            latestReports: {},
 
             // Exponer explícitamente para el view
             account: request.session.user,   // para account.image

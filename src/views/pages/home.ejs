@@ -13,11 +13,14 @@
                 
                 <div class="space-y-6">
                     
-                    <%- include('../partials/HOME/reportGenerator', {
+                    <%- include('../partials/reportGenerator/reportGenerator', {
                         layout: 'full', 
                         redirectTo: '/home',
                         defaultReportType: 'EMPLOYEE',
+                        defaultSubjectId: '',
                         reportSubjects: reportSubjects,
+                        latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+                        quickReport: '',
                         csrfToken: csrfToken
                     }) %>
 
