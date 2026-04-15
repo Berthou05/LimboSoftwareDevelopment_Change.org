@@ -276,7 +276,8 @@
     </form>
 
     <% if (latestReport) { %>
-      <div class="mt-4 border-t border-brand-secondary pt-4">
+      <div class="mt-4 border-t border-brand-secondary pt-4"
+      data-latest-report-container>
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Last Generated Report</p>
         <div class="mt-2 flex items-center justify-between rounded-lg border border-brand-secondary p-3">
           <div>
@@ -287,10 +288,13 @@
               <span data-latest-report-period><%= new Date(latestReport.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(latestReport.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
             </p>
           </div>
-          <a href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="text-xs font-semibold text-brand-primary hover:text-brand-accent">View</a>
+          <a
+            data-latest-report-link
+            href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="text-xs font-semibold text-brand-primary hover:text-brand-accent">View</a>
         </div>
       </div>
     <% } %>
   <% } %>
 </div>
 
+<script src="/js/reportGenerator.js"></script>

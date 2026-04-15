@@ -10,7 +10,7 @@ const isAuth = require('../../middleware/isAuthenticated');
 
 const reportController = require('./report.controller');
 
-router.get('/view/:content_type', isAuth, reportController.getReport);
+router.get('/view/:content_type/:id', isAuth, reportController.getReport);
 router.get('/', isAuth, reportController.getReport);
 router.post('/generate', isAuth, reportController.generateReport);
 
