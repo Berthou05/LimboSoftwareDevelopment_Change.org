@@ -33,8 +33,8 @@ CREATE TABLE `account` (
   `first_login` tinyint(1) NOT NULL,
   `last_login` datetime DEFAULT NULL,
   `image` varchar(1024) DEFAULT NULL,
-  `recovery_token` varchar(16) DEFAULT NULL,
-  `recovery_token_expires_at` datetime DEFAULT NULL,
+  `reset_token_hash` varchar(64) DEFAULT NULL,
+  `reset_token_expires_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -45,10 +45,10 @@ CREATE TABLE `account` (
 INSERT INTO `account` (
   `account_id`, `employee_id`, `email`, `password_hash`,
   `slack_username`, `status`, `first_login`, `last_login`,
-  `image`, `recovery_token`, `recovery_token_expires_at`, `created_at`
+  `image`, `reset_token_hash`, `reset_token_expires_at`, `created_at`
 ) VALUES
 ('a1b2c3d4-0001-4000-8000-000000000001', '3200033b-e165-4c8f-a0a7-f479aa673983', 'A01713854@tec.mx', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@ahurtadoRodrigo', 'ACTIVE', 1, '2026-02-20 09:15:22', NULL, NULL, NULL, '2026-01-01 08:00:00'),
-('a1b2c3d4-0002-4000-8000-000000000002', '2c44bb41-f809-45f4-a05c-11a9147e2217', 'A01713458@tec.mx', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@alexisberthou', 'ACTIVE', 1, '2026-02-18 10:05:12',NULL, 'A1B2C3D4E5F6G7H8', '2026-03-02 11:05:12', '2026-01-01 08:05:00'),
+('a1b2c3d4-0002-4000-8000-000000000002', '2c44bb41-f809-45f4-a05c-11a9147e2217', 'A01713458@tec.mx', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@alexisberthou', 'ACTIVE', 1, '2026-02-18 10:05:12',NULL, NULL, NULL, '2026-01-01 08:05:00'),
 ('a1b2c3d4-0003-4000-8000-000000000003', '2b249c47-ddc5-4873-acdd-8c984da33e1c', 'camypowerr@gmail.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@slack_cami', 'ACTIVE', 1, '2026-02-19 11:20:44', NULL, NULL, NULL, '2026-01-01 08:10:00'),
 ('a1b2c3d4-0004-4000-8000-000000000004', 'd7bc8d1a-7df7-419f-a652-4e42dcab2ded', '@4lex.c0nt11@gmail.com', '$2b$12$ZIwACOdl9g8B/9yYz12GX.i3s3Wr6OqnT0VSdkb9qc5PVssUQTk/u', '@slack_alex', 'ACTIVE', 1, '2026-02-19 11:20:44', NULL, NULL, NULL, '2026-01-01 08:10:00');
 -- --------------------------------------------------------
