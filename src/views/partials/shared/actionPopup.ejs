@@ -78,7 +78,9 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl border <%= submitTone === 'danger' ? 'border-brand-accent bg-brand-accent hover:bg-brand-accent/90' : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
+                        class="rounded-xl border <%= submitTone === 'danger'
+                            ? 'border-red-500 bg-red-500 hover:bg-red-600'
+                            : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
                     >
                         <%= submitLabel %>
                     </button>
