@@ -13,7 +13,7 @@
 /*!40101 SET NAMES utf8mb4 */;
 
 
--
+--
 -- Database: `unitas_system`
 --
 CREATE DATABASE IF NOT EXISTS `unitas_system` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
@@ -829,9 +829,6 @@ INSERT INTO `privilege` (`privilege_id`, `name`, `description`) VALUES
 ('AL-01', 'Submit Daily Entry through Slack', NULL),
 ('AL-02', 'Edit today Daily Entry', NULL),
 ('AL-03', 'View Activity Log entries', NULL),
-('AUTH-01', 'Sign in', NULL),
-('AUTH-02', 'Sign out', NULL),
-('AUTH-03', 'Recover password', NULL),
 ('EMP-01', 'View Employee profile', NULL),
 ('EMP-02', 'View filtered team memberships', NULL),
 ('EMP-03', 'Edit Employee profile', NULL),
@@ -1418,9 +1415,6 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-001', 'AL-01'),
 ('role-001', 'AL-02'),
 ('role-001', 'AL-03'),
-('role-001', 'AUTH-01'),
-('role-001', 'AUTH-02'),
-('role-001', 'AUTH-03'),
 ('role-001', 'EMP-01'),
 ('role-001', 'EMP-02'),
 ('role-001', 'EMP-04'),
@@ -1443,9 +1437,6 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-002', 'AL-01'),
 ('role-002', 'AL-02'),
 ('role-002', 'AL-03'),
-('role-002', 'AUTH-01'),
-('role-002', 'AUTH-02'),
-('role-002', 'AUTH-03'),
 ('role-002', 'EMP-01'),
 ('role-002', 'EMP-02'),
 ('role-002', 'EMP-03'),
@@ -1487,9 +1478,6 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-003', 'AL-01'),
 ('role-003', 'AL-02'),
 ('role-003', 'AL-03'),
-('role-003', 'AUTH-01'),
-('role-003', 'AUTH-02'),
-('role-003', 'AUTH-03'),
 ('role-003', 'EMP-01'),
 ('role-003', 'EMP-02'),
 ('role-003', 'EMP-03'),

@@ -13,8 +13,8 @@ const flashMessage = require('./src/middleware/flashMessage');
 const compression = require("compression");
 const PORT = process.env.PORT || 3000;
 
-const certificate = fs.readFileSync('server.cert');
-const privateKey = fs.readFileSync('server.key');
+// const certificate = fs.readFileSync('server.cert');
+// const privateKey = fs.readFileSync('server.key');
 
 const app = express();
 
@@ -111,7 +111,6 @@ const csrfProtection = csrf();
 
 /*Middleware responsible for bypassing CSRF validation only for Slack
 webhook endpoint, while preserving CSRF for the rest of the app.*/
-
 app.use((request, response, next) => {
     if (request.path.startsWith('/daily-entries/slack')) {
         next();
