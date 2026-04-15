@@ -260,7 +260,7 @@ exports.postReset = (request, response, next) => {
                 })
                 .then(() => {
                     request.session.resetEmail = email;
-                    request.session.success = 'A password reset email has been sent.';
+                    request.session.success = 'If there is an account associated password reset email has been sent.';
                     return response.redirect('/reset/confirm');
                 });
         })

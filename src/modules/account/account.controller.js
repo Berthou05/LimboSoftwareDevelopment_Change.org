@@ -34,6 +34,7 @@ const buildAccountViewModel = function buildAccountViewModel(account, employee =
         email: account.email || '',
         slackUsername: account.slack_username || '',
         image: account.image || DEFAULT_ACCOUNT_IMAGE,
+        defaultImage: DEFAULT_ACCOUNT_IMAGE,
         names: employee.names || '',
         lastnames: employee.lastnames || '',
         fullName: employee.full_name || buildFullName(employee.names, employee.lastnames) || 'Unitas User',
@@ -116,7 +117,7 @@ exports.getEditAccount = (request, response, next) => {
                 return response.redirect('/account');
             }
 
-            return renderAccountForm(request, response, account, 'Edit Account', true);
+            return renderAccountForm(request, response, account, 'Account', true);
         })
         .catch((error) => {
             console.log(error);
