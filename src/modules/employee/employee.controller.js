@@ -201,6 +201,23 @@ const normalizeDirectoryEmployee = function normalizeDirectoryEmployee(employee,
     };
 };
 
+const sortDirectoryEmployees = function sortDirectoryEmployees(employees) {
+    // Keep the logged-in employee first because their profile is visually highlighted in the directory.
+    employees.sort((leftEmployee, rightEmployee) => {
+        if (leftEmployee.isSelf) {
+            return -1;
+        }
+
+        if (rightEmployee.isSelf) {
+            return 1;
+        }
+
+        return 0;
+    });
+
+    return employees;
+};
+
 const getOwnEmployeeUrl = function getOwnEmployeeUrl(employeeId) {
     return `/employees/${employeeId}`;
 };
@@ -231,9 +248,9 @@ exports.getEmployee = (request, response, next) => {
                 return response.redirect(ownEmployeeUrl);
             }
 
-            const employees = directoryEmployees.map((employee) => {
+            const employees = sortDirectoryEmployees(directoryEmployees.map((employee) => {
                 return normalizeDirectoryEmployee(employee, employeeId);
-            });
+            }));
 
             return response.render('pages/employeeDirectory', {
                 csrfToken: request.csrfToken(),
@@ -274,9 +291,9 @@ exports.searchEmployees = (request, response, next) => {
                 });
             }
 
-            const employees = directoryEmployees.map((employee) => {
+            const employees = sortDirectoryEmployees(directoryEmployees.map((employee) => {
                 return normalizeDirectoryEmployee(employee, employeeId);
-            });
+            }));
             const suggestions = suggestionEmployees.map((employee) => {
                 const normalizedEmployee = normalizeDirectoryEmployee(employee, employeeId);
                 return {
