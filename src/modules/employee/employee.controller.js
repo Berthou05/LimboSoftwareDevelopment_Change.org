@@ -38,21 +38,6 @@ const formatDayLabel = function formatDayLabel(value) {
     });
 };
 
-const formatDateInputValue = function formatDateInputValue(value) {
-    if (!value) {
-        return '';
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return '';
-    }
-
-    const adjustedDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
-    return adjustedDate.toISOString().slice(0, 10);
-};
-
 /*buildActivitySections(activities)
 Auxiliar function responsible for creating the format of activities
 required for the activity visualization modal.*/
@@ -504,8 +489,6 @@ exports.getEmployeePage = (request, response, next) => {
                         employee,
                         isOwnProfile: currentEmployeeId === info[0].employee_id,
                         activityProjects: buildEmployeeActivityProjects(activities),
-                        activityStartValue: formatDateInputValue(activityFilter.rangeStart),
-                        activityEndValue: formatDateInputValue(activityFilter.rangeEnd),
                         activityFilter,
                         activityError: activityFilter.error || '',
                         teamRows,

@@ -17,7 +17,6 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     const subjectField = form.querySelector('[name="subjectId"]');
     const quickRangeNode = form.querySelector('[data-range-presets]');
     const trigger = form.querySelector('[data-date-trigger]');
-    const triggerLabel = form.querySelector('[data-date-trigger-label]');
     const popover = form.querySelector('[data-date-popover]');
     const shortcutsNode = form.querySelector('[data-date-shortcuts]');
     const startDisplay = form.querySelector('[data-start-display]');
@@ -87,24 +86,6 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
             day: 'numeric',
             month: 'short',
         });
-    };
-
-    const updateTriggerLabel = function updateTriggerLabel() {
-        if (!triggerLabel) {
-            return;
-        }
-
-        if (!selectedStart && !selectedEnd) {
-            triggerLabel.textContent = 'Select dates';
-            return;
-        }
-
-        if (selectedStart && !selectedEnd) {
-            triggerLabel.textContent = formatDisplayDate(selectedStart);
-            return;
-        }
-
-        triggerLabel.textContent = `${formatDisplayDate(selectedStart)} to ${formatDisplayDate(selectedEnd)}`;
     };
 
     const createMonthStart = function createMonthStart(date) {
@@ -363,15 +344,8 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         startHidden.value = selectedStart ? toIsoDate(selectedStart) : '';
         endHidden.value = selectedEnd ? toIsoDate(selectedEnd) : '';
 
-        if (startDisplay) {
-            startDisplay.value = selectedStart ? formatDisplayDate(selectedStart) : '';
-        }
-
-        if (endDisplay) {
-            endDisplay.value = selectedEnd ? formatDisplayDate(selectedEnd) : '';
-        }
-
-        updateTriggerLabel();
+        startDisplay.value = selectedStart ? formatDisplayDate(selectedStart) : '';
+        endDisplay.value = selectedEnd ? formatDisplayDate(selectedEnd) : '';
         updatePresetStyles();
     };
 
@@ -493,6 +467,8 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
 
     applyButton.addEventListener('click', () => {
         if (!selectedStart && !selectedEnd) {
+            startDisplay.setCustomValidity('Select a date range.');
+            startDisplay.reportValidity();
             return;
         }
 
@@ -502,9 +478,7 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
             renderCalendars();
         }
 
-        if (startDisplay) {
-            startDisplay.setCustomValidity('');
-        }
+        startDisplay.setCustomValidity('');
         closePopover();
     });
 
@@ -523,18 +497,12 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     form.addEventListener('submit', (event) => {
         if (!startHidden.value || !endHidden.value) {
             event.preventDefault();
-
-            if (startDisplay) {
-                startDisplay.setCustomValidity('Select and apply a date range first.');
-                startDisplay.reportValidity();
-            }
-
+            startDisplay.setCustomValidity('Select and apply a date range first.');
+            startDisplay.reportValidity();
             return;
         }
 
-        if (startDisplay) {
-            startDisplay.setCustomValidity('');
-        }
+        startDisplay.setCustomValidity('');
         persistLatestReportPreview();
     });
 
