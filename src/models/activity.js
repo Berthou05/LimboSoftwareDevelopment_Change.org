@@ -114,9 +114,10 @@ module.exports = class Activity {
         }
 
         return db.execute(`
-            SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, E.full_name 
+            SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, E.full_name, P.name AS project_name
             FROM activity as A 
             INNER JOIN employee AS E ON E.employee_id=A.employee_id 
+            LEFT JOIN project AS P ON P.project_id = A.project_id
             WHERE ${conditions.join(' AND ')}
             ORDER BY A.completed_at DESC, A.title ASC;`
             ,parameters);

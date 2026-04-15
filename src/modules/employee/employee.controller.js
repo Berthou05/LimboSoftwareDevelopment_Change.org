@@ -38,6 +38,21 @@ const formatDayLabel = function formatDayLabel(value) {
     });
 };
 
+const formatDateInputValue = function formatDateInputValue(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const adjustedDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    return adjustedDate.toISOString().slice(0, 10);
+};
+
 /*buildActivitySections(activities)
 Auxiliar function responsible for creating the format of activities
 required for the activity visualization modal.*/
@@ -73,6 +88,62 @@ const buildActivitySections = function buildActivitySections(activities) {
             dayLabel: key === 'unknown' ? 'Unknown date' : formatDayLabel(key),
             items,
         }));
+};
+
+/*buildEmployeeActivityProjects(activities)
+Auxiliar function responsible for grouping employee activities by project so the
+employee page can display one project section with all matching activity rows.*/
+
+const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(activities) {
+    const grouped = new Map();
+
+    activities.forEach((activity) => {
+        const projectId = activity.project_id || 'unassigned';
+        const projectName = activity.project_name || 'General Activity';
+        const projectKey = `${projectId}:${projectName}`;
+        const rawDate = activity.completed_at;
+        const projectActivities = grouped.get(projectKey) || {
+            id: activity.project_id || '',
+            name: projectName,
+            latestCompletedAt: rawDate || null,
+            items: [],
+        };
+
+        if (rawDate && (!projectActivities.latestCompletedAt || rawDate > projectActivities.latestCompletedAt)) {
+            projectActivities.latestCompletedAt = rawDate;
+        }
+
+        projectActivities.items.push({
+            id: activity.activity_id || '',
+            title: activity.title || 'Untitled activity',
+            description: activity.description || '',
+            dateLabel: rawDate ? formatDayLabel(rawDate) : 'Unknown date',
+            timeLabel: rawDate
+                ? new Date(rawDate).toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                })
+                : '',
+        });
+
+        grouped.set(projectKey, projectActivities);
+    });
+
+    return [...grouped.values()]
+        .sort((leftProject, rightProject) => {
+            const leftDate = leftProject.latestCompletedAt || '';
+            const rightDate = rightProject.latestCompletedAt || '';
+
+            if (leftDate < rightDate) {
+                return 1;
+            }
+
+            if (leftDate > rightDate) {
+                return -1;
+            }
+
+            return 0;
+        });
 };
 
 const isValidDateInput = function isValidDateInput(value) {
@@ -432,7 +503,9 @@ exports.getEmployeePage = (request, response, next) => {
                         pageSubtitle: '',
                         employee,
                         isOwnProfile: currentEmployeeId === info[0].employee_id,
-                        activitySections: buildActivitySections(activities),
+                        activityProjects: buildEmployeeActivityProjects(activities),
+                        activityStartValue: formatDateInputValue(activityFilter.rangeStart),
+                        activityEndValue: formatDateInputValue(activityFilter.rangeEnd),
                         activityFilter,
                         activityError: activityFilter.error || '',
                         teamRows,
