@@ -235,6 +235,14 @@ sections so they can be stored as activity rows.*/
 export async function extractActivities(payload = {}) {
   const normalizedPayload = {
     done: String(payload.done || '').trim(),
+    projects: Array.isArray(payload.projects)
+      ? payload.projects
+          .map((project) => ({
+            id: String(project?.id || '').trim(),
+            name: String(project?.name || '').trim(),
+          }))
+          .filter((project) => project.id && project.name)
+      : [],
   };
 
   if (!normalizedPayload.done) {
@@ -250,9 +258,15 @@ Use these rules:
 - Put the main work item in "title".
 - Put a fuller explanation in "description".
 - If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
+- Prefer exact project names from the candidate list below when they match the standup text.
 - Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
 - Ignore greetings, filler text, and generic statements with no actionable work.
 - If there are no valid activities, return an empty array.
+
+Candidate projects:
+${normalizedPayload.projects.length
+  ? normalizedPayload.projects.map((project) => `- ${project.name} (${project.id})`).join('\n')
+  : '- No candidate projects were provided.'}
 
 Standup content:
 didToday:

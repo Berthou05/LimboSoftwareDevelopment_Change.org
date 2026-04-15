@@ -12,6 +12,7 @@ const Activity = require('../../models/activity');
 const DailyEntry = require('../../models/dailyentry');
 const Collaboration = require('../../models/collaboration');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
+const Project = require('../../models/project');
 
 const MAX_TEXT_LENGTH = 500;
 const MAX_URL_LENGTH = 2048;
@@ -155,8 +156,33 @@ exports.submitFromSlack = async (request, response) => {
         // Asynchronously extract activities, handle project memberships and create activity records
         (async () => {
             const aiWrapper = await getAiWrapper();
+            const [
+                [employeeProjects],
+                [teamProjects],
+            ] = await Promise.all([
+                Project.getProjectByEmployeeId(account.employee_id),
+                Project.getProjectsByTeamId(team.team_id),
+            ]);
+            const projectCandidates = [];
+            const seenProjectIds = new Set();
+
+            // Keep the project list relevant to the employee and Slack team so AI can map standup text more reliably.
+            [...employeeProjects, ...teamProjects].forEach((project) => {
+                const projectId = String(project.project_id || '').trim();
+
+                if (!projectId || seenProjectIds.has(projectId)) {
+                    return;
+                }
+
+                seenProjectIds.add(projectId);
+                projectCandidates.push({
+                    id: projectId,
+                    name: String(project.name || '').trim(),
+                });
+            });
             const activities = await aiWrapper.extractActivities({
                 done,
+                projects: projectCandidates,
             });
 
             for (const activity of activities) {
