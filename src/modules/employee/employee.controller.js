@@ -375,7 +375,7 @@ exports.getEmployeePage = (request, response, next) => {
                             id: project.project_id,
                             name: project.name,
                         },
-                        roleName: project.coll_description || 'MEMBER',
+                        roleName: project.coll_role || 'MEMBER',
                         startDateLabel: formatDayLabel(project.started_at),
                     }));
 

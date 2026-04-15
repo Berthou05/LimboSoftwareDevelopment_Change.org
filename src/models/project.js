@@ -14,7 +14,7 @@ const DIRECTORY_QUERY = `SELECT DISTINCT
     P.end_date,
     E.full_name AS lead_name,
     CASE
-        WHEN C.employee_id IS NOT NULL OR P.employee_responsible_id = ? THEN 1
+        WHEN C.employee_id IS NOT NULL THEN 1
         ELSE 0
     END AS is_member
 FROM project AS P
@@ -36,7 +36,6 @@ ORDER BY is_member DESC, P.name ASC`;
 const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
     const normalizedSearch = `%${searchTerm}%`;
     return [
-        employeeId || '',
         employeeId || '',
         searchTerm,
         normalizedSearch,
@@ -111,12 +110,9 @@ module.exports = class Project {
                 AND C.employee_id = ?
                 AND C.ended_at IS NULL
             WHERE P.status = 'IN PROGRESS'
-                AND (
-                    P.employee_responsible_id = ?
-                    OR C.employee_id IS NOT NULL
-                )
+                AND C.employee_id IS NOT NULL
             ORDER BY P.name ASC;`,
-            [employee_id, employee_id]
+            [employee_id]
         );
     }
 
@@ -135,13 +131,12 @@ module.exports = class Project {
                 0 AS is_member
             FROM project AS P
             INNER JOIN employee AS E ON P.employee_responsible_id = E.employee_id
-            WHERE P.employee_responsible_id <> ?
-            AND P.project_id NOT IN (
+            WHERE P.project_id NOT IN (
                 SELECT project_id FROM collaboration WHERE employee_id = ? AND ended_at IS NULL
             )
             AND P.status = 'IN PROGRESS'
             ORDER BY P.name ASC;`,
-            [employee_id, employee_id]
+            [employee_id]
         );
     }
 
@@ -177,12 +172,26 @@ module.exports = class Project {
 
     static getProjectByEmployeeId(employee_id){
         return db.execute(`
-            SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, P.employee_responsible_id,E.full_name,C.description as coll_description,C.started_at,C.ended_at 
+            SELECT
+                P.project_id,
+                P.name,
+                P.description,
+                P.status,
+                P.start_date,
+                P.end_date,
+                P.employee_responsible_id,
+                E.full_name,
+                C.description AS coll_description,
+                C.role AS coll_role,
+                C.started_at,
+                C.ended_at
             FROM project as P 
             INNER JOIN collaboration as C on P.project_id=C.project_id 
             INNER JOIN employee as E ON P.employee_responsible_id=E.employee_id 
-            WHERE C.employee_id=?;`,
-            [employee_id]);
+            WHERE C.employee_id=?
+                AND C.ended_at IS NULL
+                AND P.status <> ?;`,
+            [employee_id, Status.DISABLED]);
     };
 
     static findByName(name) {
