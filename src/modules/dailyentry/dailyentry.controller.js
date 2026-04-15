@@ -166,7 +166,7 @@ exports.submitFromSlack = async (request, response) => {
             const projectCandidates = [];
             const seenProjectIds = new Set();
 
-            // Keep the project list relevant to the employee and Slack team so AI can map standup text more reliably.
+            // Keep the candidate list narrow so AI can resolve shorthand project references without unrelated noise.
             [...employeeProjects, ...teamProjects].forEach((project) => {
                 const projectId = String(project.project_id || '').trim();
 

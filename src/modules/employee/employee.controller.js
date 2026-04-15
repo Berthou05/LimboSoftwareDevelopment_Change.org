@@ -531,6 +531,7 @@ exports.updateActivityProject = (request, response, next) => {
     const projectId = typeof request.body.projectId === 'string' ? request.body.projectId.trim() : '';
     const redirectTo = request.get('referer') || `/employees/${employeeId}`;
 
+    // This quick edit is intentionally limited to the owner viewing their own activity feed.
     if (currentEmployeeId !== employeeId) {
         request.session.error = 'You cannot update this activity.';
         return response.redirect(redirectTo);

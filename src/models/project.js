@@ -4,6 +4,7 @@
 const db = require('../utils/database.js');
 
 const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
+// Treat project leads as members in directory-style queries even when no collaboration row exists yet.
 const DIRECTORY_QUERY = `SELECT DISTINCT
     P.project_id,
     P.name,
@@ -191,6 +192,7 @@ module.exports = class Project {
                 C.started_at,
                 C.ended_at
             FROM project as P 
+            -- Lead-owned projects do not always create a collaboration row at creation time.
             LEFT JOIN collaboration as C on P.project_id=C.project_id 
                 AND C.employee_id=?
                 AND C.ended_at IS NULL

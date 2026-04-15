@@ -73,6 +73,7 @@ module.exports = class Activity {
     whose id=team_id*/
 
     static getTeamMembersActivities(team_id, start_date = null, end_date = null){
+        // Team activity must follow the activity's recorded team, not every team the author belongs to.
         const conditions = ['A.team_id=?'];
         const parameters = [team_id];
 
