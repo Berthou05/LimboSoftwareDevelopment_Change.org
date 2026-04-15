@@ -33,7 +33,11 @@ module.exports = class Report {
 
     // Read report by ID
     static fetchById(report_id) {
-        // TODO: Implement database query to fetch report by ID
+        return db.execute(`
+            SELECT R.report_id, R.content_id, R.ai_output_text, R.content_type
+            FROM report as R
+            WHERE R.report_id=?;`,
+            [report_id]);
     }
 
     static fetchByContentId(employee_id, content_id){

@@ -327,23 +327,47 @@ Function responsible for returning a concrete report page*/
 //! This function is under development as it is only used
 //! for view design and testing purposes.
 
+//testing route /reports/view/project/db0b319d-382c-11f1-ba39-4c5f701a0fe0
+//testing route /reports/view/project/e1c51f1e-3819-11f1-ba39-4c5f701a0fe0
+
 exports.getReport = (request, response, next) => {
     const reportType = normalizeReportType(request.params.content_type || request.query.type || 'EMPLOYEE') || 'EMPLOYEE';
-    const reportFormat = REPORT_FORMATS[reportType];
     const redirectTo = typeof request.query.redirectTo === 'string'
         ? request.query.redirectTo
         : '/home';
+    console.log(request.params.id);
 
-    return response.render('pages/report',{
-        csrfToken: request.csrfToken(),
-        isLoggedIn: request.session.isLoggedIn || '',
-        username: request.session.username || '',
-        pageTitle: reportFormat.title,
-        pageSubtitle: 'Simple preview of the selected report format.',
-        reportType,
-        reportFormat,
-        redirectTo,
-    });
+    Report.fetchById(request.params.id).then(([report,fieldData])=>{
+        console.log(report);
+        Search.getNameFromId(report[0].content_id).then(([name, fieldData])=>{
+
+            console.log(name[0]);
+
+            return response.render('pages/report',{
+                csrfToken: request.csrfToken(),
+                isLoggedIn: request.session.isLoggedIn || '',
+                username: request.session.username || '',
+                pageTitle: name[0].full_name,
+                title: name[0].full_name,
+                pageSubtitle: '',
+                reportType: report[0].content_type,
+                reportFormat: JSON.parse(report[0].ai_output_text),
+                redirectTo,
+            });
+        })
+        .catch((error)=>{
+            console.log(error);
+            return responde.redirect(typeof request.query.redirectTo === 'string'
+            ? request.query.redirectTo
+            : '/home'); 
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return responde.redirect(typeof request.query.redirectTo === 'string'
+        ? request.query.redirectTo
+        : '/home');
+    })
 };
 
 
@@ -656,7 +680,7 @@ exports.generateReport = async (request, response, next)=>{
 
                 const responsePayload = {
                     id: reports[0].report_id,
-                    subjectLabel: name[0],
+                    subjectLabel: name[0].full_name,
                     createdAt: reports[0].created_at,
                     periodStart: reports[0].period_start,
                     periodEnd: reports[0].period_end,

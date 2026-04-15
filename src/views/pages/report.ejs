@@ -1,15 +1,24 @@
 <div class="mx-auto max-w-4xl space-y-6">
   <section class="rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
     <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Report Format</p>
-    <h1 class="mt-2 font-heading text-3xl font-bold text-brand-text"><%= reportFormat?.title || 'Report Format' %></h1>
-    <p class="mt-2 text-sm text-brand-text/70">This view shows the simple format used for the selected report type.</p>
+    <h1 class="mt-2 font-heading text-3xl font-bold text-brand-text"><%= title || 'Report Format' %></h1>
     <div class="mt-4">
       <a href="<%= redirectTo || '/home' %>" class="inline-flex rounded-xl border border-brand-secondary px-3 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
         Back
       </a>
+
+      <%- include('../partials/shared/actionButton', {
+        buttonLabel: 'Copy',
+        buttonIcon: 'copy',
+        buttonVariant: 'compact',
+        buttonTone: 'highlight',
+        buttonClasses: 'js-copy-report'
+      }) %>
+
     </div>
   </section>
 
+  <div id="report-content" class="mx-auto max-w-4xl space-y-6">
   <% (reportFormat?.sections || []).forEach((section) => { %>
     <section class="rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
       <h2 class="font-heading text-xl font-semibold text-brand-text"><%= section.title %></h2>
@@ -52,4 +61,7 @@
       <% } %>
     </section>
   <% }) %>
+  </div>
 </div>
+
+<script src="/js/reportPage.js"></script>
