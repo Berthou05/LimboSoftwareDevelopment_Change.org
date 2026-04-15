@@ -83,36 +83,54 @@
 
         <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Your Teams</h2>
-            <div class="mt-4 space-y-3">
+            <p class="mt-1 text-sm text-brand-text/60">Teams this employee is assigned to</p>
+            <div class="mb-1 mt-4 max-h-48 space-y-2 overflow-y-auto">
                 <% if (!(teamRows || []).length) { %>
                     <p class="text-sm text-brand-text/70">No teams assigned.</p>
                 <% } %>
                 <% (teamRows || []).forEach((row) => { %>
-                    <a href="/teams/<%= row.team_id %>" class="flex items-center gap-3 rounded-xl border border-brand-secondary p-3 transition hover:bg-brand-bg">
-                        <div class="h-8 w-8 rounded-full border border-brand-secondary bg-brand-bg"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-brand-text"><%= row.team.name %> - <%= row.roleName %></p>
-                            <p class="text-xs text-brand-text/60"><%= row.startDateLabel %></p>
-                        </div>
-                    </a>
+                    <div class="group flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50">
+                        <a href="/teams/<%= row.team_id %>" class="flex min-w-0 flex-1 items-center gap-2">
+                            <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                                <%= row.team.name ? row.team.name.split(' ').map((part) => part[0]).slice(0, 2).join('') : '?' %>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-xs font-semibold text-brand-text"><%= row.team.name || 'Unknown team' %></p>
+                                <p class="truncate text-[10px] text-brand-text/50">
+                                    <%= row.roleName %>
+                                    <span class="mx-1 text-brand-text/40">|</span>
+                                    Since <%= row.startDateLabel %>
+                                </p>
+                            </div>
+                        </a>
+                    </div>
                 <% }) %>
             </div>
         </article>
 
         <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Your Projects</h2>
-            <div class="mt-4 space-y-3">
+            <p class="mt-1 text-sm text-brand-text/60">Projects this employee is contributing to</p>
+            <div class="mb-1 mt-4 max-h-48 space-y-2 overflow-y-auto">
                 <% if (!(projectRows || []).length) { %>
                     <p class="text-sm text-brand-text/70">No projects assigned.</p>
                 <% } %>
                 <% (projectRows || []).forEach((row) => { %>
-                    <a href="/projects/<%= row.project.id %>" class="flex items-center gap-3 rounded-xl border border-brand-secondary p-3 transition hover:bg-brand-bg">
-                        <div class="h-8 w-8 rounded-full border border-brand-secondary bg-brand-bg"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold text-brand-text"><%= row.project.name %> - <%= row.roleName %></p>
-                            <p class="text-xs text-brand-text/60"><%= row.startDateLabel %></p>
-                        </div>
-                    </a>
+                    <div class="group flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50">
+                        <a href="/projects/<%= row.project.id %>" class="flex min-w-0 flex-1 items-center gap-2">
+                            <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
+                                <%= row.project.name ? row.project.name.split(' ').map((part) => part[0]).slice(0, 2).join('') : '?' %>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-xs font-semibold text-brand-text"><%= row.project.name || 'Unknown project' %></p>
+                                <p class="truncate text-[10px] text-brand-text/50">
+                                    <%= row.roleName %>
+                                    <span class="mx-1 text-brand-text/40">|</span>
+                                    Since <%= row.startDateLabel %>
+                                </p>
+                            </div>
+                        </a>
+                    </div>
                 <% }) %>
             </div>
         </article>
