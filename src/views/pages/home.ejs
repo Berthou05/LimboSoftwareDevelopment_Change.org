@@ -1,7 +1,52 @@
-<section class="rounded-3xl bg-white p-6 shadow-panel">
-  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Dashboard</p>
-  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Home</h1>
-  <p class="mt-3 max-w-2xl text-brand-text/70">
-    The shared layout is active on this page, so the topbar and sidebar render around the main content.
-  </p>
-</section>
+        <div class="mx-auto max-w-7xl p-6">
+            <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
+            <% const homeEmployeeName =
+                (typeof employee !== 'undefined' && employee && employee.names)
+                || (typeof user !== 'undefined' && user && user.username)
+                || 'Usuario'; %>
+            <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+            <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
+            <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
+            <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+            <div class="mb-8 flex items-center gap-4 rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
+                <div class="h-14 w-14 overflow-hidden rounded-full border-2 border-brand-primary/20 bg-brand-secondary/30">
+                    <img src="<%= homeAccountImage %>" alt="Profile" class="h-full w-full object-cover">
+                </div>
+                <div>
+                    <h1 class="font-heading text-2xl font-bold text-brand-text">Welcome, <%= homeEmployeeName %></h1>
+                    <p class="text-sm text-brand-text/60">Aquí tienes un resumen de lo que sucede hoy.</p>
+                </div>
+            </div>
+
+            <div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+                
+                <div class="space-y-6">
+                    
+                    <%- include('../partials/reportGenerator/reportGenerator', {
+                        layout: 'full', 
+                        redirectTo: '/home',
+                        defaultReportType: 'EMPLOYEE',
+                        defaultSubjectId: '',
+                        reportSubjects: homeReportSubjects,
+                        latestReports: homeLatestReports,
+                        quickReport: '',
+                        csrfToken: homeCsrfToken
+                    }) %>
+
+                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+                        <h2 class="font-heading text-lg font-semibold text-brand-text">Your Latest Activity</h2>
+                        </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+                        <h2 class="font-heading text-lg font-semibold text-brand-text">Team Activity</h2>
+                    </div>
+
+                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+                        <h2 class="font-heading text-lg font-semibold text-brand-text">Your Projects</h2>
+                    </div>
+                </div>
+
+            </div>
+        </div>
