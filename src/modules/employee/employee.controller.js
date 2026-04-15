@@ -100,6 +100,7 @@ const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(act
 
         projectActivities.items.push({
             id: activity.activity_id || '',
+            projectId: activity.project_id || '',
             title: activity.title || 'Untitled activity',
             description: activity.description || '',
             dateLabel: rawDate ? formatDayLabel(rawDate) : 'Unknown date',
@@ -521,6 +522,51 @@ exports.getEmployeePage = (request, response, next) => {
             request.session.error = `Error validating access for Employee ${employeeId}.`;
             return response.redirect('/employees');
         });
+};
+
+exports.updateActivityProject = (request, response, next) => {
+    const employeeId = request.params.employee_id;
+    const activityId = request.params.activity_id;
+    const currentEmployeeId = request.session.employeeId || '';
+    const projectId = typeof request.body.projectId === 'string' ? request.body.projectId.trim() : '';
+    const redirectTo = request.get('referer') || `/employees/${employeeId}`;
+
+    if (currentEmployeeId !== employeeId) {
+        request.session.error = 'You cannot update this activity.';
+        return response.redirect(redirectTo);
+    }
+
+    return Promise.all([
+        Activity.fetchById(activityId),
+        Project.getProjectByEmployeeId(employeeId),
+    ]).then(([
+        [activityRows],
+        [projects],
+    ]) => {
+        const activity = activityRows[0];
+
+        if (!activity || activity.employee_id !== employeeId) {
+            request.session.error = 'The selected activity was not found.';
+            return response.redirect(redirectTo);
+        }
+
+        if (projectId && !projects.some((project) => project.project_id === projectId)) {
+            request.session.error = 'The selected project is not available for this activity.';
+            return response.redirect(redirectTo);
+        }
+
+        return Activity.update(activityId, {
+            employee_id: employeeId,
+            project_id: projectId || null,
+        }).then(() => {
+            request.session.success = 'Activity project updated successfully.';
+            return response.redirect(redirectTo);
+        });
+    }).catch((error) => {
+        console.log(error);
+        request.session.error = 'Could not update the activity project right now.';
+        return response.redirect(redirectTo);
+    });
 };
 
 

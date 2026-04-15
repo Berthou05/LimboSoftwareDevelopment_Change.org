@@ -218,7 +218,13 @@ module.exports = class Activity {
 
     // Read activity by ID
     static fetchById(activity_id) {
-        // TODO: Implement database query to fetch activity by ID
+        return db.execute(
+            `SELECT activity_id, project_id, employee_id
+            FROM activity
+            WHERE activity_id = ?
+            LIMIT 1`,
+            [activity_id],
+        );
     }
 
     // Read activities by daily entry
@@ -228,7 +234,19 @@ module.exports = class Activity {
 
     // Update activity
     static update(activity_id, updateData) {
-        // TODO: Implement database update logic
+        return db.execute(
+            `UPDATE activity
+            SET project_id = ?
+            WHERE activity_id = ?
+                AND employee_id = ?`,
+            [
+                Object.prototype.hasOwnProperty.call(updateData, 'project_id')
+                    ? updateData.project_id
+                    : null,
+                activity_id,
+                updateData.employee_id,
+            ],
+        );
     }
 
     // Delete activity
