@@ -1,10 +1,19 @@
         <div class="mx-auto max-w-7xl p-6">
+            <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
+            <% const homeEmployeeName =
+                (typeof employee !== 'undefined' && employee && employee.names)
+                || (typeof user !== 'undefined' && user && user.username)
+                || 'Usuario'; %>
+            <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+            <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
+            <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
+            <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
             <div class="mb-8 flex items-center gap-4 rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
                 <div class="h-14 w-14 overflow-hidden rounded-full border-2 border-brand-primary/20 bg-brand-secondary/30">
-                    <img src="<%= account.image %>" alt="Profile" class="h-full w-full object-cover">
+                    <img src="<%= homeAccountImage %>" alt="Profile" class="h-full w-full object-cover">
                 </div>
                 <div>
-                    <h1 class="font-heading text-2xl font-bold text-brand-text">Welcome, <%= employee.names %></h1>
+                    <h1 class="font-heading text-2xl font-bold text-brand-text">Welcome, <%= homeEmployeeName %></h1>
                     <p class="text-sm text-brand-text/60">Aquí tienes un resumen de lo que sucede hoy.</p>
                 </div>
             </div>
@@ -18,10 +27,10 @@
                         redirectTo: '/home',
                         defaultReportType: 'EMPLOYEE',
                         defaultSubjectId: '',
-                        reportSubjects: reportSubjects,
-                        latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+                        reportSubjects: homeReportSubjects,
+                        latestReports: homeLatestReports,
                         quickReport: '',
-                        csrfToken: csrfToken
+                        csrfToken: homeCsrfToken
                     }) %>
 
                     <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
