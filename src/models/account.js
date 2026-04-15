@@ -44,7 +44,11 @@ module.exports = class Account {
     based on email.*/
 
     static fetchByEmail(email) {
-        return db.execute('SELECT * FROM account WHERE email=?',[email]);
+        return db.execute(`
+            SELECT * 
+            FROM account 
+            WHERE email=?;`,
+            [email]);
     }
 
     /*findBySlackUsername(slack_username)

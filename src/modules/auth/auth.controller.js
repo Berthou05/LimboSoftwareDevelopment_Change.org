@@ -124,7 +124,9 @@ exports.postLogin = (request, response, next)=>{
     Account.fetchByEmail(request.body.email).then(([rows,fieldData])=>{
         if(rows.length<1){
             request.session.error = 'Email not found';
-            console.log("Email not found");
+            return response.redirect('/');
+        }else if(rows[0].status == 'DISABLED'){
+            request.session.error = 'Disabled Account. Login is not possible. Please contact the System Administrator';
             return response.redirect('/');
         }else{
             bcrypt.compare(request.body.password, rows[0].password_hash).then((doMatch)=>{
