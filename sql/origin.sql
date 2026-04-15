@@ -13,7 +13,6 @@
 /*!40101 SET NAMES utf8mb4 */;
 
 
--
 -- Database: `unitas_system`
 --
 USE `unitas_system`;
@@ -191,7 +190,8 @@ CREATE TABLE `goal` (
   `employee_responsible_id` char(36) NOT NULL,
   `title` varchar(150) NOT NULL,
   `description` varchar(1000) NOT NULL,
-  `due_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
