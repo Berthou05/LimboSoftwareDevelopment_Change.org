@@ -16,16 +16,18 @@ const initializeSidebar = function initializeSidebar() {
 
     if (sidebar && mobileMenuToggle) {
         mobileMenuToggle.addEventListener('click', () => {
-            if (sidebar.hasAttribute('data-mobile-open')) {
-                sidebar.removeAttribute('data-mobile-open');
+            if (sidebar.getAttribute('data-mobile-open') === 'true') {
+                sidebar.setAttribute('data-mobile-open', 'false');
+                mobileMenuToggle.setAttribute('data-mobile-open', 'false');
                 return;
             }
 
             sidebar.setAttribute('data-mobile-open', 'true');
+            mobileMenuToggle.setAttribute('data-mobile-open', 'true');
         });
 
         document.addEventListener('click', (event) => {
-            if (!sidebar.hasAttribute('data-mobile-open')) {
+            if (sidebar.getAttribute('data-mobile-open') !== 'true') {
                 return;
             }
 
@@ -33,7 +35,8 @@ const initializeSidebar = function initializeSidebar() {
             const clickedToggle = mobileMenuToggle.contains(event.target);
 
             if (!clickedInsideSidebar && !clickedToggle) {
-                sidebar.removeAttribute('data-mobile-open');
+                sidebar.setAttribute('data-mobile-open', 'false');
+                mobileMenuToggle.setAttribute('data-mobile-open', 'false');
             }
         });
     }

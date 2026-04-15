@@ -93,6 +93,41 @@ input[type="password"]::-ms-clear {
         @apply text-brand-text/70 transition hover:border-brand-nav hover:bg-brand-nav/10 hover:text-brand-nav;
     }
 
+    /* On mobile the layout item stays collapsed while the inner panel slides over the content. */
+    @media (max-width: 1023px) {
+        .app-topbar {
+            z-index: 10;
+        }
+
+        .app-mobile-menu-toggle {
+            position: fixed;
+            top: 0.75rem;
+            left: 1rem;
+            z-index: 60;
+            transform: translateX(0);
+        }
+
+        .app-mobile-menu-toggle[data-mobile-open="true"] {
+            transform: translateX(18rem);
+        }
+
+        .app-sidebar {
+            width: 0 !important;
+            min-width: 0 !important;
+            flex-shrink: 1 !important;
+        }
+
+        .app-sidebar-panel {
+            transform: translateX(-100%);
+            pointer-events: none;
+        }
+
+        .app-sidebar[data-mobile-open="true"] .app-sidebar-panel {
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+    }
+
     .app-avatar-button {
         @apply bg-brand-nav text-white;
     }
