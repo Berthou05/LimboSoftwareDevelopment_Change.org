@@ -285,6 +285,8 @@ CREATE TABLE `project` (
   `status` enum('PLANNED','IN PROGRESS','ON HOLD','COMPLETED','CANCELLED','DISABLED') NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date DEFAULT NULL,
+  `created_at` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -628,6 +630,11 @@ CREATE TABLE `team` (
   `team_id` char(36) NOT NULL,
   `employee_responsible_id` char(36) NOT NULL,
   `name` varchar(150) NOT NULL,
+  `description` varchar(1000) DEFAULT NULL,
+  `created_at` datetime DEFAULT NULL,
+  `image` varchar(1024) DEFAULT NULL,
+  `status` enum('ACTIVE','DISABLED') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 -- Indexes for dumped tables
 --
