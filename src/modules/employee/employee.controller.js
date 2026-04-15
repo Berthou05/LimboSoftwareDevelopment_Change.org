@@ -406,6 +406,9 @@ exports.getEmployeePage = (request, response, next) => {
     const employeeId = request.params.employee_id;
     const currentEmployeeId = request.session.employeeId || '';
     const ownEmployeeUrl = getOwnEmployeeUrl(currentEmployeeId);
+    const selectedActivityProjectId = typeof request.query.projectId === 'string'
+        ? request.query.projectId.trim()
+        : '';
 
     const canAccessPromise = employeeId === currentEmployeeId
         ? Promise.resolve(true)
@@ -442,6 +445,12 @@ exports.getEmployeePage = (request, response, next) => {
                         request.session.error = `Error loading Employee ${employeeId}. Employee information not found.`;
                         return response.redirect('/employees');
                     }
+
+                    const filteredActivities = selectedActivityProjectId
+                        ? activities.filter((activity) => {
+                            return String(activity.project_id || '') === selectedActivityProjectId;
+                        })
+                        : activities;
 
                     const projectRows = employeeProjects.map((project) => ({
                         project: {
@@ -488,7 +497,8 @@ exports.getEmployeePage = (request, response, next) => {
                         pageSubtitle: '',
                         employee,
                         isOwnProfile: currentEmployeeId === info[0].employee_id,
-                        activityProjects: buildEmployeeActivityProjects(activities),
+                        activityProjects: buildEmployeeActivityProjects(filteredActivities),
+                        selectedActivityProjectId,
                         activityFilter,
                         activityError: activityFilter.error || '',
                         teamRows,
