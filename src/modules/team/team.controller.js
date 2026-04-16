@@ -734,6 +734,7 @@ exports.getTeamPage = (request, response, next) => {
                 description: teamRow.description,
                 image: teamRow.image || buildAvatarUrl(teamRow.name),
                 imagePath: teamRow.image || '',
+                fallbackImage: buildAvatarUrl(teamRow.name),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,

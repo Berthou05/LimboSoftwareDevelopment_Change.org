@@ -97,15 +97,63 @@
                         ><%= team?.description || '' %></textarea>
                     </label>
 
-                    <label class="block text-sm">
-                        <span class="mb-2 block font-semibold text-brand-text/70">Team image</span>
+                    <div class="block text-sm">
+                        <span class="mb-3 block font-semibold text-brand-text/70">Team image</span>
                         <input
+                            id="teamImageFile"
                             type="file"
                             name="image"
-                            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
-                            class="w-full rounded-xl border border-brand-secondary px-3 py-2 text-sm outline-none ring-brand-primary/30 focus:ring"
+                            accept="image/*"
+                            class="sr-only"
                         />
-                    </label>
+                        <input id="teamImageValue" type="hidden" name="currentImage" value="<%= team?.imagePath || '' %>">
+                        <p id="teamImageFilename" class="sr-only">No file selected</p>
+
+                        <div class="relative inline-flex flex-col items-start">
+                            <img
+                                id="teamImagePreview"
+                                src="<%= team?.image || '' %>"
+                                data-default-image="<%= team?.fallbackImage || team?.image || '' %>"
+                                alt="Team preview"
+                                class="h-36 w-36 rounded-full border border-brand-secondary object-cover"
+                            />
+                            <div class="relative -mt-8 ml-3">
+                                <button
+                                    id="teamImageMenuButton"
+                                    type="button"
+                                    aria-expanded="false"
+                                    aria-controls="teamImageMenu"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-white active:bg-white focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-nav/20"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="M4 13.5V16h2.5L14 8.5 11.5 6 4 13.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                        <path d="m12.5 5 1-1a1.4 1.4 0 0 1 2 2l-1 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                    </svg>
+                                    Edit
+                                </button>
+
+                                <div
+                                    id="teamImageMenu"
+                                    class="absolute left-0 top-full z-20 mt-2 hidden w-52 overflow-hidden rounded-lg border border-brand-secondary bg-white text-sm shadow-sm"
+                                >
+                                    <button
+                                        id="teamImageUploadButton"
+                                        type="button"
+                                        class="block w-full bg-brand-nav px-4 py-3 text-left font-semibold text-white transition hover:bg-brand-nav/90"
+                                    >
+                                        Upload a photo...
+                                    </button>
+                                    <button
+                                        id="teamImageRemoveButton"
+                                        type="button"
+                                        class="block w-full px-4 py-3 text-left font-semibold text-brand-text transition hover:bg-brand-secondary/20"
+                                    >
+                                        Remove photo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="flex flex-wrap justify-end gap-3 pt-2">
                         <button
