@@ -55,12 +55,15 @@
                             </button>
                         <% } %>
                         <% if (canManageMembers && member.employee?.id !== currentEmployeeId && member.employee?.id !== teamLeadId) { %>
-                            <form class="js-inline-submit remove-member-form" action="/teams/<%= team.id %>/members/<%= member.employee?.id %>/remove" method="POST" data-error-message="Failed to remove member.">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from team">
-                                    Remove
-                                </button>
-                            </form>
+                            <% const removePopupId = `team-remove-member-${team.id}-${member.employee?.id}`; %>
+                            <button
+                                type="button"
+                                data-popup-open="<%= removePopupId %>"
+                                class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100"
+                                title="Remove from team"
+                            >
+                                Remove
+                            </button>
                         <% } %>
                     </div>
                 </div>
@@ -87,6 +90,21 @@
                                 ],
                             },
                         ],
+                    }) %>
+                <% } %>
+                <% if (canManageMembers && member.employee?.id !== currentEmployeeId && member.employee?.id !== teamLeadId) { %>
+                    <% const removePopupId = `team-remove-member-${team.id}-${member.employee?.id}`; %>
+                    <%- include('../shared/actionPopup', {
+                        popupId: removePopupId,
+                        popupTitle: 'Remove Team Member',
+                        popupDescription: `Confirm if you want to remove ${member.employee?.fullName || 'this member'} from this team.`,
+                        popupAction: `/teams/${team.id}/members/${member.employee?.id}/remove`,
+                        popupMethod: 'POST',
+                        popupSubmitLabel: 'Remove',
+                        popupSubmitTone: 'danger',
+                        popupErrorMessage: 'Failed to remove member.',
+                        csrfToken,
+                        popupFields: [],
                     }) %>
                 <% } %>
             <% }) %>

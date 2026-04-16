@@ -1,3 +1,5 @@
+//----------------------- Auxiliar Functions -------------------------------
+
 function updateLatestReportUI(form, report) {
     const container = form.closest('[data-report-generator-card]');
     if (!container) return;
@@ -37,6 +39,18 @@ function updateLatestReportUI(form, report) {
 }
 
 
+function hideLatestReportUI(form) {
+    const container = form.closest('[data-report-generator-card]');
+    if (!container) return;
+
+    const latestSection = container.querySelector('[data-latest-report-container]');
+    if (!latestSection) return;
+
+    latestSection.classList.add('hidden');
+}
+
+//----------------------- Main Functions -------------------------------
+
 document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('[data-report-generator="enhanced"]');
 
@@ -45,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const submitBtn = form.querySelector('button[type="submit"]');
+        hideLatestReportUI(form);
         submitBtn.disabled = true;
         submitBtn.innerHTML = `
             <span class="animate-pulse">Generating...</span>
