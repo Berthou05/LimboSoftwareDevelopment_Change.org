@@ -33,6 +33,6 @@ router.post('/:project_id/join', isAuth, projectController.joinProject);
 router.post('/:project_id/leave', isAuth, projectController.leaveProject);
 router.post('/:project_id/toggle-membership', isAuth, projectController.toggleProjectMembership);
 router.delete('/:project_id/delete', isAuth, projectController.deleteProject);
-router.get('/:project_id', isAuth, projectController.getProjectPage);
+router.get('/:project_id', projectController.ensureProjectExists, isAuth, projectController.getProjectPage);
 
 module.exports = router;

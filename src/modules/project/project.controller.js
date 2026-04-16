@@ -14,6 +14,7 @@ const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
 const Team = require('../../models/team');
+const renderNotFound = require('../../utils/renderNotFound');
 
 const PAGE_TITLE = 'Project';
 const PAGE_SUBTITLE = 'Intermediate selection for own and other projects.';
@@ -25,6 +26,18 @@ const PROJECT_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED'
 const GOAL_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
 const PROJECT_MEMBER_ROLE_MAX_LENGTH = 150;
 const PROJECT_TEAM_DESCRIPTION_MAX_LENGTH = 50;
+
+exports.ensureProjectExists = (request, response, next) => {
+    return Project.findById(request.params.project_id)
+        .then(([projectRows]) => {
+            if (!projectRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
 
 const resolveProjectMemberRole = function resolveProjectMemberRole(rawRole) {
     const normalizedRole = String(rawRole || '').trim().replace(/\s+/g, ' ');
@@ -499,39 +512,7 @@ exports.getProjectPage = (request, response, next) => {
         const activityError = activityResponse.error || '';
 
         if (!projectRows || projectRows.length === 0) {
-            return response.status(404).render('pages/project', {
-                csrfToken: request.csrfToken(),
-                isLoggedIn: request.session.isLoggedIn || '',
-                username: request.session.username || '',
-                pageTitle: PAGE_TITLE,
-                error: 'Project not found',
-                project: {
-                    id: null,
-                    name: 'Project not found',
-                    description: 'No project information is available for the selected project.',
-                achievementsDetailed: [],
-                    goalsDetailed: [],
-                    latestReportsDetailed: [],
-                    highlightsDetailed: [],
-                    teamsDetailed: [],
-                    membersDetailed: [],
-                    lead: {
-                        fullName: 'Unknown',
-                    },
-                },
-                projectName: 'Project not found',
-                projectDescription: 'No project information is available for the selected project.',
-                projectMembership: {
-                    isMember: false,
-                    canToggle: false,
-                    buttonLabel: 'Join Project',
-                },
-                availableEmployees: [],
-                availableTeams: [],
-                activitySections: [],
-                activityFilter,
-                activityError: activityFilter.error || activityError || '',
-            });
+            return renderNotFound(request, response);
         }
 
         const project = projectRows[0];
