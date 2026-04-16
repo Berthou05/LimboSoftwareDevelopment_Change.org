@@ -1007,6 +1007,9 @@ If a required field or metric is missing, leave it empty or explicitly state: "N
 Do not introduce external benchmarks, assumptions, or “team averages” unless explicitly given
 If evidence is insufficient, do not generate the insight
 Guidelines:
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
 Focus only on actions with clear, supported positive impact on project outcomes
 Prioritize meaningful contributions; ignore trivial or routine tasks unless impact is explicitly demonstrated
 Highlight efficiency, consistency, ownership, or initiative only when directly supported by input data
@@ -1045,6 +1048,9 @@ Scope:
 Analyze only the specified team
 Do not include employees or activities not explicitly present in the input
 Guidelines:
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
 Identify meaningful contributions with clear, supported impact on team outcomes
 Prioritize collaboration, reliability, initiative, and support for team efficiency or coordination only when explicitly evidenced
 Include cross-employee interactions only if directly present in the input data
@@ -1082,6 +1088,9 @@ Do NOT create metrics, trends, timelines, or comparisons unless explicitly provi
 If any required detail is missing, leave it empty or explicitly state: "No information provided"
 Do not introduce external benchmarks, expectations, or assumptions
 Guidelines:
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
 Identify positive patterns, progress, or outcomes only when clearly supported by multiple explicit data points or direct indicators
 Focus on project-level impact (delivery, quality, efficiency, coordination, risk reduction) only if directly evidenced in the input
 Highlight what is enabling progress or improving results strictly based on observed data
@@ -1123,6 +1132,9 @@ Do NOT compare with other teams unless comparative data is explicitly provided
 If any required detail is missing, leave it empty or explicitly state: "No information provided"
 Do not introduce external benchmarks or assumptions
 Guidelines:
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
 Focus only on high-impact contributions affecting delivery, quality, timelines, or coordination when directly supported by input data
 Identify cross-project patterns (consistency, reliability, scalability, adaptability) only if explicitly evidenced across multiple data points
 Include both direct (deliverables) and indirect (support, unblocking) impact only when clearly documented in the input

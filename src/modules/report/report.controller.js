@@ -448,7 +448,7 @@ exports.generateReport = async (request, response, next)=>{
     //What went well? section
 
     const pLimit = (await import("p-limit")).default;
-    const limit = pLimit(3);
+    const limit = pLimit(2);
     const promises = [];
 
     let promptBeBetter = prompts.find(p => p.name === "BeBetter");

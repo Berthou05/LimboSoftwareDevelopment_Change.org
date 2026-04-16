@@ -208,6 +208,7 @@ Main function all remaining functions are integrated to*/
 
 const generateReportSection = async function generateReportSection(body, prompt, schema) {
   let reportSchema = reportSchemas[schema];
+  console.log('CHINGA TU MADRE');
 
   const buildMessages = (body, prompt) => ([
     { role: "user", content: "Context data:" },
@@ -219,7 +220,8 @@ const generateReportSection = async function generateReportSection(body, prompt,
     model: openai(MODEL),
     output: Output.object({schema: reportSchema}),
     system: SYSTEM_MESSAGE,
-    messages: buildMessages(body, prompt)
+    messages: buildMessages(body, prompt),
+    maxRetries: 0
   });
 
   console.log(output);
