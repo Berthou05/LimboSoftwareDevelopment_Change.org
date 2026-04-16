@@ -26,9 +26,9 @@ deactivate Routes
 activate Controller
 
 note right of Controller
-    Slack signature validation exists,
-    but it is commented during local testing.
+    Slack signature validation
 end note
+Controller -> Controller : validateSlackSignature(req.headers)
 
 Controller -> Controller : normalize payload and validate required fields
 
