@@ -55,11 +55,11 @@ document.querySelectorAll('.toggle-form').forEach(form => {
 
             if (data.enabled) {
                 button.textContent = 'ON';
-                button.classList.add('bg-brand-primary', 'text-white');
+                button.classList.add('bg-brand-nav', 'text-white');
                 button.classList.remove('bg-brand-secondary/50', 'text-brand-text/70');
             } else {
                 button.textContent = 'OFF';
-                button.classList.remove('bg-brand-primary', 'text-white');
+                button.classList.remove('bg-brand-nav', 'text-white');
                 button.classList.add('bg-brand-secondary/50', 'text-brand-text/70');
             }
 
