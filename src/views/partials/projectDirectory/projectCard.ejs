@@ -12,20 +12,15 @@
             <p class="text-sm text-brand-text/70">Lead: <%= project.leadName %></p>
         </div>
         <% if (project.canArchive) { %>
-            <form
-                action="/projects/<%= project.id %>/delete"
-                method="POST"
-                data-project-directory-delete-form
-                class="shrink-0"
-            >
+            <div class="shrink-0">
                 <%- include('../shared/actionButton', {
-                    buttonType: 'submit',
-                    buttonIcon: 'archive',
-                    buttonLabel: 'Archive',
+                    buttonPopupOpen: 'delete-project-directory-' + project.id,
+                    buttonIcon: 'trash',
+                    buttonLabel: 'Delete',
                     buttonVariant: 'small',
-                    buttonAriaLabel: 'Archive project',
+                    buttonAriaLabel: 'Delete project',
                 }) %>
-            </form>
+            </div>
         <% } %>
     </div>
     <p class="mt-3 text-sm text-brand-text/80">
@@ -38,3 +33,53 @@
         Open project
     </a>
 </article>
+
+<% if (project.canArchive) { %>
+    <div data-popup="delete-project-directory-<%= project.id %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
+        <div class="mx-auto max-w-lg">
+            <div class="rounded-3xl border border-brand-secondary bg-white p-6 shadow-panel">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="font-heading text-2xl font-bold text-brand-text">Delete Project</h3>
+                        <p class="mt-1 text-sm text-brand-text/60">
+                            Confirm if you want to remove this project from the active project list.
+                        </p>
+                    </div>
+                    <%- include('../shared/actionButton', {
+                        buttonPopupClose: true,
+                        buttonIcon: 'close',
+                        buttonVariant: 'icon-only',
+                        buttonClasses: 'shrink-0',
+                        buttonAriaLabel: 'Close popup',
+                    }) %>
+                </div>
+
+                <form
+                    action="/projects/<%= project.id %>/delete"
+                    method="POST"
+                    data-project-directory-delete-form
+                    data-error-message="The project could not be deleted right now."
+                    class="mt-5 space-y-4"
+                >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <div class="flex flex-wrap justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            data-popup-close
+                            class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="rounded-xl border border-red-500 bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<% } %>

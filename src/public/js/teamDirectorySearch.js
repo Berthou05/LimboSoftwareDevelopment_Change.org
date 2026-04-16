@@ -1,7 +1,52 @@
 const TEAM_DIRECTORY_EMPTY_MESSAGE = 'Start typing to see matching teams.';
 
 const initializeTeamDirectoryArchive = function initializeTeamDirectoryArchive() {
-    // Use delegated submit handling so archive buttons keep working after AJAX search rerenders the cards.
+    const openPopup = function openPopup(popupId) {
+        const popup = document.querySelector(`[data-popup="${popupId}"]`);
+
+        if (!popup) {
+            return;
+        }
+
+        popup.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    };
+
+    const closePopup = function closePopup(popup) {
+        popup.classList.add('hidden');
+
+        if (!document.querySelector('[data-popup]:not(.hidden)')) {
+            document.body.classList.remove('overflow-hidden');
+        }
+    };
+
+    // Use delegated popup and submit handling so delete actions keep working after AJAX rerenders the cards.
+    document.addEventListener('click', (event) => {
+        const openButton = event.target.closest('[data-popup-open]');
+        const closeButton = event.target.closest('[data-popup-close]');
+        const popup = event.target.closest('[data-popup]');
+
+        if (openButton) {
+            openPopup(openButton.getAttribute('data-popup-open'));
+            return;
+        }
+
+        if (closeButton) {
+            const parentPopup = closeButton.closest('[data-popup]');
+
+            if (!parentPopup) {
+                return;
+            }
+
+            closePopup(parentPopup);
+            return;
+        }
+
+        if (popup && event.target === popup) {
+            closePopup(popup);
+        }
+    });
+
     document.addEventListener('submit', async (event) => {
         const form = event.target.closest('[data-team-directory-delete-form]');
 
@@ -10,12 +55,6 @@ const initializeTeamDirectoryArchive = function initializeTeamDirectoryArchive()
         }
 
         event.preventDefault();
-
-        const confirmed = window.confirm('Archive this team?');
-
-        if (!confirmed) {
-            return;
-        }
 
         const response = await fetch(form.action, {
             method: 'DELETE',

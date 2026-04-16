@@ -2,7 +2,7 @@
     <h2 class="mb-3 font-heading text-xl font-semibold text-brand-text">My Projects</h2>
     <div class="mb-8 grid gap-4 lg:grid-cols-2">
         <% for (const project of myProjects) { %>
-            <%- include('./projectCard', { project }) %>
+            <%- include('./projectCard', { project, csrfToken }) %>
         <% } %>
     </div>
 <% } %>
@@ -11,7 +11,7 @@
     <h2 class="mb-3 font-heading text-xl font-semibold text-brand-text">Other Projects</h2>
     <div class="grid gap-4 lg:grid-cols-2">
         <% for (const project of otherProjects) { %>
-            <%- include('./projectCard', { project }) %>
+            <%- include('./projectCard', { project, csrfToken }) %>
         <% } %>
     </div>
 <% } %>
