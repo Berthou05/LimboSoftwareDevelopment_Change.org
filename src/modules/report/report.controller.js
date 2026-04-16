@@ -364,11 +364,12 @@ async function getContext(reportType, id, start_date, end_date, route){
         let enrichedProjects;
 
         if(reportType == 'PROJECT'){
-            enrichedProjects = {
-                goals: normalizedGoals,
-                achievements: normalizedAchievements,
-                activities: normalizedActivities
-            }
+            enrichedProjects = [{
+                project_id:ids[0],
+                goals: normalizedGoals[projectIds[0]],
+                achievements: normalizedAchievements[projectIds[0]],
+                activities: normalizedActivities[projectIds[0]]
+            }]
         }
         else{
             enrichedProjects = projectIds.map(project => ({
@@ -448,7 +449,7 @@ exports.generateReport = async (request, response, next)=>{
     //What went well? section
 
     const pLimit = (await import("p-limit")).default;
-    const limit = pLimit(2);
+    const limit = pLimit(3);
     const promises = [];
 
     let promptBeBetter = prompts.find(p => p.name === "BeBetter");
@@ -473,24 +474,21 @@ exports.generateReport = async (request, response, next)=>{
     const results = await Promise.all(promises);
     const hasGoneWell = {};
     for (const { projectId, section } of results) {
-    hasGoneWell[projectId] = section;
-    }
+        hasGoneWell[projectId] = section;
+    };
+
+    // What can be improved Section
+    const promptWhatToImprove = prompts.find(p => p.name === "Improve");
+    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
     // Team Impact Section
     let TeamImpact = false;
-
     if(reportType == 'TEAM'){
-        console.log('TEAM HERE');
         let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
         TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
     }
 
-    // What can be improved SEction
-    let promptWhatToImprove = prompts.find(p => p.name === "Improve");
-    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
-
     let companyValues = false;
-
     if(!(reportType == 'PROJECT')){
         let valuesPrompt = prompts.find(p => p.name === "Values");
         companyValues = await AiWrapper.companyValues(hasGoneWell, valuesPrompt.prompt, valuesPrompt.schema);

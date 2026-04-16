@@ -90,7 +90,7 @@ const WhatWentWellProjectSectionSchema = z.object({
       z.string().min(1)
         .describe("A specific, evidence-based statement describing what is going well in the project and its impact")
     )
-    .length(10, "Exactly 10 bullet points are required")
+    .max(10, "Exactly 10 bullet points are required")
     .describe("Exactly 10 evidence-based bullet points describing positive progress, outcomes, or effective practices in the project"),
 });
 /*TeamImpactGroupSchema
@@ -119,7 +119,7 @@ const WhatCanBeImprovedSectionSchema = z.object({
       z.string().min(1)
         .describe("A specific, evidence-based improvement insight describing a gap and a realistic recommendation")
     )
-    .length(5, "Exactly 5 bullet points are required")
+    .max(5, "Exactly 5 bullet points are required")
     .describe("Exactly 5 evidence-based bullet points describing key improvement areas and actionable recommendations"),
 });
 
@@ -208,7 +208,8 @@ Main function all remaining functions are integrated to*/
 
 const generateReportSection = async function generateReportSection(body, prompt, schema) {
   let reportSchema = reportSchemas[schema];
-  console.log('CHINGA TU MADRE');
+  console.log('BODY HERE: !!!!!!!!!!');
+  console.log(body);
 
   const buildMessages = (body, prompt) => ([
     { role: "user", content: "Context data:" },
