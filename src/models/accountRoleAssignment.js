@@ -24,8 +24,16 @@ module.exports = class AccountRole {
 
     static updateByRole(delete_role_id){
         //* Role of the ID for which the User will be changed to.
-        const ROLE_ID='role-001';
-        return db.execute('UPDATE accountrole SET role_id=? WHERE role_id=? values(?,?)'[ROLE_ID, delete_role_id]);
+        const ROLE_NAME='EMPLOYEE';
+        return db.execute(`
+            UPDATE accountrole
+            SET role_id = (
+                SELECT role_id
+                FROM role
+                WHERE name = ?
+            )
+            WHERE role_id = ?;`,
+            [ROLE_NAME, delete_role_id]);
     }
 
 

@@ -3,7 +3,7 @@
    Expected locals: roles, privilegesCatalog.
    Matrix layout: each row is a privilege, each column is a role, each cell toggles assignment.
 %>
-
+<div id="flash-container"></div>
 <%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
 
 <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
@@ -32,10 +32,9 @@
                             buttonClasses: 'opacity-0 group-hover:opacity-100 transition-opacity border-red-200 text-red-500',
                             actionTone: 'danger'
                         }) %>
-              <% }) %>
               </div>
             </th>
-          
+            <% }) %>          
         </tr>
 
       </thead>
@@ -73,6 +72,7 @@
   </div>
   <% roles.forEach((role) => { %>
   <%- include('../partials/shared/actionPopup', {
+      dataAction: 'delete-roles',
       popupId: 'delete-role-' + role.id,
       popupTitle: 'Delete Role',
       popupDescription: 'Confirm if you want to remove this role from the system.',

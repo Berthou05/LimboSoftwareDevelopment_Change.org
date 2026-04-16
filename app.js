@@ -103,7 +103,6 @@ app.use(session({
     saveUninitialized: false, 
 }));
 
-app.use(flashMessage);
 
 /*Instalacion de csurf*/
 const csrf = require('csurf');
@@ -119,6 +118,9 @@ app.use((request, response, next) => {
 
     csrfProtection(request, response, next);
 }); 
+
+//Flash Message declaration
+app.use(flashMessage);
 
 //Uso de Auth middleware
 const isAuth = require('./src/middleware/isAuthenticated');

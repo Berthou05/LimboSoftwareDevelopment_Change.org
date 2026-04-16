@@ -22,9 +22,9 @@ module.exports = (request, response, next) => {
         }
         : null;
 
-    request.session.success = '';
-    request.session.warning = '';
-    request.session.error = '';
+    delete request.session.success;
+    delete request.session.warning;
+    delete request.session.error;
 
     next();
 };
