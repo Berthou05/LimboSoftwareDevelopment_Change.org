@@ -84,30 +84,16 @@ module.exports = class Report {
     Function responsible for obtaining the last created reports of the content_id by
     the employee with id=employee_id*/
 
-    static fetchLatestReport(employee_id, content_id, limit = '5') {
+    static fetchLatestReport(employee_id, content_id, limit = '1') {
         return db.execute(
-            `SELECT
-                report_id,
-                generated_by_employee_id,
-                content_id,
-                content_type,
-                period_start,
-                period_end,
-                created_at,
-                model_name,
-                model_version,
-                ai_output_text
-            FROM report
-            WHERE generated_by_employee_id = ?
-                AND content_id = ?
-            ORDER BY created_at DESC
+            `SELECT R.report_id, R.content_id, R.period_start, R.period_end, R.created_at, R.content_type
+            FROM report AS R
+            WHERE R.content_id=? AND R.generated_by_employee_id=?
+            ORDER BY R.created_at DESC
             LIMIT ?;`,
-            [employee_id, content_id, limit],
+            [content_id, employee_id, limit],
         );
     }
-
-
-
 
     // Read reports by prompt
     static fetchByPrompt(prompt_id) {

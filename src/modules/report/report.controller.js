@@ -367,8 +367,8 @@ exports.getReport = (request, response, next) => {
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
-                pageTitle: subject.full_name,
-                title: subject.full_name,
+                pageTitle: subject.name,
+                title: subject.name,
                 pageSubtitle: '',
                 reportType: reportRow.content_type,
                 reportFormat: JSON.parse(reportRow.ai_output_text),
@@ -692,13 +692,11 @@ exports.generateReport = async (request, response, next)=>{
         //LatestReports obtention
         Report.fetchLatestReport(request.session.employeeId, id).then(([reports, fieldData])=>{
 
-            //TODO: Implement AJAX reload. Modification of the generateReport modal.
-
             Search.getNameFromId(reports[0].content_id).then(([name, fieldData])=>{
 
                 const responsePayload = {
                     id: reports[0].report_id,
-                    subjectLabel: name[0].full_name,
+                    subjectLabel: name[0].name,
                     createdAt: reports[0].created_at,
                     periodStart: reports[0].period_start,
                     periodEnd: reports[0].period_end,

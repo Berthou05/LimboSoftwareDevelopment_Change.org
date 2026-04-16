@@ -11,6 +11,8 @@ const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const Report = require('../../models/report');
+const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
 const { randomUUID } = require('crypto');
 
@@ -37,6 +39,35 @@ exports.ensureTeamExists = (request, response, next) => {
 };
 
 //--------------------------- Auxiliar Functions ---------------------------
+
+/*getLatestReport(content_id)
+Auxiliar function respondible for returning the optimal information required to show the 
+latestReport created of the content_id*/
+
+const getLatestReport = async function getLatestReport(content_id, user_id){
+    return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
+        return Search.getNameFromId(content_id).then(([name,fieldData])=>{
+            console.log(report);
+            console.log(report[0].report_id);
+            return {
+                id:report[0].report_id,
+                subjectLabel:name[0].name,
+                createdAt:report[0].created_at,
+                periodStart:report[0].period_start,
+                periodEnd:report[0].period_end,
+                type:report[0].content_type
+            };
+        })
+        .catch((error)=>{
+            return;
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return;
+    })
+}
+
 
 /*buildAvatarUrl(label)
 Auxiliar function responsible for creating a fallback avatar based on a label.*/
@@ -546,8 +577,9 @@ exports.getTeamPage = (request, response, next) => {
         activityPromise,
         Project.getProjectsByTeamId(teamId),
         Employee.fetchAll(),
+        getLatestReport(teamId, request.session.employeeId)
     ])
-        .then(async ([[teamInfo], [teamMembers], activityResponse, [teamProjects], [allEmployees]]) => {
+        .then(async ([[teamInfo], [teamMembers], activityResponse, [teamProjects], [allEmployees], latestReport]) => {
             const teamRow = teamInfo[0];
             const memberActivities = activityResponse.rows || [];
             const activityError = activityResponse.error || '';
@@ -636,7 +668,6 @@ exports.getTeamPage = (request, response, next) => {
                 pageTitle: `Team ${team.name}`,
                 pageSubtitle: '',
                 team,
-                //TODO: Review code
                 defaultReportType: 'TEAM',
                 defaultSubjectId: team.id,
                 reportSubjects: {
@@ -650,7 +681,7 @@ exports.getTeamPage = (request, response, next) => {
                     ],
                     projects: [],
                 },
-                latestReports: {},
+                latestReport: latestReport,
                 quickReport: '',
                 currentEmployeeId: request.session.employeeId || null,
                 isMember: team.membersDetailed.some(

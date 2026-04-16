@@ -12,8 +12,39 @@ const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 const renderNotFound = require('../../utils/renderNotFound');
+const Report = require('../../models/report');
+const Search = require('../../models/search');
+const { search } = require('../report/report.routes');
 
 //--------------------------- Auxiliar Functions ---------------------------
+
+/*getLatestReport(content_id)
+Auxiliar function respondible for returning the optimal information required to show the 
+latestReport created of the content_id*/
+
+const getLatestReport = async function getLatestReport(content_id, user_id){
+    return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
+        return Search.getNameFromId(content_id).then(([name,fieldData])=>{
+            console.log(report);
+            console.log(report[0].report_id);
+            return {
+                id:report[0].report_id,
+                subjectLabel:name[0].name,
+                createdAt:report[0].created_at,
+                periodStart:report[0].period_start,
+                periodEnd:report[0].period_end,
+                type:report[0].content_type
+            };
+        })
+        .catch((error)=>{
+            return;
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return;
+    })
+}
 
 /*buildAvatarUrl(fullName)
 Auxiliar function responsible for creating a random avatar based on an employee fullName*/
@@ -416,7 +447,7 @@ activities:activities,
 teams:teams,
 projects:projects,*/
 
-exports.getEmployeePage = (request, response, next) => {
+exports.getEmployeePage = async (request, response, next) => {
     const employeeId = request.params.employee_id;
     const currentEmployeeId = request.session.employeeId || '';
     const ownEmployeeUrl = getOwnEmployeeUrl(currentEmployeeId);
@@ -448,12 +479,14 @@ exports.getEmployeePage = (request, response, next) => {
                 Employee.fetchById(employeeId),
                 activityPromise,
                 Project.getProjectByEmployeeId(employeeId),
+                getLatestReport(employeeId, currentEmployeeId)
             ])
                 .then(([
                     [team],
                     [info],
                     [activities],
                     [employeeProjects],
+                    latestReport
                 ]) => {
                     if (!info.length) {
                         return renderNotFound(request, response);
@@ -522,7 +555,7 @@ exports.getEmployeePage = (request, response, next) => {
                         defaultReportType: 'EMPLOYEE',
                         defaultSubjectId: employeeId,
                         reportSubjects,
-                        latestReports: '',
+                        latestReport:latestReport,
                         quickReport: '',
                     });
                 })

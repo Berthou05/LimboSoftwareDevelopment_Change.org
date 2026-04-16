@@ -3,19 +3,19 @@ import db from '../utils/database.js';
 export async function getNameFromId(content_id){
     return db.execute(`
         SELECT * FROM (
-            SELECT employee_id, full_name 
+            SELECT employee_id AS 'id', full_name AS 'name' 
             FROM employee 
             WHERE employee_id = ?
             
             UNION ALL
             
-            SELECT team_id, name
+            SELECT team_id AS 'id', name
             FROM team 
             WHERE team_id = ?
             
             UNION ALL
             
-            SELECT project_id, name 
+            SELECT project_id AS 'id', name 
             FROM project 
             WHERE project_id = ?
         ) AS results

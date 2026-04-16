@@ -14,6 +14,7 @@ const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
 const Team = require('../../models/team');
+const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
 
 const PAGE_TITLE = 'Project';
@@ -26,6 +27,38 @@ const PROJECT_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED'
 const GOAL_ALLOWED_STATUS = ['PLANNED', 'IN PROGRESS', 'ON HOLD', 'COMPLETED', 'CANCELLED'];
 const PROJECT_MEMBER_ROLE_MAX_LENGTH = 150;
 const PROJECT_TEAM_DESCRIPTION_MAX_LENGTH = 50;
+
+//--------------------------- Auxiliar Functions ---------------------------
+
+/*getLatestReport(content_id)
+Auxiliar function respondible for returning the optimal information required to show the 
+latestReport created of the content_id*/
+
+const getLatestReport = async function getLatestReport(content_id, user_id){
+    return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
+        return Search.getNameFromId(content_id).then(([name,fieldData])=>{
+            console.log(report);
+            console.log(report[0].report_id);
+            return {
+                id:report[0].report_id,
+                subjectLabel:name[0].name,
+                createdAt:report[0].created_at,
+                periodStart:report[0].period_start,
+                periodEnd:report[0].period_end,
+                type:report[0].content_type
+            };
+        })
+        .catch((error)=>{
+            return;
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return;
+    })
+}
+
+
 
 exports.ensureProjectExists = (request, response, next) => {
     return Project.findById(request.params.project_id)
@@ -306,6 +339,8 @@ const respondProjectPopupRequest = function respondProjectPopupRequest(
     return response.redirect(`/projects/${projectId}`);
 };
 
+//--------------------------- Main Functions ---------------------------
+
 /*getProjects
 Function responsible for rendering the intermediate projects page.*/
 
@@ -487,7 +522,6 @@ exports.getProjectPage = (request, response, next) => {
         Project.findById(projectId),
         Achievement.fetchByProject(projectId),
         Goal.fetchByProject(projectId),
-        Report.fetchLatestByProjectAndEmployee(projectId, employeeId),
         Highlight.fetchByProject(projectId),
         activityPromise,
         ProjectTeam.fetchDetailedByProject(projectId),
@@ -495,11 +529,11 @@ exports.getProjectPage = (request, response, next) => {
         Collaboration.findActiveByProjectAndEmployee(projectId, employeeId),
         Employee.fetchAll(),
         Team.findAll(),
+        getLatestReport(projectId, request.session.employeeId)
     ]).then(([
         [projectRows],
         [achievementRows],
         [goalRows],
-        [reportRows],
         [highlightRows],
         activityResponse,
         [teamRows],
@@ -507,6 +541,7 @@ exports.getProjectPage = (request, response, next) => {
         [activeCollaborationRows],
         [allEmployees],
         [allTeams],
+        latestReport
     ]) => {
         const activityRows = activityResponse.rows || [];
         const activityError = activityResponse.error || '';
@@ -592,16 +627,6 @@ exports.getProjectPage = (request, response, next) => {
                     createdAtLabel: formatDateLabel(goal.created_at, 'Date unavailable'),
                     authorName: goal.full_name || 'Unknown',
                 })),
-                latestReportsDetailed: reportRows.map((report) => ({
-                    id: report.report_id || null,
-                    createdAtLabel: formatDateLabel(report.created_at, 'Date unavailable'),
-                    periodStartLabel: formatDateLabel(report.period_start, 'Unknown'),
-                    periodEndLabel: formatDateLabel(report.period_end, 'Unknown'),
-                    modelLabel: [report.model_name, report.model_version].filter(Boolean).join(' ') || 'AI model unavailable',
-                    preview: report.ai_output_text
-                        ? `${String(report.ai_output_text).slice(0, 180)}${String(report.ai_output_text).length > 180 ? '...' : ''}`
-                        : 'No report preview available.',
-                })),
                 highlightsDetailed: highlightRows.map((highlight) => ({
                     id: highlight.highlight_id || null,
                     title: highlight.title || 'Untitled highlight',
@@ -652,16 +677,7 @@ exports.getProjectPage = (request, response, next) => {
                     },
                 ],
             },
-            latestReports: {
-                PROJECT: reportRows.length > 0
-                    ? {
-                        subjectLabel: project.name || 'Project',
-                        createdAt: reportRows[0].created_at,
-                        periodStart: reportRows[0].period_start,
-                        periodEnd: reportRows[0].period_end,
-                    }
-                    : null,
-            },
+            latestReport: latestReport,
             quickReport: '',
             currentEmployeeId: employeeId,
             availableEmployees,
