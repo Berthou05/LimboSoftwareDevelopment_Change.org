@@ -24,193 +24,6 @@ const getAiWrapper = async function getAiWrapper() {
     return import('../../utils/webServices/aiWrapper.mjs');
 };
 
-
-const REPORT_FORMATS = {
-    EMPLOYEE: {
-        title: 'Employee Report Format',
-        sections: [
-            {
-                title: 'What went well?',
-                groups: [
-                    {
-                        title: 'Project: Endorsements',
-                        items: [
-                            'Implemented several UI improvements based on feedback from internal demos, embracing openness to team input to refine the user experience and address usability issues identified during reviews.',
-                            'Fixed bugs affecting task interactions and key user flows, taking responsibility for improving platform stability and ensuring smoother user interactions.',
-                            'Addressed pull request feedback and incorporated suggested changes through candid technical discussions that helped move features forward while maintaining code quality standards.',
-                            'Completed code reviews for teammates’ pull requests, helping maintain consistency with the project’s architecture and strengthening collaboration across the team.',
-                            'Updated preview functionality to improve reliability and better align it with the intended user workflow, contributing to the team’s ambition to continuously improve the product experience.',
-                        ],
-                    },
-                    {
-                        title: 'Project: Ready to Share',
-                        items: [
-                            'Participated in technical discussions and reviews with openness to different perspectives in order to clarify implementation details and refine the feature design.',
-                            'Assisted in testing and reviewing updates to help ensure stable integration with existing platform features.',
-                            'Improved form validations and error handling to prevent incorrect inputs and provide clearer feedback to users, contributing to a more reliable experience.',
-                            'Refined confirmation messages and UI feedback states to make system responses clearer and more intuitive.',
-                            'Integrated shared components developed by another squad, helping build stronger cross-team connections while maintaining UI consistency across the platform.',
-                            'Contributed to work related to the Signed Petition Home MVP, which is showing promising early results: the view-to-share conversion rate is ~8% compared to ~4% in the control, representing a 100% increase [LINK].',
-                            'Helped support improvements tied to sharing flows, where 48% of shares in the Signed Petition Home are coming from header share channels and 51% from the checklist feature, including 36% from “text a friend” / “email a friend” and 15% from social sharing options [LINK].',
-                        ],
-                    },
-                ],
-            },
-            {
-                title: 'What could be improved?',
-                items: [
-                    'Strengthen coordination when integrating changes across different areas of the system or across teams.',
-                    'Continue improving documentation of technical decisions to support knowledge sharing and team alignment.',
-                    'Plan cross-feature integrations earlier to reduce last-minute adjustments during development.',
-                ],
-            },
-        ],
-    },
-    TEAM: {
-        title: 'Team Report Format',
-        sections: [
-            {
-                title: 'What went well?',
-                groups: [
-                    {
-                        title: 'Project: Endorsements',
-                        subgroups: [
-                            {
-                                title: 'Camila Cuevas (@ana.cuevas)',
-                                items: [
-                                    'Implemented several UI improvements based on feedback from internal demos, refining the user experience and addressing usability issues identified during reviews.',
-                                    'Addressed pull request feedback and incorporated suggested changes through technical discussions that helped maintain code quality standards [LINK].',
-                                ],
-                            },
-                            {
-                                title: 'Alexis Berthou (@alexis.berthou)',
-                                items: [
-                                    'Contributed to architectural alignment through code reviews and technical discussions, helping maintain consistency across modules.',
-                                    'Supported feature development by reviewing and validating implementations against project standards [LINK].',
-                                ],
-                            },
-                            {
-                                title: 'Alejandro Contreras (@alejandro.contreras)',
-                                items: [
-                                    'Collaborated on resolving issues affecting core flows, contributing to improved system stability.',
-                                    'Participated in pull request reviews and discussions to ensure quality and alignment with system design [LINK].',
-                                ],
-                            },
-                            {
-                                title: 'Rodrigo Hurtado (@rodrigo.hurtado)',
-                                items: [
-                                    'Strengthened collaboration through consistent participation in code reviews, helping enforce architectural consistency.',
-                                    'Supported ongoing improvements by validating feature behavior and identifying edge cases during development.',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        title: 'Project: Ready to Share',
-                        subgroups: [
-                            {
-                                title: 'Camila Cuevas (@ana.cuevas)',
-                                items: [
-                                    'Participated in technical discussions and reviews to clarify implementation details and refine feature design [LINK].',
-                                    'Improved form validations and error handling, reducing incorrect inputs and improving user feedback.',
-                                ],
-                            },
-                            {
-                                title: 'Alexis Berthou (@alexis.berthou)',
-                                items: [
-                                    'Collaborated on integrating shared components from another squad, ensuring UI consistency across the platform.',
-                                    'Supported cross-team alignment by coordinating integration efforts and validating shared functionality.',
-                                ],
-                            },
-                            {
-                                title: 'Alejandro Contreras (@alejandro.contreras)',
-                                items: [
-                                    'Assisted in testing and reviewing updates to ensure stable integration with existing platform features.',
-                                    'Contributed to maintaining system reliability during feature rollouts.',
-                                ],
-                            },
-                            {
-                                title: 'Rodrigo Hurtado (@rodrigo.hurtado)',
-                                items: [
-                                    'Participated in testing and validation of feature updates, helping ensure smooth integration across modules.',
-                                    'Supported coordination efforts between different parts of the system during development.',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        title: 'Team Impact (Cross-functional contributions)',
-                        items: [
-                            'Contributed to the Signed Petition Home MVP, achieving a ~8% view-to-share conversion rate vs ~4% in the control, representing a 100% increase [LINK].',
-                            'Enabled diversified sharing behavior, where 48% of shares come from header channels and 51% from the checklist feature, including 36% via direct messaging (text/email) and 15% via social sharing options [LINK].',
-                        ],
-                    },
-                ],
-            },
-            {
-                title: 'What could be improved?',
-                items: [
-                    'Improve coordination across team members when integrating changes in different areas of the system.',
-                    'Strengthen documentation of technical decisions to support shared understanding and onboarding.',
-                    'Plan cross-feature integrations earlier to reduce last-minute adjustments and improve delivery predictability.',
-                ],
-            },
-        ],
-    },
-    PROJECT: {
-        title: 'Project Report Format',
-        sections: [
-            {
-                title: 'What went well?',
-                groups: [
-                    {
-                        title: 'Camila Cuevas (@ana.cuevas)',
-                        items: [
-                            'Implemented UI improvements based on feedback from internal demos, refining the user experience and addressing usability issues identified during reviews.',
-                            'Fixed bugs affecting key user flows, improving platform stability and ensuring smoother user interactions.',
-                            'Improved form validations and error handling, reducing incorrect inputs and enhancing user feedback.',
-                            'Refined confirmation messages and UI feedback states, making system responses more intuitive.',
-                            'Participated in technical discussions and reviews to clarify implementation details and refine feature design [LINK].',
-                        ],
-                    },
-                    {
-                        title: 'Alexis Berthou (@alexis.berthou)',
-                        items: [
-                            'Contributed to architectural consistency through code reviews and technical discussions, ensuring alignment across different modules.',
-                            'Supported integration of shared components, maintaining UI consistency across the platform.',
-                            'Collaborated in cross-team efforts to validate implementations and ensure alignment with shared standards [LINK].',
-                        ],
-                    },
-                    {
-                        title: 'Alejandro Contreras (@alejandro.contreras)',
-                        items: [
-                            'Assisted in testing and reviewing updates, ensuring stable integration with existing platform features.',
-                            'Contributed to resolving issues affecting core functionality, supporting overall system reliability.',
-                            'Participated in pull request reviews and validation processes to maintain quality standards [LINK].',
-                        ],
-                    },
-                    {
-                        title: 'Rodrigo Hurtado (@rodrigo.hurtado)',
-                        items: [
-                            'Strengthened collaboration through consistent participation in code reviews, helping enforce architectural consistency.',
-                            'Supported validation of feature behavior and identification of edge cases during development.',
-                            'Contributed to coordination efforts across different parts of the system during feature integration.',
-                        ],
-                    },
-                ],
-            },
-            {
-                title: 'What could be improved?',
-                items: [
-                    'Improve coordination across team members when integrating changes in different areas of the system.',
-                    'Strengthen documentation of technical decisions to support shared understanding and alignment.',
-                    'Plan cross-feature integrations earlier to reduce last-minute adjustments and improve delivery predictability.',
-                ],
-            },
-        ],
-    },
-};
-
 //---------------------- Auxiliar functions ---------------------------
 
 function groupBy(array, key) {
@@ -221,7 +34,6 @@ function groupBy(array, key) {
         return acc;
     }, {});
 }
-
 
 
 function groupByTwoLevels(array, key1, key2) {
@@ -237,7 +49,6 @@ function groupByTwoLevels(array, key1, key2) {
         return acc;
     }, {});
 }
-
 
 function groupByThreeLevels(array, key1, key2, key3) {
     return array.reduce((acc, item) => {
@@ -256,27 +67,54 @@ function groupByThreeLevels(array, key1, key2, key3) {
 }
 
 function normalizeSection(section) {
-    return {
+    const normalized = {
         title: section.title,
-        items: section.items ?? [],
-        groups: section.groups ?? [],
     };
-};
 
-function buildWhatWentWellSection(wentWell){
-    const groups = Object.values(wentWell).map(project => {
-    return {
-        title: project.title,
-        items: project.items ?? [],
-        subgroups: project.subgroups ?? [],
+    if (section.groups && section.groups.length > 0) {
+        normalized.groups = section.groups.map(group => {
+        const g = {
+            title: group.title,
         };
+
+        if (group.subgroups && group.subgroups.length > 0) {
+            g.subgroups = group.subgroups.map(sub => ({
+            title: sub.title,
+            items: sub.items ?? [],
+            }));
+        } else if (group.items && group.items.length > 0) {
+            g.items = group.items;
+        }
+
+        return g;
+        });
+    } else if (section.items && section.items.length > 0) {
+        normalized.items = section.items;
+    }
+
+    return normalized;
+}
+
+function buildWhatWentWellSection(wentWell) {
+    const groups = Object.values(wentWell).map(project => {
+        const group = {
+        title: project.title,
+        };
+
+        if (project.subgroups && project.subgroups.length > 0) {
+        group.subgroups = project.subgroups;
+        } else if (project.items && project.items.length > 0) {
+        group.items = project.items;
+        }
+
+        return group;
     });
 
     return {
         title: "What went well?",
         groups,
     };
-};
+}
 
 
 //---------------------------------------------------------------------
@@ -336,12 +174,6 @@ exports.ensureReportExists = (request, response, next) => {
 
 /*getReport
 Function responsible for returning a concrete report page*/
-
-//! This function is under development as it is only used
-//! for view design and testing purposes.
-
-//testing route /reports/view/project/db0b319d-382c-11f1-ba39-4c5f701a0fe0
-//testing route /reports/view/project/e1c51f1e-3819-11f1-ba39-4c5f701a0fe0
 
 exports.getReport = (request, response, next) => {
     const reportType = normalizeReportType(request.params.content_type || request.query.type || 'EMPLOYEE') || 'EMPLOYEE';
@@ -608,7 +440,9 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Context + Data Obtention
-    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);   
+    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);  
+    
+    console.log(prompts);
 
     //Report Generation
     //What went well? section
@@ -651,20 +485,27 @@ exports.generateReport = async (request, response, next)=>{
         TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
     }
 
-
     // What can be improved SEction
     let promptWhatToImprove = prompts.find(p => p.name === "Improve");
     const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
 
+    let companyValues = false;
+
+    if(!(reportType == 'PROJECT')){
+        let valuesPrompt = prompts.find(p => p.name === "Values");
+        companyValues = await AiWrapper.companyValues(hasGoneWell, valuesPrompt.prompt, valuesPrompt.schema);
+    }
 
     // Assembly of the report object
     const sections = [];
-
     sections.push(buildWhatWentWellSection(hasGoneWell));
     if (TeamImpact) {
     sections.push(normalizeSection(TeamImpact));
     }
     sections.push(normalizeSection(whatToImprove));
+    if (companyValues) {
+    sections.push(normalizeSection(companyValues));
+    }
 
     const reportObject = {
         title: context.name,

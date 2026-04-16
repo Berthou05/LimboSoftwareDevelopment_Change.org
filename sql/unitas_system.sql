@@ -1033,26 +1033,25 @@ Output:
 ', 'whatWentWellTeam', 'TEAM'),
 
 ('585ce299-218f-4fcf-a47a-b6ae14db0e93','BeBetter', '
-Analyze the provided project data and identify what went well within the project, focusing on each employee’s contribution.
-Evaluate how each employee’s activities, goals, and achievements positively impacted the overall success, progress, or quality of the project.
+Analyze the provided project data and identify what is going well in the project overall. Focus on progress, outcomes, and effective practices that positively impact delivery, quality, or efficiency.
 Guidelines:
-- For each employee, identify 5 key positive contributions
-- Focus on how the employee’s work influenced project outcomes (delivery, quality, progress, efficiency)
-- Highlight contributions that solved problems, accelerated progress, or improved results
-- Emphasize how employees complemented each other through their roles, coordination, or sequencing of work
-- Consider dependencies and how individual efforts contributed to broader project success
+Identify positive patterns, progress, or outcomes across the project
+Focus on project-level impact (delivery, quality, efficiency, coordination, risk reduction)
+Highlight what is enabling progress or improving results
+Consider how activities, goals, and achievements contribute to overall project success
+Do not organize or reference results by individual employees
 Requirements:
-- Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each bullet point must include:
-  (1) what the employee did
-  (2) how it positively impacted the project
+Be specific and evidence-based
+Do not infer or assume missing information
+Avoid generic or vague statements
+Each bullet point must include:
+(1) what is happening in the project
+(2) the positive impact on the project
 Output format:
-- Group results by employee
-- Each employee must have exactly 5 bullet points
-- Focus strictly on project-level impact (not just individual or team-level benefits)
-- Follow strictly the provided schema
-- Do not include any extra text'
+Do not group results
+Each bullet point must reflect project-level progress or outcomes
+Follow strictly the provided schema
+Do not include any extra text'
 , 'whatWentWellTeam', 'PROJECT'),
 
 ('19b70127-c179-46c7-a754-6e4f7391187b', 'TeamImpact','
@@ -1076,6 +1075,69 @@ Output:
 ','teamImpact','TEAM'),
 
 ('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','
+Evaluate the employee’s “what went well” contributions to identify areas for improvement based strictly on the available evidence.
+Guidelines:
+Identify gaps, inconsistencies, or missing elements in the employee’s contributions
+Focus on what could be improved to increase impact, quality, or effectiveness
+Consider patterns, not isolated observations
+Base insights only on observed evidence (no assumptions or external standards)
+Requirements:
+Be specific and evidence-based (reference prior contributions)
+Do not infer or assume missing information
+Avoid vague or generic statements
+Each insight must include:
+(1) the observed gap or limitation
+(2) a realistic, actionable improvement
+Output:
+Each bullet must reflect a clear improvement opportunity grounded in evidence
+Do not reference company values
+Strictly follow the schema
+No extra text
+','whatCanBeImproved','EMPLOYEE'),
+
+('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','
+Evaluate the team’s “what went well” contributions to identify areas for improvement based strictly on the available evidence.
+Guidelines:
+Identify gaps, inconsistencies, or missing elements in team-level performance
+Focus on patterns across the team, not isolated actions
+Evaluate how team execution could improve impact, coordination, quality, or efficiency
+Base insights only on observed evidence (no assumptions or external standards)
+Requirements:
+Be specific and evidence-based (reference prior contributions)
+Do not infer or assume missing information
+Avoid vague or generic statements
+Each insight must include:
+(1) the observed team-level gap or limitation
+(2) a realistic, actionable improvement
+Output:
+Each must reflect a clear team-level improvement opportunity grounded in evidence
+Do not reference company values
+Strictly follow the schema
+No extra text
+','whatCanBeImproved','TEAM'),
+
+('831c0fc3-dac9-4264-975c-98f880766052','Improve','
+Evaluate the project’s “what went well” outcomes to identify areas for improvement based strictly on the available evidence.
+Guidelines:
+Identify gaps, inconsistencies, or missing elements in project execution or outcomes
+Focus on project-level patterns across delivery, coordination, quality, and efficiency
+Evaluate what could be improved to increase overall project impact
+Base insights only on observed outcomes (no assumptions or external standards)
+Requirements:
+Be specific and evidence-based (reference prior outcomes)
+Do not infer or assume missing information
+Avoid vague or generic statements
+Each insight must include:
+(1) the observed gap or limitation in the project
+(2) a realistic, actionable improvement
+Output:
+Each must reflect a clear project-level improvement opportunity grounded in evidence
+Do not reference company values
+Strictly follow the schema
+No extra text
+','whatCanBeImproved','PROJECT'),
+
+('0583ff2e-8cf6-4881-8fdf-fece65dea388','Values','
 Evaluate the employee’s “what went well” contributions against company values.
 Guidelines:
 - For each value, identify evidence of alignment based on actions and impact
@@ -1093,9 +1155,9 @@ Output:
 - Each must name the value and include its short label
 - Strictly follow the schema
 - No extra text
-','whatCanBeImproved','EMPLOYEE'),
+','companyValues','EMPLOYEE'),
 
-('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','
+('5633c478-eb1e-4075-9465-5dbcf74c1b4b','Values','
 Evaluate the team’s “what went well” contributions against company values to identify gaps and improvement areas.
 Guidelines:
 - For each value, detect partial, inconsistent, or missing alignment based on team-level patterns
@@ -1113,27 +1175,7 @@ Output:
 - Each must name the value and include its short label
 - Strictly follow the schema
 - No extra text
-','whatCanBeImproved','TEAM'),
-
-('831c0fc3-dac9-4264-975c-98f880766052','Improve','
-Evaluate the project’s “what went well” outcomes against company values.
-Guidelines:
-- For each value, identify alignment based on project outcomes, team interactions, and delivery patterns
-- Focus on project-level impact across teams (not isolated actions)
-- Highlight alignment driven by collaboration, coordination, and execution quality
-- Base insights only on observed outcomes (no assumptions)
-Requirements:
-- Use values exactly as defined
-- Be specific and evidence-based (reference prior outcomes)
-- Each insight must link outcome → value → alignment explanation
-- Avoid vague or generic statements
-- Ensure balanced evaluation based on evidence
-Output:
-- Exactly 5 bullet points (one per value)
-- Each must name the value and include its short label
-- Strictly follow the schema
-- No extra text
-','whatCanBeImproved','PROJECT');
+','companyValues','TEAM');
 
 -- --------------------------------------------------------
 
