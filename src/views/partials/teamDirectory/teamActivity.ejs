@@ -1,6 +1,6 @@
 <%# Team Activity - Compact sidebar view %>
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <% const teamPath = `/teams/${team?.id || ''}`; %>
+    <% const teamPath = typeof teamPath !== 'undefined' && teamPath ? teamPath : `/teams/${team?.id || ''}`; %>
     <div class="flex items-center justify-between gap-2">
         <h2 class="font-heading text-xl font-semibold text-brand-text">Activity</h2>
     </div>

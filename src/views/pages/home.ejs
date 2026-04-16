@@ -14,7 +14,7 @@
                 </div>
                 <div>
                     <h1 class="font-heading text-2xl font-bold text-brand-text">Welcome, <%= homeEmployeeName %></h1>
-                    <p class="text-sm text-brand-text/60">Aquí tienes un resumen de lo que sucede hoy.</p>
+                    <p class="text-sm text-brand-text/60">What's happening today?</p>
                 </div>
             </div>
 
@@ -39,14 +39,17 @@
                 </div>
 
                 <div class="space-y-6">
-                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-                        <h2 class="font-heading text-lg font-semibold text-brand-text">Team Activity</h2>
-                    </div>
+                    <%- include('../partials/teamDirectory/teamActivity', {
+                        team: team,
+                        teamPath: '/home',
+                        activityFilter: activityFilter,
+                        activityError: activityError,
+                        activitySections: activitySections,
+                    }) %>
 
                     <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
                         <h2 class="font-heading text-lg font-semibold text-brand-text">Your Projects</h2>
                     </div>
                 </div>
-
             </div>
         </div>

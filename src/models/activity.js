@@ -74,7 +74,7 @@ module.exports = class Activity {
 
     static getTeamMembersActivities(team_id, start_date = null, end_date = null){
         // Team activity must follow the activity's recorded team, not every team the author belongs to.
-        const conditions = ['A.team_id=?'];
+        const conditions = ['A.entry_id IN (SELECT entry_id FROM dailyentry WHERE team_id = ?)'];
         const parameters = [team_id];
 
         if (start_date) {
@@ -89,9 +89,9 @@ module.exports = class Activity {
 
         return db.execute(`
             SELECT A.activity_id, A.project_id, A.title, A.description, A.completed_at, A.employee_id, E.full_name, ET.role 
-            FROM activity as A 
-            INNER JOIN employee as E ON A.employee_id=E.employee_id 
-            INNER JOIN employeeteam as ET ON ET.employee_id=E.employee_id AND ET.team_id=A.team_id 
+            FROM activity AS A 
+            INNER JOIN employee AS E ON A.employee_id = E.employee_id 
+            INNER JOIN employeeteam AS ET ON ET.employee_id = E.employee_id 
             WHERE ${conditions.join(' AND ')}
             ORDER BY A.completed_at DESC, A.title ASC;`,
             parameters);
