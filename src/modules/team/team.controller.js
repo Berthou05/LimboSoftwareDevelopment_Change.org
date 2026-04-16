@@ -15,12 +15,14 @@ const Report = require('../../models/report');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
 const { randomUUID } = require('crypto');
+const path = require('path');
 
 const TEAM_CREATE_PAGE_TITLE = 'New Team';
 const TEAM_CREATE_PAGE_SUBTITLE = 'Register a new team and assign yourself as the responsible lead.';
 const TEAM_CREATE_DUPLICATE_MESSAGE = 'A team with that name already exists.';
 const TEAM_CREATE_GENERIC_ERROR_MESSAGE = 'The team could not be created right now.';
 const TEAM_ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpg', 'image/jpeg'];
+const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
 const TEAM_MEMBER_ROLES = [
     EmployeeTeamMembership.EmployeeRole.LEAD,
     EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
@@ -75,6 +77,17 @@ Auxiliar function responsible for creating a fallback avatar based on a label.*/
 const buildAvatarUrl = function buildAvatarUrl(label) {
     const normalizedLabel = String(label || 'Unknown').trim() || 'Unknown';
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(normalizedLabel)}&background=fbfbfe&color=1f2937`;
+};
+
+/*getUploadedTeamImage(request)
+Auxiliar function responsible for normalizing uploaded team image paths to the public URL format.*/
+
+const getUploadedTeamImage = function getUploadedTeamImage(request) {
+    if (!request.file) {
+        return '';
+    }
+
+    return `/${path.relative(PUBLIC_DIRECTORY, request.file.path).replace(/\\/g, '/')}`;
 };
 
 /*normalizeTeam(team)
@@ -414,6 +427,22 @@ const renderNewTeamPage = function renderNewTeamPage(request, response, statusCo
     });
 };
 
+const respondTeamPopupRequest = function respondTeamPopupRequest(
+    request,
+    response,
+    teamId,
+    statusCode,
+    payload,
+) {
+    if (payload.success) {
+        request.session.success = 'Team information updated successfully.';
+    } else if (payload.error) {
+        request.session.error = payload.error;
+    }
+
+    return response.redirect(`/teams/${teamId}`);
+};
+
 //--------------------------- Main Functions ---------------------------
 
 /*getNewTeamPage
@@ -492,6 +521,80 @@ exports.createTeam = (request, response, next) => {
             return renderNewTeamPage(request, response, 500, {
                 teamForm,
                 formError: TEAM_CREATE_GENERIC_ERROR_MESSAGE,
+            });
+        });
+};
+
+/*updateTeamInfo
+Function responsible for updating the main team information card, including the optional team image.*/
+
+exports.updateTeamInfo = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.session.employeeId || '';
+    const name = typeof request.body.name === 'string' ? request.body.name.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const currentImage = typeof request.body.currentImage === 'string' ? request.body.currentImage.trim() : '';
+    const image = getUploadedTeamImage(request) || currentImage || null;
+
+    if (request.fileValidationError) {
+        return respondTeamPopupRequest(request, response, teamId, 400, {
+            error: request.fileValidationError,
+        });
+    }
+
+    if (!name) {
+        return respondTeamPopupRequest(request, response, teamId, 400, {
+            error: 'Team name is required.',
+        });
+    }
+
+    return Team.findById(teamId)
+        .then(([teamRows]) => {
+            const team = teamRows[0];
+
+            if (!team) {
+                return respondTeamPopupRequest(request, response, teamId, 404, {
+                    error: 'The selected team was not found.',
+                });
+            }
+
+            if (team.employee_responsible_id !== employeeId) {
+                return respondTeamPopupRequest(request, response, teamId, 403, {
+                    error: 'Only the team lead can update team information.',
+                });
+            }
+
+            return Team.findByName(name).then(([nameRows]) => {
+                const existingTeam = nameRows[0];
+
+                if (existingTeam && existingTeam.team_id !== teamId) {
+                    return respondTeamPopupRequest(request, response, teamId, 409, {
+                        error: TEAM_CREATE_DUPLICATE_MESSAGE,
+                    });
+                }
+
+                return Team.update(
+                    teamId,
+                    name,
+                    description || null,
+                    image,
+                ).then(([result]) => {
+                    if (!result.affectedRows) {
+                        return respondTeamPopupRequest(request, response, teamId, 404, {
+                            error: 'The selected team was not found.',
+                        });
+                    }
+
+                    return respondTeamPopupRequest(request, response, teamId, 200, {
+                        success: true,
+                    });
+                });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondTeamPopupRequest(request, response, teamId, 500, {
+                error: 'Could not update team information right now.',
             });
         });
 };
@@ -630,6 +733,8 @@ exports.getTeamPage = (request, response, next) => {
                 name: teamRow.name,
                 description: teamRow.description,
                 image: teamRow.image || buildAvatarUrl(teamRow.name),
+                imagePath: teamRow.image || '',
+                fallbackImage: buildAvatarUrl(teamRow.name),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,
