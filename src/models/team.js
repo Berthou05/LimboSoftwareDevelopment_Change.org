@@ -139,7 +139,13 @@ module.exports = class Team {
     Function responsible for returning all teams an employee is part of*/
 
     static fetchByEmployeeId(employee_id){
-        return db.execute('SELECT * FROM team as T INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL AND T.status=?;',
+        return db.execute(`
+            SELECT T.team_id, T.name, T.image, T.description,E.full_name 
+            FROM team as T 
+            INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id
+            INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id 
+            WHERE ET.employee_id=? AND ET.left_at IS NULL 
+            AND T.status=?;`,
             [employee_id, Status.ACTIVE]);
     }
 
@@ -147,7 +153,16 @@ module.exports = class Team {
     Function responsible for returning all active teams an employee is not part of*/
 
     static fetchNotByEmployeeId(employee_id){
-        return db.execute('SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id WHERE T.status=? AND T.team_id NOT IN (SELECT T.team_id FROM team as T INNER JOIN employeeteam as ET ON T.team_id=ET.team_id WHERE ET.employee_id=? AND ET.left_at IS NULL)',
+        return db.execute(`
+            SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name 
+            FROM team as T 
+            INNER JOIN employeeteam as ET ON T.team_id=ET.team_id 
+            INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id 
+            WHERE T.status=? AND T.team_id NOT IN (
+                SELECT T.team_id 
+                FROM team as T 
+                INNER JOIN employeeteam as ET ON T.team_id=ET.team_id 
+                WHERE ET.employee_id=? AND ET.left_at IS NULL)`,
             [Status.ACTIVE, employee_id]);
     }
 
