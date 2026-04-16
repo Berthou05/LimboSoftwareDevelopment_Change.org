@@ -29,7 +29,7 @@ const sendResetEmail = async function sendResetEmail(email, token, expirationMin
     }
 };
 
-const sendAccountCreatedEmail = async function sendAccountCreatedEmail(email, fullName, loginUrl) {
+const sendAccountCreatedEmail = async function sendAccountCreatedEmail(email, fullName, resetUrl) {
     if (!process.env.RESEND_API_KEY) {
         throw new Error('Missing RESEND_API_KEY environment variable.');
     }
@@ -40,12 +40,13 @@ const sendAccountCreatedEmail = async function sendAccountCreatedEmail(email, fu
     const { error } = await resend.emails.send({
         from: fromEmail,
         to: [email],
-        subject: 'Your Unitas account is ready',
+        subject: 'Your Unitas account is ready - Reset your password',
         html: `
             <p>Hello ${fullName || 'there'},</p>
             <p>Your Unitas account has been created successfully.</p>
-            <p>You can sign in using your email at <a href="${loginUrl}">${loginUrl}</a>.</p>
-            <p>If you did not request this account or need a password reset, please contact your administrator.</p>
+            <p>Please reset your password using this link: <a href="${resetUrl}">Reset Password</a></p>
+            <p>This link expires in 8 minutes.</p>
+            <p>If you did not request this account or need assistance, please contact your administrator.</p>
         `,
     });
 

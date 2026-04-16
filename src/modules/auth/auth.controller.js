@@ -271,8 +271,25 @@ exports.postReset = (request, response, next) => {
         });
 };
 
-exports.getResetConfirm = (request, response, next) => {
-    if (!request.session.resetEmail) {
+exports.getResetConfirm = async (request, response, next) => {
+    const token = request.query.token;
+    let prefilledToken = '';
+
+    if (token) {
+        prefilledToken = token;
+        const tokenHash = hashResetToken(token);
+
+        try {
+            const [accounts] = await Account.fetchByEmailAndResetToken(null, tokenHash);
+            if (accounts.length) {
+                request.session.resetEmail = accounts[0].email;
+            }
+        } catch (error) {
+            console.log('Error fetching account by token:', error);
+        }
+    }
+
+    if (!request.session.resetEmail && !token) {
         request.session.error = 'Request a reset code first.';
         return response.redirect('/reset');
     }
@@ -283,6 +300,7 @@ exports.getResetConfirm = (request, response, next) => {
         pageTitle: 'Confirm Reset',
         resetEmail: request.session.resetEmail || '',
         maskedResetEmail: request.session.resetEmail ? maskEmail(request.session.resetEmail) : '',
+        prefilledToken: prefilledToken,
     });
 };
 

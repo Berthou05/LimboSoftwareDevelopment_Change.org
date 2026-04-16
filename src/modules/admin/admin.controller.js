@@ -11,6 +11,7 @@ const AccountRole = require('../../models/accountRoleAssignment');
 const Account = require('../../models/account');
 const Employee = require('../../models/employee');
 const resendService = require('../../utils/webServices/resendService');
+const crypto = require('crypto');
 const req = require('express/lib/request');
 
 //------------ Auxiliar Functions -----------------
@@ -34,6 +35,22 @@ const formatDateLabel = function formatDateLabel(value, fallback = '') {
         day: 'numeric',
         year: 'numeric',
     });
+};
+
+const RESET_TOKEN_EXPIRATION_MINUTES = 8;
+
+const createResetToken = function createResetToken() {
+    return String(crypto.randomInt(100000, 1000000));
+};
+
+const hashResetToken = function hashResetToken(token) {
+    return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+const getResetExpiration = function getResetExpiration() {
+    const expirationDate = new Date();
+    expirationDate.setMinutes(expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES);
+    return expirationDate;
 };
 
 //------------------- Main Functions --------------------
@@ -424,8 +441,13 @@ exports.postCreateAccount = async (request, response, next) => {
         const accountRole = new AccountRole(accountId, formData.roleId);
         await accountRole.save();
 
-        const loginUrl = `${getBaseUrl(request)}/`;
-        await resendService.sendAccountCreatedEmail(formData.email, formData.fullName, loginUrl);
+        const resetToken = createResetToken();
+        const resetTokenHash = hashResetToken(resetToken);
+        const resetExpiration = getResetExpiration();
+        await Account.saveResetToken(accountId, resetTokenHash, resetExpiration);
+
+        const resetUrl = `${getBaseUrl(request)}/reset/confirm?token=${resetToken}`;
+        await resendService.sendAccountCreatedEmail(formData.email, formData.fullName, resetUrl);
 
         delete request.session.createAccountFormData;
         request.session.success = 'Account created successfully and a notification email has been sent.';
