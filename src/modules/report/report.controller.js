@@ -442,7 +442,7 @@ exports.generateReport = async (request, response, next)=>{
     //Context + Data Obtention
     const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);  
     
-    console.log(prompts);
+    console.log(projects);
 
     //Report Generation
     //What went well? section

@@ -222,6 +222,7 @@ const generateReportSection = async function generateReportSection(body, prompt,
     messages: buildMessages(body, prompt)
   });
 
+  console.log(output);
   console.log(totalUsage);  
   return output
 };
