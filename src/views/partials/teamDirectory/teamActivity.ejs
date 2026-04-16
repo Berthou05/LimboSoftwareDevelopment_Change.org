@@ -1,24 +1,24 @@
 <%# Team Activity - Compact sidebar view %>
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <% const teamPath = typeof teamPath !== 'undefined' && teamPath ? teamPath : `/teams/${team?.id || ''}`; %>
+    <% const activityTeamPath = teamPath || `/teams/${team?.id || ''}`; %>
     <div class="flex items-center justify-between gap-2">
         <h2 class="font-heading text-xl font-semibold text-brand-text">Activity</h2>
     </div>
 
     <div class="mt-3 flex flex-wrap items-center gap-2">
-        <a href="<%= `${teamPath}?activityPreset=today` %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+        <a href="<%= `${activityTeamPath}?activityPreset=today` %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
             Today
         </a>
-        <a href="<%= `${teamPath}?activityPreset=week` %>" class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+        <a href="<%= `${activityTeamPath}?activityPreset=week` %>" class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
             Week
         </a>
-        <a href="<%= `${teamPath}?activityPreset=month` %>" class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+        <a href="<%= `${activityTeamPath}?activityPreset=month` %>" class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
             Month
         </a>
-        <a href="<%= `${teamPath}?activityPreset=quarter` %>" class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+        <a href="<%= `${activityTeamPath}?activityPreset=quarter` %>" class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
             Quarter
         </a>
-        <a href="<%= `${teamPath}?activityPreset=all` %>" class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+        <a href="<%= `${activityTeamPath}?activityPreset=all` %>" class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
             All
         </a>
     </div>
