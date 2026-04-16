@@ -6,6 +6,7 @@ Modified by: Hurtado, R.
 
 const Account = require('../../models/account');
 const Employee = require('../../models/employee');
+const renderNotFound = require('../../utils/renderNotFound');
 const path = require('path');
 
 const DEFAULT_ACCOUNT_IMAGE = 'https://ui-avatars.com/api/?name=Unitas%20User&background=fbfbfe&color=1f2937';
@@ -62,6 +63,18 @@ const renderAccountForm = function renderAccountForm(request, response, account,
     });
 };
 
+exports.ensureAccountExists = (request, response, next) => {
+    return Account.fetchById(request.params.account_id)
+        .then(([accountRows]) => {
+            if (!accountRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
+
 const fetchAccountWithEmployee = function fetchAccountWithEmployee(accountId) {
     return Account.fetchById(accountId).then(([accountRows]) => {
         if (!accountRows.length) {
@@ -106,15 +119,13 @@ exports.getAccount = (request, response, next) => {
 
 exports.getEditAccount = (request, response, next) => {
     if (!canEditAccount(request)) {
-        request.session.error = 'You can only edit your own account.';
-        return response.redirect('/account');
+        return renderNotFound(request, response);
     }
 
     return fetchAccountWithEmployee(request.params.account_id)
         .then((account) => {
             if (!account) {
-                request.session.error = 'We could not find your account information.';
-                return response.redirect('/account');
+                return renderNotFound(request, response);
             }
 
             return renderAccountForm(request, response, account, 'Account', true);
@@ -128,8 +139,7 @@ exports.getEditAccount = (request, response, next) => {
 
 exports.postEditAccount = (request, response, next) => {
     if (!canEditAccount(request)) {
-        request.session.error = 'You can only edit your own account.';
-        return response.redirect('/account');
+        return renderNotFound(request, response);
     }
 
     const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
@@ -158,8 +168,7 @@ exports.postEditAccount = (request, response, next) => {
     return fetchAccountWithEmployee(request.params.account_id)
         .then((account) => {
             if (!account) {
-                request.session.error = 'We could not find your account information.';
-                return response.redirect('/account');
+                return renderNotFound(request, response);
             }
 
             return Employee.updateNames(account.employeeId, names, lastnames, fullName)

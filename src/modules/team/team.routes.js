@@ -25,6 +25,6 @@ router.post('/:team_id/members/:employee_id/role', isAuth, isAuth.requirePermiss
 
 router.post('/:team_id/members/:employee_id/remove', isAuth, isAuth.requirePermission('TEAM-07-02'), teamController.removeTeamMember);
 router.delete('/:team_id/delete', isAuth, teamController.deleteTeam);
-router.get('/:team_id', isAuth, teamController.getTeamPage);
+router.get('/:team_id', teamController.ensureTeamExists, isAuth, teamController.getTeamPage);
 
 module.exports = router;

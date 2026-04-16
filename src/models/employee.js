@@ -111,7 +111,7 @@ module.exports = class Employee {
 
     static fetchById(employee_id) {
         return db.execute(`
-            SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email 
+            SELECT E.full_name, E.employee_id, A.slack_username, A.image, A.email, A.created_at
             FROM employee AS E 
             INNER JOIN account AS A ON E.employee_id=A.employee_id 
             WHERE E.employee_id=?`,

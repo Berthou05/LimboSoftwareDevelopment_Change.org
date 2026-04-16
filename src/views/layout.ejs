@@ -12,13 +12,20 @@
                     class="pointer-events-none absolute -bottom-16 right-0 h-80 w-80 rounded-full
                         bg-brand-title/20 blur-3xl"
                 ></div>
-                <section
-                    class="relative z-10 w-full max-w-lg rounded-3xl border
-                        border-brand-secondary/60 bg-white/90 p-8 shadow-xl backdrop-blur"
-                >
-                    <%- include("partials/flash") %>
-                    <%- body %>
-                </section>
+                <% if (typeof isNotFoundPage !== 'undefined' && isNotFoundPage) { %>
+                    <section class="relative z-10 w-full px-4">
+                        <%- include("partials/flash") %>
+                        <%- body %>
+                    </section>
+                <% } else { %>
+                    <section
+                        class="relative z-10 w-full max-w-lg rounded-3xl border
+                            border-brand-secondary/60 bg-white/90 p-8 shadow-xl backdrop-blur"
+                    >
+                        <%- include("partials/flash") %>
+                        <%- body %>
+                    </section>
+                <% } %>
             </main>
         <% } else { %>
             <div class="flex min-h-screen">
