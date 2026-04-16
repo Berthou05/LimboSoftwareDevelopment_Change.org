@@ -11,6 +11,7 @@ const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const renderNotFound = require('../../utils/renderNotFound');
 const { randomUUID } = require('crypto');
 
 const TEAM_CREATE_PAGE_TITLE = 'New Team';
@@ -23,6 +24,17 @@ const TEAM_MEMBER_ROLES = [
     EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
 ];
 
+exports.ensureTeamExists = (request, response, next) => {
+    return Team.findById(request.params.team_id)
+        .then(([teamRows]) => {
+            if (!teamRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
 
 //--------------------------- Auxiliar Functions ---------------------------
 
@@ -541,8 +553,7 @@ exports.getTeamPage = (request, response, next) => {
             const activityError = activityResponse.error || '';
 
             if (!teamRow) {
-                request.session.error = `Error loading team ${teamId}. Team information not found.`;
-                return response.redirect('/team');
+                return renderNotFound(request, response);
             }
 
             const leadName = teamMembers.find(

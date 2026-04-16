@@ -13,6 +13,7 @@ const Goal = require('../../models/goal');
 const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
 const Search = require('../../models/search');
+const renderNotFound = require('../../utils/renderNotFound');
 const { end } = require('../../utils/database');
 
 /*getAiWrapper()
@@ -321,6 +322,18 @@ const normalizeReportType = function normalizeReportType(value = '') {
     return '';
 };
 
+exports.ensureReportExists = (request, response, next) => {
+    return Report.fetchById(request.params.id)
+        .then(([reportRows]) => {
+            if (!reportRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
+
 /*getReport
 Function responsible for returning a concrete report page*/
 
@@ -335,38 +348,43 @@ exports.getReport = (request, response, next) => {
     const redirectTo = typeof request.query.redirectTo === 'string'
         ? request.query.redirectTo
         : '/home';
-    console.log(request.params.id);
 
     Report.fetchById(request.params.id).then(([report,fieldData])=>{
-        console.log(report);
-        Search.getNameFromId(report[0].content_id).then(([name, fieldData])=>{
+        const reportRow = report[0];
 
-            console.log(name[0]);
+        if (!reportRow) {
+            return renderNotFound(request, response);
+        }
+
+        Search.getNameFromId(reportRow.content_id).then(([name, fieldData])=>{
+            const subject = name[0];
+
+            if (!subject) {
+                return renderNotFound(request, response);
+            }
 
             return response.render('pages/report',{
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
-                pageTitle: name[0].full_name,
-                title: name[0].full_name,
+                pageTitle: subject.full_name,
+                title: subject.full_name,
                 pageSubtitle: '',
-                reportType: report[0].content_type,
-                reportFormat: JSON.parse(report[0].ai_output_text),
+                reportType: reportRow.content_type,
+                reportFormat: JSON.parse(reportRow.ai_output_text),
                 redirectTo,
             });
         })
         .catch((error)=>{
             console.log(error);
-            return responde.redirect(typeof request.query.redirectTo === 'string'
-            ? request.query.redirectTo
-            : '/home'); 
+            request.session.error = 'The report could not be loaded.';
+            return response.redirect(redirectTo); 
         })
     })
     .catch((error)=>{
         console.log(error);
-        return responde.redirect(typeof request.query.redirectTo === 'string'
-        ? request.query.redirectTo
-        : '/home');
+        request.session.error = 'The report could not be loaded.';
+        return response.redirect(redirectTo);
     })
 };
 
