@@ -1118,7 +1118,7 @@ No unsupported claims
 No inferred or assumed content
 Strictly follow the provided schema
 No extra text
-', 'whatWentWellTeam', 'PROJECT'),
+', 'whatWentWellProject', 'PROJECT'),
 
 ('19b70127-c179-46c7-a754-6e4f7391187b', 'TeamImpact','
 Task:
