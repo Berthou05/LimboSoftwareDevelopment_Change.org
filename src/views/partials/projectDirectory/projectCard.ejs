@@ -6,11 +6,27 @@
 %>
 
 <article class="rounded-2xl bg-white p-4 shadow-panel <%= cardClasses %>">
-    <div class="flex items-center gap-3">
+    <div class="flex items-start justify-between gap-3">
         <div>
             <h3 class="font-heading text-lg font-bold text-brand-text"><%= project.name %></h3>
             <p class="text-sm text-brand-text/70">Lead: <%= project.leadName %></p>
         </div>
+        <% if (project.canArchive) { %>
+            <form
+                action="/projects/<%= project.id %>/delete"
+                method="POST"
+                data-project-directory-delete-form
+                class="shrink-0"
+            >
+                <%- include('../shared/actionButton', {
+                    buttonType: 'submit',
+                    buttonIcon: 'archive',
+                    buttonLabel: 'Archive',
+                    buttonVariant: 'small',
+                    buttonAriaLabel: 'Archive project',
+                }) %>
+            </form>
+        <% } %>
     </div>
     <p class="mt-3 text-sm text-brand-text/80">
         <%= project.description || 'No description available.' %>

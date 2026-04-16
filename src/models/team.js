@@ -11,6 +11,7 @@ const Status = {
 const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const DIRECTORY_QUERY = `SELECT DISTINCT
     T.team_id,
+    T.employee_responsible_id,
     T.name,
     T.image,
     T.description,

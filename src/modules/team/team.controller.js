@@ -93,10 +93,11 @@ const getUploadedTeamImage = function getUploadedTeamImage(request) {
 /*normalizeTeam(team)
 Function responsible for the normalization of a team given as a parameter*/
 
-const normalizeTeam = function normalizeTeam(team) {
+const normalizeTeam = function normalizeTeam(team, currentEmployeeId = '') {
     return {
         id: team.team_id ?? null,
         name: team.name ?? 'Unnamed team',
+        leadId: team.employee_responsible_id ?? null,
         leadName:
             team.full_name ??
             team.lead_name ??
@@ -104,6 +105,7 @@ const normalizeTeam = function normalizeTeam(team) {
         description: team.description ?? 'No team description has been added yet.',
         image: team.image || buildAvatarUrl(team.name),
         isMember: Boolean(team.isMember ?? team.is_member),
+        canArchive: Boolean(team.employee_responsible_id && team.employee_responsible_id === currentEmployeeId),
     };
 };
 
@@ -615,8 +617,8 @@ exports.getTeams = (request, response, next) => {
                 username: request.session.username || '',
                 pageTitle: 'Team',
                 pageSubtitle: 'Intermediate selection for own and other teams.',
-                myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true })),
-                otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false })),
+                myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true }, employeeId)),
+                otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false }, employeeId)),
                 query:'',
             });
         })
@@ -1142,7 +1144,7 @@ exports.searchTeams = (request, response, next) => {
         const myTeams = [];
         const otherTeams = [];
         const suggestions = suggestionTeams.map((team) => {
-            const normalizedTeam = normalizeTeam(team);
+            const normalizedTeam = normalizeTeam(team, employeeId);
             return {
                 id: normalizedTeam.id,
                 name: normalizedTeam.name,
@@ -1152,7 +1154,7 @@ exports.searchTeams = (request, response, next) => {
         });
 
         directoryTeams.forEach((team) => {
-            const normalizedTeam = normalizeTeam(team);
+            const normalizedTeam = normalizeTeam(team, employeeId);
 
             if (normalizedTeam.isMember) {
                 myTeams.push(normalizedTeam);

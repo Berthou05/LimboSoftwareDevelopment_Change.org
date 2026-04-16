@@ -1,5 +1,42 @@
 const PROJECT_DIRECTORY_EMPTY_MESSAGE = 'Start typing to see matching projects.';
 
+const initializeProjectDirectoryArchive = function initializeProjectDirectoryArchive() {
+    // Keep archive actions active even when the directory cards are replaced by live search results.
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-project-directory-delete-form]');
+
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const confirmed = window.confirm('Archive this project?');
+
+        if (!confirmed) {
+            return;
+        }
+
+        const response = await fetch(form.action, {
+            method: 'DELETE',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(form)).toString(),
+        });
+
+        const payload = await response.json().catch(() => null);
+
+        if (response.ok) {
+            window.location.href = payload?.redirectTo || '/projects';
+            return;
+        }
+
+        window.alert(payload?.error || 'The project could not be archived right now.');
+    });
+};
+
 const initializeProjectDirectorySearch = function initializeProjectDirectorySearch() {
     const projectDirectory = document.querySelector('[data-project-directory]');
 
@@ -275,4 +312,5 @@ const initializeProjectDirectorySearch = function initializeProjectDirectorySear
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeProjectDirectorySearch();
+    initializeProjectDirectoryArchive();
 });

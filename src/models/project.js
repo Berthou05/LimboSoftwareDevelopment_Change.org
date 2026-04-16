@@ -7,6 +7,7 @@ const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 // Treat project leads as members in directory-style queries even when no collaboration row exists yet.
 const DIRECTORY_QUERY = `SELECT DISTINCT
     P.project_id,
+    P.employee_responsible_id,
     P.name,
     NULL AS image,
     P.description,

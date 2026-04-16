@@ -367,6 +367,10 @@ exports.getProjects = (request, response, next) => {
                 description: project.description,
                 image: project.image || null,
                 isMember: Boolean(project.is_member || project.isMember),
+                canArchive: Boolean(
+                    project.employee_responsible_id
+                    && project.employee_responsible_id === employeeId
+                ),
             })),
             otherProjects: notProjects.map((project) => ({
                 id: project.project_id,
@@ -375,6 +379,10 @@ exports.getProjects = (request, response, next) => {
                 description: project.description,
                 image: project.image || null,
                 isMember: Boolean(project.is_member || project.isMember),
+                canArchive: Boolean(
+                    project.employee_responsible_id
+                    && project.employee_responsible_id === employeeId
+                ),
             })),
             query: '',
         });
@@ -1107,6 +1115,10 @@ exports.searchProjects = (request, response, next) => {
                 description: project.description,
                 image: project.image || null,
                 isMember: Boolean(project.is_member || project.isMember),
+                canArchive: Boolean(
+                    project.employee_responsible_id
+                    && project.employee_responsible_id === employeeId
+                ),
             };
 
             if (normalizedProject.isMember) {

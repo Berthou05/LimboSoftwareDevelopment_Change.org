@@ -1,5 +1,42 @@
 const TEAM_DIRECTORY_EMPTY_MESSAGE = 'Start typing to see matching teams.';
 
+const initializeTeamDirectoryArchive = function initializeTeamDirectoryArchive() {
+    // Use delegated submit handling so archive buttons keep working after AJAX search rerenders the cards.
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-team-directory-delete-form]');
+
+        if (!form) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const confirmed = window.confirm('Archive this team?');
+
+        if (!confirmed) {
+            return;
+        }
+
+        const response = await fetch(form.action, {
+            method: 'DELETE',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(form)).toString(),
+        });
+
+        const payload = await response.json().catch(() => null);
+
+        if (response.ok) {
+            window.location.href = payload?.redirectTo || '/team';
+            return;
+        }
+
+        window.alert(payload?.error || 'The team could not be archived right now.');
+    });
+};
+
 const initializeTeamDirectorySearch = function initializeTeamDirectorySearch() {
     const teamDirectory = document.querySelector('[data-team-directory]');
 
@@ -327,4 +364,5 @@ const initializeTeamDirectorySearch = function initializeTeamDirectorySearch() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeTeamDirectorySearch();
+    initializeTeamDirectoryArchive();
 });
