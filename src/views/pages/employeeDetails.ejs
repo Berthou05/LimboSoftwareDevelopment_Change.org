@@ -15,6 +15,22 @@
                 />
                 <div class="flex-1 min-w-0">
                     <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= employee.full_name %></h1>
+                    <div class="mt-3 grid gap-2 text-sm text-brand-text/70 sm:grid-cols-2">
+                        <p class="min-w-0">
+                            <span class="block text-[10px] font-semibold uppercase tracking-wide text-brand-text/45">Email</span>
+                            <span class="block truncate"><%= employee.email || 'No email available' %></span>
+                        </p>
+                        <p class="min-w-0">
+                            <span class="block text-[10px] font-semibold uppercase tracking-wide text-brand-text/45">Slack</span>
+                            <span class="block truncate"><%= employee.slack_username || 'No Slack username available' %></span>
+                        </p>
+                        <% if (employee.accountCreatedAtLabel) { %>
+                            <p class="min-w-0 sm:col-span-2">
+                                <span class="block text-[10px] font-semibold uppercase tracking-wide text-brand-text/45">Account created</span>
+                                <span class="block truncate"><%= employee.accountCreatedAtLabel %></span>
+                            </p>
+                        <% } %>
+                    </div>
                 </div>
                 <% if (isOwnProfile) { %>
                     <span class="app-breadcrumb app-breadcrumb--static">Own Profile</span>
@@ -161,7 +177,7 @@
 
     <section class="space-y-4">
         <%# Report generator replaces the date display and quick report button. %>
-        <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/employees/' + employee.id, defaultReportType, defaultSubjectId, reportSubjects, latestReports, quickReport }) %>
+        <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/employees/' + employee.id, defaultReportType, defaultSubjectId, reportSubjects, latestReport, quickReport }) %>
 
         <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Your Teams</h2>

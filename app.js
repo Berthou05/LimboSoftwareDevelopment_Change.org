@@ -10,6 +10,7 @@ const expressLayouts = require('express-ejs-layouts');
 const multer = require('multer');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const flashMessage = require('./src/middleware/flashMessage');
+const renderNotFound = require('./src/utils/renderNotFound');
 const compression = require("compression");
 const PORT = process.env.PORT || 3000;
 
@@ -103,7 +104,6 @@ app.use(session({
     saveUninitialized: false, 
 }));
 
-app.use(flashMessage);
 
 /*Instalacion de csurf*/
 const csrf = require('csurf');
@@ -119,6 +119,9 @@ app.use((request, response, next) => {
 
     csrfProtection(request, response, next);
 }); 
+
+//Flash Message declaration
+app.use(flashMessage);
 
 //Uso de Auth middleware
 const isAuth = require('./src/middleware/isAuthenticated');
@@ -178,6 +181,8 @@ app.use((error, request, response, next) => {
     request.session.error = 'Your form expired. Please try again.';
     response.redirect(request.get('Referrer') || '/');
 });
+
+app.use(renderNotFound);
 
 //Any additional route outside our domain
 // https.createServer({ key: privateKey, cert: certificate }, app).listen(process.env.PORT || 3000);

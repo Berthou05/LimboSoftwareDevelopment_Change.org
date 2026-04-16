@@ -1,6 +1,6 @@
 <%# Template: partials/reportGenerator.ejs
    Purpose: Reusable report generation form with enhanced calendar picker.
-   Expected locals: redirectTo, defaultReportType, defaultSubjectId, reportSubjects, latestReports (optional), quickReport (optional), layout (optional: 'full' or 'compact').
+   Expected locals: redirectTo, defaultReportType, defaultSubjectId, reportSubjects, latestReport (optional), quickReport (optional), layout (optional: 'full' or 'compact').
    JS integration: Uses data-report-generator="enhanced" for calendar behavior in dateRangePicker.js.
 %>
 
@@ -52,24 +52,11 @@
   const resolvedSubjectLabel = resolvedSubject
     ? (resolvedSubject.label || resolvedSubject.name || currentTypeLabel)
     : currentTypeLabel;
-  const normalizedLatestReports = (
-    typeof latestReports === 'object'
-    && latestReports !== null
-  ) ? latestReports : {};
-  
-  //TODO: Review code
-  const latestReport = normalizedLatestReports[currentType] || (
-    resolvedSubjectId
-      ? {
-          subjectLabel: resolvedSubjectLabel,
-          createdAt: now,
-          periodStart: defaultPeriodStart,
-          periodEnd: defaultPeriodEnd,
-        }
-      : null
-  );
   
   const currentYear = now.getFullYear();
+  const latestReportData = typeof latestReport !== 'undefined' && latestReport
+  ? latestReport
+  : null;
 %>
 
 <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel" data-report-generator-card>
@@ -174,22 +161,54 @@
       </button>
     </form>
 
-    <% if (latestReport) { %>
-      <div class="mt-5 border-t border-brand-secondary pt-5">
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">Last Generated Report</p>
-        <div class="mt-3 flex items-center justify-between rounded-xl border border-brand-secondary bg-brand-bg/30 p-4">
-          <div>
-            <p class="font-semibold text-brand-text"><%= latestReport.subjectLabel %></p>
-            <p class="mt-1 text-sm text-brand-text/60">
-              <span data-latest-report-created-at><%= new Date(latestReport.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
-              &middot;
-              <span data-latest-report-period><%= new Date(latestReport.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(latestReport.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
-            </p>
-          </div>
-          <a href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="rounded-lg border border-brand-secondary px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white">View</a>
+    <div class="mt-5 border-t border-brand-secondary pt-5 <%= latestReportData ? '' : 'hidden' %>"
+        data-latest-report-container>
+
+      <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
+        Last Generated Report
+      </p>
+
+      <div class="mt-3 flex items-center justify-between rounded-xl border border-brand-secondary bg-brand-bg/30 p-4">
+        <div>
+          <p data-latest-report-title class="font-semibold text-brand-text">
+            <%= latestReportData ? latestReportData.subjectLabel : '' %>
+          </p>
+
+          <p class="mt-1 text-sm text-brand-text/60">
+            <span data-latest-report-created-at>
+              <%= latestReportData
+                ? new Date(latestReportData.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })
+                : '' %>
+            </span>
+            &middot;
+            <span data-latest-report-period>
+              <%= latestReportData
+                ? `${new Date(latestReportData.periodStart).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })} - ${new Date(latestReportData.periodEnd).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}`
+                : '' %>
+            </span>
+          </p>
         </div>
+
+        <a
+          data-latest-report-link
+          href="<%= latestReportData
+            ? `/reports/view/${latestReportData.type.toLowerCase()}/${latestReportData.id}?redirectTo=${encodeURIComponent(redirectTo || '/home')}`
+            : '#' %>"
+          class="rounded-lg border border-brand-secondary px-3 py-1.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary hover:text-white">
+          View
+        </a>
       </div>
-    <% } %>
+    </div>
   <% } else { %>
     <%# ===================== COMPACT LAYOUT (Detail pages with stacked dates + button) ===================== %>
     <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Report Generator</p>
@@ -275,25 +294,54 @@
       </div>
     </form>
 
-    <% if (latestReport) { %>
-      <div class="mt-4 border-t border-brand-secondary pt-4"
-      data-latest-report-container>
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Last Generated Report</p>
-        <div class="mt-2 flex items-center justify-between rounded-lg border border-brand-secondary p-3">
-          <div>
-            <p class="text-sm font-semibold text-brand-text"><%= latestReport.subjectLabel %></p>
-            <p class="mt-1 text-xs text-brand-text/50">
-              <span data-latest-report-created-at><%= new Date(latestReport.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></span>
-              &middot;
-              <span data-latest-report-period><%= new Date(latestReport.periodStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %> - <%= new Date(latestReport.periodEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) %></span>
-            </p>
-          </div>
-          <a
-            data-latest-report-link
-            href="/reports/view/<%= String(currentType || 'EMPLOYEE').toLowerCase() %>?redirectTo=<%= encodeURIComponent(redirectTo || '/home') %>" class="text-xs font-semibold text-brand-primary hover:text-brand-accent">View</a>
+    <div class="mt-4 border-t border-brand-secondary pt-4 <%= latestReportData ? '' : 'hidden' %>"
+        data-latest-report-container>
+
+      <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+        Last Generated Report
+      </p>
+
+      <div class="mt-2 flex items-center justify-between rounded-lg border border-brand-secondary p-3">
+        <div>
+          <p data-latest-report-title class="text-sm font-semibold text-brand-text">
+            <%= latestReportData ? latestReportData.subjectLabel : '' %>
+          </p>
+
+          <p class="mt-1 text-xs text-brand-text/50">
+            <span data-latest-report-created-at>
+              <%= latestReportData
+                ? new Date(latestReportData.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })
+                : '' %>
+            </span>
+            &middot;
+            <span data-latest-report-period>
+              <%= latestReportData
+                ? `${new Date(latestReportData.periodStart).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })} - ${new Date(latestReportData.periodEnd).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                  })}`
+                : '' %>
+            </span>
+          </p>
         </div>
+
+        <a
+          data-latest-report-link
+          href="<%= latestReportData
+            ? `/reports/view/${latestReportData.type.toLowerCase()}/${latestReportData.id}?redirectTo=${encodeURIComponent(redirectTo || '/home')}`
+            : '#' %>"
+          class="text-xs font-semibold text-brand-primary hover:text-brand-accent">
+          View
+        </a>
       </div>
-    <% } %>
+    </div>
   <% } %>
 </div>
 

@@ -6,6 +6,7 @@
     const popupFormAction = typeof popupAction !== 'undefined' ? popupAction : '';
     const popupFormMethod = typeof popupMethod !== 'undefined' ? popupMethod : 'POST';
     const popupFormError = typeof popupErrorMessage !== 'undefined' ? popupErrorMessage : 'Failed to submit form.';
+    const dataFormAction = typeof dataAction !== 'undefined' ? dataAction : '';
 %>
 
 <div data-popup="<%= popupId %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
@@ -29,6 +30,7 @@
 
             <form
                 data-popup-form
+                data-action="<%=dataFormAction%>"
                 action="<%= popupFormAction %>"
                 method="<%= popupFormMethod %>"
                 data-error-message="<%= popupFormError %>"
@@ -78,7 +80,9 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl border <%= submitTone === 'danger' ? 'border-brand-accent bg-brand-accent hover:bg-brand-accent/90' : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
+                        class="rounded-xl border <%= submitTone === 'danger'
+                            ? 'border-red-500 bg-red-500 hover:bg-red-600'
+                            : 'border-brand-primary bg-brand-primary hover:bg-brand-accent' %> px-4 py-2 text-sm font-semibold text-white transition"
                     >
                         <%= submitLabel %>
                     </button>

@@ -241,26 +241,58 @@ Function responsible for a role deletion including:
 AccountRole tuples update, RolePrivilege tuples deletion and Role deletion*/
 
 exports.deleteRole = (request, response, next) =>{
-    AccountRole.updateByRole(request.params.roleId).then(()=>{
-        RolePrivilege.deleteByRoleId(request.params.roleId).then(()=>{
-            Role.deleteByRoleId(request.params.roleId).then(()=>{
-                request.session.success = `The Role with ID ${request.params.roleId} was succesfully deleted`;
-                return response.redirect('/admin/roles');
+    Role.fetchNameById(request.params.roleId).then(([role_name,fieldData])=>{
+        if(role_name[0].name === 'ADMIN'){
+            return response.json({
+                type: 'error',
+                message: 'ADMIN role can not be deleted'
+            });
+            }
+        else if(role_name[0].name === 'EMPLOYEE'){
+            return response.json({
+                type: 'error',
+                message: 'EMPLOYEE role can not be deleted'
+            });
+        }
+        else{
+            AccountRole.updateByRole(request.params.roleId).then(()=>{
+                RolePrivilege.deleteByRoleId(request.params.roleId).then(()=>{
+                    Role.delete(request.params.roleId).then(()=>{
+                        return response.json({
+                            type:'success',
+                            message: `The Role with ID ${request.params.roleId} was succesfully deleted`
+                        });
+                    })
+                    .catch((error)=>{
+                        console.log(error);
+                        return response.json({
+                            type: 'error',
+                            message: 'Role deletion failed'
+                        });
+                    })
+                })
+                .catch((error)=>{
+                    console.log(error);
+                    return response.json({
+                        type: 'error',
+                        message: 'Role - Privilege relations deletion failed'
+                    });
+                })
             })
             .catch((error)=>{
                 console.log(error);
-                return response.redirect('/admin/roles');
+                return response.json({
+                    type: 'error',
+                    message: 'Association accounts could not be reassigned to Employee'
+                });
             })
-        })
-        .catch((error)=>{
-            console.log(error);
-            return response.redirect('/admin/roles');
-        })
-    })
-    .catch((error)=>{
-        console.log(error);
-        return response.redirect('/admin/roles');
-    })
+        }
+    }).catch((error)=>{
+        return response.json({
+            type: 'error',
+            message: 'Role Name could not be found'
+        });
+    })    
 };
 
 /*createRole

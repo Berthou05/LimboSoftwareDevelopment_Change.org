@@ -4,6 +4,7 @@ function updateLatestReportUI(form, report) {
 
     const latestSection = container.querySelector('[data-latest-report-container]');
     if (!latestSection) return;
+    latestSection.classList.remove('hidden');
 
     const createdAtEl = latestSection.querySelector('[data-latest-report-created-at]');
     const periodEl = latestSection.querySelector('[data-latest-report-period]');

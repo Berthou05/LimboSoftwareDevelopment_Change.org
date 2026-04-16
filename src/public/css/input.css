@@ -69,6 +69,14 @@ input[type="password"]::-ms-clear {
         @apply h-10 w-10 rounded-lg p-0;
     }
 
+    .panel-action-button--icon-compact {
+        @apply inline-flex items-center justify-center p-1;
+    }
+
+    .panel-action-button--icon-compact .panel-action-button__icon {
+        @apply h-5 w-5;
+    }
+
     .panel-action-button__icon {
         @apply h-4 w-4 shrink-0;
     }

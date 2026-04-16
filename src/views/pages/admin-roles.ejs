@@ -3,7 +3,7 @@
    Expected locals: roles, privilegesCatalog.
    Matrix layout: each row is a privilege, each column is a role, each cell toggles assignment.
 %>
-
+<div id="flash-container"></div>
 <%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
 
 <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
@@ -22,9 +22,21 @@
         <tr class="text-left text-brand-text/70">
           <th class="px-3 py-2">Privilege</th>
           <% roles.forEach((role) => { %>
-            <th class="px-3 py-2"><%= role.name %></th>
-          <% }) %>
+            <th class="px-3 py-2">
+              <div class="flex items-center gap-2 group">
+              <%= role.name %>
+              <%- include('../partials/shared/actionButton', {
+                            buttonPopupOpen: 'delete-role-' + role.id,
+                            buttonIcon: 'trash',
+                            buttonVariant: 'icon-only',
+                            buttonClasses: 'opacity-0 group-hover:opacity-100 transition-opacity border-red-200 text-red-500',
+                            actionTone: 'danger'
+                        }) %>
+              </div>
+            </th>
+            <% }) %>          
         </tr>
+
       </thead>
       <tbody class="divide-y divide-brand-secondary/60">
         <%# Row loop: one row per privilege from repository catalog. %>
@@ -46,7 +58,7 @@
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button
                     type="submit"
-                    class="toggle-btn inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold transition <%= enabled ? 'bg-brand-primary text-white' : 'bg-brand-secondary/50 text-brand-text/70 hover:bg-brand-secondary' %>"
+                    class="toggle-btn inline-flex min-w-20 justify-center rounded-full px-3 py-1 text-xs font-semibold transition <%= enabled ? 'bg-brand-nav text-white' : 'bg-brand-secondary/50 text-brand-text/70 hover:bg-brand-secondary' %>"
                   >
                     <%= enabled ? "ON" : "OFF" %>
                   </button>
@@ -58,6 +70,20 @@
       </tbody>
     </table>
   </div>
+  <% roles.forEach((role) => { %>
+  <%- include('../partials/shared/actionPopup', {
+      dataAction: 'delete-roles',
+      popupId: 'delete-role-' + role.id,
+      popupTitle: 'Delete Role',
+      popupDescription: 'Confirm if you want to remove this role from the system.',
+      popupAction: '/admin/roles/' + role.id + '/remove',
+      popupMethod: 'POST',
+      csrfToken,
+      popupFields: [],
+      popupSubmitLabel: 'Delete',
+      popupSubmitTone: 'danger',
+  }) %>
+<% }) %>
 </section>
 
 <script src="/js/adminRoles.js"></script>

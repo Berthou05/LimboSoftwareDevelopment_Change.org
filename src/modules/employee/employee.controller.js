@@ -11,8 +11,40 @@ const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const renderNotFound = require('../../utils/renderNotFound');
+const Report = require('../../models/report');
+const Search = require('../../models/search');
+const { search } = require('../report/report.routes');
 
 //--------------------------- Auxiliar Functions ---------------------------
+
+/*getLatestReport(content_id)
+Auxiliar function respondible for returning the optimal information required to show the 
+latestReport created of the content_id*/
+
+const getLatestReport = async function getLatestReport(content_id, user_id){
+    return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
+        return Search.getNameFromId(content_id).then(([name,fieldData])=>{
+            console.log(report);
+            console.log(report[0].report_id);
+            return {
+                id:report[0].report_id,
+                subjectLabel:name[0].name,
+                createdAt:report[0].created_at,
+                periodStart:report[0].period_start,
+                periodEnd:report[0].period_end,
+                type:report[0].content_type
+            };
+        })
+        .catch((error)=>{
+            return;
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        return;
+    })
+}
 
 /*buildAvatarUrl(fullName)
 Auxiliar function responsible for creating a random avatar based on an employee fullName*/
@@ -279,6 +311,18 @@ const getOwnEmployeeUrl = function getOwnEmployeeUrl(employeeId) {
     return `/employees/${employeeId}`;
 };
 
+exports.ensureEmployeeExists = (request, response, next) => {
+    return Employee.fetchById(request.params.employee_id)
+        .then(([employeeRows]) => {
+            if (!employeeRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
+
 //--------------------------- Main Functions ---------------------------
 
 /*getEmployee()
@@ -403,7 +447,7 @@ activities:activities,
 teams:teams,
 projects:projects,*/
 
-exports.getEmployeePage = (request, response, next) => {
+exports.getEmployeePage = async (request, response, next) => {
     const employeeId = request.params.employee_id;
     const currentEmployeeId = request.session.employeeId || '';
     const ownEmployeeUrl = getOwnEmployeeUrl(currentEmployeeId);
@@ -435,16 +479,17 @@ exports.getEmployeePage = (request, response, next) => {
                 Employee.fetchById(employeeId),
                 activityPromise,
                 Project.getProjectByEmployeeId(employeeId),
+                getLatestReport(employeeId, currentEmployeeId)
             ])
                 .then(([
                     [team],
                     [info],
                     [activities],
                     [employeeProjects],
+                    latestReport
                 ]) => {
                     if (!info.length) {
-                        request.session.error = `Error loading Employee ${employeeId}. Employee information not found.`;
-                        return response.redirect('/employees');
+                        return renderNotFound(request, response);
                     }
 
                     const filteredActivities = selectedActivityProjectId
@@ -476,7 +521,10 @@ exports.getEmployeePage = (request, response, next) => {
                         id: info[0].employee_id,
                         employee_id: info[0].employee_id,
                         full_name: info[0].full_name,
-                        image: buildAvatarUrl(info[0].full_name),
+                        email: info[0].email || '',
+                        slack_username: info[0].slack_username || '',
+                        accountCreatedAtLabel: info[0].created_at ? formatDayLabel(info[0].created_at) : '',
+                        image: info[0].image || buildAvatarUrl(info[0].full_name),
                     };
 
                     const reportSubjects = {
@@ -507,7 +555,7 @@ exports.getEmployeePage = (request, response, next) => {
                         defaultReportType: 'EMPLOYEE',
                         defaultSubjectId: employeeId,
                         reportSubjects,
-                        latestReports: '',
+                        latestReport:latestReport,
                         quickReport: '',
                     });
                 })

@@ -30,14 +30,20 @@ module.exports = class Role {
     Function responsible for a Role deletion based on role_id*/
     
     static delete(delete_role_id){
-        return db.execute('DELETE FROM roles WHERE role_id=?',[delete_role_id]);
+        return db.execute('DELETE FROM role WHERE role_id=?',[delete_role_id]);
     }
-
 
     static fetchAll(){
         return db.execute('SELECT * FROM role');
     }
     
+    static fetchNameById(role_id){
+        return db.execute(`
+            SELECT R.name
+            FROM role as R
+            WHERE R.role_id=?;`,
+            [role_id]);
+    }
 
     // Read role by ID
     static fetchById(role_id) {
