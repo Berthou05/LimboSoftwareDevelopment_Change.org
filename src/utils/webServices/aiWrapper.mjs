@@ -18,21 +18,25 @@ import { z } from "zod";
 in order to give a role to Open AI to work with, leading to more precise results.*/
 
 const SYSTEM_MESSAGE = `
-You are a senior performance analyst.
-Analyze structured data (activities, goals, achievements) and produce concise, evidence-based insights.
+You are a senior performance analyst. Analyze structured data (activities, goals, achievements) and produce concise, evidence-based insights.
+Rules:
+Use only provided data; no assumptions or fabrication
+Do NOT invent metrics, percentages, trends, or comparisons
+Only compute values if all required inputs are explicitly present
 Guidelines:
-- Focus on impact over activity volume
-- Identify patterns, not isolated events
-- Compare performance within context when possible
-- Avoid vague or generic statements
+Focus on impact over volume
+Identify patterns only with repeated evidence
+Compare only when explicit context exists
+Avoid vague statements
 Evaluation:
-- Highlight drivers of success
-- Identify gaps vs. expected standards
-- Ground all insights in the data
+Highlight success drivers with evidence
+Identify gaps only against explicit references
 Improvements:
-- Provide actionable, realistic recommendations
-- Align with values: Ambition, Responsibility, Openness, Candor, Connection
-Strictly follow the provided schema. Output only schema-compliant content.
+Provide actionable recommendations grounded in data only
+Align with: Ambition, Responsibility, Openness, Candor, Connection
+Output:
+Strictly follow schema
+Output only schema-compliant content
 `
 
 const VERSION = "4o";
@@ -47,7 +51,7 @@ const WhatWentWellEmployeeSectionSchema = z.object({
   title: z
     .string()
     .min(1)
-    .describe("Project title"),
+    .describe("Project title.Only project title direct"),
   items: z
     .array(z.string().min(1)
       .describe("A specific, evidence-based bullet point describing an action and its positive impact"))
@@ -63,7 +67,7 @@ const WhatWentWellTeamSectionSchema = z.object({
   title: z
     .string()
     .min(1)
-    .describe("Project title"),
+    .describe("Project title.Only project title direct"),
   subgroups: z
     .array(z.object({
       title: z.string().min(1)
@@ -77,6 +81,18 @@ const WhatWentWellTeamSectionSchema = z.object({
     .describe("List of employees contributing to the project, each with their own bullet points"),
 });
 
+/*WhatWentWellProjectSectionSchema
+Defined schema for the project resports, section what went well?*/
+
+const WhatWentWellProjectSectionSchema = z.object({
+  items: z
+    .array(
+      z.string().min(1)
+        .describe("A specific, evidence-based statement describing what is going well in the project and its impact")
+    )
+    .max(10, "Exactly 10 bullet points are required")
+    .describe("Exactly 10 evidence-based bullet points describing positive progress, outcomes, or effective practices in the project"),
+});
 /*TeamImpactGroupSchema
 Defined schema for the team impact section in a team report.*/
 
@@ -97,6 +113,23 @@ Defined schema for any report about the last section: what can be improved?*/
 const WhatCanBeImprovedSectionSchema = z.object({
   title: z
     .literal("What can be improved")
+    .describe("Section focused on general improvement areas"),
+  items: z
+    .array(
+      z.string().min(1)
+        .describe("A specific, evidence-based improvement insight describing a gap and a realistic recommendation")
+    )
+    .max(5, "Exactly 5 bullet points are required")
+    .describe("Exactly 5 evidence-based bullet points describing key improvement areas and actionable recommendations"),
+});
+
+/*ValuesSectionSchema
+Defined schema for any report about the last section: what can be improved? based
+on values*/
+
+const ValuesSectionSchema = z.object({
+  title: z
+    .literal("CHANGE.ORG values")
     .describe("Section focused on improvement areas aligned with company values"),
   items: z
     .array(z.string().min(1)
@@ -107,17 +140,18 @@ const WhatCanBeImprovedSectionSchema = z.object({
     ),
 });
 
-
 const reportSchemas = {
   whatWentWellEmployee: WhatWentWellEmployeeSectionSchema,
   whatWentWellTeam: WhatWentWellTeamSectionSchema,
-  whatWentWellProject: WhatWentWellTeamSectionSchema,
+  whatWentWellProject: WhatWentWellProjectSectionSchema,
   teamImpact: TeamImpactGroupSchema,
-  whatCanBeImproved: WhatCanBeImprovedSectionSchema
+  whatCanBeImproved: WhatCanBeImprovedSectionSchema,
+  companyValues: ValuesSectionSchema,
 }
 
 
 //---------------------- AI Wrapper Functions ----------------------------
+//====================== Report Generation ===============================
 
 /*createOpenAI
 Creation of the openai object based on the given API key*/
@@ -160,6 +194,12 @@ export async function whatToImprove(sections, prompt, schema){
   return await generateReportSection(sections, prompt, schema);
 }
 
+/*companyValues(sections, prompt, schema)
+Auxiliar function to collect the report "CHANGE.org values" section*/
+
+export async function companyValues(sections, prompt, schema){
+  return await generateReportSection(sections, prompt, schema);
+}
 
 /*generateReportSection(body, prompt, schema)
 Function responsible for obtaining a section of the report based on the given
@@ -168,6 +208,8 @@ Main function all remaining functions are integrated to*/
 
 const generateReportSection = async function generateReportSection(body, prompt, schema) {
   let reportSchema = reportSchemas[schema];
+  console.log('BODY HERE: !!!!!!!!!!');
+  console.log(body);
 
   const buildMessages = (body, prompt) => ([
     { role: "user", content: "Context data:" },
@@ -179,9 +221,11 @@ const generateReportSection = async function generateReportSection(body, prompt,
     model: openai(MODEL),
     output: Output.object({schema: reportSchema}),
     system: SYSTEM_MESSAGE,
-    messages: buildMessages(body, prompt)
+    messages: buildMessages(body, prompt),
+    maxRetries: 0
   });
 
+  console.log(output);
   console.log(totalUsage);  
   return output
 };

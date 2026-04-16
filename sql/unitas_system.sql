@@ -997,143 +997,376 @@ CREATE TABLE `prompt` (
 
 INSERT INTO `prompt` (`prompt_id`, `name`, `description`,`schema`,`type`) VALUES
 ('b3cceb1b-507e-4989-8729-5e16e9bf314a', 'BeBetter', '
+Task:
 Analyze employee performance per project and identify impactful positive contributions.
+Strict Data Rules (MANDATORY):
+Use only the data explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT invent, estimate, infer, or assume any details (including numbers, percentages, timelines, comparisons, or context)
+If a required field or metric is missing, leave it empty or explicitly state: "No information provided"
+Do not introduce external benchmarks, assumptions, or “team averages” unless explicitly given
+If evidence is insufficient, do not generate the insight
 Guidelines:
-- Focus on actions with clear positive impact on project outcomes
-- Prioritize meaningful contributions (avoid trivial tasks)
-- Highlight efficiency, consistency, ownership, or initiative when evident
-- Compare with peers when useful to emphasize strengths
-- Detect cross-project collaboration and explicitly note when the employee contributed without being officially assigned
-Requirements:
-- Be specific and evidence-based
-- Each insight must link action → impact
-- Avoid vague or generic praise
-- Clearly indicate collaborator role when applicable
-Output:
-- Strictly follow the schema
-- No extra text
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
+Focus only on actions with clear, supported positive impact on project outcomes
+Prioritize meaningful contributions; ignore trivial or routine tasks unless impact is explicitly demonstrated
+Highlight efficiency, consistency, ownership, or initiative only when directly supported by input data
+Compare with peers only if peer data is explicitly available
+Detect cross-project collaboration and note it only when explicitly stated in the input
+Evidence Requirement:
+Every insight must strictly follow:
+action → evidence → impact
+“Evidence” must reference actual input data (e.g., task, event, record, or metric)
+If evidence is missing or unclear, do not generate the insight
+Missing Data Handling (CRITICAL):
+If any section lacks sufficient input data:
+Output: "No information provided"
+Do NOT infer or fill gaps
+If partial data exists:
+Include only supported elements
+Leave unsupported fields empty or mark them as "No information provided"
+Output Constraints:
+Strictly follow the required schema
+No extra text
+No generic praise
+No unsupported claims
+No inferred or assumed content
 ', 'whatWentWellEmployee', 'EMPLOYEE'),
 
 ('b9c2a462-9955-43a5-bc24-b650cc426599', 'BeBetter', '
-Analyze team-level project data and identify impactful positive contributions per employee.
+TStrict Data Rules (MANDATORY):
+Use only the data explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT invent, assume, or infer contributions, interactions, metrics, or context
+Do NOT create numbers, percentages, timelines, or comparisons unless explicitly present
+If a required field or detail is missing, leave it empty or explicitly state: "No information provided"
+Do not introduce external benchmarks or assumptions
+If insufficient data exists for an employee, do not fabricate outputs
+Scope:
+Analyze only the specified team
+Do not include employees or activities not explicitly present in the input
 Guidelines:
-- Focus only on the specified team
-- For each employee, extract 5 meaningful contributions with clear impact on team outcomes
-- Prioritize collaboration, reliability, initiative, and support to team efficiency or coordination
-- Consider how contributions complemented others when relevant
-Requirements:
-- Be specific and evidence-based
-- Each point must link action → team impact
-- Avoid vague or generic praise
-Output:
-- Group by employee
-- Exactly 5 bullet points per employee
-- Strictly follow the schema
-- No extra text
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
+Identify meaningful contributions with clear, supported impact on team outcomes
+Prioritize collaboration, reliability, initiative, and support for team efficiency or coordination only when explicitly evidenced
+Include cross-employee interactions only if directly present in the input data
+Avoid trivial, routine, or low-impact actions unless impact is explicitly demonstrated
+Evidence Requirement:
+Each point must strictly follow:
+action → evidence → team impact
+“Evidence” must reference actual input data (task, activity, record, or event)
+If evidence is missing, unclear, or indirect, do not generate the point
+Missing Data Handling (CRITICAL):
+If no sufficient data exists for an employee:
+Output: "No information provided"
+If partial data exists:
+Include only supported elements
+Leave unsupported fields empty or mark them as "No information provided"
+Do NOT reduce quality thresholds to fill gaps
+Output Constraints:
+Group strictly by employee
+No generic praise
+No unsupported claims
+No inferred or assumed content
+Strictly follow the schema
+No extra text
 ', 'whatWentWellTeam', 'TEAM'),
 
 ('585ce299-218f-4fcf-a47a-b6ae14db0e93','BeBetter', '
-Analyze the provided project data and identify what went well within the project, focusing on each employee’s contribution.
-Evaluate how each employee’s activities, goals, and achievements positively impacted the overall success, progress, or quality of the project.
+Task:
+Analyze the provided project data and identify what is going well in the project overall.
+Strict Data Rules (MANDATORY):
+Use only information explicitly present in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT introduce outcomes (e.g., improved efficiency, faster delivery, reduced risk) unless directly supported by explicit evidence
+Do NOT create metrics, trends, timelines, or comparisons unless explicitly provided
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
+Do not introduce external benchmarks, expectations, or assumptions
 Guidelines:
-- For each employee, identify 5 key positive contributions
-- Focus on how the employee’s work influenced project outcomes (delivery, quality, progress, efficiency)
-- Highlight contributions that solved problems, accelerated progress, or improved results
-- Emphasize how employees complemented each other through their roles, coordination, or sequencing of work
-- Consider dependencies and how individual efforts contributed to broader project success
-Requirements:
-- Be specific and evidence-based
-- Avoid generic praise or vague statements
-- Each bullet point must include:
-  (1) what the employee did
-  (2) how it positively impacted the project
-Output format:
-- Group results by employee
-- Each employee must have exactly 5 bullet points
-- Focus strictly on project-level impact (not just individual or team-level benefits)
-- Follow strictly the provided schema
-- Do not include any extra text'
-, 'whatWentWellTeam', 'PROJECT'),
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
+Identify positive patterns, progress, or outcomes only when clearly supported by multiple explicit data points or direct indicators
+Focus on project-level impact (delivery, quality, efficiency, coordination, risk reduction) only if directly evidenced in the input
+Highlight what is enabling progress or improving results strictly based on observed data
+Do not organize, group, or reference results by individual employees
+Avoid trivial observations unless their positive impact is explicitly demonstrated
+Evidence Requirement:
+Each bullet point must strictly include:
+What is happening (explicit data point or clearly supported pattern)
+Evidence (direct reference to input data: activity, result, or record)
+Project-level impact (only if directly supported by that evidence; otherwise state "No information provided")
+If evidence is weak, indirect, or missing, do not generate the bullet point
+Missing Data Handling (CRITICAL):
+If no sufficient data exists to support any insight:
+Output: "No information provided"
+If partial data exists:
+Include only supported elements
+Leave unsupported sections empty or mark them as "No information provided"
+Do NOT fill gaps or lower evidence standards to produce output
+Output Constraints:
+Do not group results
+Each bullet point must reflect project-level progress or outcomes
+Generate only high-confidence insights (omit weak or ambiguous ones)
+No generic statements or praise
+No unsupported claims
+No inferred or assumed content
+Strictly follow the provided schema
+No extra text
+', 'whatWentWellProject', 'PROJECT'),
 
 ('19b70127-c179-46c7-a754-6e4f7391187b', 'TeamImpact','
+Task:
 Analyze the team’s performance across projects and identify their most impactful contributions.
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create metrics, comparisons, timelines, or trends unless explicitly present
+Do NOT compare with other teams unless comparative data is explicitly provided
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
+Do not introduce external benchmarks or assumptions
 Guidelines:
-- Focus on high-impact contributions affecting delivery, quality, timelines, or coordination
-- Identify cross-project patterns (consistency, reliability, scalability, adaptability)
-- Include both direct (deliverables) and indirect (support, unblocking) impact
-- Highlight how team members’ efforts complement each other
-- Compare with other teams when useful to emphasize relative impact
-Requirements:
-- Be specific and evidence-based
-- Each insight must link team action → observable impact
-- Avoid vague or generic statements
-- Reflect cross-project contributions or justify project-specific focus
-Output:
-- Exactly 8 bullet points
-- Each tied to a project or clear cross-project contribution
-- Strictly follow the schema
-- No extra text
+If the input contains no goals, achievements, or activities:
+Return exactly:
+"No information provided"
+Focus only on high-impact contributions affecting delivery, quality, timelines, or coordination when directly supported by input data
+Identify cross-project patterns (consistency, reliability, scalability, adaptability) only if explicitly evidenced across multiple data points
+Include both direct (deliverables) and indirect (support, unblocking) impact only when clearly documented in the input
+Highlight how team members’ efforts complement each other only if interactions are explicitly present in the data
+Avoid vague, generic, or low-impact statements
+Evidence Requirement:
+Each insight must strictly follow:
+team action → evidence → observable impact
+“Evidence” must reference actual input data (task, activity, result, or record)
+If impact is not explicitly supported by the evidence, state: "No information provided"
+If evidence is missing, indirect, or unclear, do not generate the insight
+Missing Data Handling (CRITICAL):
+If insufficient data exists to support all required insights:
+Output fewer than 8 bullet points or output: "No information provided" if none are valid
+If partial data exists:
+Include only fully supported insights
+Leave unsupported elements empty or mark them as "No information provided"
+Do NOT fabricate or lower evidence standards to meet the bullet count
+Output Constraints:
+Maximum of 8 bullet points (do not force exactly 8 if data is insufficient)
+Each bullet must be tied to a specific project or a clearly supported cross-project contribution
+No generic statements or praise
+No unsupported claims
+No inferred or assumed content
+Strictly follow the provided schema
+No extra text
 ','teamImpact','TEAM'),
 
 ('b2b9d1dc-0294-4cc6-a7bc-7ccc7631ef05','Improve','
-Evaluate the employee’s “what went well” contributions against company values.
+Task:
+Evaluate the employee’s “what went well” contributions to identify areas for improvement based strictly on the available evidence.
+
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create metrics, comparisons, trends, or context unless explicitly present
+Do NOT introduce external standards, expectations, or benchmarks
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
 Guidelines:
-- For each value, identify evidence of alignment based on actions and impact
-- Include strong or partial alignment where applicable
-- Base insights only on observed behavior (no assumptions)
-- Reflect how actions demonstrate the intent of each value
-Requirements:
-- Use values exactly as defined
-- Be specific and evidence-based (reference prior contributions)
-- Each insight must link action → value → alignment explanation
-- Avoid vague or generic statements
-- Ensure balanced evaluation based on available evidence
-Output:
-- Exactly 5 bullet points (one per value)
-- Each must name the value and include its short label
-- Strictly follow the schema
-- No extra text
+Identify gaps, inconsistencies, or missing elements only when directly observable in the input data
+Focus on improvements that would increase impact, quality, or effectiveness based strictly on evidence
+Consider patterns only if supported by multiple explicit data points
+Avoid isolated or weak observations unless clearly supported
+Avoid vague, generic, or speculative statements
+Evidence Requirement:
+Each insight must strictly include:
+Observed gap or limitation (explicitly supported by input data)
+Evidence (reference to specific contribution, task, activity, or record)
+Actionable improvement (must logically follow from the evidence; if not possible, state "No information provided")
+If evidence is missing, unclear, or indirect, do not generate the insight
+Missing Data Handling (CRITICAL):
+If no sufficient evidence exists to identify improvement areas:
+Output: "No information provided"
+If partial data exists:
+Include only fully supported insights
+Leave unsupported elements empty or mark them as "No information provided"
+Do NOT infer gaps or fabricate improvement opportunities
+Output Constraints:
+Each bullet must reflect a clear improvement opportunity grounded in evidence
+No generic or high-level advice
+No unsupported claims
+No inferred or assumed content
+Do not reference company values
+Strictly follow the schema
+No extra text
 ','whatCanBeImproved','EMPLOYEE'),
 
 ('3a055d5f-b6c7-4f14-9645-b4922d971ff2','Improve','
-Evaluate the team’s “what went well” contributions against company values to identify gaps and improvement areas.
+Task:
+Evaluate the team’s “what went well” contributions to identify areas for improvement based strictly on the available evidence.
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create metrics, comparisons, trends, or context unless explicitly present
+Do NOT introduce external standards, benchmarks, or expectations
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
 Guidelines:
-- For each value, detect partial, inconsistent, or missing alignment based on team-level patterns
-- Focus on collective behavior across projects (not isolated actions)
-- Identify opportunities to improve impact through better alignment
-- Keep insights constructive and improvement-oriented
-Requirements:
-- Use values exactly as defined
-- Be specific and evidence-based (reference prior contributions)
-- Each insight must link gap → value → improvement direction
-- Avoid vague or generic statements
-- Ensure balanced evaluation based on evidence
-Output:
-- Exactly 5 bullet points (one per value)
-- Each must name the value and include its short label
-- Strictly follow the schema
-- No extra text
+Identify gaps, inconsistencies, or missing elements in team-level performance only when directly observable in the input data
+Focus on patterns across the team only if supported by multiple explicit data points
+Evaluate how team execution could improve impact, coordination, quality, or efficiency only when directly supported by evidence
+Avoid isolated, weak, or ambiguous observations
+Avoid vague, generic, or speculative statements
+Evidence Requirement:
+Each insight must strictly include:
+Observed team-level gap or limitation (explicitly supported by input data)
+Evidence (reference to specific contributions, activities, or records from the input)
+Actionable improvement (must logically follow from the evidence; if not possible, state "No information provided")
+If evidence is missing, unclear, or indirect, do not generate the insight
+Missing Data Handling (CRITICAL):
+If no sufficient evidence exists to identify improvement areas:
+Output: "No information provided"
+If partial data exists:
+Include only fully supported insights
+Leave unsupported elements empty or mark them as "No information provided"
+Do NOT infer gaps or fabricate improvement opportunities
+Output Constraints:
+Each item must reflect a clear team-level improvement opportunity grounded in evidence
+No generic or high-level advice
+No unsupported claims
+No inferred or assumed content
+Do not reference company values
+Strictly follow the schema
+No extra text
 ','whatCanBeImproved','TEAM'),
 
 ('831c0fc3-dac9-4264-975c-98f880766052','Improve','
-Evaluate the project’s “what went well” outcomes against company values.
+Task:
+Evaluate the project’s “what went well” outcomes to identify areas for improvement based strictly on the available evidence.
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create metrics, comparisons, trends, timelines, or context unless explicitly present
+Do NOT introduce external standards, benchmarks, or expectations
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
 Guidelines:
-- For each value, identify alignment based on project outcomes, team interactions, and delivery patterns
-- Focus on project-level impact across teams (not isolated actions)
-- Highlight alignment driven by collaboration, coordination, and execution quality
-- Base insights only on observed outcomes (no assumptions)
-Requirements:
-- Use values exactly as defined
-- Be specific and evidence-based (reference prior outcomes)
-- Each insight must link outcome → value → alignment explanation
-- Avoid vague or generic statements
-- Ensure balanced evaluation based on evidence
-Output:
-- Exactly 5 bullet points (one per value)
-- Each must name the value and include its short label
-- Strictly follow the schema
-- No extra text
-','whatCanBeImproved','PROJECT');
+Identify gaps, inconsistencies, or missing elements in project execution or outcomes only when directly observable in the input data
+Focus on project-level patterns across delivery, coordination, quality, and efficiency only if supported by multiple explicit data points
+Evaluate what could be improved to increase overall project impact only when directly supported by evidence
+Avoid isolated, weak, or ambiguous observations
+Avoid vague, generic, or speculative statements
+Evidence Requirement:
+Each insight must strictly include:
+Observed gap or limitation in the project (explicitly supported by input data)
+Evidence (reference to specific outcomes, activities, or records from the input)
+Actionable improvement (must logically follow from the evidence; if not possible, state "No information provided")
+If evidence is missing, unclear, or indirect, do not generate the insight
+Missing Data Handling (CRITICAL):
+If no sufficient evidence exists to identify improvement areas:
+Output: "No information provided"
+If partial data exists:
+Include only fully supported insights
+Leave unsupported elements empty or mark them as "No information provided"
+Do NOT infer gaps or fabricate improvement opportunities
+Output Constraints:
+Each item must reflect a clear project-level improvement opportunity grounded in evidence
+No generic or high-level advice
+No unsupported claims
+No inferred or assumed content
+Do not reference company values
+Strictly follow the schema
+No extra text
+','whatCanBeImproved','PROJECT'),
+
+('0583ff2e-8cf6-4881-8fdf-fece65dea388','Values','
+Task:
+Evaluate the employee’s “what went well” contributions against company values.
+
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create behaviors, impacts, metrics, or context unless explicitly present
+Use company values exactly as defined in the input (do not reinterpret or expand them)
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
+Guidelines:
+For each value, identify evidence of alignment only when directly supported by observed actions and outcomes in the input
+Include strong or partial alignment only if explicitly evidenced
+Reflect how actions demonstrate the intent of each value without adding interpretation beyond the provided definition
+Ensure balanced evaluation strictly based on available evidence
+Avoid vague, generic, or speculative statements
+Evidence Requirement:
+Each insight must strictly include:
+Action (explicitly observed contribution from the input)
+Value (use exact name and short label as provided)
+Alignment explanation (must directly connect the action to the value using only provided evidence; if not possible, state "No information provided")
+If no valid evidence exists for a value, output:
+Value: [value name + short label] → No information provided
+If evidence is missing, unclear, or indirect, do not infer alignment
+Missing Data Handling (CRITICAL):
+Always output exactly 5 bullet points (one per value)
+If a value has no supporting evidence:
+Output: "No information provided" for that value
+If partial evidence exists:
+Include only supported elements
+Mark unsupported parts as "No information provided"
+Do NOT fabricate alignment to satisfy completeness
+Output Constraints:
+Exactly 5 bullet points (one per value)
+Each must explicitly name the value and include its short label
+No generic praise
+No unsupported claims
+No inferred or assumed content
+Strictly follow the schema
+No extra text
+','companyValues','EMPLOYEE'),
+
+('5633c478-eb1e-4075-9465-5dbcf74c1b4b','Values','
+Task:
+Evaluate the team’s “what went well” contributions against company values to identify gaps and improvement areas.
+Strict Data Rules (MANDATORY):
+Use only information explicitly provided in the input
+Do NOT invent titles, subtitles, etc.
+Do NOT infer, assume, generalize, or extrapolate beyond the provided data
+Do NOT create behaviors, patterns, metrics, or context unless explicitly present
+Use company values exactly as defined in the input (do not reinterpret or expand them)
+If any required detail is missing, leave it empty or explicitly state: "No information provided"
+Guidelines:
+For each value, detect partial, inconsistent, or missing alignment only when directly supported by team-level patterns in the input data
+Focus on collective behavior across projects only if supported by multiple explicit data points
+Identify improvement opportunities only when gaps are clearly evidenced
+Keep insights constructive and improvement-oriented without speculation
+Avoid isolated, weak, or ambiguous observations
+Avoid vague, generic, or speculative statements
+Evidence Requirement:
+Each insight must strictly include:
+Observed gap (team-level limitation or inconsistency explicitly supported by input data)
+Value (use exact name and short label as provided)
+Evidence (reference to specific contributions, activities, or records from the input)
+Improvement direction (must logically follow from the evidence; if not possible, state "No information provided")
+If no valid evidence exists for a value, output:
+Value: [value name + short label] → No information provided
+If evidence is missing, unclear, or indirect, do not infer gaps or misalignment
+Missing Data Handling (CRITICAL):
+Always output exactly 5 bullet points (one per value)
+If a value has no supporting evidence:
+Output: "No information provided" for that value
+If partial evidence exists:
+Include only supported elements
+Mark unsupported parts as "No information provided"
+Do NOT fabricate gaps or improvement opportunities
+Output Constraints:
+Exactly 5 bullet points (one per value)
+Each must explicitly name the value and include its short label
+No generic statements
+No unsupported claims
+No inferred or assumed content
+Strictly follow the schema
+No extra text
+','companyValues','TEAM');
 
 -- --------------------------------------------------------
 

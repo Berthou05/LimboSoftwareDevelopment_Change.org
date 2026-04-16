@@ -26,7 +26,6 @@
       <% if (section.groups && section.groups.length) { %>
         <div class="mt-5 space-y-5">
           <% section.groups.forEach((group) => { %>
-            <div class="rounded-xl border border-brand-secondary/70 p-4">
               <h3 class="font-heading text-lg font-bold text-brand-text"><%= group.title %></h3>
 
               <% if (group.subgroups && group.subgroups.length) { %>
@@ -49,7 +48,6 @@
                   <% }) %>
                 </ul>
               <% } %>
-            </div>
           <% }) %>
         </div>
       <% } else if (section.items && section.items.length) { %>
