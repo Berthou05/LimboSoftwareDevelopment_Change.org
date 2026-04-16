@@ -9,6 +9,8 @@ const RolePrivilege = require('../../models/rolePrivilegeAssignment');
 const Privilege = require('../../models/privilege');
 const AccountRole = require('../../models/accountRoleAssignment');
 const Account = require('../../models/account');
+const Employee = require('../../models/employee');
+const resendService = require('../../utils/webServices/resendService');
 const req = require('express/lib/request');
 
 //------------ Auxiliar Functions -----------------
@@ -312,10 +314,34 @@ exports.createRole = (request, response, next)=>{
     })
 };
 
+const buildCreateAccountFormData = (formData = {}) => ({
+    fullName: formData.fullName || '',
+    email: formData.email || '',
+    slackUsername: formData.slackUsername || '',
+    roleId: formData.roleId || '',
+    image: formData.image || ''
+});
+
+const parseEmployeeNameParts = (fullName) => {
+    const trimmedName = String(fullName || '').trim();
+    const [names, ...lastnames] = trimmedName.split(/\s+/);
+
+    return {
+        fullName: trimmedName,
+        names: names || trimmedName,
+        lastnames: lastnames.join(' ') || ''
+    };
+};
+
+const getBaseUrl = (request) => `${request.protocol}://${request.get('host')}`;
+
 /*getCreateAccount
 Function responsible for rendering the create account page from admin accounts.*/
 
 exports.getCreateAccount = (request, response, next) => {
+    const storedFormData = buildCreateAccountFormData(request.session.createAccountFormData);
+    delete request.session.createAccountFormData;
+
     Role.fetchAll().then(([roles]) => {
         return response.render('pages/admin-createAccount', {
             csrfToken: request.csrfToken(),
@@ -325,13 +351,7 @@ exports.getCreateAccount = (request, response, next) => {
                 id: role.role_id,
                 name: role.name
             })),
-            formData: {
-                fullName: '',
-                email: '',
-                slackUsername: '',
-                roleId: '',
-                image: ''
-            }
+            formData: storedFormData
         });
     }).catch((error) => {
         console.log(error);
@@ -341,11 +361,80 @@ exports.getCreateAccount = (request, response, next) => {
 };
 
 /*postCreateAccount
-Temporary placeholder while account creation backend is pending implementation.*/
+Implementation for creating an account and sending a notification email.*/
 
-exports.postCreateAccount = (request, response, next) => {
-    request.session.error = 'Account creation backend is not implemented yet.';
-    return response.redirect('/admin/accounts/create');
+exports.postCreateAccount = async (request, response, next) => {
+    const formData = {
+        fullName: String(request.body.fullName || '').trim(),
+        email: String(request.body.email || '').trim(),
+        password: String(request.body.password || ''),
+        slackUsername: String(request.body.slackUsername || '').trim(),
+        roleId: String(request.body.roleId || '').trim(),
+        image: String(request.body.image || '').trim()
+    };
+
+    request.session.createAccountFormData = buildCreateAccountFormData(formData);
+
+    if (!formData.fullName || !formData.email || !formData.password || !formData.roleId) {
+        request.session.error = 'Full name, email, password, and role are required to create an account.';
+        return response.redirect('/admin/accounts/create');
+    }
+
+    if (formData.password.length < 6) {
+        request.session.error = 'Password must be at least 6 characters long.';
+        return response.redirect('/admin/accounts/create');
+    }
+
+    try {
+        const [existingEmailRows] = await Account.fetchByEmail(formData.email);
+        if (existingEmailRows.length > 0) {
+            request.session.error = 'An account with that email already exists.';
+            return response.redirect('/admin/accounts/create');
+        }
+
+        if (formData.slackUsername) {
+            const [existingSlackRows] = await Account.findBySlackUsername(formData.slackUsername);
+            if (existingSlackRows.length > 0) {
+                request.session.error = 'An account with that Slack username already exists.';
+                return response.redirect('/admin/accounts/create');
+            }
+        }
+
+        const employeeParts = parseEmployeeNameParts(formData.fullName);
+        const employee = new Employee(employeeParts.fullName, employeeParts.names, employeeParts.lastnames);
+        await employee.save();
+
+        const [employeeRows] = await Employee.getEmployeeIdByFullname(employeeParts.fullName);
+        const employeeId = employeeRows[0]?.employee_id;
+
+        if (!employeeId) {
+            throw new Error('Unable to determine the newly created employee id.');
+        }
+
+        const account = new Account(employeeId, formData.email, formData.password, formData.slackUsername, formData.image || null);
+        await account.save();
+
+        const [insertedAccountRows] = await Account.getAccountIdByEmailSlack(formData.email, formData.slackUsername);
+        const accountId = insertedAccountRows[0]?.account_id;
+
+        if (!accountId) {
+            throw new Error('Unable to determine the newly created account id.');
+        }
+
+        const accountRole = new AccountRole(accountId, formData.roleId);
+        await accountRole.save();
+
+        const loginUrl = `${getBaseUrl(request)}/`;
+        await resendService.sendAccountCreatedEmail(formData.email, formData.fullName, loginUrl);
+
+        delete request.session.createAccountFormData;
+        request.session.success = 'Account created successfully and a notification email has been sent.';
+        return response.redirect('/admin/accounts');
+    } catch (error) {
+        console.log(error);
+        request.session.error = 'Could not create the account right now. Please try again later.';
+        return response.redirect('/admin/accounts/create');
+    }
 };
 
 /*deleteAccount
