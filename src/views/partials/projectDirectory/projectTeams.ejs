@@ -16,6 +16,7 @@
                 <p class="text-sm text-brand-text/70">No teams assigned.</p>
             <% } %>
             <% teamsDetailed.forEach((team) => { %>
+                <% const removePopupId = `project-remove-team-${project.id || project.project_id}-${team.id}`; %>
                 <div class="group flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50">
                     <a href="/teams/<%= team.id %>" class="flex min-w-0 flex-1 items-center gap-2">
                         <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
@@ -33,13 +34,27 @@
                             <% } %>
                         </div>
                     </a>
-                    <form class="js-inline-submit ml-2" action="/projects/<%= project.id || project.project_id %>/teams/<%= team.id %>/remove" method="POST" data-error-message="Failed to remove team.">
-                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                        <button type="submit" class="rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from project">
-                            Remove
-                        </button>
-                    </form>
+                    <button
+                        type="button"
+                        data-popup-open="<%= removePopupId %>"
+                        class="ml-2 rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100"
+                        title="Remove from project"
+                    >
+                        Remove
+                    </button>
                 </div>
+                <%- include('../shared/actionPopup', {
+                    popupId: removePopupId,
+                    popupTitle: 'Remove Project Team',
+                    popupDescription: `Confirm if you want to remove ${team.name || 'this team'} from this project.`,
+                    popupAction: `/projects/${project.id || project.project_id}/teams/${team.id}/remove`,
+                    popupMethod: 'POST',
+                    popupSubmitLabel: 'Remove',
+                    popupSubmitTone: 'danger',
+                    popupErrorMessage: 'Failed to remove team.',
+                    csrfToken,
+                    popupFields: [],
+                }) %>
             <% }) %>
         </div>
 

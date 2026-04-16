@@ -48,12 +48,15 @@
                             </button>
                         <% } %>
                         <% if (canManageMembers && member.id !== projectLeadId) { %>
-                            <form class="js-inline-submit remove-member-form" action="/projects/<%= project.id || project.project_id %>/members/<%= member.id %>/remove" method="POST" data-error-message="Failed to remove member.">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button type="submit" class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100" title="Remove from project">
-                                    Remove
-                                </button>
-                            </form>
+                            <% const removePopupId = `project-remove-member-${project.id || project.project_id}-${member.id}`; %>
+                            <button
+                                type="button"
+                                data-popup-open="<%= removePopupId %>"
+                                class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100"
+                                title="Remove from project"
+                            >
+                                Remove
+                            </button>
                         <% } %>
                     </div>
                 </div>
@@ -77,6 +80,21 @@
                                 placeholder: 'e.g. Backend Lead, QA Reviewer, UX Support',
                             },
                         ],
+                    }) %>
+                <% } %>
+                <% if (canManageMembers && member.id !== projectLeadId) { %>
+                    <% const removePopupId = `project-remove-member-${project.id || project.project_id}-${member.id}`; %>
+                    <%- include('../shared/actionPopup', {
+                        popupId: removePopupId,
+                        popupTitle: 'Remove Project Member',
+                        popupDescription: `Confirm if you want to remove ${member.fullName || 'this member'} from this project.`,
+                        popupAction: `/projects/${project.id || project.project_id}/members/${member.id}/remove`,
+                        popupMethod: 'POST',
+                        popupSubmitLabel: 'Remove',
+                        popupSubmitTone: 'danger',
+                        popupErrorMessage: 'Failed to remove member.',
+                        csrfToken,
+                        popupFields: [],
                     }) %>
                 <% } %>
             <% }) %>
