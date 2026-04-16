@@ -180,19 +180,12 @@ module.exports = class Account {
     }
 
     static fetchByEmailAndResetToken(email, reset_token_hash) {
-        const queryParts = [
-            `SELECT account_id, email, reset_token_expires_at`
-            , `FROM account`
-            , `WHERE reset_token_hash = ?`
-        ];
+        const sql = email
+            ? `SELECT account_id, email, reset_token_expires_at FROM account WHERE email = ? AND reset_token_hash = ?`
+            : `SELECT account_id, email, reset_token_expires_at FROM account WHERE reset_token_hash = ?`;
+        const params = email ? [email, reset_token_hash] : [reset_token_hash];
 
-        const params = [reset_token_hash];
-        if (email) {
-            queryParts.splice(2, 0, `WHERE email = ? AND `);
-            params.unshift(email);
-        }
-
-        return executeWithResetColumns(() => db.execute(queryParts.join(' '), params));
+        return executeWithResetColumns(() => db.execute(sql, params));
     }
 
     static clearResetToken(account_id) {

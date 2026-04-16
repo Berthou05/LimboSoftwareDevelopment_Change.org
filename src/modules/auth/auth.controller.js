@@ -341,9 +341,9 @@ exports.postResetConfirm = (request, response, next) => {
             }
 
             const account = accounts[0];
-            const expiresAt = new Date(account.reset_token_expires_at);
+            const expiresAt = account.reset_token_expires_at ? new Date(account.reset_token_expires_at) : null;
 
-            if (expiresAt < new Date()) {
+            if (expiresAt && expiresAt < new Date()) {
                 return Account.clearResetToken(account.account_id)
                     .then(() => {
                         request.session.resetEmail = null;

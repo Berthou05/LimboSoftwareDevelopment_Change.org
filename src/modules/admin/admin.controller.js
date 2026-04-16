@@ -441,12 +441,7 @@ exports.postCreateAccount = async (request, response, next) => {
         const accountRole = new AccountRole(accountId, formData.roleId);
         await accountRole.save();
 
-        const resetToken = createResetToken();
-        const resetTokenHash = hashResetToken(resetToken);
-        const resetExpiration = getResetExpiration();
-        await Account.saveResetToken(accountId, resetTokenHash, resetExpiration);
-
-        const resetUrl = `${getBaseUrl(request)}/reset/confirm?token=${resetToken}`;
+        const resetUrl = `${getBaseUrl(request)}/reset`;
         await resendService.sendAccountCreatedEmail(formData.email, formData.fullName, resetUrl);
 
         delete request.session.createAccountFormData;

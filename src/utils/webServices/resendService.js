@@ -44,8 +44,8 @@ const sendAccountCreatedEmail = async function sendAccountCreatedEmail(email, fu
         html: `
             <p>Hello ${fullName || 'there'},</p>
             <p>Your Unitas account has been created successfully.</p>
-            <p>Please reset your password using this link: <a href="${resetUrl}">Reset Password</a></p>
-            <p>This link expires in 8 minutes.</p>
+            <p>To set your password, please visit <a href="${resetUrl}">Reset Password</a>.</p>
+            <p>Then enter your email and follow the instructions on the page.</p>
             <p>If you did not request this account or need assistance, please contact your administrator.</p>
         `,
     });
