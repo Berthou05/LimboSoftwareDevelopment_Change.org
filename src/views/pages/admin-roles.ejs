@@ -11,6 +11,7 @@
     <h2 class="font-heading text-xl font-bold">Roles Administration</h2>
     <button
       type="button"
+      data-popup-open="add-role"
       class="rounded-xl border-2 border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:border-brand-accent hover:bg-brand-accent">
       Create Role
     </button>
@@ -85,5 +86,18 @@
   }) %>
 <% }) %>
 </section>
+
+<%- include('../partials/shared/actionPopup', {
+    dataAction: 'add-role',
+    popupId: 'add-role',
+    popupTitle: 'Add Role',
+    popupDescription: 'Register a new role for the system.',
+    popupAction: '/admin/roles/add',
+    popupMethod: 'POST',
+    csrfToken,
+    popupFields: [
+        { name: 'name', label: 'Role name', value: '', placeholder: 'Supervisor' }
+    ],
+}) %>
 
 <script src="/js/adminRoles.js"></script>
