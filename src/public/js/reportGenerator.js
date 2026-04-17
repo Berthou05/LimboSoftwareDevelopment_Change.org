@@ -38,6 +38,9 @@ const formatReportPeriod = function formatReportPeriod(startValue, endValue) {
     return `${startDate.toLocaleDateString('en-US', formatter)} - ${endDate.toLocaleDateString('en-US', formatter)}`;
 };
 
+/*setGeneratorStatus(statusNode, message, tone = 'neutral')
+Function responsible for changing the generator status of the card*/
+
 const setGeneratorStatus = function setGeneratorStatus(statusNode, message, tone = 'neutral') {
     if (!statusNode) {
         return;
@@ -58,6 +61,8 @@ const setGeneratorStatus = function setGeneratorStatus(statusNode, message, tone
 
     statusNode.classList.add('border-brand-secondary', 'bg-brand-bg/40', 'text-brand-text/70');
 };
+
+
 
 const updateLatestReportCard = function updateLatestReportCard(form, payload) {
     const generatorCard = form.closest('[data-report-generator-card]');
@@ -88,6 +93,7 @@ const updateLatestReportCard = function updateLatestReportCard(form, payload) {
     }
 };
 
+
 const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
     if (form.dataset.reportGeneratorMode !== 'ajax') {
         return;
@@ -108,7 +114,6 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
         }
 
         event.preventDefault();
-
         const formData = new FormData(form);
         const body = new URLSearchParams();
 
@@ -119,6 +124,12 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
         submitButton.disabled = true;
         submitButton.textContent = 'Generating...';
         setGeneratorStatus(statusNode, 'Generating report...');
+        const generatorCard = form.closest('[data-report-generator-card]');
+        const latestReportContainer = generatorCard?.querySelector('[data-latest-report-container]');
+
+        if (latestReportContainer) {
+            latestReportContainer.classList.add('hidden');
+        }
 
         try {
             const response = await fetch(form.action, {
@@ -140,6 +151,7 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
             }
 
             if (!response.ok) {
+                submitButton.textContent = defaultButtonLabel;
                 setGeneratorStatus(
                     statusNode,
                     payload?.message || 'The report could not be generated. Please try again.',
@@ -149,7 +161,16 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
             }
 
             updateLatestReportCard(form, payload);
-            setGeneratorStatus(statusNode, 'Report generated successfully.');
+            submitButton.textContent = 'Opening...';
+            setGeneratorStatus(statusNode, 'Opening report...');
+
+            setTimeout(() => {
+                const redirectToField = form.querySelector('[name="redirectTo"]');
+                const redirectTo = redirectToField ? redirectToField.value : '/home';
+
+                window.location.href = `/reports/view/${String(payload.type).toLowerCase()}/${payload.id}?redirectTo=${encodeURIComponent(redirectTo)}`;
+            }, 600);
+
         } catch (error) {
             setGeneratorStatus(statusNode, 'The report could not be generated. Please try again.', 'error');
         } finally {
@@ -158,6 +179,9 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
         }
     });
 };
+
+/*initFullReportSubjectSearch(form)
+Funcion for loading the options in the Full Page Report Generator*/
 
 const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
     const typeField = form.querySelector('.report-type');

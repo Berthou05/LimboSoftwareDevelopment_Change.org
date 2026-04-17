@@ -549,12 +549,14 @@ exports.generateReport = async (request, response, next)=>{
                     type: reports[0].content_type
                 };
 
-                if (request.xhr || request.headers.accept?.includes('json')) {
-                    return response.status(200).json(responsePayload);
+                if (wantsJson) {
+                    return response.status(200).json({
+                        success: true,
+                        ...responsePayload
+                    });
                 }
-                else{
-                    return response.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}?redirectTo=${encodeURIComponent(route)}`);
-                }
+
+                return response.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}?redirectTo=${encodeURIComponent(route)}`);
 
             }).catch((error)=>{
                 console.log(error);
