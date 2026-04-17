@@ -1,6 +1,7 @@
 @import "tailwindcss";
-
-@import "flowbite";
+@import "flowbite/src/themes/default";
+@plugin "flowbite/plugin";
+@source "../../../node_modules/flowbite";
 
 /* Hide browser-native password reveal button to avoid duplicating the custom toggle */
 input[type="password"]::-ms-reveal,
