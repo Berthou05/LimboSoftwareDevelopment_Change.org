@@ -1,53 +1,51 @@
-<div class="mx-auto max-w-7xl p-6">
-    <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
-    <% const homeEmployeeName =
-        (typeof employee !== 'undefined' && employee && employee.names)
-        || (typeof user !== 'undefined' && user && user.username)
-        || 'Usuario'; %>
-    <%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
-    <% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
-    <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
-    <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
-    <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
-    <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
-    <% const homeLatestActivitySections = typeof latestActivitySections !== 'undefined' ? latestActivitySections : []; %>
-    <% const homeTeamActivitySections = typeof teamActivitySections !== 'undefined' ? teamActivitySections : []; %>
-    <% const homeProjectPanels = typeof projectPanels !== 'undefined' ? projectPanels : []; %>
-    <% const homeActivityProjects = typeof activityProjects !== 'undefined' ? activityProjects : []; %>
-    <% const homeProjectRows = typeof projectRows !== 'undefined' ? projectRows : []; %>
-    <% const homeSelectedActivityProjectId = typeof selectedActivityProjectId !== 'undefined' ? selectedActivityProjectId : ''; %>
-    <% const homeActivityFilter = typeof activityFilter !== 'undefined' ? activityFilter : { preset: 'all', isFiltered: false }; %>
-    <% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
+<% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
+<% const homeEmployeeName =
+(typeof employee !== 'undefined' && employee && employee.names)
+|| (typeof user !== 'undefined' && user && user.username)
+|| 'Usuario'; %>
+<%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
+<% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
+<% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+<% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
+<% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
+<% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+<% const homeLatestActivitySections = typeof latestActivitySections !== 'undefined' ? latestActivitySections : []; %>
+<% const homeTeamActivitySections = typeof teamActivitySections !== 'undefined' ? teamActivitySections : []; %>
+<% const homeProjectPanels = typeof projectPanels !== 'undefined' ? projectPanels : []; %>
+<% const homeActivityProjects = typeof activityProjects !== 'undefined' ? activityProjects : []; %>
+<% const homeProjectRows = typeof projectRows !== 'undefined' ? projectRows : []; %>
+<% const homeSelectedActivityProjectId = typeof selectedActivityProjectId !== 'undefined' ? selectedActivityProjectId : ''; %>
+<% const homeActivityFilter = typeof activityFilter !== 'undefined' ? activityFilter : { preset: 'all', isFiltered: false }; %>
+<% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
 
+<div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
     <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
-    <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
-        <section class="space-y-4 sm:space-y-6 mb-4">
-            <%- include('../partials/reportGenerator/reportGenerator', {
-                layout: 'full',
-                redirectTo: '/home',
-                defaultReportType: 'EMPLOYEE',
-                defaultSubjectId: '',
-                reportSubjects: homeReportSubjects,
-                latestReport: null,
-                quickReport: '',
-                csrfToken: homeCsrfToken
-            }) %>
+    <section class="space-y-4 sm:space-y-6">
+        <%- include('../partials/reportGenerator/reportGenerator', {
+            layout: 'full',
+            redirectTo: '/home',
+            defaultReportType: 'EMPLOYEE',
+            defaultSubjectId: '',
+            reportSubjects: homeReportSubjects,
+            latestReport: null,
+            quickReport: '',
+            csrfToken: homeCsrfToken
+        }) %>
 
-            <%- include('../partials/HOME/latestActivity', {
-                latestActivitySections: homeLatestActivitySections,
-                activityProjects: homeActivityProjects,
-                projectRows: homeProjectRows,
-                selectedActivityProjectId: homeSelectedActivityProjectId,
-                activityFilter: homeActivityFilter,
-                activityError: homeActivityError
-            }) %>
-        </section>
-        
-        <section class="space-y-6 sm:space-y-6">
-            <%- include('../partials/HOME/teamActivity', { teamActivitySections: homeTeamActivitySections }) %>
-            <%- include('../partials/HOME/projectsPanel', { projectPanels: homeProjectPanels }) %>
-        </section>
-    </div>
+        <%- include('../partials/HOME/latestActivity', {
+            latestActivitySections: homeLatestActivitySections,
+            activityProjects: homeActivityProjects,
+            projectRows: homeProjectRows,
+            selectedActivityProjectId: homeSelectedActivityProjectId,
+            activityFilter: homeActivityFilter,
+            activityError: homeActivityError
+        }) %>
+    </section>
+    
+    <section class="space-y-6">
+        <%- include('../partials/HOME/teamActivity', { teamActivitySections: homeTeamActivitySections }) %>
+        <%- include('../partials/HOME/projectsPanel', { projectPanels: homeProjectPanels }) %>
+    </section>
 </div>
 
 <script src="/js/dateRangePicker.js"></script>
