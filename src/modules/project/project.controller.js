@@ -983,6 +983,12 @@ exports.removeProjectTeam = (request, response, next) => {
 exports.joinProject = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
+    const role = resolveProjectMemberRole(request.body.role);
+
+    if (request.body.role && !role) {
+        request.session.error = `Provide a role of up to ${PROJECT_MEMBER_ROLE_MAX_LENGTH} characters.`;
+        return response.redirect(`/projects/${projectId}`);
+    }
 
     Project.findById(projectId).then(([projectRows]) => {
         if (!projectRows.length) {
@@ -1002,7 +1008,12 @@ exports.joinProject = (request, response, next) => {
                     return response.redirect(`/projects/${projectId}`);
                 }
 
-                return Collaboration.joinProject(projectId, employeeId).then(() => {
+                return Collaboration.joinProject(
+                    projectId,
+                    employeeId,
+                    'Joined from project detail page.',
+                    role || 'EMPLOYEE',
+                ).then(() => {
                     request.session.success = `You joined ${projectRows[0].name || 'the project'}.`;
                     return response.redirect(`/projects/${projectId}`);
                 });
@@ -1051,6 +1062,12 @@ exports.leaveProject = (request, response, next) => {
 exports.toggleProjectMembership = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
+    const role = resolveProjectMemberRole(request.body.role);
+
+    if (request.body.role && !role) {
+        request.session.error = `Provide a role of up to ${PROJECT_MEMBER_ROLE_MAX_LENGTH} characters.`;
+        return response.redirect(`/projects/${projectId}`);
+    }
 
     Project.findById(projectId)
         .then(([projectRows]) => {
@@ -1068,7 +1085,12 @@ exports.toggleProjectMembership = (request, response, next) => {
                         return Collaboration.leaveProject(projectId, employeeId);
                     }
 
-                    return Collaboration.joinProject(projectId, employeeId);
+                    return Collaboration.joinProject(
+                        projectId,
+                        employeeId,
+                        'Joined from project detail page.',
+                        role || 'EMPLOYEE',
+                    );
                 })
                 .then(() => {
                     return response.redirect(`/projects/${projectId}`);

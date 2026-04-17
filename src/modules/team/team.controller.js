@@ -819,6 +819,7 @@ exports.toggleTeamMembership = (request, response, next) => {
     const targetEmployeeId = isAddMemberRequest
         ? request.body.employeeId
         : request.session.employeeId;
+    const selectedRole = resolveTeamMemberRole(request.body.role);
     let flashType = '';
     let flashMessage = '';
 
@@ -826,6 +827,11 @@ exports.toggleTeamMembership = (request, response, next) => {
         request.session.error = isAddMemberRequest
             ? 'Select a valid employee to add to the team.'
             : 'You must be logged in to update team membership.';
+        return response.redirect(`/teams/${teamId}`);
+    }
+
+    if (request.body.role && !selectedRole) {
+        request.session.error = 'Select a valid team role for the member.';
         return response.redirect(`/teams/${teamId}`);
     }
 
@@ -838,7 +844,12 @@ exports.toggleTeamMembership = (request, response, next) => {
                 flashMessage = isAddMemberRequest
                     ? 'Member added to the team.'
                     : 'You joined the team.';
-                return EmployeeTeamMembership.join(targetEmployeeId, teamId);
+                return EmployeeTeamMembership.join(
+                    targetEmployeeId,
+                    teamId,
+                    new Date(),
+                    selectedRole || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                );
             }
 
             if (membership.left_at) {
@@ -849,7 +860,7 @@ exports.toggleTeamMembership = (request, response, next) => {
                 return EmployeeTeamMembership.update(targetEmployeeId, teamId, {
                     joined_at: new Date(),
                     left_at: null,
-                    role: membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+                    role: selectedRole || membership.role || EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
                 });
             }
 

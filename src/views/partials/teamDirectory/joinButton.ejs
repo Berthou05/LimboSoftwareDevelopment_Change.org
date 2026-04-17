@@ -1,12 +1,47 @@
 <%# Leave/Join Team %>
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <form action="/teams/<%= team.id %>/toggle-membership" method="POST">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <% if (isMember) { %>
+        <form action="/teams/<%= team.id %>/toggle-membership" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button
+                type="submit"
+                class="app-cta-button app-cta-button--neutral w-full"
+            >
+                Leave Team
+            </button>
+        </form>
+    <% } else { %>
         <button
-            type="submit"
-            class="app-cta-button w-full <%= isMember ? 'app-cta-button--neutral' : 'app-cta-button--highlight' %>"
+            type="button"
+            data-popup-open="join-team-<%= team.id %>"
+            class="app-cta-button app-cta-button--highlight w-full"
         >
-            <%= isMember ? 'Leave Team' : 'Join Team' %>
+            Join Team
         </button>
-    </form>
+    <% } %>
 </div>
+
+<% if (!isMember) { %>
+    <%- include('../shared/actionPopup', {
+        popupId: 'join-team-' + team.id,
+        popupTitle: 'Join Team',
+        popupDescription: 'Select the role to use when joining this team.',
+        popupAction: '/teams/' + team.id + '/toggle-membership',
+        popupMethod: 'POST',
+        popupSubmitLabel: 'Join',
+        popupErrorMessage: 'Failed to join team.',
+        csrfToken,
+        popupFields: [
+            {
+                name: 'role',
+                label: 'Role',
+                type: 'select',
+                value: 'EMPLOYEE',
+                options: [
+                    { value: 'EMPLOYEE', label: 'EMPLOYEE' },
+                    { value: 'LEAD', label: 'LEAD' },
+                ],
+            },
+        ],
+    }) %>
+<% } %>
