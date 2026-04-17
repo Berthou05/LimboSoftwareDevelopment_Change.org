@@ -226,9 +226,19 @@ module.exports = class Team {
         // TODO: Implement database query to fetch teams by responsible employee
     }
 
-    // Update team
-    static update(team_id, updateData) {
-        // TODO: Implement database update logic
+    /*update(team_id, name, description, image)
+    Function responsible for updating the information shown in the team details card.*/
+
+    static update(team_id, name, description, image) {
+        return db.execute(
+            `UPDATE team
+            SET
+                name = ?,
+                description = ?,
+                image = ?
+            WHERE team_id = ?`,
+            [name, description, image, team_id],
+        );
     }
 
     // Delete team

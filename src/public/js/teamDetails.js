@@ -235,9 +235,114 @@ const submitDeleteProjectForm = async function submitDeleteProjectForm(form) {
     window.alert(payload?.error || form.dataset.errorMessage || 'The project could not be deleted right now.');
 };
 
+const initializeTeamImageEditor = function initializeTeamImageEditor() {
+    const fileInput = document.getElementById('teamImageFile');
+    const filenameLabel = document.getElementById('teamImageFilename');
+    const preview = document.getElementById('teamImagePreview');
+    const currentImageInput = document.getElementById('teamImageValue');
+    const menuButton = document.getElementById('teamImageMenuButton');
+    const menu = document.getElementById('teamImageMenu');
+    const uploadButton = document.getElementById('teamImageUploadButton');
+    const removeButton = document.getElementById('teamImageRemoveButton');
+
+    const closeImageMenu = function closeImageMenu() {
+        if (menu) {
+            menu.classList.add('hidden');
+        }
+
+        if (menuButton) {
+            menuButton.setAttribute('aria-expanded', 'false');
+        }
+    };
+
+    const openImageMenu = function openImageMenu() {
+        if (menu) {
+            menu.classList.remove('hidden');
+        }
+
+        if (menuButton) {
+            menuButton.setAttribute('aria-expanded', 'true');
+        }
+    };
+
+    if (fileInput && preview) {
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files?.[0];
+
+            if (!file) {
+                if (filenameLabel) {
+                    filenameLabel.textContent = 'No file selected';
+                }
+                return;
+            }
+
+            if (currentImageInput) {
+                currentImageInput.value = '';
+            }
+
+            const previewUrl = URL.createObjectURL(file);
+
+            preview.onload = () => URL.revokeObjectURL(previewUrl);
+            preview.src = previewUrl;
+
+            if (filenameLabel) {
+                filenameLabel.textContent = file.name;
+            }
+        });
+    }
+
+    if (menuButton && menu) {
+        menuButton.addEventListener('click', (event) => {
+            event.stopPropagation();
+
+            if (menu.classList.contains('hidden')) {
+                openImageMenu();
+                return;
+            }
+
+            closeImageMenu();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!menu.contains(event.target) && !menuButton.contains(event.target)) {
+                closeImageMenu();
+            }
+        });
+    }
+
+    if (uploadButton && fileInput) {
+        uploadButton.addEventListener('click', () => {
+            fileInput.click();
+            closeImageMenu();
+        });
+    }
+
+    if (removeButton && preview) {
+        removeButton.addEventListener('click', () => {
+            const defaultImage = preview.dataset.defaultImage || '';
+
+            if (fileInput) {
+                fileInput.value = '';
+            }
+
+            if (currentImageInput) {
+                currentImageInput.value = '';
+            }
+
+            if (filenameLabel) {
+                filenameLabel.textContent = 'No file selected';
+            }
+
+            preview.src = defaultImage;
+            closeImageMenu();
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeInlinePickers();
     initializeInlineSubmitForms();
     initializeDeleteTeamForms();
     initializeDeleteProjectForms();
+    initializeTeamImageEditor();
 });

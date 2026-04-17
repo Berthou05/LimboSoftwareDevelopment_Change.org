@@ -420,20 +420,33 @@ exports.generateReport = async (request, response, next)=>{
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     const reportType = normalizeReportType(type);
+    const wantsJson = request.xhr || request.headers.accept?.includes('json');
+    const respondWithError = function respondWithError(statusCode, message) {
+        if (wantsJson) {
+            return response.status(statusCode).json({
+                success: false,
+                message,
+            });
+        }
+
+        request.session.error = message;
+        return response.redirect(route);
+    };
 
     if (!type || !id || !start_date || !end_date) {
-        request.session.error = 'Complete the report type, subject, and date range before generating a report.';
-        return response.redirect(route);
+        return respondWithError(400, 'Complete the report type, subject, and date range before generating a report.');
+    }
+
+    if (!reportType) {
+        return respondWithError(400, 'Select a valid report type before generating a report.');
     }
 
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-        request.session.error = 'Select a valid report date range.';
-        return response.redirect(route);
+        return respondWithError(400, 'Select a valid report date range.');
     }
 
     if (startDate.getTime() > endDate.getTime()) {
-        request.session.error = 'The start date must be before the end date.';
-        return response.redirect(route);
+        return respondWithError(400, 'The start date must be before the end date.');
     }
 
     //Context + Data Obtention
@@ -540,7 +553,7 @@ exports.generateReport = async (request, response, next)=>{
                     return response.status(200).json(responsePayload);
                 }
                 else{
-                    return res.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}`);
+                    return response.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}?redirectTo=${encodeURIComponent(route)}`);
                 }
 
             }).catch((error)=>{

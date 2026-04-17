@@ -59,8 +59,6 @@
   : null;
 %>
 
-<div id="flash-container"></div>
-
 <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel" data-report-generator-card>
   <% if (isFullLayout) { %>
     <%# ===================== FULL LAYOUT (Home page - Primary action module) ===================== %>
@@ -123,11 +121,11 @@
         <div class="relative">
           <span class="mb-2 block text-sm font-semibold text-brand-text/70">Date Range</span>
           <div data-date-trigger class="grid cursor-pointer gap-3 sm:grid-cols-2">
-            <div class="px-4 py-3">
+            <div class="rounded-xl border border-brand-secondary bg-white px-4 py-3">
               <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">Start Date</p>
               <input data-start-display type="text" readonly class="mt-1 w-full appearance-none border-none bg-transparent p-0 text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
             </div>
-            <div class="px-4 py-3">
+            <div class="rounded-xl border border-brand-secondary bg-white px-4 py-3">
               <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">End Date</p>
               <input data-end-display type="text" readonly class="mt-1 w-full appearance-none border-none bg-transparent p-0 text-base font-bold text-brand-text outline-none cursor-pointer" value="" />
             </div>

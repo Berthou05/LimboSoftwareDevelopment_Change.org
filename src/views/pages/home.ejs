@@ -1,52 +1,54 @@
-        <div class="mx-auto max-w-7xl p-6">
-            <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
-            <% const homeEmployeeName =
-                (typeof employee !== 'undefined' && employee && employee.names)
-                || (typeof user !== 'undefined' && user && user.username)
-                || 'Usuario'; %>
-            <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
-            <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
-            <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
-            <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
-            <div class="mb-8 flex items-center gap-4 rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
-                <div class="h-14 w-14 overflow-hidden rounded-full border-2 border-brand-primary/20 bg-brand-secondary/30">
-                    <img src="<%= homeAccountImage %>" alt="Profile" class="h-full w-full object-cover">
-                </div>
-                <div>
-                    <h1 class="font-heading text-2xl font-bold text-brand-text">Welcome, <%= homeEmployeeName %></h1>
-                    <p class="text-sm text-brand-text/60">Aquí tienes un resumen de lo que sucede hoy.</p>
-                </div>
-            </div>
+<% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
+<% const homeEmployeeName =
+(typeof employee !== 'undefined' && employee && employee.names)
+|| (typeof user !== 'undefined' && user && user.username)
+|| 'Usuario'; %>
+<%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
+<% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
+<% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+<% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
+<% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
+<% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+<% const homeLatestActivitySections = typeof latestActivitySections !== 'undefined' ? latestActivitySections : []; %>
+<% const homeTeamActivitySections = typeof teamActivitySections !== 'undefined' ? teamActivitySections : []; %>
+<% const homeProjectPanels = typeof projectPanels !== 'undefined' ? projectPanels : []; %>
+<% const homeActivityProjects = typeof activityProjects !== 'undefined' ? activityProjects : []; %>
+<% const homeProjectRows = typeof projectRows !== 'undefined' ? projectRows : []; %>
+<% const homeSelectedActivityProjectId = typeof selectedActivityProjectId !== 'undefined' ? selectedActivityProjectId : ''; %>
+<% const homeActivityFilter = typeof activityFilter !== 'undefined' ? activityFilter : { preset: 'all', isFiltered: false }; %>
+<% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
 
-            <div class="grid gap-6 md:grid-cols-[2fr_1fr]">
-                
-                <div class="space-y-6">
-                    
-                    <%- include('../partials/reportGenerator/reportGenerator', {
-                        layout: 'full', 
-                        redirectTo: '/home',
-                        defaultReportType: 'EMPLOYEE',
-                        defaultSubjectId: '',
-                        reportSubjects: homeReportSubjects,
-                        latestReports: homeLatestReports,
-                        quickReport: '',
-                        csrfToken: homeCsrfToken
-                    }) %>
+<div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
+    <section class="lg:col-span-2">
+        <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+    </section>
 
-                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-                        <h2 class="font-heading text-lg font-semibold text-brand-text">Your Latest Activity</h2>
-                        </div>
-                </div>
+    <section class="space-y-4 sm:space-y-6">
+        <%- include('../partials/reportGenerator/reportGenerator', {
+            layout: 'full',
+            redirectTo: '/home',
+            defaultReportType: 'EMPLOYEE',
+            defaultSubjectId: '',
+            reportSubjects: homeReportSubjects,
+            latestReport: null,
+            quickReport: '',
+            csrfToken: homeCsrfToken
+        }) %>
+        
+        <%- include('../partials/HOME/latestActivity', {
+            latestActivitySections: homeLatestActivitySections,
+            activityProjects: homeActivityProjects,
+            projectRows: homeProjectRows,
+            selectedActivityProjectId: homeSelectedActivityProjectId,
+            activityFilter: homeActivityFilter,
+            activityError: homeActivityError
+        }) %>
+    </section>
+    
+    <section class="space-y-6">
+        <%- include('../partials/HOME/teamActivity', { teamActivitySections: homeTeamActivitySections }) %>
+        <%- include('../partials/HOME/projectsPanel', { projectPanels: homeProjectPanels }) %>
+    </section>
+</div>
 
-                <div class="space-y-6">
-                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-                        <h2 class="font-heading text-lg font-semibold text-brand-text">Team Activity</h2>
-                    </div>
-
-                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-                        <h2 class="font-heading text-lg font-semibold text-brand-text">Your Projects</h2>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+<script src="/js/dateRangePicker.js"></script>

@@ -1,136 +1,140 @@
-//----------------------- Auxiliar Functions -------------------------------
+const normalizeSubjectEntry = function normalizeSubjectEntry(subject) {
+    const subjectId = subject.id || subject.employee_id || subject.team_id || subject.project_id || '';
+    const subjectLabel = subject.label || subject.name || subject.full_name || '';
 
-function updateLatestReportUI(form, report) {
-    const container = form.closest('[data-report-generator-card]');
-    if (!container) return;
+    return {
+        id: String(subjectId || '').trim(),
+        label: String(subjectLabel || '').trim(),
+    };
+};
 
-    const latestSection = container.querySelector('[data-latest-report-container]');
-    if (!latestSection) return;
-    latestSection.classList.remove('hidden');
+const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
+    const typeField = form.querySelector('.report-type');
+    const searchField = form.querySelector('.report-search');
+    const subjectField = form.querySelector('.report-subject-id');
+    const resultsNode = form.querySelector('.report-search-results');
+    const catalogNode = form.parentElement.querySelector('.report-subject-catalog');
 
-    const createdAtEl = latestSection.querySelector('[data-latest-report-created-at]');
-    const periodEl = latestSection.querySelector('[data-latest-report-period]');
-    const linkEl = latestSection.querySelector('[data-latest-report-link]');
-    const titleEl = latestSection.querySelector('p.font-semibold, p.text-sm');
-
-    const formatDate = (date) =>
-        new Date(date).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-        });
-
-    if (titleEl) {
-        titleEl.textContent = report.subjectLabel;
+    if (!typeField || !searchField || !subjectField || !resultsNode || !catalogNode) {
+        return;
     }
 
-    if (createdAtEl) {
-        createdAtEl.textContent = formatDate(report.createdAt);
+    let subjectCatalog = {};
+
+    try {
+        subjectCatalog = JSON.parse(catalogNode.textContent || '{}');
+    } catch (error) {
+        subjectCatalog = {};
     }
 
-    if (periodEl) {
-        periodEl.textContent =
-        `${formatDate(report.periodStart)} - ${formatDate(report.periodEnd)}`;
-    }
-
-    if (linkEl) {
-        linkEl.href = `/reports/view/${report.type.toLowerCase()}/${report.id}`;
-    }
-}
-
-
-function hideLatestReportUI(form) {
-    const container = form.closest('[data-report-generator-card]');
-    if (!container) return;
-
-    const latestSection = container.querySelector('[data-latest-report-container]');
-    if (!latestSection) return;
-
-    latestSection.classList.add('hidden');
-}
-
-function showFlash({ type = 'success', message = '' }) {
-    const container = document.getElementById('flash-container');
-    if (!container) return;
-
-    const colors = {
-        success: 'bg-green-100 text-green-700 border-green-300',
-        error: 'bg-red-100 text-red-700 border-red-300',
-        warning: 'bg-yellow-100 text-yellow-700 border-yellow-300'
+    const getCurrentSubjects = function getCurrentSubjects() {
+        return (subjectCatalog[typeField.value] || [])
+            .map(normalizeSubjectEntry)
+            .filter((subject) => subject.id && subject.label);
     };
 
-    const flash = document.createElement('div');
-    flash.className = `
-        mb-3 rounded-lg border px-4 py-3 text-sm font-semibold shadow
-        ${colors[type] || colors.success}
-    `;
+    const hideResults = function hideResults() {
+        resultsNode.classList.add('hidden');
+        resultsNode.innerHTML = '';
+    };
 
-    flash.innerHTML = `
-        <div class="flex items-center justify-between gap-4">
-            <span>${message}</span>
-            <button class="text-xs opacity-70 hover:opacity-100">✕</button>
-        </div>
-    `;
+    const selectSubject = function selectSubject(subject) {
+        subjectField.value = subject.id;
+        searchField.value = subject.label;
+        searchField.setCustomValidity('');
+        hideResults();
+    };
 
-    // Close button
-    flash.querySelector('button').addEventListener('click', () => {
-        flash.remove();
+    const renderResults = function renderResults() {
+        const searchTerm = searchField.value.trim().toLowerCase();
+        const currentSubjects = getCurrentSubjects();
+        const filteredSubjects = searchTerm
+            ? currentSubjects.filter((subject) => subject.label.toLowerCase().includes(searchTerm))
+            : currentSubjects.slice(0, 5);
+
+        resultsNode.innerHTML = '';
+
+        if (!filteredSubjects.length) {
+            const emptyState = document.createElement('p');
+            emptyState.className = 'px-3 py-2 text-sm text-brand-text/60';
+            emptyState.textContent = 'No matching subjects found.';
+            resultsNode.appendChild(emptyState);
+            resultsNode.classList.remove('hidden');
+            return;
+        }
+
+        filteredSubjects.forEach((subject) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'block w-full rounded-lg px-3 py-2 text-left text-sm text-brand-text transition hover:bg-brand-bg';
+            button.textContent = subject.label;
+            button.addEventListener('click', () => {
+                selectSubject(subject);
+            });
+            resultsNode.appendChild(button);
+        });
+
+        resultsNode.classList.remove('hidden');
+    };
+
+    const syncSubjectForType = function syncSubjectForType() {
+        const currentSubjects = getCurrentSubjects();
+
+        subjectField.value = '';
+        searchField.value = '';
+        searchField.placeholder = currentSubjects.length ? 'Search...' : 'No subjects available';
+        searchField.readOnly = !currentSubjects.length;
+
+        if (currentSubjects.length === 1) {
+            selectSubject(currentSubjects[0]);
+            return;
+        }
+
+        hideResults();
+    };
+
+    searchField.addEventListener('focus', () => {
+        if (searchField.readOnly) {
+            return;
+        }
+
+        renderResults();
     });
 
-    container.appendChild(flash);
+    searchField.addEventListener('input', () => {
+        subjectField.value = '';
+        searchField.setCustomValidity('');
+        renderResults();
+    });
 
-    // Auto remove
-    setTimeout(() => {
-        flash.remove();
-    }, 4000);
-}
+    typeField.addEventListener('change', () => {
+        syncSubjectForType();
+    });
 
-//----------------------- Main Functions -------------------------------
+    form.addEventListener('submit', (event) => {
+        if (!subjectField.value) {
+            event.preventDefault();
+            searchField.setCustomValidity('Select a subject before generating a report.');
+            searchField.reportValidity();
+            return;
+        }
+
+        searchField.setCustomValidity('');
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!resultsNode.contains(event.target) && event.target !== searchField) {
+            hideResults();
+        }
+    });
+
+    syncSubjectForType();
+};
 
 document.addEventListener('DOMContentLoaded', () => {
     const forms = document.querySelectorAll('[data-report-generator="enhanced"]');
 
-    forms.forEach(form => {
-        form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const submitBtn = form.querySelector('button[type="submit"]');
-        hideLatestReportUI(form);
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-            <span class="animate-pulse">Generating...</span>
-        `;
-
-        try {
-            const formData = new FormData(form);
-
-            const res = await fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'Accept': 'application/json'
-            }
-            });
-
-            const data = await res.json();
-
-            updateLatestReportUI(form, data);
-
-            showFlash({
-                type: 'success',
-                message: `Report for ${data.subjectLabel} is ready`
-            });
-
-        } catch (err) {
-            console.error(err);
-                showFlash({
-                    type: 'error',
-                    message: 'Failed to generate report. Try again.'
-                });
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Generate Report';
-        }
-        });
+    forms.forEach((form) => {
+        initFullReportSubjectSearch(form);
     });
 });
