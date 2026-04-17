@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Unitas System  
 Software Requirements & Activity Intelligence Platform  
 Limbo Software Development  
@@ -40,6 +39,17 @@ The primary goal of the system is to:
 - Report generation (Employee / Team / Project)
 - PDF export of reports
 - Role-Based Access Control (RBAC)
+
+---
+## Fifth Advancement - Demonstration Video
+https://drive.google.com/file/d/1wyK1LF4hJll-Wt6pQiUd5Wuj_2sqefm8/view?usp=drivesdk
+
+
+### Deployment diagram
+![alt text](documentation/Deploy.png)
+
+### Client Approval 30%
+File with signature validating at least 30% of requirements in slack ...limbo sent by Bernardo Land in a thread with the same file
 
 ---
 
@@ -88,7 +98,6 @@ Pending:
 - PDF generation finalization
 - UI polish
 - RBAC validation
-=======
 # Unitas
 
 > **A modern web application for team management and collaboration**  
@@ -105,15 +114,11 @@ Pending:
 - **Backend**: Node.js + Express.js
 - **Frontend**: EJS + Flowbite + Tailwind CSS 
 - **Architecture**: MVC Pattern
->>>>>>> 7929a9791226978de8a80cf6aa93f76b2c390703
 
 ---
 
 ## License
 
-<<<<<<< HEAD
 Academic project for  
 Instituto Tecnológico y de Estudios Superiores de Monterrey  
-=======
 This project is licensed under the **ISC License** - see the [LICENSE](LICENSE) file for details.
->>>>>>> 7929a9791226978de8a80cf6aa93f76b2c390703
