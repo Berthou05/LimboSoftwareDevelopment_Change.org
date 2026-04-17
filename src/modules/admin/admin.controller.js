@@ -332,21 +332,23 @@ exports.createRole = (request, response, next)=>{
 };
 
 const buildCreateAccountFormData = (formData = {}) => ({
-    fullName: formData.fullName || '',
+    names: formData.names || '',
+    lastnames: formData.lastnames || '',
     email: formData.email || '',
     slackUsername: formData.slackUsername || '',
     roleId: formData.roleId || '',
     image: formData.image || ''
 });
 
-const parseEmployeeNameParts = (fullName) => {
-    const trimmedName = String(fullName || '').trim();
-    const [names, ...lastnames] = trimmedName.split(/\s+/);
+const parseEmployeeNameParts = (names, lastnames) => {
+    const trimmedNames = String(names || '').trim();
+    const trimmedLastnames = String(lastnames || '').trim();
+    const fullName = [trimmedNames, trimmedLastnames].filter(Boolean).join(' ');
 
     return {
-        fullName: trimmedName,
-        names: names || trimmedName,
-        lastnames: lastnames.join(' ') || ''
+        fullName,
+        names: trimmedNames,
+        lastnames: trimmedLastnames
     };
 };
 
@@ -382,7 +384,8 @@ Implementation for creating an account and sending a notification email.*/
 
 exports.postCreateAccount = async (request, response, next) => {
     const formData = {
-        fullName: String(request.body.fullName || '').trim(),
+        names: String(request.body.names || '').trim(),
+        lastnames: String(request.body.lastnames || '').trim(),
         email: String(request.body.email || '').trim(),
         password: String(request.body.password || ''),
         slackUsername: String(request.body.slackUsername || '').trim(),
@@ -392,8 +395,8 @@ exports.postCreateAccount = async (request, response, next) => {
 
     request.session.createAccountFormData = buildCreateAccountFormData(formData);
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.roleId) {
-        request.session.error = 'Full name, email, password, and role are required to create an account.';
+    if (!formData.names || !formData.lastnames || !formData.email || !formData.password || !formData.roleId) {
+        request.session.error = 'Names, last names, email, password, and role are required to create an account.';
         return response.redirect('/admin/accounts/create');
     }
 
@@ -417,7 +420,7 @@ exports.postCreateAccount = async (request, response, next) => {
             }
         }
 
-        const employeeParts = parseEmployeeNameParts(formData.fullName);
+        const employeeParts = parseEmployeeNameParts(formData.names, formData.lastnames);
         const employee = new Employee(employeeParts.fullName, employeeParts.names, employeeParts.lastnames);
         await employee.save();
 
