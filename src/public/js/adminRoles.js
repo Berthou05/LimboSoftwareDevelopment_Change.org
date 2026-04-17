@@ -110,3 +110,47 @@ document.querySelectorAll('[data-action="delete-roles"]').forEach(form => {
         }
     });
 });
+
+document.querySelectorAll('[data-action="add-role"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+        const form = e.target;
+
+        if (!form.matches('[data-action="add-role"]')) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const url = form.action;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: new FormData(form)
+            });
+
+            console.log('POSTING FROM HERE');
+
+            const data = await response.json();
+            console.log(data);
+
+            showFlash(data);
+
+            if (data.type === 'success') {
+                form.closest('[data-popup]')
+                ?.querySelector('[data-popup-close]')
+                ?.click();
+                setTimeout(() => location.reload(), 1500);
+            }
+
+            form.closest('[data-popup]')
+                ?.querySelector('[data-popup-close]')
+                ?.click();
+
+        } catch (err) {
+            console.error(err);
+            showFlash({
+                type: 'error',
+                message: 'Network error'
+            });
+        }
+    });
+});

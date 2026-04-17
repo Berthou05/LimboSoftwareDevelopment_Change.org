@@ -192,7 +192,9 @@ exports.getRoleAdmin = (request, response, next) => {
                     };
                 }
 
-                rolesMap[row.role_id].privilegeCodes.push(row.privilege_id);
+                if (row.privilege_id) {
+                    rolesMap[row.role_id].privilegeCodes.push(row.privilege_id);
+                }
             });
 
             const roles = Object.values(rolesMap);
@@ -279,7 +281,7 @@ exports.deleteRole = (request, response, next) =>{
                     Role.delete(request.params.roleId).then(()=>{
                         return response.json({
                             type:'success',
-                            message: `The Role with ID ${request.params.roleId} was succesfully deleted`
+                            message: `The Role with name ${role_name[0].name} was succesfully deleted`
                         });
                     })
                     .catch((error)=>{
@@ -319,15 +321,20 @@ Function responsible for the role creation and redirect to
 roleAdministration page render*/
 
 exports.createRole = (request, response, next)=>{
-    const role = new Role(request.params.name);
+    const role = new Role(request.body.name);
+
     role.save().then(()=>{
-        request.session.success = `The Role  ${request.params.roleId} was created successfully`;
-        return response.redirect('/admin/roles');
+        return response.json({
+            type: 'success',
+            message: `The Role ${request.body.name} was created successfully`
+        });
     })
     .catch((error)=>{
         console.log(error);
-        request.session.error = `The Role ${request.params.name} could not be created`;
-        return response.redirect('admin/roles');
+        return response.json({
+            type: 'error',
+            message: `The Role ${request.body.name} could not be created`
+        });
     })
 };
 

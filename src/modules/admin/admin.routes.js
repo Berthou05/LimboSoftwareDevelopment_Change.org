@@ -18,7 +18,7 @@ router.get('/roles', isAuth, isAuth.requirePermission('ADMIN-01'), adminControll
 // ADMIN-03: delete roles.
 router.post('/roles/:roleId/remove', isAuth, isAuth.requirePermission('ADMIN-03'), adminController.deleteRole);
 // ADMIN-02: create roles.
-router.get('/roles/newRole/:name', isAuth, isAuth.requirePermission('ADMIN-02'), adminController.createRole);
+router.post('/roles/add', isAuth, isAuth.requirePermission('ADMIN-02'), adminController.createRole);
 router.post('/accounts/:account_id/role',isAuth, isAuth.requirePermission('ADMIN-05'), adminController.assignRole);
 // ADMIN-06: create accounts.
 router.get('/accounts/create', isAuth, isAuth.requirePermission('ADMIN-06'), adminController.getCreateAccount);
