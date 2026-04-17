@@ -334,8 +334,6 @@ async function getContext(reportType, id, start_date, end_date, route){
             ids = projectIds.map(p => p.project_id);
         }        
 
-        console.log(ids);
-
         //Obtention of remaining data depending on projectIds
         const [activities, goals, achievements,prompts] = await Promise.all([
             Activity.getProjectActivities(ids,start_date,end_date),
@@ -419,8 +417,6 @@ Information obtained through body:
 exports.generateReport = async (request, response, next)=>{
     const { type, id, start_date, end_date, route } = normalizeReportRequest(request.body);
     const AiWrapper = await getAiWrapper();
-    console.log(start_date);
-    console.log(end_date);
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     const reportType = normalizeReportType(type);
@@ -443,8 +439,6 @@ exports.generateReport = async (request, response, next)=>{
     //Context + Data Obtention
     const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);  
     
-    console.log(projects);
-
     //Report Generation
     //What went well? section
 

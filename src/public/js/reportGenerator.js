@@ -49,6 +49,42 @@ function hideLatestReportUI(form) {
     latestSection.classList.add('hidden');
 }
 
+function showFlash({ type = 'success', message = '' }) {
+    const container = document.getElementById('flash-container');
+    if (!container) return;
+
+    const colors = {
+        success: 'bg-green-100 text-green-700 border-green-300',
+        error: 'bg-red-100 text-red-700 border-red-300',
+        warning: 'bg-yellow-100 text-yellow-700 border-yellow-300'
+    };
+
+    const flash = document.createElement('div');
+    flash.className = `
+        mb-3 rounded-lg border px-4 py-3 text-sm font-semibold shadow
+        ${colors[type] || colors.success}
+    `;
+
+    flash.innerHTML = `
+        <div class="flex items-center justify-between gap-4">
+            <span>${message}</span>
+            <button class="text-xs opacity-70 hover:opacity-100">✕</button>
+        </div>
+    `;
+
+    // Close button
+    flash.querySelector('button').addEventListener('click', () => {
+        flash.remove();
+    });
+
+    container.appendChild(flash);
+
+    // Auto remove
+    setTimeout(() => {
+        flash.remove();
+    }, 4000);
+}
+
 //----------------------- Main Functions -------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -80,8 +116,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             updateLatestReportUI(form, data);
 
+            showFlash({
+                type: 'success',
+                message: `Report for ${data.subjectLabel} is ready`
+            });
+
         } catch (err) {
             console.error(err);
+                showFlash({
+                    type: 'error',
+                    message: 'Failed to generate report. Try again.'
+                });
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Generate Report';

@@ -23,7 +23,8 @@ module.exports = class Role {
         return db.execute(`
             SELECT R.role_id, R.name, RP.privilege_id
             FROM role AS R
-            JOIN roleprivilege AS RP ON RP.role_id=R.role_id;`);
+            LEFT JOIN roleprivilege AS RP ON RP.role_id=R.role_id
+            WHERE R.name != 'ADMIN';`);
     }
 
     /*deleteByRoleId(delete_role_id)
