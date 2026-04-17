@@ -1,37 +1,37 @@
-        <div class="mx-auto max-w-7xl p-6">
-            <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
-            <% const homeEmployeeName =
-                (typeof employee !== 'undefined' && employee && employee.names)
-                || (typeof user !== 'undefined' && user && user.username)
-                || 'Usuario'; %>
-            <%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
-            <% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
-            <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
-            <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
-            <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
-            <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+<div class="mx-auto max-w-7xl p-6">
+    <% const homeAccount = (typeof account !== 'undefined' && account) ? account : {}; %>
+    <% const homeEmployeeName =
+        (typeof employee !== 'undefined' && employee && employee.names)
+        || (typeof user !== 'undefined' && user && user.username)
+        || 'Usuario'; %>
+    <%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
+    <% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
+    <% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+    <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
+    <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
+    <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
 
-            <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
-                <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+    <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+    <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
 
-                <section class="space-y-4 sm:space-y-6">
-                    <%- include('../partials/HOME/reportGenerator', {
-                        layout: 'full',
-                        redirectTo: '/home',
-                        defaultReportType: 'EMPLOYEE',
-                        defaultSubjectId: '',
-                        reportSubjects: homeReportSubjects,
-                        latestReports: homeLatestReports,
-                        quickReport: '',
-                        csrfToken: homeCsrfToken
-                    }) %>
+        <section class="space-y-4 sm:space-y-6">
+            <%- include('../partials/HOME/reportGenerator', {
+                layout: 'full',
+                redirectTo: '/home',
+                defaultReportType: 'EMPLOYEE',
+                defaultSubjectId: '',
+                reportSubjects: homeReportSubjects,
+                latestReports: homeLatestReports,
+                quickReport: '',
+                csrfToken: homeCsrfToken
+            }) %>
 
-                    <%- include('../partials/HOME/latestActivity', { latestActivitySections }) %>
-                </section>
+            <%- include('../partials/HOME/latestActivity', { latestActivitySections }) %>
+        </section>
 
-                <section class="space-y-6">
-                    <%- include('../partials/HOME/teamActivity', { teamActivitySections }) %>
-                    <%- include('../partials/HOME/projectsPanel') %>
-                </section>
-            </div>
-        </div>
+        <section class="space-y-6">
+            <%- include('../partials/HOME/teamActivity', { teamActivitySections }) %>
+            <%- include('../partials/HOME/projectsPanel', { projectPanels }) %>
+        </section>
+    </div>
+</div>
