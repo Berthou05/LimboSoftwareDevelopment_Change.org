@@ -10,6 +10,14 @@
     <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
     <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
     <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
+    <% const homeLatestActivitySections = typeof latestActivitySections !== 'undefined' ? latestActivitySections : []; %>
+    <% const homeTeamActivitySections = typeof teamActivitySections !== 'undefined' ? teamActivitySections : []; %>
+    <% const homeProjectPanels = typeof projectPanels !== 'undefined' ? projectPanels : []; %>
+    <% const homeActivityProjects = typeof activityProjects !== 'undefined' ? activityProjects : []; %>
+    <% const homeProjectRows = typeof projectRows !== 'undefined' ? projectRows : []; %>
+    <% const homeSelectedActivityProjectId = typeof selectedActivityProjectId !== 'undefined' ? selectedActivityProjectId : ''; %>
+    <% const homeActivityFilter = typeof activityFilter !== 'undefined' ? activityFilter : { preset: 'all', isFiltered: false }; %>
+    <% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
 
     <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
     <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
@@ -25,12 +33,19 @@
                 csrfToken: homeCsrfToken
             }) %>
 
-            <%- include('../partials/HOME/latestActivity', { latestActivitySections }) %>
+            <%- include('../partials/HOME/latestActivity', {
+                latestActivitySections: homeLatestActivitySections,
+                activityProjects: homeActivityProjects,
+                projectRows: homeProjectRows,
+                selectedActivityProjectId: homeSelectedActivityProjectId,
+                activityFilter: homeActivityFilter,
+                activityError: homeActivityError
+            }) %>
         </section>
         
         <section class="space-y-6 sm:space-y-6">
-            <%- include('../partials/HOME/teamActivity', { teamActivitySections }) %>
-            <%- include('../partials/HOME/projectsPanel', { projectPanels }) %>
+            <%- include('../partials/HOME/teamActivity', { teamActivitySections: homeTeamActivitySections }) %>
+            <%- include('../partials/HOME/projectsPanel', { projectPanels: homeProjectPanels }) %>
         </section>
     </div>
 </div>
