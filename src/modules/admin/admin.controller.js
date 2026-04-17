@@ -342,6 +342,8 @@ const buildCreateAccountFormData = (formData = {}) => ({
     names: formData.names || '',
     lastnames: formData.lastnames || '',
     email: formData.email || '',
+    password: formData.password || '',
+    confirmPassword: formData.confirmPassword || '',
     slackUsername: formData.slackUsername || '',
     roleId: formData.roleId || '',
     image: formData.image || ''
@@ -395,6 +397,7 @@ exports.postCreateAccount = async (request, response, next) => {
         lastnames: String(request.body.lastnames || '').trim(),
         email: String(request.body.email || '').trim(),
         password: String(request.body.password || ''),
+        confirmPassword: String(request.body.confirmPassword || ''),
         slackUsername: String(request.body.slackUsername || '').trim(),
         roleId: String(request.body.roleId || '').trim(),
         image: String(request.body.image || '').trim()
@@ -402,13 +405,18 @@ exports.postCreateAccount = async (request, response, next) => {
 
     request.session.createAccountFormData = buildCreateAccountFormData(formData);
 
-    if (!formData.names || !formData.lastnames || !formData.email || !formData.password || !formData.roleId) {
-        request.session.error = 'Names, last names, email, password, and role are required to create an account.';
+    if (!formData.names || !formData.lastnames || !formData.email || !formData.password || !formData.confirmPassword || !formData.roleId) {
+        request.session.error = 'Names, last names, email, password, confirm password, and role are required to create an account.';
         return response.redirect('/admin/accounts/create');
     }
 
     if (formData.password.length < 6) {
         request.session.error = 'Password must be at least 6 characters long.';
+        return response.redirect('/admin/accounts/create');
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+        request.session.error = 'Password and confirm password must match.';
         return response.redirect('/admin/accounts/create');
     }
 

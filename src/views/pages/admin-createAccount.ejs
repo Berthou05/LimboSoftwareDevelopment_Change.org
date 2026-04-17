@@ -69,6 +69,18 @@
       </label>
 
       <label class="block text-sm">
+        <span class="mb-1 block text-brand-text/70">Confirm password</span>
+        <input
+          type="password"
+          name="confirmPassword"
+          required
+          minlength="6"
+          placeholder="Repeat password"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        />
+      </label>
+
+      <label class="block text-sm">
         <span class="mb-1 block text-brand-text/70">Slack username</span>
         <input
           type="text"
@@ -79,7 +91,7 @@
         />
       </label>
 
-      <label class="block text-sm sm:col-span-2">
+      <label class="block text-sm sm:col-span-1">
         <span class="mb-1 block text-brand-text/70">Role</span>
         <select
           name="roleId"
