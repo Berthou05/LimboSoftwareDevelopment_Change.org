@@ -66,6 +66,10 @@ input[type="password"]::-ms-clear {
         @apply border-red-300 text-red-500 hover:bg-red-500 hover:text-white;
     }
 
+    .panel-action-button--delete-hover {
+        @apply hover:border-red-300 hover:bg-red-50 hover:text-red-500;
+    }
+
     .panel-action-button--icon-only {
         @apply h-10 w-10 rounded-lg p-0;
     }

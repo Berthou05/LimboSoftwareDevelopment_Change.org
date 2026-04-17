@@ -3788,6 +3788,23 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear {
       }
     }
   }
+  .panel-action-button--delete-hover {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--color-red-300);
+      }
+    }
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-red-50);
+      }
+    }
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-red-500);
+      }
+    }
+  }
   .panel-action-button--icon-only {
     height: calc(var(--spacing) * 10);
     width: calc(var(--spacing) * 10);

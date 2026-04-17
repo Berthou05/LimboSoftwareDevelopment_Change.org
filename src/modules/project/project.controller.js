@@ -361,6 +361,7 @@ exports.getProjects = (request, response, next) => {
             myProjects: projects.map((project) => ({
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
@@ -369,11 +370,13 @@ exports.getProjects = (request, response, next) => {
             otherProjects: notProjects.map((project) => ({
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
                 isMember: Boolean(project.is_member || project.isMember),
             })),
+            currentEmployeeId: employeeId,
             query: '',
         });
     }).catch((error) => {
@@ -1101,6 +1104,7 @@ exports.searchProjects = (request, response, next) => {
             const normalizedProject = {
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
@@ -1119,6 +1123,8 @@ exports.searchProjects = (request, response, next) => {
             layout: false,
             myProjects,
             otherProjects,
+            csrfToken: request.csrfToken(),
+            currentEmployeeId: employeeId,
         }, (renderError, resultsHtml) => {
             if (renderError) {
                 console.log(renderError);

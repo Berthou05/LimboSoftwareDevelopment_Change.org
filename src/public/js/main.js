@@ -77,9 +77,6 @@ const initializeAccountMenu = function initializeAccountMenu() {
 };
 
 const initializePopups = function initializePopups() {
-    const openButtons = document.querySelectorAll('[data-popup-open]');
-    const closeButtons = document.querySelectorAll('[data-popup-close]');
-
     const openPopup = function openPopup(popupId) {
         const popup = document.querySelector(`[data-popup="${popupId}"]`);
         if (!popup) {
@@ -134,48 +131,50 @@ const initializePopups = function initializePopups() {
         window.alert(payload?.error || form.dataset.errorMessage || 'Failed to submit form.');
     };
 
-    openButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            openPopup(button.getAttribute('data-popup-open'));
-        });
-    });
+    document.addEventListener('click', (event) => {
+        const openButton = event.target.closest('[data-popup-open]');
+        if (openButton) {
+            openPopup(openButton.getAttribute('data-popup-open'));
+            return;
+        }
 
-    closeButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-            const popup = button.closest('[data-popup]');
+        const closeButton = event.target.closest('[data-popup-close]');
+        if (closeButton) {
+            const popup = closeButton.closest('[data-popup]');
             if (!popup) {
                 return;
             }
 
             closePopup(popup);
-        });
+            return;
+        }
+
+        const popup = event.target.closest('[data-popup]');
+        if (popup && event.target === popup) {
+            closePopup(popup);
+        }
     });
 
-    document.querySelectorAll('[data-popup]').forEach((popup) => {
-        popup.addEventListener('click', (event) => {
-            if (event.target === popup) {
-                closePopup(popup);
-            }
-        });
-    });
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-popup-form]');
+        if (!form) {
+            return;
+        }
 
-    document.querySelectorAll('[data-popup-form]').forEach((form) => {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const popup = form.closest('[data-popup]');
-            const formAction = (form.getAttribute('action') || '').trim();
+        event.preventDefault();
+        const popup = form.closest('[data-popup]');
+        const formAction = (form.getAttribute('action') || '').trim();
 
-            if (!formAction) {
-                if (!popup) {
-                    return;
-                }
-
-                closePopup(popup);
+        if (!formAction) {
+            if (!popup) {
                 return;
             }
 
-            await submitPopupForm(form);
-        });
+            closePopup(popup);
+            return;
+        }
+
+        await submitPopupForm(form);
     });
 
     document.addEventListener('keydown', (event) => {
