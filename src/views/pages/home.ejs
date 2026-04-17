@@ -74,8 +74,30 @@
                 </section>
 
                 <section class="space-y-6">
-                    <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-                        <h2 class="font-heading text-lg font-semibold text-brand-text">Team Activity</h2>
+                    <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+                        <h2 class="font-heading text-xl font-bold text-brand-text">Team Activity</h2>
+                        <p class="mt-1 text-xs text-brand-text/50">Recent contributions from your team</p>
+
+                        <div class="mt-4 max-h-80 overflow-y-auto space-y-1">
+                            <% if (!(teamActivitySections || []).length) { %>
+                                <p class="py-4 text-center text-sm text-brand-text/50">No team activity yet.</p>
+                            <% } %>
+                            <% (teamActivitySections || []).forEach((section) => { %>
+                                <p class="sticky top-0 bg-white py-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text/40"><%= section.dayLabel %></p>
+                                <% section.items.forEach((item) => { %>
+                                    <div class="flex items-start gap-2 rounded-lg px-2 py-2 transition hover:bg-brand-bg/50">
+                                        <div class="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary/20 text-[9px] font-bold text-brand-primary">
+                                            <%= item.authorInitials || '?' %>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-[11px] font-semibold text-brand-text/70"><%= item.authorName || 'Unknown' %></p>
+                                            <p class="text-xs text-brand-text truncate"><%= item.title %></p>
+                                        </div>
+                                        <span class="shrink-0 text-[10px] text-brand-text/40"><%= item.completedAt ? new Date(item.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '' %></span>
+                                    </div>
+                                <% }) %>
+                            <% }) %>
+                        </div>
                     </div>
 
                     <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
