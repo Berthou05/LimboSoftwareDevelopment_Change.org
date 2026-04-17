@@ -426,6 +426,10 @@ exports.createProject = (request, response, next) => {
         formErrors.push('Start date is required.');
     }
 
+    if (projectForm.startDate >= projectForm.endDate){
+        formErrors.push('Start date is greater or equal than end date.');
+    }
+
     if (formErrors.length > 0) {
         return response.status(422).render('pages/projectNew', {
             csrfToken: request.csrfToken(),
