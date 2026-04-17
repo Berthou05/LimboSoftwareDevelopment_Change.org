@@ -19,10 +19,7 @@
 <% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
 
 <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
-    <section class="lg:col-span-2">
-        <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
-    </section>
-
+    <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
     <section class="space-y-4 sm:space-y-6">
         <%- include('../partials/reportGenerator/reportGenerator', {
             layout: 'full',
@@ -34,7 +31,7 @@
             quickReport: '',
             csrfToken: homeCsrfToken
         }) %>
-        
+
         <%- include('../partials/HOME/latestActivity', {
             latestActivitySections: homeLatestActivitySections,
             activityProjects: homeActivityProjects,
