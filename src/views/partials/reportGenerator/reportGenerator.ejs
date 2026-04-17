@@ -67,7 +67,7 @@
       <p class="mt-1 text-sm text-brand-text/60">Create reports for employees, teams, or projects</p>
     </div>
 
-    <form action="/reports/generate" method="POST" class="space-y-5" data-report-generator="enhanced" data-current-year="<%= currentYear %>">
+    <form action="/reports/generate" method="POST" class="space-y-5" data-report-generator="enhanced" data-current-year="<%= currentYear %>" data-report-generator-mode="ajax">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
 
@@ -156,7 +156,9 @@
       </div>
 
       <%# Row 3: Submit Button %>
-      <button type="submit" class="w-full rounded-xl border-2 border-brand-primary bg-brand-primary px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-brand-accent hover:border-brand-accent">
+      <p class="hidden rounded-xl border border-brand-secondary bg-brand-bg/40 px-4 py-3 text-sm font-medium text-brand-text/70" data-report-generator-status></p>
+
+      <button type="submit" class="w-full rounded-xl border-2 border-brand-primary bg-brand-primary px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-brand-accent hover:border-brand-accent disabled:cursor-not-allowed disabled:opacity-70" data-report-generator-submit>
         Generate Report
       </button>
     </form>

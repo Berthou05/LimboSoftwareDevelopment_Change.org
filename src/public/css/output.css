@@ -2058,6 +2058,12 @@
       background-color: color-mix(in oklab, var(--color-brand-bg) 30%, transparent);
     }
   }
+  .bg-brand-bg\/40 {
+    background-color: color-mix(in srgb, #ffffff 40%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-brand-bg) 40%, transparent);
+    }
+  }
   .bg-brand-bg\/60 {
     background-color: color-mix(in srgb, #ffffff 60%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2529,6 +2535,9 @@
   .tracking-wider {
     --tw-tracking: var(--tracking-wider);
     letter-spacing: var(--tracking-wider);
+  }
+  .break-words {
+    overflow-wrap: break-word;
   }
   .datatable-sorter {
     .datatable-wrapper .datatable-table thead th & {
@@ -3182,6 +3191,11 @@
       cursor: default;
     }
   }
+  .disabled\:cursor-not-allowed {
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
   .disabled\:bg-white {
     &:disabled {
       background-color: var(--color-white);
@@ -3190,6 +3204,11 @@
   .disabled\:text-brand-text {
     &:disabled {
       color: var(--color-brand-text);
+    }
+  }
+  .disabled\:opacity-70 {
+    &:disabled {
+      opacity: 70%;
     }
   }
   .disabled\:opacity-100 {
@@ -3766,6 +3785,23 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear {
     &:hover {
       @media (hover: hover) {
         color: var(--color-white);
+      }
+    }
+  }
+  .panel-action-button--delete-hover {
+    &:hover {
+      @media (hover: hover) {
+        border-color: var(--color-red-300);
+      }
+    }
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-red-50);
+      }
+    }
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-red-500);
       }
     }
   }

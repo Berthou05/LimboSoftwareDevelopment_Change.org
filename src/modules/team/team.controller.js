@@ -95,6 +95,7 @@ const normalizeTeam = function normalizeTeam(team) {
     return {
         id: team.team_id ?? null,
         name: team.name ?? 'Unnamed team',
+        leadId: team.employee_responsible_id ?? null,
         leadName:
             team.full_name ??
             team.lead_name ??
@@ -613,6 +614,7 @@ exports.getTeams = (request, response, next) => {
                 username: request.session.username || '',
                 pageTitle: 'Team',
                 pageSubtitle: 'Intermediate selection for own and other teams.',
+                currentEmployeeId: employeeId,
                 myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true })),
                 otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false })),
                 query:'',
@@ -1165,6 +1167,8 @@ exports.searchTeams = (request, response, next) => {
             layout: false,
             myTeams,
             otherTeams,
+            csrfToken: request.csrfToken(),
+            currentEmployeeId: employeeId,
         }, (renderError, resultsHtml) => {
             if (renderError) {
                 console.log(renderError);

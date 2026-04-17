@@ -172,15 +172,15 @@ const initializeInlineSubmitForms = function initializeInlineSubmitForms() {
 };
 
 const initializeDeleteTeamForms = function initializeDeleteTeamForms() {
-    const forms = document.querySelectorAll('[data-team-delete-form]');
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-team-delete-form]');
+        if (!form) {
+            return;
+        }
 
-    for (const form of forms) {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            await submitDeleteTeamForm(form);
-        });
-    }
+        event.preventDefault();
+        await submitDeleteTeamForm(form);
+    });
 };
 
 const submitDeleteTeamForm = async function submitDeleteTeamForm(form) {
@@ -204,15 +204,15 @@ const submitDeleteTeamForm = async function submitDeleteTeamForm(form) {
 };
 
 const initializeDeleteProjectForms = function initializeDeleteProjectForms() {
-    const forms = document.querySelectorAll('[data-project-delete-form]');
+    document.addEventListener('submit', async (event) => {
+        const form = event.target.closest('[data-project-delete-form]');
+        if (!form) {
+            return;
+        }
 
-    for (const form of forms) {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            await submitDeleteProjectForm(form);
-        });
-    }
+        event.preventDefault();
+        await submitDeleteProjectForm(form);
+    });
 };
 
 const submitDeleteProjectForm = async function submitDeleteProjectForm(form) {

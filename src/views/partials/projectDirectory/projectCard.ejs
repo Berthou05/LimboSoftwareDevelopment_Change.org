@@ -2,15 +2,30 @@
     const cardClasses = project.isMember
         ? 'app-directory-card--active'
         : 'border border-brand-secondary';
-    const placeholderInitial = (project.name || 'T').trim().charAt(0).toUpperCase();
+    const canDeleteProject = Boolean(
+        project?.leadId
+        && typeof currentEmployeeId !== 'undefined'
+        && currentEmployeeId
+        && project.leadId === currentEmployeeId
+    );
 %>
 
 <article class="rounded-2xl bg-white p-4 shadow-panel <%= cardClasses %>">
-    <div class="flex items-center gap-3">
+    <div class="flex items-start justify-between gap-3">
         <div>
             <h3 class="font-heading text-lg font-bold text-brand-text"><%= project.name %></h3>
             <p class="text-sm text-brand-text/70">Lead: <%= project.leadName %></p>
         </div>
+        <% if (canDeleteProject) { %>
+            <%- include('../shared/actionButton', {
+                buttonPopupOpen: 'delete-project-' + project.id,
+                buttonIcon: 'trash',
+                buttonLabel: 'Delete',
+                buttonVariant: 'small',
+                buttonClasses: 'panel-action-button--delete-hover',
+                buttonAriaLabel: 'Delete project',
+            }) %>
+        <% } %>
     </div>
     <p class="mt-3 text-sm text-brand-text/80">
         <%= project.description || 'No description available.' %>
@@ -22,3 +37,53 @@
         Open project
     </a>
 </article>
+
+<% if (canDeleteProject) { %>
+    <div data-popup="delete-project-<%= project.id %>" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
+        <div class="mx-auto max-w-lg">
+            <div class="rounded-3xl border border-brand-secondary bg-white p-6 shadow-panel">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="font-heading text-2xl font-bold text-brand-text">Delete Project</h3>
+                        <p class="mt-1 text-sm text-brand-text/60">
+                            This will disable the project and remove it from active project listings. This action cannot be undone from this screen.
+                        </p>
+                    </div>
+                    <%- include('../shared/actionButton', {
+                        buttonPopupClose: true,
+                        buttonIcon: 'close',
+                        buttonVariant: 'icon-only',
+                        buttonClasses: 'shrink-0',
+                        buttonAriaLabel: 'Close popup',
+                    }) %>
+                </div>
+
+                <form
+                    action="/projects/<%= project.id %>/delete"
+                    method="POST"
+                    data-project-delete-form
+                    data-error-message="The project could not be deleted right now."
+                    class="mt-5 space-y-4"
+                >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+                    <div class="flex flex-wrap justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            data-popup-close
+                            class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="rounded-xl border border-brand-accent bg-brand-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent/90"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<% } %>
