@@ -9,6 +9,33 @@ const AccountStatus = {
     DISABLED: 'DISABLED'
 };
 
+const ensureResetTokenColumns = async () => {
+    return db.execute(`
+        ALTER TABLE account
+        ADD COLUMN IF NOT EXISTS reset_token_hash varchar(64) DEFAULT NULL,
+        ADD COLUMN IF NOT EXISTS reset_token_expires_at datetime DEFAULT NULL
+    `);
+};
+
+const executeWithResetColumns = async (operation) => {
+    try {
+        return await operation();
+    } catch (error) {
+        const isMissingColumn = error && (
+            error.code === 'ER_BAD_FIELD_ERROR' ||
+            error.errno === 1054 ||
+            String(error.message).includes('Unknown column')
+        );
+
+        if (!isMissingColumn) {
+            throw error;
+        }
+
+        await ensureResetTokenColumns();
+        return operation();
+    }
+};
+
 module.exports = class Account {
     constructor(employee_id, email, password, slack_username, image) {
         this.employee_id = employee_id;
@@ -144,40 +171,40 @@ module.exports = class Account {
     Function responsible for saving password reset token information.*/
 
     static saveResetToken(account_id, reset_token_hash, reset_token_expires_at) {
-        return db.execute(`
+        return executeWithResetColumns(() => db.execute(`
             UPDATE account
             SET reset_token_hash = ?,
                 reset_token_expires_at = ?
             WHERE account_id = ?`,
-            [reset_token_hash, reset_token_expires_at, account_id]);
+            [reset_token_hash, reset_token_expires_at, account_id]));
     }
 
     static fetchByEmailAndResetToken(email, reset_token_hash) {
-        return db.execute(`
-            SELECT account_id, reset_token_expires_at
-            FROM account
-            WHERE email = ?
-            AND reset_token_hash = ?
-        `, [email, reset_token_hash]);
+        const sql = email
+            ? `SELECT account_id, email, reset_token_expires_at FROM account WHERE email = ? AND reset_token_hash = ?`
+            : `SELECT account_id, email, reset_token_expires_at FROM account WHERE reset_token_hash = ?`;
+        const params = email ? [email, reset_token_hash] : [reset_token_hash];
+
+        return executeWithResetColumns(() => db.execute(sql, params));
     }
 
     static clearResetToken(account_id) {
-        return db.execute(`
+        return executeWithResetColumns(() => db.execute(`
             UPDATE account
             SET reset_token_hash = NULL,
                 reset_token_expires_at = NULL
             WHERE account_id = ?
-        `, [account_id]);
+        `, [account_id]));
     }
 
     static updatePasswordAndClearResetToken(account_id, password_hash) {
-        return db.execute(`
+        return executeWithResetColumns(() => db.execute(`
             UPDATE account
             SET password_hash = ?,
                 reset_token_hash = NULL,
                 reset_token_expires_at = NULL
             WHERE account_id = ?
-        `, [password_hash, account_id]);
+        `, [password_hash, account_id]));
     }
 
 };

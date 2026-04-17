@@ -55,11 +55,11 @@ document.querySelectorAll('.toggle-form').forEach(form => {
 
             if (data.enabled) {
                 button.textContent = 'ON';
-                button.classList.add('bg-brand-primary', 'text-white');
+                button.classList.add('bg-brand-nav', 'text-white');
                 button.classList.remove('bg-brand-secondary/50', 'text-brand-text/70');
             } else {
                 button.textContent = 'OFF';
-                button.classList.remove('bg-brand-primary', 'text-white');
+                button.classList.remove('bg-brand-nav', 'text-white');
                 button.classList.add('bg-brand-secondary/50', 'text-brand-text/70');
             }
 
@@ -84,6 +84,50 @@ document.querySelectorAll('[data-action="delete-roles"]').forEach(form => {
                 method: 'POST',
                 body: new FormData(form)
             });
+
+            const data = await response.json();
+            console.log(data);
+
+            showFlash(data);
+
+            if (data.type === 'success') {
+                form.closest('[data-popup]')
+                ?.querySelector('[data-popup-close]')
+                ?.click();
+                setTimeout(() => location.reload(), 1500);
+            }
+
+            form.closest('[data-popup]')
+                ?.querySelector('[data-popup-close]')
+                ?.click();
+
+        } catch (err) {
+            console.error(err);
+            showFlash({
+                type: 'error',
+                message: 'Network error'
+            });
+        }
+    });
+});
+
+document.querySelectorAll('[data-action="add-role"]').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+        const form = e.target;
+
+        if (!form.matches('[data-action="add-role"]')) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const url = form.action;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: new FormData(form)
+            });
+
+            console.log('POSTING FROM HERE');
 
             const data = await response.json();
             console.log(data);

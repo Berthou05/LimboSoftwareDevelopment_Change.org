@@ -59,12 +59,15 @@ in order to update in case it is modified and receives an AJAX response.*/
 
 document.querySelectorAll('.status-select').forEach((select) => {
     let previousValue = select.value;
+    updateStatusStyle(select);
 
     select.addEventListener('change', async function () {
         const accountId = this.dataset.accountId;
         const csrfToken = this.dataset.csrf;
         const status    = this.value;
         const feedback  = this.nextElementSibling;
+
+        updateStatusStyle(this);
 
         this.disabled = true;
         feedback.className = 'status-feedback mt-1 text-xs font-semibold text-brand-text/60';
@@ -87,11 +90,13 @@ document.querySelectorAll('.status-select').forEach((select) => {
             showFeedback(feedback, `✓ Status updated to ${status}`, 'text-green-600');
         } else {
             this.value = previousValue;
+            updateStatusStyle(this);
             showFeedback(feedback, `✗ ${json.error}`, 'text-red-500');
         }
 
         } catch (err) {
         this.value = previousValue;
+        updateStatusStyle(this);
         showFeedback(feedback, '✗ Connection error. Try again.', 'text-red-500');
         } finally {
         this.disabled = false;
@@ -112,4 +117,20 @@ setTimeout(() => {
     el.className = 'role-feedback mt-1 hidden text-xs font-semibold';
     el.textContent = '';
 }, 3000);
+}
+
+/*updateStatusStyle(select)
+Function responsible for updating the background color of the account status*/
+
+function updateStatusStyle(select) {
+    select.classList.remove(
+        'bg-green-100','text-green-700','border-green-300',
+        'bg-red-100','text-red-700','border-red-300'
+    );
+
+    if (select.value === 'ACTIVE') {
+        select.classList.add('bg-green-100','text-green-700','border-green-300');
+    } else if (select.value === 'DISABLED') {
+        select.classList.add('bg-red-100','text-red-700','border-red-300');
+    }
 }
