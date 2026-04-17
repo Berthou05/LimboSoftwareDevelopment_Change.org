@@ -57,7 +57,24 @@
   const latestReportData = typeof latestReport !== 'undefined' && latestReport
   ? latestReport
   : null;
+  const reportGeneratorFlash = typeof reportGeneratorFlashData !== 'undefined' && latestReport
+  ? latestReport
+  : null;
 %>
+
+<% if (reportGeneratorFlash) { %>
+  <div 
+    data-report-generator-flash
+    class="mb-4 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-300 ease-out
+    <%= reportGeneratorFlash.type === 'error'
+      ? 'border-red-300 bg-red-100 text-red-800'
+      : reportGeneratorFlash.type === 'warning'
+      ? 'border-amber-300 bg-amber-100 text-amber-800'
+      : 'border-emerald-300 bg-emerald-100 text-emerald-800' %>">
+
+    <%= reportGeneratorFlash.message %>
+  </div>
+<% } %>
 
 <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel" data-report-generator-card>
   <% if (isFullLayout) { %>

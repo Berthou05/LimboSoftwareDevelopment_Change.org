@@ -422,14 +422,19 @@ exports.generateReport = async (request, response, next)=>{
     const reportType = normalizeReportType(type);
     const wantsJson = request.xhr || request.headers.accept?.includes('json');
     const respondWithError = function respondWithError(statusCode, message) {
+        const flash = {
+            type: 'error',
+            message
+        };
+
         if (wantsJson) {
             return response.status(statusCode).json({
                 success: false,
-                message,
+                flash
             });
         }
 
-        request.session.error = message;
+        request.session.reportGeneratorFlash = flash;
         return response.redirect(route);
     };
 
@@ -552,26 +557,34 @@ exports.generateReport = async (request, response, next)=>{
                 if (wantsJson) {
                     return response.status(200).json({
                         success: true,
-                        ...responsePayload
+                        ...responsePayload,
+                        flash: {
+                            type: 'success',
+                            message: 'Report generated successfully.'
+                        }
                     });
                 }
 
+                request.session.reportGeneratorFlash = {
+                    type: 'success',
+                    message: 'Report generated successfully.'
+                };
                 return response.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}?redirectTo=${encodeURIComponent(route)}`);
 
             }).catch((error)=>{
                 console.log(error);
-                return response.status(500).json({success:false, message: 'Report name obtention failed. Try again.'});
+                return respondWithError(500,'Report name obtention failed. Try again.');
             })
 
         })  
         .catch((error)=>{
             console.log(error);
-            return response.status(500).json({success:false, message: 'Latest report obtention failed. Try again.'});    
+            return respondWithError(500, 'Latest report obtention failed. Try again.');
         })
 
     })
     .catch((error)=>{
         console.log(error);
-        return response.status(500).json({success:false, message: 'Report object could not be stores successfully, Try again.'});
+        return respondWithError(500, 'Report object could not be stores successfully, Try again.');
     })
 };
