@@ -49,8 +49,6 @@ latestReport created of the content_id*/
 const getLatestReport = async function getLatestReport(content_id, user_id){
     return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
         return Search.getNameFromId(content_id).then(([name,fieldData])=>{
-            console.log(report);
-            console.log(report[0].report_id);
             return {
                 id:report[0].report_id,
                 subjectLabel:name[0].name,
@@ -732,6 +730,7 @@ exports.getTeamPage = (request, response, next) => {
                 id: teamRow.team_id,
                 name: teamRow.name,
                 description: teamRow.description,
+                createdAt: formatDayLabel(teamRow.created_at),
                 image: teamRow.image || buildAvatarUrl(teamRow.name),
                 imagePath: teamRow.image || '',
                 fallbackImage: buildAvatarUrl(teamRow.name),
