@@ -120,7 +120,7 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
         const latestReportContainer = generatorCard?.querySelector('[data-latest-report-container]');
 
         if (latestReportContainer) {
-            latestReportContainer.classList.add('opacity-0', 'translate-y-2');
+            latestReportContainer.classList.add('hidden');
         }
 
         try {
