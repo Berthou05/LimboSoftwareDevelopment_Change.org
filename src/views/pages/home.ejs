@@ -18,8 +18,8 @@
 <% const homeActivityFilter = typeof activityFilter !== 'undefined' ? activityFilter : { preset: 'all', isFiltered: false }; %>
 <% const homeActivityError = typeof activityError !== 'undefined' ? activityError : ''; %>
 
-<div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
-    <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+<%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+<div class="grid gap-4 sm:gap-6 md:grid-cols-[2fr_1fr]">
     <section class="space-y-4 sm:space-y-6">
         <%- include('../partials/reportGenerator/reportGenerator', {
             layout: 'full',
