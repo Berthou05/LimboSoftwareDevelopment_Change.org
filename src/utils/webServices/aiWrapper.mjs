@@ -208,8 +208,6 @@ Main function all remaining functions are integrated to*/
 
 const generateReportSection = async function generateReportSection(body, prompt, schema) {
   let reportSchema = reportSchemas[schema];
-  console.log('BODY HERE: !!!!!!!!!!');
-  console.log(body);
 
   const buildMessages = (body, prompt) => ([
     { role: "user", content: "Context data:" },
@@ -225,8 +223,6 @@ const generateReportSection = async function generateReportSection(body, prompt,
     maxRetries: 0
   });
 
-  console.log(output);
-  console.log(totalUsage);  
   return output
 };
 
