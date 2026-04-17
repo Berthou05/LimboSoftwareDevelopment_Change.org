@@ -10,7 +10,7 @@
 <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
 <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
 <% const homeLatestActivitySections = typeof latestActivitySections !== 'undefined' ? latestActivitySections : []; %>
-<% const homeTeamActivitySections = typeof teamActivitySections !== 'undefined' ? teamActivitySections : []; %>
+<% const homeTeamActivityGroups = typeof teamActivityGroups !== 'undefined' ? teamActivityGroups : []; %>
 <% const homeProjectPanels = typeof projectPanels !== 'undefined' ? projectPanels : []; %>
 <% const homeActivityProjects = typeof activityProjects !== 'undefined' ? activityProjects : []; %>
 <% const homeProjectRows = typeof projectRows !== 'undefined' ? projectRows : []; %>
@@ -45,7 +45,7 @@
     </section>
     
     <section class="min-w-0 space-y-6">
-        <%- include('../partials/HOME/teamActivity', { teamActivitySections: homeTeamActivitySections }) %>
+        <%- include('../partials/HOME/teamActivity', { teamActivityGroups: homeTeamActivityGroups }) %>
         <%- include('../partials/HOME/projectsPanel', { projectPanels: homeProjectPanels }) %>
     </section>
 </div>

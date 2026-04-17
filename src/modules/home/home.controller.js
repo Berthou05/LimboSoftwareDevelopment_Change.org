@@ -110,6 +110,14 @@ const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(act
         });
 };
 
+const buildHomeTeamActivityGroups = function buildHomeTeamActivityGroups(teams, teamActivityRowsByTeam) {
+    return teams.map((team, index) => ({
+        id: team.team_id,
+        name: team.name || 'Unnamed team',
+        sections: buildActivitySections((teamActivityRowsByTeam[index] || []).slice(0, 10)),
+    }));
+};
+
 const isValidDateInput = function isValidDateInput(value) {
     if (!value) {
         return true;
@@ -271,12 +279,18 @@ exports.getHome = async (request, response, next) => {
             startDateLabel: formatDayLabel(project.started_at),
         }));
         const activityProjects = buildEmployeeActivityProjects(filteredActivities);
-        // Home keeps a single team feed to avoid mixing separate team timelines in one card.
-        const primaryTeam = teamRows[0] || null;
-        const [teamActivityRows] = primaryTeam
-            ? await Activity.getTeamMembersActivities(primaryTeam.team_id)
-            : [[]];
-        const teamActivitySections = buildActivitySections(teamActivityRows.slice(0, 10));
+        const teamActivityRowsByTeam = await Promise.all(
+            teamRows.map(async (team) => {
+                const [rows] = await Activity.getTeamMembersActivities(
+                    team.team_id,
+                    activityFilter.isFiltered ? activityFilter.rangeStart : null,
+                    activityFilter.isFiltered ? activityFilter.rangeEnd : null,
+                );
+
+                return rows;
+            }),
+        );
+        const teamActivityGroups = buildHomeTeamActivityGroups(teamRows, teamActivityRowsByTeam);
         const projectPanels = await Promise.all(userProjects.map(async (project) => {
             const [goalRows] = await Goal.fetchByProject(project.project_id);
             const [achievementRows] = await Achievement.fetchByProject(project.project_id);
@@ -408,7 +422,7 @@ exports.getHome = async (request, response, next) => {
             selectedActivityProjectId,
             activityFilter,
             activityError: activityFilter.error || '',
-            teamActivitySections,
+            teamActivityGroups,
             projectPanels,
             account: {
                 image: accountInfo.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=fbfbfe&color=1f2937`,
