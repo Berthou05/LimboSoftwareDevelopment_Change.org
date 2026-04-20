@@ -18,6 +18,11 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     const quickRangeNode = form.querySelector('[data-range-presets]');
     const trigger = form.querySelector('[data-date-trigger]');
     const popover = form.querySelector('[data-date-popover]');
+
+    popover.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+
     const shortcutsNode = form.querySelector('[data-date-shortcuts]');
     const startDisplay = form.querySelector('[data-start-display]');
     const endDisplay = form.querySelector('[data-end-display]');
@@ -415,6 +420,10 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
 
                 syncDateInputs();
                 renderCalendars();
+
+                if (selectedStart && selectedEnd) {
+                    closePopover();
+                }
             });
 
             dayGrid.appendChild(button);
@@ -483,7 +492,10 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     });
 
     document.addEventListener('click', (event) => {
-        if (!form.contains(event.target)) {
+        const isInsidePopover = popover.contains(event.target);
+        const isTrigger = trigger.contains(event.target);
+
+        if (!isInsidePopover && !isTrigger) {
             closePopover();
         }
     });
@@ -518,4 +530,5 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
 
 document.addEventListener('DOMContentLoaded', () => {
     initReportsDateRangePicker();
+
 });
