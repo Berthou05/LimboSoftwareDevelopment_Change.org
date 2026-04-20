@@ -9,13 +9,25 @@
   <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
     <form action="/admin/accounts/create" method="POST" class="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-      <label class="block text-sm sm:col-span-2">
-        <span class="mb-1 block text-brand-text/70">Full name</span>
+      <label class="block text-sm sm:col-span-1">
+        <span class="mb-1 block text-brand-text/70">Name(s)</span>
         <input
           type="text"
-          name="fullName"
-          value="<%= formData.fullName %>"
-          placeholder="Alexis Berthou"
+          name="names"
+          value="<%= formData.names %>"
+          placeholder="Alexis"
+          required
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        />
+      </label>
+
+      <label class="block text-sm sm:col-span-1">
+        <span class="mb-1 block text-brand-text/70">Last names</span>
+        <input
+          type="text"
+          name="lastnames"
+          value="<%= formData.lastnames %>"
+          placeholder="Berthou"
           required
           class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
@@ -57,6 +69,18 @@
       </label>
 
       <label class="block text-sm">
+        <span class="mb-1 block text-brand-text/70">Confirm password</span>
+        <input
+          type="password"
+          name="confirmPassword"
+          required
+          minlength="6"
+          placeholder="Repeat password"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        />
+      </label>
+
+      <label class="block text-sm">
         <span class="mb-1 block text-brand-text/70">Slack username</span>
         <input
           type="text"
@@ -67,7 +91,7 @@
         />
       </label>
 
-      <label class="block text-sm sm:col-span-2">
+      <label class="block text-sm sm:col-span-1">
         <span class="mb-1 block text-brand-text/70">Role</span>
         <select
           name="roleId"
@@ -127,3 +151,58 @@
     </ul>
   </aside>
 </div>
+
+<script>
+  function generateSecurePassword() {
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '0123456789';
+    const specials = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+    // Ensure at least one of each required character
+    let password = '';
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += specials[Math.floor(Math.random() * specials.length)];
+
+    // Fill the rest to make at least 8 characters
+    const allChars = lowercase + uppercase + numbers + specials;
+    while (password.length < 8) {
+      password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+
+    // Shuffle the password
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+
+    return password;
+  }
+
+  document.getElementById('generateAccountPasswordBtn').addEventListener('click', function() {
+    const password = generateSecurePassword();
+    const passwordInput = document.getElementById('createAccountPassword');
+    const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
+
+    passwordInput.value = password;
+    confirmPasswordInput.value = password;
+
+    // Add light background color to indicate auto-generated
+    passwordInput.classList.add('bg-yellow-50');
+    confirmPasswordInput.classList.add('bg-yellow-50');
+
+    // Update hint
+    const hint = document.getElementById('generateAccountPasswordHint');
+    if (hint) {
+      hint.textContent = 'Password generated and copied to both fields.';
+    }
+  });
+
+  // Remove background color when user types
+  document.getElementById('createAccountPassword').addEventListener('input', function() {
+    this.classList.remove('bg-yellow-50');
+  });
+
+  document.querySelector('input[name="confirmPassword"]').addEventListener('input', function() {
+    this.classList.remove('bg-yellow-50');
+  });
+</script>
