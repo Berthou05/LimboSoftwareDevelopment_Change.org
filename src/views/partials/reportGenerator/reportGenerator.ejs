@@ -57,7 +57,24 @@
   const latestReportData = typeof latestReport !== 'undefined' && latestReport
   ? latestReport
   : null;
+  const reportGeneratorFlash = typeof reportGeneratorFlashData !== 'undefined' && latestReport
+  ? latestReport
+  : null;
 %>
+
+<% if (reportGeneratorFlash) { %>
+  <div 
+    data-report-generator-flash
+    class="mb-4 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-300 ease-out
+    <%= reportGeneratorFlash.type === 'error'
+      ? 'border-red-300 bg-red-100 text-red-800'
+      : reportGeneratorFlash.type === 'warning'
+      ? 'border-amber-300 bg-amber-100 text-amber-800'
+      : 'border-emerald-300 bg-emerald-100 text-emerald-800' %>">
+
+    <%= reportGeneratorFlash.message %>
+  </div>
+<% } %>
 
 <div class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel" data-report-generator-card>
   <% if (isFullLayout) { %>
@@ -163,7 +180,7 @@
       </button>
     </form>
 
-    <div class="mt-5 border-t border-brand-secondary pt-5 <%= latestReportData ? '' : 'hidden' %>"
+    <div class="transition-all duration-300 ease-out opacity-100 translate-y-0 mt-5 border-t border-brand-secondary pt-5 <%= latestReportData ? '' : 'hidden' %>"
         data-latest-report-container>
 
       <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
@@ -215,7 +232,8 @@
     <%# ===================== COMPACT LAYOUT (Detail pages with stacked dates + button) ===================== %>
     <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">Report Generator</p>
 
-    <form action="/reports/generate" method="POST" class="mt-4" data-report-generator="enhanced" data-current-year="<%= currentYear %>">
+    <form action="/reports/generate" method="POST" class="mt-4" data-report-generator="enhanced" data-current-year="<%= currentYear %>" data-report-generator-mode="ajax">
+      
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
       <input type="hidden" name="contentType" value="<%= currentType %>" />
@@ -290,14 +308,15 @@
           </div>
         </div>
 
-        <button type="submit" class="w-full rounded-xl border border-brand-primary bg-brand-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent">
+        <button data-report-generator-submit type="submit" class="w-full rounded-xl border border-brand-primary bg-brand-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent">
           Generate Report
         </button>
       </div>
     </form>
 
-    <div class="mt-4 border-t border-brand-secondary pt-4 <%= latestReportData ? '' : 'hidden' %>"
+    <div class="transition-all duration-300 ease-out opacity-100 translate-y-0 mt-4 border-t border-brand-secondary pt-4 <%= latestReportData ? '' : 'hidden' %>"
         data-latest-report-container>
+
 
       <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
         Last Generated Report

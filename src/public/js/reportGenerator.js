@@ -38,33 +38,38 @@ const formatReportPeriod = function formatReportPeriod(startValue, endValue) {
     return `${startDate.toLocaleDateString('en-US', formatter)} - ${endDate.toLocaleDateString('en-US', formatter)}`;
 };
 
-const setGeneratorStatus = function setGeneratorStatus(statusNode, message, tone = 'neutral') {
-    if (!statusNode) {
-        return;
+
+const renderReportGeneratorFlash = (form, flash) => {
+    if (!flash) return;
+
+    const generatorCard = form.closest('[data-report-generator-card]');
+    if (!generatorCard) return;
+
+    let flashNode = generatorCard.querySelector('[data-report-generator-flash]');
+
+    if (!flashNode) {
+        flashNode = document.createElement('div');
+        flashNode.setAttribute('data-report-generator-flash', '');
+        generatorCard.insertBefore(flashNode, generatorCard.firstChild);
     }
 
-    statusNode.textContent = message || '';
-    statusNode.classList.remove('hidden', 'border-red-200', 'bg-red-50', 'text-red-700', 'border-brand-secondary', 'bg-brand-bg/40', 'text-brand-text/70');
+    flashNode.className = `mb-4 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-300 ease-out ${
+        flash.type === 'error'
+            ? 'border-red-200 bg-red-50 text-red-700'
+            : 'border-green-200 bg-green-50 text-green-700'
+    }`;
 
-    if (!message) {
-        statusNode.classList.add('hidden');
-        return;
-    }
+    flashNode.textContent = flash.message;
 
-    if (tone === 'error') {
-        statusNode.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
-        return;
-    }
-
-    statusNode.classList.add('border-brand-secondary', 'bg-brand-bg/40', 'text-brand-text/70');
+    // optional auto-hide
+    setTimeout(() => {
+        flashNode.classList.add('opacity-0', 'translate-y-2');
+    }, 4000);
 };
 
 const updateLatestReportCard = function updateLatestReportCard(form, payload) {
     const generatorCard = form.closest('[data-report-generator-card]');
-
-    if (!generatorCard || !payload) {
-        return;
-    }
+    if (!generatorCard || !payload) return;
 
     const latestReportContainer = generatorCard.querySelector('[data-latest-report-container]');
     const latestReportTitle = generatorCard.querySelector('[data-latest-report-title]');
@@ -78,7 +83,7 @@ const updateLatestReportCard = function updateLatestReportCard(form, payload) {
         return;
     }
 
-    latestReportContainer.classList.remove('hidden');
+    latestReportContainer.classList.remove('hidden', 'opacity-0', 'translate-y-2');
     latestReportTitle.textContent = payload.subjectLabel || '';
     latestReportCreatedAt.textContent = formatReportCreatedAt(payload.createdAt);
     latestReportPeriod.textContent = formatReportPeriod(payload.periodStart, payload.periodEnd);
@@ -89,23 +94,15 @@ const updateLatestReportCard = function updateLatestReportCard(form, payload) {
 };
 
 const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
-    if (form.dataset.reportGeneratorMode !== 'ajax') {
-        return;
-    }
+    if (form.dataset.reportGeneratorMode !== 'ajax') return;
 
     const submitButton = form.querySelector('[data-report-generator-submit]');
-    const statusNode = form.querySelector('[data-report-generator-status]');
-
-    if (!submitButton) {
-        return;
-    }
+    if (!submitButton) return;
 
     const defaultButtonLabel = submitButton.textContent.trim();
 
     form.addEventListener('submit', async (event) => {
-        if (event.defaultPrevented) {
-            return;
-        }
+        if (event.defaultPrevented) return;
 
         event.preventDefault();
 
@@ -118,7 +115,13 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
 
         submitButton.disabled = true;
         submitButton.textContent = 'Generating...';
-        setGeneratorStatus(statusNode, 'Generating report...');
+
+        const generatorCard = form.closest('[data-report-generator-card]');
+        const latestReportContainer = generatorCard?.querySelector('[data-latest-report-container]');
+
+        if (latestReportContainer) {
+            latestReportContainer.classList.add('hidden');
+        }
 
         try {
             const response = await fetch(form.action, {
@@ -140,25 +143,45 @@ const initAjaxReportSubmission = function initAjaxReportSubmission(form) {
             }
 
             if (!response.ok) {
-                setGeneratorStatus(
-                    statusNode,
-                    payload?.message || 'The report could not be generated. Please try again.',
-                    'error',
-                );
+                renderReportGeneratorFlash(form, payload?.flash || {
+                    type: 'error',
+                    message: payload?.message || 'The report could not be generated.'
+                });
+
+                submitButton.disabled = false;
+                submitButton.textContent = defaultButtonLabel;
                 return;
             }
 
             updateLatestReportCard(form, payload);
-            setGeneratorStatus(statusNode, 'Report generated successfully.');
+
+            renderReportGeneratorFlash(form, payload?.flash || {
+                type: 'success',
+                message: 'Report generated successfully.'
+            });
+
+            submitButton.textContent = 'Opening...';
+
+            setTimeout(() => {
+                const redirectToField = form.querySelector('[name="redirectTo"]');
+                const redirectTo = redirectToField ? redirectToField.value : '/home';
+
+                window.location.href = `/reports/view/${String(payload.type).toLowerCase()}/${payload.id}?redirectTo=${encodeURIComponent(redirectTo)}`;
+            }, 600);
+
         } catch (error) {
-            setGeneratorStatus(statusNode, 'The report could not be generated. Please try again.', 'error');
-        } finally {
+            renderReportGeneratorFlash(form, {
+                type: 'error',
+                message: 'The report could not be generated. Please try again.'
+            });
+
             submitButton.disabled = false;
             submitButton.textContent = defaultButtonLabel;
         }
     });
 };
 
+/* Subject search stays unchanged */
 const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
     const typeField = form.querySelector('.report-type');
     const searchField = form.querySelector('.report-search');
@@ -178,29 +201,29 @@ const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
         subjectCatalog = {};
     }
 
-    const getCurrentSubjects = function getCurrentSubjects() {
+    const getCurrentSubjects = function () {
         return (subjectCatalog[typeField.value] || [])
             .map(normalizeSubjectEntry)
             .filter((subject) => subject.id && subject.label);
     };
 
-    const hideResults = function hideResults() {
+    const hideResults = function () {
         resultsNode.classList.add('hidden');
         resultsNode.innerHTML = '';
     };
 
-    const selectSubject = function selectSubject(subject) {
+    const selectSubject = function (subject) {
         subjectField.value = subject.id;
         searchField.value = subject.label;
         searchField.setCustomValidity('');
         hideResults();
     };
 
-    const renderResults = function renderResults() {
+    const renderResults = function () {
         const searchTerm = searchField.value.trim().toLowerCase();
         const currentSubjects = getCurrentSubjects();
         const filteredSubjects = searchTerm
-            ? currentSubjects.filter((subject) => subject.label.toLowerCase().includes(searchTerm))
+            ? currentSubjects.filter((s) => s.label.toLowerCase().includes(searchTerm))
             : currentSubjects.slice(0, 5);
 
         resultsNode.innerHTML = '';
@@ -219,16 +242,14 @@ const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
             button.type = 'button';
             button.className = 'block w-full rounded-lg px-3 py-2 text-left text-sm text-brand-text transition hover:bg-brand-bg';
             button.textContent = subject.label;
-            button.addEventListener('click', () => {
-                selectSubject(subject);
-            });
+            button.addEventListener('click', () => selectSubject(subject));
             resultsNode.appendChild(button);
         });
 
         resultsNode.classList.remove('hidden');
     };
 
-    const syncSubjectForType = function syncSubjectForType() {
+    const syncSubjectForType = function () {
         const currentSubjects = getCurrentSubjects();
 
         subjectField.value = '';
@@ -244,23 +265,9 @@ const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
         hideResults();
     };
 
-    searchField.addEventListener('focus', () => {
-        if (searchField.readOnly) {
-            return;
-        }
-
-        renderResults();
-    });
-
-    searchField.addEventListener('input', () => {
-        subjectField.value = '';
-        searchField.setCustomValidity('');
-        renderResults();
-    });
-
-    typeField.addEventListener('change', () => {
-        syncSubjectForType();
-    });
+    searchField.addEventListener('focus', renderResults);
+    searchField.addEventListener('input', renderResults);
+    typeField.addEventListener('change', syncSubjectForType);
 
     form.addEventListener('submit', (event) => {
         if (!subjectField.value) {
@@ -269,7 +276,6 @@ const initFullReportSubjectSearch = function initFullReportSubjectSearch(form) {
             searchField.reportValidity();
             return;
         }
-
         searchField.setCustomValidity('');
     });
 
