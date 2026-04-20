@@ -493,9 +493,6 @@ const generateReportSection = async function generateReportSection(body, prompt,
     messages: buildMessages(body, prompt),
     maxRetries: 0
   });
-
-  console.log(totalUsage);
-
   return output
 };
 
