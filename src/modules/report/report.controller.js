@@ -257,6 +257,7 @@ async function getEmployeeContext(employee_id, start_date, end_date){
         const [project_ids] = await Project.getEmployeeProjectIDsBtw(employee_id,start_date,end_date);
 
         const [activities] = await Activity.getNullProjectActivities(employee_id,start_date, end_date);
+        console.log(activities);
         if(activities.length > 0){
             project_ids.push({project_id: null, name: 'General Activities'});
         }
