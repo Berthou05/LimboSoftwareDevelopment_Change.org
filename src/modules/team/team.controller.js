@@ -650,6 +650,8 @@ projects: projects,
 */
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
+    const wantsActivityPartial = (request.get('Accept') || '').includes('application/json')
+        && request.query.ajax === 'activity';
     const privilegeMap = request.session?.user?.privilege || {};
     const canAddTeamMembers = Boolean(privilegeMap['TEAM-06-02']);
     const canManageTeamMembers = Boolean(privilegeMap['TEAM-07-02']);
@@ -766,6 +768,36 @@ exports.getTeamPage = (request, response, next) => {
                     fullName: employee.full_name,
                     image: buildAvatarUrl(employee.full_name),
                 }));
+            const activitySections = buildActivitySections(memberActivities);
+            const normalizedActivityError = activityFilter.error || activityError || '';
+
+            if (wantsActivityPartial) {
+                return response.render('partials/teamDirectory/teamActivity', {
+                    layout: false,
+                    team,
+                    activitySections,
+                    activityFilter,
+                    activityError: normalizedActivityError,
+                }, (renderError, html) => {
+                    if (renderError) {
+                        console.log(renderError);
+                        return response.status(500).json({
+                            error: 'The activity log could not be loaded. Please try again.',
+                        });
+                    }
+
+                    const nextUrl = new URL(`/teams/${teamId}`, `${request.protocol}://${request.get('host')}`);
+
+                    if (activityFilter?.preset) {
+                        nextUrl.searchParams.set('activityPreset', activityFilter.preset);
+                    }
+
+                    return response.json({
+                        html,
+                        url: `${nextUrl.pathname}${nextUrl.search}`,
+                    });
+                });
+            }
 
             return response.render('pages/team', {
                 csrfToken: request.csrfToken(),
@@ -793,9 +825,9 @@ exports.getTeamPage = (request, response, next) => {
                 isMember: team.membersDetailed.some(
                     (member) => member.employee.id === request.session.employeeId
                 ),
-                activitySections: buildActivitySections(memberActivities),
+                activitySections,
                 activityFilter,
-                activityError: activityFilter.error || activityError || '',
+                activityError: normalizedActivityError,
                 availableEmployees,
                 canAddTeamMembers,
                 canManageTeamMembers,

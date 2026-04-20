@@ -234,6 +234,8 @@ exports.getHome = async (request, response, next) => {
     const sessionUser = request.session.user || {};
     const userId = sessionUser.id;
     const employeeId = sessionUser.employeeId;
+    const wantsActivityPartial = (request.get('Accept') || '').includes('application/json')
+        && request.query.ajax === 'activity';
     const selectedActivityProjectId = typeof request.query.projectId === 'string'
         ? request.query.projectId.trim()
         : '';
@@ -387,6 +389,40 @@ exports.getHome = async (request, response, next) => {
             };
         }));
         const displayName = employeeInfo.names || sessionUser.username || 'Usuario';
+
+        if (wantsActivityPartial) {
+            return response.render('partials/HOME/latestActivity', {
+                layout: false,
+                latestActivitySections,
+                activityProjects,
+                projectRows,
+                selectedActivityProjectId,
+                activityFilter,
+                activityError: activityFilter.error || '',
+            }, (renderError, html) => {
+                if (renderError) {
+                    console.log(renderError);
+                    return response.status(500).json({
+                        error: 'The activity log could not be loaded. Please try again.',
+                    });
+                }
+
+                const nextUrl = new URL('/home', `${request.protocol}://${request.get('host')}`);
+
+                if (activityFilter?.preset) {
+                    nextUrl.searchParams.set('activityPreset', activityFilter.preset);
+                }
+
+                if (selectedActivityProjectId) {
+                    nextUrl.searchParams.set('projectId', selectedActivityProjectId);
+                }
+
+                return response.json({
+                    html,
+                    url: `${nextUrl.pathname}${nextUrl.search}`,
+                });
+            });
+        }
 
         return response.render('pages/home', {
             csrfToken: request.csrfToken(),

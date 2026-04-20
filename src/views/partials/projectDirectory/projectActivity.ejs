@@ -1,21 +1,21 @@
-<div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
+<div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel" data-activity-ajax>
     <% const projectPath = `/projects/${project?.id || project?.project_id || ''}`; %>
     <div class="flex items-center justify-between gap-2">
         <h2 class="font-heading text-xl font-semibold text-brand-text">Project Activity</h2>
         <div class="flex flex-wrap items-center justify-end gap-2">
-            <a href="<%= `${projectPath}?activityPreset=today` %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="<%= `${projectPath}?activityPreset=today` %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Today
             </a>
-            <a href="<%= `${projectPath}?activityPreset=week` %>" class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="<%= `${projectPath}?activityPreset=week` %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Week
             </a>
-            <a href="<%= `${projectPath}?activityPreset=month` %>" class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="<%= `${projectPath}?activityPreset=month` %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Month
             </a>
-            <a href="<%= `${projectPath}?activityPreset=quarter` %>" class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="<%= `${projectPath}?activityPreset=quarter` %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Quarter
             </a>
-            <a href="<%= `${projectPath}?activityPreset=all` %>" class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="<%= `${projectPath}?activityPreset=all` %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 All
             </a>
         </div>

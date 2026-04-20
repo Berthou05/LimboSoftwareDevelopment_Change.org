@@ -4,16 +4,15 @@
         : '';
 %>
 
-<article class="min-w-0 rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+<article class="min-w-0 rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel" data-activity-ajax>
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex min-w-0 flex-wrap items-center gap-3">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Your Activity</h2>
-            <form action="/home" method="GET">
+            <form action="/home" method="GET" data-activity-ajax-form>
                 <input type="hidden" name="activityPreset" value="<%= activityFilter?.preset || '' %>">
                 <label class="inline-block max-w-36 text-sm">
                     <select
                         name="projectId"
-                        onchange="this.form.submit()"
                         class="block w-full min-w-0 appearance-none truncate border-0 border-b border-brand-secondary bg-transparent pb-1 pr-4 text-xs font-semibold text-brand-text/60 outline-none ring-0 focus:border-brand-secondary focus:ring-0"
                     >
                         <option value="">All</option>
@@ -32,19 +31,19 @@
             </form>
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
-            <a href="/home?activityPreset=today<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="/home?activityPreset=today<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'today' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Today
             </a>
-            <a href="/home?activityPreset=week<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="/home?activityPreset=week<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Week
             </a>
-            <a href="/home?activityPreset=month<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="/home?activityPreset=month<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Month
             </a>
-            <a href="/home?activityPreset=quarter<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="/home?activityPreset=quarter<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 Quarter
             </a>
-            <a href="/home?activityPreset=all<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+            <a href="/home?activityPreset=all<%= selectedProjectId ? `&projectId=${encodeURIComponent(selectedProjectId)}` : '' %>" data-activity-ajax-link class="app-breadcrumb <%= activityFilter?.preset === 'all' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
                 All
             </a>
         </div>
