@@ -46,6 +46,8 @@
                             <textarea
                                 name="<%= field.name %>"
                                 rows="<%= field.rows || 4 %>"
+                                <%= field.required ? 'required' : '' %>
+                                <%= field.maxlength ? `maxlength="${field.maxlength}"` : '' %>
                                 class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
                                 placeholder="<%= field.placeholder || '' %>"
                             ><%= field.value || '' %></textarea>
@@ -53,6 +55,7 @@
                             <select
                                 name="<%= field.name %>"
                                 class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                                <%= field.required ? 'required' : '' %>
                             >
                                 <% (field.options || []).forEach((option) => { %>
                                     <option value="<%= option.value %>" <%= option.value === field.value ? 'selected' : '' %>><%= option.label %></option>
@@ -62,6 +65,8 @@
                             <input
                                 type="<%= field.type || 'text' %>"
                                 name="<%= field.name %>"
+                                <%= field.maxlength ? `maxlength="${field.maxlength}"` : '' %>
+                                <%= field.required ? 'required' : '' %>
                                 value="<%= field.value || '' %>"
                                 class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
                                 placeholder="<%= field.placeholder || '' %>"

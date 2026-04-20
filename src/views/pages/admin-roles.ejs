@@ -25,7 +25,7 @@
           <% roles.forEach((role) => { %>
             <th class="px-3 py-2">
               <div class="group flex flex-col items-start gap-1">
-                <span class="relative -top-0.5"><%= role.name %></span>
+                <span class="relative -top-0.5"><%= role.name.toUpperCase() %></span>
                 <%- include('../partials/shared/actionButton', {
                               buttonPopupOpen: 'delete-role-' + role.id,
                               buttonIcon: 'trash',
@@ -97,8 +97,9 @@
     popupMethod: 'POST',
     csrfToken,
     popupFields: [
-        { name: 'name', label: 'Role name', value: '', placeholder: 'Supervisor' }
+        { name: 'name', label: 'Role name', value: '', placeholder: 'Supervisor', required:true, maxlength:100}
     ],
 }) %>
 
 <script src="/js/adminRoles.js"></script>
++  

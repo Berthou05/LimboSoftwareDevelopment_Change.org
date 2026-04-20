@@ -2,7 +2,6 @@
 FUnction responsible for managing the flash alerts in the Role Administration page*/
 
 function showFlash({ type, message }) {
-    console.log('FLASH RENDERED');
     const container = document.getElementById('flash-container');
 
     let classes = '';
@@ -86,7 +85,6 @@ document.querySelectorAll('[data-action="delete-roles"]').forEach(form => {
             });
 
             const data = await response.json();
-            console.log(data);
 
             showFlash(data);
 
@@ -94,7 +92,7 @@ document.querySelectorAll('[data-action="delete-roles"]').forEach(form => {
                 form.closest('[data-popup]')
                 ?.querySelector('[data-popup-close]')
                 ?.click();
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 1000);
             }
 
             form.closest('[data-popup]')
@@ -127,10 +125,7 @@ document.querySelectorAll('[data-action="add-role"]').forEach(form => {
                 body: new FormData(form)
             });
 
-            console.log('POSTING FROM HERE');
-
             const data = await response.json();
-            console.log(data);
 
             showFlash(data);
 
@@ -138,7 +133,7 @@ document.querySelectorAll('[data-action="add-role"]').forEach(form => {
                 form.closest('[data-popup]')
                 ?.querySelector('[data-popup-close]')
                 ?.click();
-                setTimeout(() => location.reload(), 1500);
+                setTimeout(() => location.reload(), 1000);
             }
 
             form.closest('[data-popup]')

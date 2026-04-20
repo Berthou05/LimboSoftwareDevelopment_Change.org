@@ -46,6 +46,14 @@ module.exports = class Role {
             [role_id]);
     }
 
+    static compareName(name){
+        return db.execute(`
+            SELECT R.name
+            FROM role AS R
+            WHERE LOWER(R.name)=LOWER(?);`,
+            [name])
+    };
+
     // Read role by ID
     static fetchById(role_id) {
         // TODO: Implement database query to fetch role by ID
