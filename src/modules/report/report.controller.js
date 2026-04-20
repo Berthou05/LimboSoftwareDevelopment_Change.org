@@ -9,6 +9,7 @@ const Project = require ('../../models/project');
 const Team = require('../../models/team');
 const Activity = require('../../models/activity');
 const Achievement = require('../../models/achievement');
+const Highlight = require('../../models/highlight');
 const Goal = require('../../models/goal');
 const Prompt = require('../../models/prompt');
 const Report = require('../../models/report');
@@ -25,6 +26,22 @@ const getAiWrapper = async function getAiWrapper() {
 };
 
 //---------------------- Auxiliar functions ---------------------------
+function respondWithError(statusCode, message, wantsJson, response, request) {
+    const flash = {
+        type: 'error',
+        message
+    };
+
+    if (wantsJson) {
+        return response.status(statusCode).json({
+            success: false,
+            flash
+        });
+    }
+
+    request.session.reportGeneratorFlash = flash;
+    return response.redirect(route);
+};
 
 function groupBy(array, key) {
     return array.reduce((acc, item) => {
@@ -239,10 +256,17 @@ async function getEmployeeContext(employee_id, start_date, end_date){
 
         const [project_ids] = await Project.getEmployeeProjectIDsBtw(employee_id,start_date,end_date);
 
+        const [activities] = await Activity.getNullProjectActivities(employee_id,start_date, end_date);
+        console.log(activities);
+        if(activities.length > 0){
+            project_ids.push({project_id: null, name: 'General Activities'});
+        }
+
         return {
             context,
             projectIds:project_ids
         };
+
 
     } catch (error) {
         throw error;
@@ -316,11 +340,11 @@ const handlers = {
 Asyncronous function responsible foe obtaining context and common project
 elements as activities, goals and achievements*/
 
-async function getContext(reportType, id, start_date, end_date, route){
+async function getContext(reportType, id, start_date, end_date, route, wantsJson, response, request){
     try{
         const handler = handlers[reportType];
         if(!handler){
-            return response.status(400).json({success:false, message:'Data type incorrect'});
+            return respondWithError(400, 'Invalid Report data type. A report can not be generated. Try again with a different data type.',wantsJson, response, request);
         }
 
         //Obtention of context and projectIds depending on report type
@@ -335,29 +359,35 @@ async function getContext(reportType, id, start_date, end_date, route){
         }        
 
         //Obtention of remaining data depending on projectIds
-        const [activities, goals, achievements,prompts] = await Promise.all([
+        const [activities, goals, achievements, highlights, prompts] = await Promise.all([
             Activity.getProjectActivities(ids,start_date,end_date),
             Goal.getProjectGoals(ids, start_date, end_date),
             Achievement.getProjectAchievements(ids, start_date, end_date),
+            Highlight.getProjectHighlights(ids, start_date, end_date),
             Prompt.getPromptByType(reportType)
         ]);
 
         let normalizedActivities = '';
 
+        if(activities[0].length == 0){
+            return respondWithError(400, 'No activities between the selected range. A report can not be generated. Try again with a different date range.',wantsJson, response, request);
+        }
+
         //Normalization of activities
         switch (reportType){
             case 'TEAM':
-                normalizedActivities = groupByThreeLevels(activities[0], 'p','t','e');
+                normalizedActivities = groupByTwoLevels(activities[0], 'p','t');
             break;
 
             default:
-                normalizedActivities = groupByTwoLevels(activities[0],'p','t');
+                normalizedActivities = groupByTwoLevels(activities[0],'p','e');
             break;
         }
 
         //Normalization of goals and achievements
         const normalizedGoals = groupBy(goals[0], 'p');
         const normalizedAchievements = groupBy(achievements[0], 'p');
+        const normalizedHighlights = groupBy(highlights[0], 'p');
 
         let enrichedProjects;
 
@@ -366,7 +396,8 @@ async function getContext(reportType, id, start_date, end_date, route){
                 project_id:ids[0],
                 goals: normalizedGoals[projectIds[0]],
                 achievements: normalizedAchievements[projectIds[0]],
-                activities: normalizedActivities[projectIds[0]]
+                activities: normalizedActivities[projectIds[0]],
+                highlights: normalizedHighlights[projectIds[0]]
             }]
         }
         else{
@@ -374,7 +405,8 @@ async function getContext(reportType, id, start_date, end_date, route){
                 ...project,
                 goals: normalizedGoals[project.project_id] || [],
                 achievements: normalizedAchievements[project.project_id] || [],
-                activities: normalizedActivities[project.project_id] || []
+                activities: normalizedActivities[project.project_id] || [],
+                highlights: normalizedHighlights[project.project_id] || []
             }));
         }
         
@@ -392,11 +424,10 @@ async function getContext(reportType, id, start_date, end_date, route){
             prompts: promptsOrdered
         }
         
-
     }
     catch(error){
         console.log(error);
-        return response.status(500).json({success:false, message:'Data obtention failed'});
+        return respondWithError(500, 'Data obtention failed',wantsJson,response, request);
     }
 }
 
@@ -420,24 +451,26 @@ exports.generateReport = async (request, response, next)=>{
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     const reportType = normalizeReportType(type);
+    const wantsJson = request.xhr || request.headers.accept?.includes('json');
 
     if (!type || !id || !start_date || !end_date) {
-        request.session.error = 'Complete the report type, subject, and date range before generating a report.';
-        return response.redirect(route);
+        return respondWithError(400, 'Complete the report type, subject, and date range before generating a report.', wantsJson, response, request);
+    }
+
+    if (!reportType) {
+        return respondWithError(400, 'Select a valid report type before generating a report.', wantsJson, response, request);
     }
 
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-        request.session.error = 'Select a valid report date range.';
-        return response.redirect(route);
+        return respondWithError(400, 'Select a valid report date range.', wantsJson,response, request);
     }
 
     if (startDate.getTime() > endDate.getTime()) {
-        request.session.error = 'The start date must be before the end date.';
-        return response.redirect(route);
+        return respondWithError(400, 'The start date must be before the end date.',wantsJson,response, request);
     }
 
     //Context + Data Obtention
-    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route);  
+    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route, wantsJson, response, request);  
     
     //Report Generation
     //What went well? section
@@ -454,11 +487,14 @@ exports.generateReport = async (request, response, next)=>{
             project: projectData,
         };
 
+        console.log(projectData);
+
         const promise = limit(async () => {
             const section = await AiWrapper.beBetterProject(
                 collective, 
                 promptBeBetter.prompt, 
-                promptBeBetter.schema);
+                promptBeBetter.schema,
+                reportType);
             return { projectId, section};
         });
 
@@ -473,7 +509,12 @@ exports.generateReport = async (request, response, next)=>{
 
     // What can be improved Section
     const promptWhatToImprove = prompts.find(p => p.name === "Improve");
-    const whatToImprove = await AiWrapper.whatToImprove(hasGoneWell, promptWhatToImprove.prompt,promptWhatToImprove.schema);
+    const allInfo = {
+        context: context,
+        projects: projects,
+        hasGoneWell: hasGoneWell
+    }
+    const whatToImprove = await AiWrapper.whatToImprove(allInfo, promptWhatToImprove.prompt,promptWhatToImprove.schema, reportType);
 
     // Team Impact Section
     let TeamImpact = false;
@@ -485,7 +526,7 @@ exports.generateReport = async (request, response, next)=>{
     let companyValues = false;
     if(!(reportType == 'PROJECT')){
         let valuesPrompt = prompts.find(p => p.name === "Values");
-        companyValues = await AiWrapper.companyValues(hasGoneWell, valuesPrompt.prompt, valuesPrompt.schema);
+        companyValues = await AiWrapper.companyValues(hasGoneWell, valuesPrompt.prompt, valuesPrompt.schema, reportType);
     }
 
     // Assembly of the report object
@@ -536,27 +577,37 @@ exports.generateReport = async (request, response, next)=>{
                     type: reports[0].content_type
                 };
 
-                if (request.xhr || request.headers.accept?.includes('json')) {
-                    return response.status(200).json(responsePayload);
+                if (wantsJson) {
+                    return response.status(200).json({
+                        success: true,
+                        ...responsePayload,
+                        flash: {
+                            type: 'success',
+                            message: 'Report generated successfully.'
+                        }
+                    });
                 }
-                else{
-                    return res.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}`);
-                }
+
+                request.session.reportGeneratorFlash = {
+                    type: 'success',
+                    message: 'Report generated successfully.'
+                };
+                return response.redirect(`/reports/view/${reports[0].content_type.toLowerCase()}/${reports[0].report_id}?redirectTo=${encodeURIComponent(route)}`);
 
             }).catch((error)=>{
                 console.log(error);
-                return response.status(500).json({success:false, message: 'Report name obtention failed. Try again.'});
+                return respondWithError(500,'Report name obtention failed. Try again.',wantsJson, response, request);
             })
 
         })  
         .catch((error)=>{
             console.log(error);
-            return response.status(500).json({success:false, message: 'Latest report obtention failed. Try again.'});    
+            return respondWithError(500, 'Latest report obtention failed. Try again.',wantsJson, response, request);
         })
 
     })
     .catch((error)=>{
         console.log(error);
-        return response.status(500).json({success:false, message: 'Report object could not be stores successfully, Try again.'});
+        return respondWithError(500, 'Report object could not be stores successfully, Try again.',wantsJson, response, request);
     })
 };

@@ -15,12 +15,14 @@ const Report = require('../../models/report');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
 const { randomUUID } = require('crypto');
+const path = require('path');
 
 const TEAM_CREATE_PAGE_TITLE = 'New Team';
 const TEAM_CREATE_PAGE_SUBTITLE = 'Register a new team and assign yourself as the responsible lead.';
 const TEAM_CREATE_DUPLICATE_MESSAGE = 'A team with that name already exists.';
 const TEAM_CREATE_GENERIC_ERROR_MESSAGE = 'The team could not be created right now.';
 const TEAM_ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpg', 'image/jpeg'];
+const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
 const TEAM_MEMBER_ROLES = [
     EmployeeTeamMembership.EmployeeRole.LEAD,
     EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
@@ -47,8 +49,6 @@ latestReport created of the content_id*/
 const getLatestReport = async function getLatestReport(content_id, user_id){
     return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
         return Search.getNameFromId(content_id).then(([name,fieldData])=>{
-            console.log(report);
-            console.log(report[0].report_id);
             return {
                 id:report[0].report_id,
                 subjectLabel:name[0].name,
@@ -77,6 +77,17 @@ const buildAvatarUrl = function buildAvatarUrl(label) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(normalizedLabel)}&background=fbfbfe&color=1f2937`;
 };
 
+/*getUploadedTeamImage(request)
+Auxiliar function responsible for normalizing uploaded team image paths to the public URL format.*/
+
+const getUploadedTeamImage = function getUploadedTeamImage(request) {
+    if (!request.file) {
+        return '';
+    }
+
+    return `/${path.relative(PUBLIC_DIRECTORY, request.file.path).replace(/\\/g, '/')}`;
+};
+
 /*normalizeTeam(team)
 Function responsible for the normalization of a team given as a parameter*/
 
@@ -84,6 +95,7 @@ const normalizeTeam = function normalizeTeam(team) {
     return {
         id: team.team_id ?? null,
         name: team.name ?? 'Unnamed team',
+        leadId: team.employee_responsible_id ?? null,
         leadName:
             team.full_name ??
             team.lead_name ??
@@ -414,6 +426,22 @@ const renderNewTeamPage = function renderNewTeamPage(request, response, statusCo
     });
 };
 
+const respondTeamPopupRequest = function respondTeamPopupRequest(
+    request,
+    response,
+    teamId,
+    statusCode,
+    payload,
+) {
+    if (payload.success) {
+        request.session.success = 'Team information updated successfully.';
+    } else if (payload.error) {
+        request.session.error = payload.error;
+    }
+
+    return response.redirect(`/teams/${teamId}`);
+};
+
 //--------------------------- Main Functions ---------------------------
 
 /*getNewTeamPage
@@ -496,6 +524,80 @@ exports.createTeam = (request, response, next) => {
         });
 };
 
+/*updateTeamInfo
+Function responsible for updating the main team information card, including the optional team image.*/
+
+exports.updateTeamInfo = (request, response, next) => {
+    const teamId = request.params.team_id;
+    const employeeId = request.session.employeeId || '';
+    const name = typeof request.body.name === 'string' ? request.body.name.trim() : '';
+    const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
+    const currentImage = typeof request.body.currentImage === 'string' ? request.body.currentImage.trim() : '';
+    const image = getUploadedTeamImage(request) || currentImage || null;
+
+    if (request.fileValidationError) {
+        return respondTeamPopupRequest(request, response, teamId, 400, {
+            error: request.fileValidationError,
+        });
+    }
+
+    if (!name) {
+        return respondTeamPopupRequest(request, response, teamId, 400, {
+            error: 'Team name is required.',
+        });
+    }
+
+    return Team.findById(teamId)
+        .then(([teamRows]) => {
+            const team = teamRows[0];
+
+            if (!team) {
+                return respondTeamPopupRequest(request, response, teamId, 404, {
+                    error: 'The selected team was not found.',
+                });
+            }
+
+            if (team.employee_responsible_id !== employeeId) {
+                return respondTeamPopupRequest(request, response, teamId, 403, {
+                    error: 'Only the team lead can update team information.',
+                });
+            }
+
+            return Team.findByName(name).then(([nameRows]) => {
+                const existingTeam = nameRows[0];
+
+                if (existingTeam && existingTeam.team_id !== teamId) {
+                    return respondTeamPopupRequest(request, response, teamId, 409, {
+                        error: TEAM_CREATE_DUPLICATE_MESSAGE,
+                    });
+                }
+
+                return Team.update(
+                    teamId,
+                    name,
+                    description || null,
+                    image,
+                ).then(([result]) => {
+                    if (!result.affectedRows) {
+                        return respondTeamPopupRequest(request, response, teamId, 404, {
+                            error: 'The selected team was not found.',
+                        });
+                    }
+
+                    return respondTeamPopupRequest(request, response, teamId, 200, {
+                        success: true,
+                    });
+                });
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondTeamPopupRequest(request, response, teamId, 500, {
+                error: 'Could not update team information right now.',
+            });
+        });
+};
+
 /*getTeams
 Function responsible for the obtention of the Teams in the Intermediate
 Teams page.
@@ -512,6 +614,7 @@ exports.getTeams = (request, response, next) => {
                 username: request.session.username || '',
                 pageTitle: 'Team',
                 pageSubtitle: 'Intermediate selection for own and other teams.',
+                currentEmployeeId: employeeId,
                 myTeams: teams.map((team) => normalizeTeam({ ...team, isMember: true })),
                 otherTeams: notTeams.map((team) => normalizeTeam({ ...team, isMember: false })),
                 query:'',
@@ -547,6 +650,8 @@ projects: projects,
 */
 exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
+    const wantsActivityPartial = (request.get('Accept') || '').includes('application/json')
+        && request.query.ajax === 'activity';
     const privilegeMap = request.session?.user?.privilege || {};
     const canAddTeamMembers = Boolean(privilegeMap['TEAM-06-02']);
     const canManageTeamMembers = Boolean(privilegeMap['TEAM-07-02']);
@@ -629,7 +734,10 @@ exports.getTeamPage = (request, response, next) => {
                 id: teamRow.team_id,
                 name: teamRow.name,
                 description: teamRow.description,
+                createdAt: formatDayLabel(teamRow.created_at),
                 image: teamRow.image || buildAvatarUrl(teamRow.name),
+                imagePath: teamRow.image || '',
+                fallbackImage: buildAvatarUrl(teamRow.name),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,
@@ -660,6 +768,36 @@ exports.getTeamPage = (request, response, next) => {
                     fullName: employee.full_name,
                     image: buildAvatarUrl(employee.full_name),
                 }));
+            const activitySections = buildActivitySections(memberActivities);
+            const normalizedActivityError = activityFilter.error || activityError || '';
+
+            if (wantsActivityPartial) {
+                return response.render('partials/teamDirectory/teamActivity', {
+                    layout: false,
+                    team,
+                    activitySections,
+                    activityFilter,
+                    activityError: normalizedActivityError,
+                }, (renderError, html) => {
+                    if (renderError) {
+                        console.log(renderError);
+                        return response.status(500).json({
+                            error: 'The activity log could not be loaded. Please try again.',
+                        });
+                    }
+
+                    const nextUrl = new URL(`/teams/${teamId}`, `${request.protocol}://${request.get('host')}`);
+
+                    if (activityFilter?.preset) {
+                        nextUrl.searchParams.set('activityPreset', activityFilter.preset);
+                    }
+
+                    return response.json({
+                        html,
+                        url: `${nextUrl.pathname}${nextUrl.search}`,
+                    });
+                });
+            }
 
             return response.render('pages/team', {
                 csrfToken: request.csrfToken(),
@@ -687,9 +825,9 @@ exports.getTeamPage = (request, response, next) => {
                 isMember: team.membersDetailed.some(
                     (member) => member.employee.id === request.session.employeeId
                 ),
-                activitySections: buildActivitySections(memberActivities),
+                activitySections,
                 activityFilter,
-                activityError: activityFilter.error || activityError || '',
+                activityError: normalizedActivityError,
                 availableEmployees,
                 canAddTeamMembers,
                 canManageTeamMembers,
@@ -1061,6 +1199,8 @@ exports.searchTeams = (request, response, next) => {
             layout: false,
             myTeams,
             otherTeams,
+            csrfToken: request.csrfToken(),
+            currentEmployeeId: employeeId,
         }, (renderError, resultsHtml) => {
             if (renderError) {
                 console.log(renderError);

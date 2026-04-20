@@ -98,4 +98,19 @@ module.exports = class Highlight {
 
         return db.execute('DELETE FROM highlight WHERE highlight_id = ?', [highlight_id]);
     }
+
+    /**/
+
+        static getProjectHighlights(project_ids, start_date, end_date){
+            if(!project_ids.length){
+                return Promise.resolve([[]]);
+            }
+            const placeholders = project_ids.map(() => '?').join(',');
+            
+            return db.execute(`
+                SELECT H.title, H.content, H.project_id AS 'p'
+                FROM highlight as H
+                WHERE (H.created_at BETWEEN ? AND ?) AND H.project_id IN (${placeholders});`,
+                [start_date, end_date, ...project_ids]);
+        }
 };

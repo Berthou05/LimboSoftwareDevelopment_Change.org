@@ -67,8 +67,11 @@
         <%- include('../partials/teamDirectory/teamDirectoryResults', {
             myTeams,
             otherTeams,
+            csrfToken,
+            currentEmployeeId,
         }) %>
     </div>
 </section>
 
 <script src="/js/teamDirectorySearch.js"></script>
+<script src="/js/teamDetails.js"></script>

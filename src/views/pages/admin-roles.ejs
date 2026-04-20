@@ -24,15 +24,16 @@
           <th class="px-3 py-2">Privilege</th>
           <% roles.forEach((role) => { %>
             <th class="px-3 py-2">
-              <div class="flex items-center gap-2 group">
-              <%= role.name %>
-              <%- include('../partials/shared/actionButton', {
-                            buttonPopupOpen: 'delete-role-' + role.id,
-                            buttonIcon: 'trash',
-                            buttonVariant: 'icon-only',
-                            buttonClasses: 'opacity-0 group-hover:opacity-100 transition-opacity border-red-200 text-red-500',
-                            actionTone: 'danger'
-                        }) %>
+              <div class="group flex flex-col items-start gap-1">
+                <span class="relative -top-0.5"><%= role.name.toUpperCase() %></span>
+                <%- include('../partials/shared/actionButton', {
+                              buttonPopupOpen: 'delete-role-' + role.id,
+                              buttonIcon: 'trash',
+                              buttonLabel: 'Delete',
+                              buttonVariant: 'small',
+                              buttonClasses: 'panel-action-button--delete-hover opacity-0 group-hover:opacity-100 transition-opacity',
+                              buttonAriaLabel: 'Delete role'
+                          }) %>
               </div>
             </th>
             <% }) %>          
@@ -96,8 +97,9 @@
     popupMethod: 'POST',
     csrfToken,
     popupFields: [
-        { name: 'name', label: 'Role name', value: '', placeholder: 'Supervisor' }
+        { name: 'name', label: 'Role name', value: '', placeholder: 'Supervisor', required:true, maxlength:100}
     ],
 }) %>
 
 <script src="/js/adminRoles.js"></script>
++  

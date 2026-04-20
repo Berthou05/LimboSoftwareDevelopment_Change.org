@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
     <%- include("partials/head") %>
     <body>
         <% if (typeof isLoginPage !== 'undefined' && isLoginPage) { %>
@@ -23,6 +23,7 @@
                             border-brand-secondary/60 bg-white/90 p-8 shadow-xl backdrop-blur"
                     >
                         <%- include("partials/flash") %>
+                        <div id="flash-container"></div>
                         <%- body %>
                     </section>
                 <% } %>
@@ -47,6 +48,7 @@
                         <%- body %>
                     </section>
                 </main>
+            </div>
         <% } %>
         <script src="/js/main.js"></script>
     </body>

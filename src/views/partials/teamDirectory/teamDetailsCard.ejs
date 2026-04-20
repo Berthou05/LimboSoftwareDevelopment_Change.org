@@ -9,25 +9,169 @@
 %>
 
 <div class="space-y-4">
-    <div class="flex flex-wrap items-center gap-4">
-        <% if (team?.image) { %>
-            <img src="<%= team.image %>" alt="<%= team.name %>" class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover" />
-        <% } else { %>
-            <div class="app-directory-avatar flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold">
-                <%= teamInitials %>
+    <div class="flex items-start justify-between gap-4">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-4">
+            <% if (team?.image) { %>
+                <img src="<%= team.image %>" alt="<%= team.name %>" class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover" />
+            <% } else { %>
+                <div class="app-directory-avatar flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold">
+                    <%= teamInitials %>
+                </div>
+            <% } %>
+            <div class="flex-1 min-w-0">
+                <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= team.name %></h1>
+                <p class="text-sm text-brand-text/70"><%= team.description %></p>
+            </div>
+        </div>
+        <% if (canEditTeam) { %>
+            <div class="flex items-center gap-3">
+                <%- include('../shared/actionButton', {
+                    buttonPopupOpen: 'team-edit-info',
+                    buttonIcon: 'edit',
+                    buttonLabel: 'Edit',
+                    buttonVariant: 'small',
+                    buttonClasses: 'shrink-0',
+                    buttonAriaLabel: 'Edit team information',
+                }) %>
             </div>
         <% } %>
-        <div class="flex-1 min-w-0">
-            <h1 class="font-heading text-2xl font-bold text-brand-text sm:text-3xl"><%= team.name %></h1>
-            <p class="text-sm text-brand-text/70"><%= team.description %></p>
-        </div>
     </div>
     <div class="flex flex-wrap gap-2 text-xs text-brand-text/70">
         <span class="app-breadcrumb app-breadcrumb--static">
             Created by: <%= team.lead?.fullName || 'Unknown' %>
         </span>
         <span class="app-breadcrumb app-breadcrumb--static">
-            Team Information
+            Created at: <%= team.createdAt %>
         </span>
     </div>
 </div>
+
+<% if (canEditTeam) { %>
+    <div data-popup="team-edit-info" class="fixed inset-0 z-50 hidden bg-brand-text/35 px-4 py-8">
+        <div class="mx-auto max-w-lg">
+            <div class="rounded-3xl border border-brand-secondary bg-white p-6 shadow-panel">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="font-heading text-2xl font-bold text-brand-text">Edit Team Information</h3>
+                        <p class="mt-1 text-sm text-brand-text/60">
+                            Update the main information displayed in the team description card.
+                        </p>
+                    </div>
+                    <%- include('../shared/actionButton', {
+                        buttonPopupClose: true,
+                        buttonIcon: 'close',
+                        buttonVariant: 'icon-only',
+                        buttonClasses: 'shrink-0',
+                        buttonAriaLabel: 'Close popup',
+                    }) %>
+                </div>
+
+                <form
+                    action="/teams/<%= team?.id || '' %>/update"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    class="mt-5 space-y-4"
+                >
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <input type="hidden" name="currentImage" value="<%= team?.imagePath || '' %>">
+
+                    <%# Keep the form as a normal multipart submit so image replacement works with the existing multer setup. %>
+                    <label class="block text-sm">
+                        <span class="mb-2 block font-semibold text-brand-text/70">Team name</span>
+                        <input
+                            type="text"
+                            name="name"
+                            value="<%= team?.name || '' %>"
+                            class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                            placeholder="Platform Engineering"
+                        />
+                    </label>
+
+                    <label class="block text-sm">
+                        <span class="mb-2 block font-semibold text-brand-text/70">Description</span>
+                        <textarea
+                            name="description"
+                            rows="4"
+                            class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+                            placeholder="Describe the purpose and focus of the team."
+                        ><%= team?.description || '' %></textarea>
+                    </label>
+
+                    <div class="block text-sm">
+                        <span class="mb-3 block font-semibold text-brand-text/70">Team image</span>
+                        <input
+                            id="teamImageFile"
+                            type="file"
+                            name="image"
+                            accept="image/*"
+                            class="sr-only"
+                        />
+                        <input id="teamImageValue" type="hidden" name="currentImage" value="<%= team?.imagePath || '' %>">
+                        <p id="teamImageFilename" class="sr-only">No file selected</p>
+
+                        <div class="relative inline-flex flex-col items-start">
+                            <img
+                                id="teamImagePreview"
+                                src="<%= team?.image || '' %>"
+                                data-default-image="<%= team?.fallbackImage || team?.image || '' %>"
+                                alt="Team preview"
+                                class="h-36 w-36 rounded-full border border-brand-secondary object-cover"
+                            />
+                            <div class="relative -mt-8 ml-3">
+                                <button
+                                    id="teamImageMenuButton"
+                                    type="button"
+                                    aria-expanded="false"
+                                    aria-controls="teamImageMenu"
+                                    class="inline-flex items-center gap-2 rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-white active:bg-white focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-nav/20"
+                                >
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="M4 13.5V16h2.5L14 8.5 11.5 6 4 13.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                                        <path d="m12.5 5 1-1a1.4 1.4 0 0 1 2 2l-1 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                                    </svg>
+                                    Edit
+                                </button>
+
+                                <div
+                                    id="teamImageMenu"
+                                    class="absolute left-0 top-full z-20 mt-2 hidden w-52 overflow-hidden rounded-lg border border-brand-secondary bg-white text-sm shadow-sm"
+                                >
+                                    <button
+                                        id="teamImageUploadButton"
+                                        type="button"
+                                        class="block w-full bg-brand-nav px-4 py-3 text-left font-semibold text-white transition hover:bg-brand-nav/90"
+                                    >
+                                        Upload a photo...
+                                    </button>
+                                    <button
+                                        id="teamImageRemoveButton"
+                                        type="button"
+                                        class="block w-full px-4 py-3 text-left font-semibold text-brand-text transition hover:bg-brand-secondary/20"
+                                    >
+                                        Remove photo
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-3 pt-2">
+                        <button
+                            type="button"
+                            data-popup-close
+                            class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            class="rounded-xl border border-brand-primary bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent"
+                        >
+                            Save
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<% } %>

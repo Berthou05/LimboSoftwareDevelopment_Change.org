@@ -37,8 +37,6 @@ latestReport created of the content_id*/
 const getLatestReport = async function getLatestReport(content_id, user_id){
     return Report.fetchLatestReport(user_id, content_id).then(([report,fieldData])=>{
         return Search.getNameFromId(content_id).then(([name,fieldData])=>{
-            console.log(report);
-            console.log(report[0].report_id);
             return {
                 id:report[0].report_id,
                 subjectLabel:name[0].name,
@@ -363,6 +361,7 @@ exports.getProjects = (request, response, next) => {
             myProjects: projects.map((project) => ({
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
@@ -371,11 +370,13 @@ exports.getProjects = (request, response, next) => {
             otherProjects: notProjects.map((project) => ({
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
                 isMember: Boolean(project.is_member || project.isMember),
             })),
+            currentEmployeeId: employeeId,
             query: '',
         });
     }).catch((error) => {
@@ -426,6 +427,10 @@ exports.createProject = (request, response, next) => {
 
     if (!projectForm.startDate) {
         formErrors.push('Start date is required.');
+    }
+
+    if (projectForm.startDate >= projectForm.endDate){
+        formErrors.push('Start date is greater or equal than end date.');
     }
 
     if (formErrors.length > 0) {
@@ -494,6 +499,8 @@ Function responsible for rendering the detailed view of a specific project.*/
 exports.getProjectPage = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
+    const wantsActivityPartial = (request.get('Accept') || '').includes('application/json')
+        && request.query.ajax === 'activity';
     const privilegeMap = request.session?.user?.privilege || {};
     const canAddProjectMembers = Boolean(privilegeMap['PROJ-05-02']);
     const canManageProjectMembers = Boolean(privilegeMap['PROJ-06-02']);
@@ -588,6 +595,99 @@ exports.getProjectPage = (request, response, next) => {
                 id: team.team_id,
                 name: team.name || 'Unnamed team',
             }));
+        const projectViewModel = {
+            ...project,
+            id: project.project_id,
+            name: project.name || 'Project',
+            description: project.description || 'No project description has been added yet.',
+            status: project.status || 'Unknown',
+            startDateLabel: formatDateLabel(project.start_date, 'N/A'),
+            endDateLabel: formatDateLabel(project.end_date, 'In progress'),
+            startDateInput: formatDateInput(project.start_date),
+            endDateInput: formatDateInput(project.end_date),
+            lead: {
+                fullName: project.lead_name || 'Unknown',
+            },
+            achievementsDetailed: achievementRows.map((achievement) => ({
+                id: achievement.achievement_id || null,
+                title: achievement.title || 'Untitled achievement',
+                description: achievement.description || 'No achievement description available.',
+                authorName: achievement.full_name || 'Unknown',
+                achievementDateLabel: formatDateLabel(achievement.achievement_date, 'Date unavailable'),
+                achievementDate: formatDateInput(achievement.achievement_date),
+                evidenceLink: achievement.evidence_link || '',
+            })),
+            goalsDetailed: goalRows.map((goal) => ({
+                id: goal.goal_id || null,
+                title: goal.title || 'Untitled goal',
+                description: goal.description || 'No goal description available.',
+                status: goal.status || 'Unknown',
+                dueDateLabel: formatDateLabel(goal.due_date, 'No due date'),
+                dueDate: formatDateInput(goal.due_date),
+                createdAtLabel: formatDateLabel(goal.created_at, 'Date unavailable'),
+                authorName: goal.full_name || 'Unknown',
+            })),
+            highlightsDetailed: highlightRows.map((highlight) => ({
+                id: highlight.highlight_id || null,
+                title: highlight.title || 'Untitled highlight',
+                content: highlight.content || 'No highlight content available.',
+                authorName: highlight.full_name || 'Unknown',
+                createdAtLabel: formatDateLabel(highlight.created_at, 'Date unavailable'),
+            })),
+            teamsDetailed: teamRows.map((team) => ({
+                id: team.team_id || null,
+                name: team.name || 'Unnamed team',
+                description: team.description || 'No team description available.',
+                image: team.image || null,
+                status: team.status || 'Unknown',
+                assignmentDescription: team.team_role || '',
+                memberCount: Number(team.member_count || 0),
+                joinedAtLabel: formatDateLabel(team.joined_at, 'Date unavailable'),
+            })),
+            membersDetailed: memberRows.map((member) => ({
+                id: member.employee_id || null,
+                fullName: member.full_name || 'Unknown',
+                role: member.role || '',
+                description: member.description || 'Active collaborator',
+                startedAtLabel: formatDateLabel(member.started_at, 'Date unavailable'),
+            })),
+        };
+        const normalizedActivityFilter = {
+            preset: activityFilter.preset,
+            startDate: activityFilter.startDate,
+            endDate: activityFilter.endDate,
+            hasManualRange: activityFilter.hasManualRange,
+            isFiltered: activityFilter.isFiltered,
+        };
+        const normalizedActivityError = activityFilter.error || activityError || '';
+
+        if (wantsActivityPartial) {
+            return response.render('partials/projectDirectory/projectActivity', {
+                layout: false,
+                project: projectViewModel,
+                activitySections: buildActivitySections(activityRows),
+                activityFilter: normalizedActivityFilter,
+                activityError: normalizedActivityError,
+            }, (renderError, html) => {
+                if (renderError) {
+                    console.log(renderError);
+                    return response.status(500).json({
+                        error: 'The activity log could not be loaded. Please try again.',
+                    });
+                }
+
+                const nextUrl = new URL(`/projects/${projectId}`, `${request.protocol}://${request.get('host')}`);
+
+                if (normalizedActivityFilter.preset) {
+                    nextUrl.searchParams.set('activityPreset', normalizedActivityFilter.preset);
+                }
+
+                return response.json({
+                    html,
+                    url: `${nextUrl.pathname}${nextUrl.search}`,
+                });
+            });
+        }
 
         return response.render('pages/project', {
             csrfToken: request.csrfToken(),
@@ -595,75 +695,13 @@ exports.getProjectPage = (request, response, next) => {
             username: request.session.username || '',
             pageTitle: PAGE_TITLE,
             error: '',
-            project: {
-                ...project,
-                id: project.project_id,
-                name: project.name || 'Project',
-                description: project.description || 'No project description has been added yet.',
-                status: project.status || 'Unknown',
-                startDateLabel: formatDateLabel(project.start_date, 'N/A'),
-                endDateLabel: formatDateLabel(project.end_date, 'In progress'),
-                startDateInput: formatDateInput(project.start_date),
-                endDateInput: formatDateInput(project.end_date),
-                lead: {
-                    fullName: project.lead_name || 'Unknown',
-                },
-                achievementsDetailed: achievementRows.map((achievement) => ({
-                    id: achievement.achievement_id || null,
-                    title: achievement.title || 'Untitled achievement',
-                    description: achievement.description || 'No achievement description available.',
-                    authorName: achievement.full_name || 'Unknown',
-                    achievementDateLabel: formatDateLabel(achievement.achievement_date, 'Date unavailable'),
-                    achievementDate: formatDateInput(achievement.achievement_date),
-                    evidenceLink: achievement.evidence_link || '',
-                })),
-                goalsDetailed: goalRows.map((goal) => ({
-                    id: goal.goal_id || null,
-                    title: goal.title || 'Untitled goal',
-                    description: goal.description || 'No goal description available.',
-                    status: goal.status || 'Unknown',
-                    dueDateLabel: formatDateLabel(goal.due_date, 'No due date'),
-                    dueDate: formatDateInput(goal.due_date),
-                    createdAtLabel: formatDateLabel(goal.created_at, 'Date unavailable'),
-                    authorName: goal.full_name || 'Unknown',
-                })),
-                highlightsDetailed: highlightRows.map((highlight) => ({
-                    id: highlight.highlight_id || null,
-                    title: highlight.title || 'Untitled highlight',
-                    content: highlight.content || 'No highlight content available.',
-                    authorName: highlight.full_name || 'Unknown',
-                    createdAtLabel: formatDateLabel(highlight.created_at, 'Date unavailable'),
-                })),
-                teamsDetailed: teamRows.map((team) => ({
-                    id: team.team_id || null,
-                    name: team.name || 'Unnamed team',
-                    description: team.description || 'No team description available.',
-                    image: team.image || null,
-                    status: team.status || 'Unknown',
-                    assignmentDescription: team.team_role || '',
-                    memberCount: Number(team.member_count || 0),
-                    joinedAtLabel: formatDateLabel(team.joined_at, 'Date unavailable'),
-                })),
-                membersDetailed: memberRows.map((member) => ({
-                    id: member.employee_id || null,
-                    fullName: member.full_name || 'Unknown',
-                    role: member.role || '',
-                    description: member.description || 'Active collaborator',
-                    startedAtLabel: formatDateLabel(member.started_at, 'Date unavailable'),
-                })),
-            },
+            project: projectViewModel,
             projectName: project.name || 'Project',
             projectDescription: project.description || 'No project description has been added yet.',
             projectMembership,
             activitySections: buildActivitySections(activityRows),
-            activityFilter: {
-                preset: activityFilter.preset,
-                startDate: activityFilter.startDate,
-                endDate: activityFilter.endDate,
-                hasManualRange: activityFilter.hasManualRange,
-                isFiltered: activityFilter.isFiltered,
-            },
-            activityError: activityFilter.error || activityError || '',
+            activityFilter: normalizedActivityFilter,
+            activityError: normalizedActivityError,
             defaultReportType: 'PROJECT',
             defaultSubjectId: project.project_id,
             reportSubjects: {
@@ -1103,6 +1141,7 @@ exports.searchProjects = (request, response, next) => {
             const normalizedProject = {
                 id: project.project_id,
                 name: project.name,
+                leadId: project.employee_responsible_id || null,
                 leadName: project.lead_name || 'Pending assignment',
                 description: project.description,
                 image: project.image || null,
@@ -1121,6 +1160,8 @@ exports.searchProjects = (request, response, next) => {
             layout: false,
             myProjects,
             otherProjects,
+            csrfToken: request.csrfToken(),
+            currentEmployeeId: employeeId,
         }, (renderError, resultsHtml) => {
             if (renderError) {
                 console.log(renderError);

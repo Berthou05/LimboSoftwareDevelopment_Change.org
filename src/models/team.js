@@ -11,6 +11,7 @@ const Status = {
 const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
 const DIRECTORY_QUERY = `SELECT DISTINCT
     T.team_id,
+    T.employee_responsible_id,
     T.name,
     T.image,
     T.description,
@@ -140,7 +141,7 @@ module.exports = class Team {
 
     static fetchByEmployeeId(employee_id){
         return db.execute(`
-            SELECT T.team_id, T.name, T.image, T.description,E.full_name 
+            SELECT T.team_id, T.employee_responsible_id, T.name, T.image, T.description,E.full_name 
             FROM team as T 
             INNER JOIN employeeteam AS ET ON T.team_id=ET.team_id
             INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id 
@@ -154,7 +155,7 @@ module.exports = class Team {
 
     static fetchNotByEmployeeId(employee_id){
         return db.execute(`
-            SELECT DISTINCT T.team_id, T.name, T.image, T.description,E.full_name 
+            SELECT DISTINCT T.team_id, T.employee_responsible_id, T.name, T.image, T.description,E.full_name 
             FROM team as T 
             INNER JOIN employeeteam as ET ON T.team_id=ET.team_id 
             INNER JOIN employee as E ON T.employee_responsible_id=E.employee_id 
@@ -226,9 +227,19 @@ module.exports = class Team {
         // TODO: Implement database query to fetch teams by responsible employee
     }
 
-    // Update team
-    static update(team_id, updateData) {
-        // TODO: Implement database update logic
+    /*update(team_id, name, description, image)
+    Function responsible for updating the information shown in the team details card.*/
+
+    static update(team_id, name, description, image) {
+        return db.execute(
+            `UPDATE team
+            SET
+                name = ?,
+                description = ?,
+                image = ?
+            WHERE team_id = ?`,
+            [name, description, image, team_id],
+        );
     }
 
     // Delete team
