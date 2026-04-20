@@ -487,7 +487,7 @@ exports.generateReport = async (request, response, next)=>{
             project: projectData,
         };
 
-        if(projectData.project_id==NULL){
+        if(projectData.project_id==null){
             console.log(projectData.activities);
         }
         
