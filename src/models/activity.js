@@ -204,6 +204,16 @@ module.exports = class Activity {
             [start_date, end_date, ...project_ids]);
     }
 
+    /*getNullProjectActivities(employee_id, start_date, end_date)
+    Function that returns the general activities of the employee between a date range*/  
+    static getNullProjectActivities(employee_id, start_date, end_date){
+        return db.execute(`
+            SELECT A.activity_id
+            FROM activity AS A
+            WHERE A.employee_id=? AND A.project_id IS NULL AND (completed_at BETWEEN ? AND ?);
+            `,[employee_id,start_date, end_date]);
+    }
+
 //-------------------------------------------------------
 
     // Create or Update activity
