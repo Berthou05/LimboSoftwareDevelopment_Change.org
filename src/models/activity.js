@@ -190,20 +190,35 @@ module.exports = class Activity {
     Function responsible for returning all project information
     related to the project_ids passed as a parameter.*/
 
-    static getProjectActivities(project_ids, start_date, end_date){
-        if(project_ids.length===0){
-            return Promise.resolve([[]]);
-        }
-        const placeholders = project_ids.map(() => '?').join(',');
-
-        return db.execute(`
-            SELECT A.title, A.description, A.completed_at, A.employee_id AS 'e', A.team_id AS 't', A.project_id AS 'p', E.full_name 
-            FROM activity AS A
-            INNER JOIN employee AS E ON A.employee_id=E.employee_id 
-            WHERE (completed_at BETWEEN ? AND ?) AND project_id IN (${placeholders});`,
-            [start_date, end_date, ...project_ids]);
+static getProjectActivities(project_ids, start_date, end_date) {
+    if (project_ids.length === 0) {
+        return Promise.resolve([[]]);
     }
 
+    const hasNull = project_ids.includes(null);
+    const validIds = project_ids.filter(id => id !== null);
+
+    let conditions = [];
+    let params = [start_date, end_date];
+
+    if (validIds.length > 0) {
+        const placeholders = validIds.map(() => '?').join(',');
+        conditions.push(`project_id IN (${placeholders})`);
+        params.push(...validIds);
+    }
+
+    if (hasNull) {
+        conditions.push(`project_id IS NULL`);
+    }
+
+    return db.execute(`
+        SELECT A.title, A.description, A.completed_at, A.employee_id AS e, A.team_id AS t, A.project_id AS p,E.full_name
+        FROM activity AS A
+        INNER JOIN employee AS E ON A.employee_id = E.employee_id 
+        WHERE (completed_at BETWEEN ? AND ?)
+        AND (${conditions.join(' OR ')});
+    `, params);
+}
     /*getNullProjectActivities(employee_id, start_date, end_date)
     Function that returns the general activities of the employee between a date range*/  
     static getNullProjectActivities(employee_id, start_date, end_date){

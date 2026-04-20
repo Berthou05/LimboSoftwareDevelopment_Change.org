@@ -261,6 +261,7 @@ async function getEmployeeContext(employee_id, start_date, end_date){
         if(activities.length > 0){
             project_ids.push({project_id: null, name: 'General Activities'});
         }
+        console.log(project_ids);
 
         return {
             context,
