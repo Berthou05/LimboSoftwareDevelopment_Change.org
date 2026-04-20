@@ -1,7 +1,12 @@
 <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel sm:p-5 lg:col-span-2">
     <div class="flex items-center gap-3 sm:gap-4">
         <div class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-brand-secondary bg-brand-bg sm:h-12 sm:w-12">
-            <img src="<%= homeAccountImage %>" alt="Profile" class="h-full w-full object-cover">
+            <img
+                src="<%= homeAccountImage %>"
+                alt="Profile"
+                class="h-full w-full object-cover"
+                onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
+            >
         </div>
         <h1 class="font-heading text-xl font-bold text-brand-text sm:text-2xl lg:text-4xl">
             Welcome, <%= homeEmployeeFirstName %>

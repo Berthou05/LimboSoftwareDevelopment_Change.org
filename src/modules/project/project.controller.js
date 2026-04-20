@@ -16,6 +16,7 @@ const Employee = require('../../models/employee');
 const Team = require('../../models/team');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
+const { getInitials } = require('../../utils/avatar.util');
 
 const PAGE_TITLE = 'Project';
 const PAGE_SUBTITLE = 'Intermediate selection for own and other projects.';
@@ -142,12 +143,7 @@ const buildActivitySections = function buildActivitySections(activityRows) {
             title: activity.title || 'Untitled activity',
             description: activity.description || '',
             authorName,
-            authorInitials: authorName
-                .split(' ')
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part[0].toUpperCase())
-                .join('') || '?',
+            authorInitials: getInitials(authorName, '?'),
             activityTimeLabel: completedAt && !Number.isNaN(completedAt.getTime())
                 ? completedAt.toLocaleTimeString('en-US', {
                     hour: 'numeric',

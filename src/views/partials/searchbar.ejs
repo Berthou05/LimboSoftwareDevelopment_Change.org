@@ -1,8 +1,13 @@
+<%
+    const topbarSearchQuery = typeof globalSearchQuery !== 'undefined' ? globalSearchQuery : '';
+%>
+
 <form action="/search" method="GET" class="hidden flex-1 items-center gap-2 rounded-xl border border-brand-secondary bg-white px-3 py-2 shadow-sm sm:flex sm:max-w-lg">
     
     <input type="text" name="q" 
+    value="<%= topbarSearchQuery %>"
     placeholder="Search employee, team, or project..." 
-    class="w-full min-w-0 border-none bg-transparent text-sm outline-none"/>
+    class="w-full min-w-0 border-none bg-transparent text-sm outline-none ring-0 focus:outline-none focus:ring-0 focus:ring-transparent"/>
 
     <button type="submit" class="rounded-xl bg-brand-primary px-5 py-3 text-sm font-semibold text-black">
         Search

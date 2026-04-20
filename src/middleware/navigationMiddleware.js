@@ -1,22 +1,14 @@
 // middleware/navigationMiddleware.js
 const buildNavigation = require('../utils/buildNavigation.util');
 const { formatShortDate } = require('../utils/date.util');
-
-const DEFAULT_AVATAR = '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png';
-
-const isPlaceholderImage = (image) => {
-  if (!image || typeof image !== 'string') return true;
-  return image.includes('ui-avatars.com') || image.includes('dicebear');
-};
+const { DEFAULT_AVATAR, resolveAvatarImage } = require('../utils/avatar.util');
 
 function navigationMiddleware(req, res, next) {
   const sessionUser = req.session?.user || null;
   const privilegeMap = sessionUser?.privilege || {};
   const isAdmin = Boolean(privilegeMap['ADMIN-01']);
   
-  const userImage = sessionUser?.image && !isPlaceholderImage(sessionUser.image) 
-    ? sessionUser.image 
-    : DEFAULT_AVATAR;
+  const userImage = resolveAvatarImage(sessionUser?.image);
   
   const user = sessionUser
     ? {
