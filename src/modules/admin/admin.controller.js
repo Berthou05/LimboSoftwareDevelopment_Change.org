@@ -321,72 +321,43 @@ Function responsible for the role creation and redirect to
 roleAdministration page render*/
 
 exports.createRole = (request, response, next)=>{
-    const roleName = request.body.name;
+    const role = new Role(request.body.name);
 
-    if (!roleName || roleName.trim() === "") {
+    role.save().then(()=>{
         return response.json({
-            type: 'error',
-            message: `Role name is required.`
+            type: 'success',
+            message: `The Role ${request.body.name} was created successfully`
         });
-    }
-
-    if (roleName && roleName.length > 100) {
-        return response.json({
-            type: 'error',
-            message: `The Role name must be 100 characters or less.`
-        });
-    }
-
-    Role.compareName(roleName).then(([sameName, fielName])=>{
-        if(sameName.length < 1){
-            const role = new Role(roleName);
-
-            role.save().then(()=>{
-                return response.json({
-                    type: 'success',
-                    message: `The Role was created successfully`
-                });
-            })
-            .catch((error)=>{
-                console.log(error);
-                return response.json({
-                    type: 'error',
-                    message: `The Role could not be created`
-                });
-            })
-        }
-        else{
-            return response.json({
-                type: 'error',
-                message: `The Role name already exists. Type a different one.`
-            });
-        }
     })
     .catch((error)=>{
         console.log(error);
         return response.json({
             type: 'error',
-            message: `Role name comparison could not be performed. Try again`
+            message: `The Role ${request.body.name} could not be created`
         });
     })
 };
 
 const buildCreateAccountFormData = (formData = {}) => ({
-    fullName: formData.fullName || '',
+    names: formData.names || '',
+    lastnames: formData.lastnames || '',
     email: formData.email || '',
+    password: formData.password || '',
+    confirmPassword: formData.confirmPassword || '',
     slackUsername: formData.slackUsername || '',
     roleId: formData.roleId || '',
     image: formData.image || ''
 });
 
-const parseEmployeeNameParts = (fullName) => {
-    const trimmedName = String(fullName || '').trim();
-    const [names, ...lastnames] = trimmedName.split(/\s+/);
+const parseEmployeeNameParts = (names, lastnames) => {
+    const trimmedNames = String(names || '').trim();
+    const trimmedLastnames = String(lastnames || '').trim();
+    const fullName = [trimmedNames, trimmedLastnames].filter(Boolean).join(' ');
 
     return {
-        fullName: trimmedName,
-        names: names || trimmedName,
-        lastnames: lastnames.join(' ') || ''
+        fullName,
+        names: trimmedNames,
+        lastnames: trimmedLastnames
     };
 };
 
@@ -422,9 +393,11 @@ Implementation for creating an account and sending a notification email.*/
 
 exports.postCreateAccount = async (request, response, next) => {
     const formData = {
-        fullName: String(request.body.fullName || '').trim(),
+        names: String(request.body.names || '').trim(),
+        lastnames: String(request.body.lastnames || '').trim(),
         email: String(request.body.email || '').trim(),
         password: String(request.body.password || ''),
+        confirmPassword: String(request.body.confirmPassword || ''),
         slackUsername: String(request.body.slackUsername || '').trim(),
         roleId: String(request.body.roleId || '').trim(),
         image: String(request.body.image || '').trim()
@@ -432,13 +405,18 @@ exports.postCreateAccount = async (request, response, next) => {
 
     request.session.createAccountFormData = buildCreateAccountFormData(formData);
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.roleId) {
-        request.session.error = 'Full name, email, password, and role are required to create an account.';
+    if (!formData.names || !formData.lastnames || !formData.email || !formData.password || !formData.confirmPassword || !formData.roleId) {
+        request.session.error = 'Names, last names, email, password, confirm password, and role are required to create an account.';
         return response.redirect('/admin/accounts/create');
     }
 
     if (formData.password.length < 6) {
         request.session.error = 'Password must be at least 6 characters long.';
+        return response.redirect('/admin/accounts/create');
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+        request.session.error = 'Password and confirm password must match.';
         return response.redirect('/admin/accounts/create');
     }
 
@@ -457,7 +435,7 @@ exports.postCreateAccount = async (request, response, next) => {
             }
         }
 
-        const employeeParts = parseEmployeeNameParts(formData.fullName);
+        const employeeParts = parseEmployeeNameParts(formData.names, formData.lastnames);
         const employee = new Employee(employeeParts.fullName, employeeParts.names, employeeParts.lastnames);
         await employee.save();
 
