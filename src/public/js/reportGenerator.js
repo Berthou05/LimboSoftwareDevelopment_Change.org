@@ -64,6 +64,10 @@ const renderReportGeneratorFlash = (form, flash) => {
     // optional auto-hide
     setTimeout(() => {
         flashNode.classList.add('opacity-0', 'translate-y-2');
+
+        setTimeout(() => {
+            flashNode.remove();
+        }, 300);
     }, 4000);
 };
 
