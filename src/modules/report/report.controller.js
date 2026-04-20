@@ -487,7 +487,9 @@ exports.generateReport = async (request, response, next)=>{
             project: projectData,
         };
 
-        console.log(projectData);
+        if (projectData.project_id === null) {
+            console.log(projectData.activities);
+        }
 
         const promise = limit(async () => {
             const section = await AiWrapper.beBetterProject(
