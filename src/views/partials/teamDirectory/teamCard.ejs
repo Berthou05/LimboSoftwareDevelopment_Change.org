@@ -8,13 +8,7 @@
         && currentEmployeeId
         && team.leadId === currentEmployeeId
     );
-    const placeholderInitials = (team.name || 'T')
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0].toUpperCase())
-        .join('') || 'T';
+    const placeholderInitials = team.initials || 'T';
 %>
 
 <article class="rounded-2xl bg-white p-4 shadow-panel <%= cardClasses %>">

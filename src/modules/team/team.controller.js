@@ -14,6 +14,7 @@ const Goal = require('../../models/goal');
 const Report = require('../../models/report');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
+const { getInitials } = require('../../utils/avatar.util');
 const { randomUUID } = require('crypto');
 const path = require('path');
 
@@ -69,14 +70,6 @@ const getLatestReport = async function getLatestReport(content_id, user_id){
 }
 
 
-/*buildAvatarUrl(label)
-Auxiliar function responsible for creating a fallback avatar based on a label.*/
-
-const buildAvatarUrl = function buildAvatarUrl(label) {
-    const normalizedLabel = String(label || 'Unknown').trim() || 'Unknown';
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(normalizedLabel)}&background=fbfbfe&color=1f2937`;
-};
-
 /*getUploadedTeamImage(request)
 Auxiliar function responsible for normalizing uploaded team image paths to the public URL format.*/
 
@@ -101,7 +94,8 @@ const normalizeTeam = function normalizeTeam(team) {
             team.lead_name ??
             'Pending assignment',
         description: team.description ?? 'No team description has been added yet.',
-        image: team.image || buildAvatarUrl(team.name),
+        image: team.image || '',
+        initials: getInitials(team.name, 'T'),
         isMember: Boolean(team.isMember ?? team.is_member),
     };
 };
@@ -150,7 +144,7 @@ const buildActivitySections = function buildActivitySections(activities) {
             title: activity.title || 'Untitled activity',
             description: activity.description || '',
             authorName,
-            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            authorInitials: getInitials(authorName, '?'),
             activityTimeLabel: rawDate
                 ? new Date(rawDate).toLocaleTimeString('en-US', {
                     hour: 'numeric',
@@ -735,9 +729,10 @@ exports.getTeamPage = (request, response, next) => {
                 name: teamRow.name,
                 description: teamRow.description,
                 createdAt: formatDayLabel(teamRow.created_at),
-                image: teamRow.image || buildAvatarUrl(teamRow.name),
+                image: teamRow.image || '',
                 imagePath: teamRow.image || '',
-                fallbackImage: buildAvatarUrl(teamRow.name),
+                fallbackImage: '',
+                initials: getInitials(teamRow.name, 'T'),
                 lead: {
                     id: teamRow.employee_responsible_id,
                     fullName: leadName,
@@ -750,8 +745,8 @@ exports.getTeamPage = (request, response, next) => {
                     employee: {
                         id: member.employee_id,
                         fullName: member.full_name,
-                        //! To be modified based on image.
-                        image: buildAvatarUrl(member.full_name),
+                        image: '',
+                        initials: getInitials(member.full_name, '?'),
                     },
                 })),
                 projectsDetailed,
@@ -766,7 +761,8 @@ exports.getTeamPage = (request, response, next) => {
                 .map((employee) => ({
                     id: employee.employee_id,
                     fullName: employee.full_name,
-                    image: buildAvatarUrl(employee.full_name),
+                    image: '',
+                    initials: getInitials(employee.full_name, '?'),
                 }));
             const activitySections = buildActivitySections(memberActivities);
             const normalizedActivityError = activityFilter.error || activityError || '';

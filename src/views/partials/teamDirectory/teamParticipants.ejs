@@ -34,7 +34,7 @@
                             />
                         <% } else { %>
                             <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
-                                <%= member.employee?.fullName ? member.employee.fullName.trim().charAt(0).toUpperCase() : '?' %>
+                                <%= member.employee?.initials || '?' %>
                             </div>
                         <% } %>
                         <div class="flex-1 min-w-0">

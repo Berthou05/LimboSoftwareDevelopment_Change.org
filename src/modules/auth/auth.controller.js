@@ -58,6 +58,21 @@ const maskEmail = function maskEmail(email) {
     return `${visibleName}***@${domain}`;
 };
 
+const renderResetConfirmPage = function renderResetConfirmPage(request, response, {
+    email = request.session.resetEmail || '',
+    prefilledToken = '',
+    statusCode = 200,
+} = {}) {
+    return response.status(statusCode).render('pages/resetConfirm', {
+        csrfToken: request.csrfToken(),
+        isLoginPage: true,
+        pageTitle: 'Confirm Reset',
+        resetEmail: email,
+        maskedResetEmail: email ? maskEmail(email) : '',
+        prefilledToken,
+    });
+};
+
 /*getSignin
 Function that renders the sign in form.
 Only avaible with privilege ADMIN-03*/
@@ -229,16 +244,20 @@ exports.postReset = (request, response, next) => {
         return response.redirect('/reset');
     }
 
-    if (!process.env.RESEND_API_KEY) {
-        request.session.error = 'Email reset service is not configured.';
-        return response.redirect('/reset');
-    }
-
     return Account.fetchByEmail(email)
         .then(([accounts]) => {
             if (!accounts.length) {
-                request.session.resetEmail = null;
-                request.session.success = 'If an account exists for that email, a reset message will be sent.';
+                request.session.resetEmail = email;
+                response.locals.flash = {
+                    type: 'success',
+                    message: 'If an account exists for that email, a reset message will be sent.',
+                };
+
+                return renderResetConfirmPage(request, response, { email });
+            }
+
+            if (!process.env.RESEND_API_KEY) {
+                request.session.error = 'Email reset service is not configured.';
                 return response.redirect('/reset');
             }
 
@@ -294,13 +313,9 @@ exports.getResetConfirm = async (request, response, next) => {
         return response.redirect('/reset');
     }
 
-    return response.render('pages/resetConfirm', {
-        csrfToken: request.csrfToken(),
-        isLoginPage: true,
-        pageTitle: 'Confirm Reset',
-        resetEmail: request.session.resetEmail || '',
-        maskedResetEmail: request.session.resetEmail ? maskEmail(request.session.resetEmail) : '',
-        prefilledToken: prefilledToken,
+    return renderResetConfirmPage(request, response, {
+        email: request.session.resetEmail || '',
+        prefilledToken,
     });
 };
 

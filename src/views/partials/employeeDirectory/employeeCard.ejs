@@ -3,7 +3,7 @@
     const employeeName = employee.fullName || employee.full_name || 'Unknown employee';
     const employeeSlack = employee.slackUsername || employee.slack_username || '';
     const employeeEmail = employee.email || '';
-    const employeeImage = employee.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(employeeName)}&background=fbfbfe&color=1f2937`;
+    const employeeImage = employee.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png';
     const cardClasses = employee.isSelf
         ? 'app-directory-card--active'
         : 'border border-brand-secondary';
@@ -15,6 +15,7 @@
             src="<%= employeeImage %>"
             alt="<%= employeeName %>"
             class="h-12 w-12 rounded-full border border-brand-secondary object-cover"
+            onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
         />
         <div class="min-w-0">
             <h3 class="truncate font-heading text-lg font-bold text-brand-text">

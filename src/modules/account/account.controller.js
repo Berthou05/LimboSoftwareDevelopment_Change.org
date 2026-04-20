@@ -7,9 +7,9 @@ Modified by: Hurtado, R.
 const Account = require('../../models/account');
 const Employee = require('../../models/employee');
 const renderNotFound = require('../../utils/renderNotFound');
+const { DEFAULT_AVATAR, resolveAvatarImage } = require('../../utils/avatar.util');
 const path = require('path');
 
-const DEFAULT_ACCOUNT_IMAGE = 'https://ui-avatars.com/api/?name=Unitas%20User&background=fbfbfe&color=1f2937';
 const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
 
 const getSessionAccountId = function getSessionAccountId(request) {
@@ -34,8 +34,8 @@ const buildAccountViewModel = function buildAccountViewModel(account, employee =
         employeeId: account.employee_id,
         email: account.email || '',
         slackUsername: account.slack_username || '',
-        image: account.image || DEFAULT_ACCOUNT_IMAGE,
-        defaultImage: DEFAULT_ACCOUNT_IMAGE,
+        image: resolveAvatarImage(account.image),
+        defaultImage: DEFAULT_AVATAR,
         names: employee.names || '',
         lastnames: employee.lastnames || '',
         fullName: employee.full_name || buildFullName(employee.names, employee.lastnames) || 'Unitas User',
@@ -51,7 +51,7 @@ const renderAccountForm = function renderAccountForm(request, response, account,
     response.locals.layoutCurrentUser = {
         ...(response.locals.layoutCurrentUser || {}),
         name: account.names || response.locals.layoutCurrentUser?.name || 'Unitas User',
-        image: account.image || '',
+        image: resolveAvatarImage(account.image),
     };
 
     return response.render('pages/account', {

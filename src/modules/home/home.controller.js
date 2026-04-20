@@ -7,6 +7,7 @@ const Activity = require('../../models/activity');
 const Goal = require('../../models/goal');
 const Achievement = require('../../models/achievement');
 const Highlight = require('../../models/highlight');
+const { getInitials, resolveAvatarImage } = require('../../utils/avatar.util');
 
 const formatDayLabel = function formatDayLabel(value) {
     const date = new Date(value);
@@ -36,7 +37,7 @@ const buildActivitySections = function buildActivitySections(activities) {
             description: activity.description || '',
             content: activity.description || '',
             authorName,
-            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            authorInitials: getInitials(authorName, '?'),
             activityTimeLabel: rawDate
                 ? new Date(rawDate).toLocaleTimeString('en-US', {
                     hour: 'numeric',
@@ -461,7 +462,7 @@ exports.getHome = async (request, response, next) => {
             teamActivityGroups,
             projectPanels,
             account: {
-                image: accountInfo.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=fbfbfe&color=1f2937`,
+                image: resolveAvatarImage(accountInfo.image),
             },
             employee: {
                 names: displayName,

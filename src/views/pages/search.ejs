@@ -1,7 +1,112 @@
-<section class="rounded-3xl bg-white p-6 shadow-panel">
-  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-text/60">Discovery</p>
-  <h1 class="mt-3 font-heading text-4xl font-extrabold text-brand-text">Search</h1>
-  <p class="mt-3 max-w-2xl text-brand-text/70">
-    Search requests from the topbar now resolve to this route instead of posting to a missing employees endpoint.
-  </p>
+<%
+    const safeQuery = typeof query !== 'undefined' ? query : '';
+    const safeSections = typeof resultSections !== 'undefined' ? resultSections : [];
+    const safeTotalResults = typeof totalResults !== 'undefined' ? totalResults : 0;
+    const safeErrorMessage = typeof errorMessage !== 'undefined' ? errorMessage : '';
+%>
+
+<%- include("../partials/pageHeader", {
+    title: 'Search results',
+    subtitle: safeQuery ? `${safeTotalResults} results for "${safeQuery}"` : 'Search employees, teams, and projects.'
+}) %>
+
+<section class="mx-auto max-w-5xl">
+    <% if (safeErrorMessage) { %>
+        <p class="rounded-lg border border-brand-accent bg-white px-4 py-3 text-sm font-semibold text-brand-accent">
+            <%= safeErrorMessage %>
+        </p>
+    <% } else if (!safeQuery) { %>
+        <p class="rounded-lg border border-brand-secondary bg-white px-4 py-3 text-sm text-brand-text/70">
+            Type a name, email, team, project, or lead to search across Unitas.
+        </p>
+    <% } else if (!safeTotalResults) { %>
+        <p class="rounded-lg border border-brand-secondary bg-white px-4 py-3 text-sm text-brand-text/70">
+            No results found.
+        </p>
+    <% } else { %>
+        <div class="mb-6 flex flex-wrap gap-2">
+            <% for (const section of safeSections) { %>
+                <% if (section.results.length) { %>
+                    <a
+                        href="#<%= section.id %>"
+                        class="rounded-lg border border-brand-secondary bg-white px-3 py-2 text-xs font-semibold text-brand-text/75
+                            transition hover:bg-brand-secondary/30"
+                    >
+                        <%= section.title %> (<%= section.results.length %>)
+                    </a>
+                <% } %>
+            <% } %>
+        </div>
+
+        <div class="space-y-8">
+            <% for (const section of safeSections) { %>
+                <% if (section.results.length) { %>
+                    <section id="<%= section.id %>">
+                        <h2 class="mb-3 font-heading text-xl font-semibold text-brand-text">
+                            <%= section.title %>
+                        </h2>
+
+                        <div class="space-y-3">
+                            <% for (const result of section.results) { %>
+                                <a
+                                    href="<%= result.url %>"
+                                    class="block rounded-lg border border-brand-secondary bg-white p-4 shadow-sm
+                                        transition hover:bg-brand-secondary/20"
+                                >
+                                    <div class="flex gap-3">
+                                        <% if (result.image) { %>
+                                            <img
+                                                src="<%= result.image %>"
+                                                alt="<%= result.title %>"
+                                                class="h-12 w-12 shrink-0 rounded-lg border border-brand-secondary object-cover"
+                                            />
+                                        <% } else { %>
+                                            <div
+                                                class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-brand-bg
+                                                    font-heading text-sm font-bold text-brand-text"
+                                            >
+                                                <%= result.initials %>
+                                            </div>
+                                        <% } %>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span
+                                                    class="rounded-lg bg-brand-secondary/40 px-2 py-1 text-xs font-semibold text-brand-text/70"
+                                                >
+                                                    <%= result.label %>
+                                                </span>
+
+                                                <% if (result.badge) { %>
+                                                    <span
+                                                        class="rounded-lg bg-brand-primary/10 px-2 py-1 text-xs font-semibold text-brand-primary"
+                                                    >
+                                                        <%= result.badge %>
+                                                    </span>
+                                                <% } %>
+                                            </div>
+
+                                            <h3 class="mt-2 truncate font-heading text-lg font-bold text-brand-text">
+                                                <%= result.title %>
+                                            </h3>
+
+                                            <p class="text-sm text-brand-text/70">
+                                                <%= result.subtitle %>
+                                            </p>
+
+                                            <% if (result.description) { %>
+                                                <p class="mt-2 text-sm text-brand-text/60">
+                                                    <%= result.description %>
+                                                </p>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </a>
+                            <% } %>
+                        </div>
+                    </section>
+                <% } %>
+            <% } %>
+        </div>
+    <% } %>
 </section>

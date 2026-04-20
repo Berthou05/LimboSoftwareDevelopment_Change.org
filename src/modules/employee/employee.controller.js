@@ -12,6 +12,7 @@ const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
 const renderNotFound = require('../../utils/renderNotFound');
+const { getInitials, resolveAvatarImage } = require('../../utils/avatar.util');
 const Report = require('../../models/report');
 const Search = require('../../models/search');
 const { search } = require('../report/report.routes');
@@ -43,13 +44,6 @@ const getLatestReport = async function getLatestReport(content_id, user_id){
         return;
     })
 }
-
-/*buildAvatarUrl(fullName)
-Auxiliar function responsible for creating a random avatar based on an employee fullName*/
-
-const buildAvatarUrl = function buildAvatarUrl(fullName) {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=fbfbfe&color=1f2937`;
-};
 
 /*formatDayLabel(value)
 Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
@@ -85,7 +79,7 @@ const buildActivitySections = function buildActivitySections(activities) {
             title: activity.title || 'Untitled activity',
             description: activity.description || '',
             authorName,
-            authorInitials: authorName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+            authorInitials: getInitials(authorName, '?'),
             activityTimeLabel: rawDate
                 ? new Date(rawDate).toLocaleTimeString('en-US', {
                     hour: 'numeric',
@@ -283,7 +277,7 @@ const normalizeDirectoryEmployee = function normalizeDirectoryEmployee(employee,
         fullName,
         slackUsername: employee.slack_username || '',
         email: employee.email || '',
-        image: employee.image || buildAvatarUrl(fullName),
+        image: resolveAvatarImage(employee.image),
         isSelf: Boolean(currentEmployeeId) && employeeId === currentEmployeeId,
     };
 };
@@ -522,7 +516,7 @@ exports.getEmployeePage = async (request, response, next) => {
                         email: info[0].email || '',
                         slack_username: info[0].slack_username || '',
                         accountCreatedAtLabel: info[0].created_at ? formatDayLabel(info[0].created_at) : '',
-                        image: info[0].image || buildAvatarUrl(info[0].full_name),
+                        image: resolveAvatarImage(info[0].image),
                     };
 
                     const reportSubjects = {

@@ -5,7 +5,7 @@
 || 'Usuario'; %>
 <%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
 <% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
-<% const homeAccountImage = homeAccount.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(homeEmployeeName)}&background=fbfbfe&color=1f2937`; %>
+<% const homeAccountImage = homeAccount.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'; %>
 <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
 <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
 <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
