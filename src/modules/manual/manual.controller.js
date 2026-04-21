@@ -18,6 +18,7 @@ exports.getManuals = (request, response) => {
     const nextEntry = currentIndex >= 0 && currentIndex < entries.length - 1 ? entries[currentIndex + 1] : null;
 
     response.render('pages/manuals', {
+        csrfToken: request.csrfToken(),
         pageTitle: 'User Manuals',
         pageSubtitle: 'Browse reusable guides by module and workflow instead of maintaining one manual per screen.',
         manualLibrary,

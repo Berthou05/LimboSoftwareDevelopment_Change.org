@@ -59,7 +59,9 @@
           </a>
 
           <form action="/logout" method="POST" class="mt-1">
+          <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
           <input type="hidden" name="_csrf" value="<%= csrfToken %>" >
+          <% } %>
             <input
               type="submit"
               class="app-cta-button app-cta-button--nav w-full rounded-lg px-2 py-2 text-left"
