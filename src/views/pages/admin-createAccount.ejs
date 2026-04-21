@@ -5,23 +5,43 @@
 
 <%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
 
-<div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
-  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <form action="/admin/accounts/create" method="POST" class="grid gap-4 sm:grid-cols-2">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-      <label class="block text-sm sm:col-span-1">
-        <span class="mb-1 block text-brand-text/70">Name(s)</span>
+<section class="w-full rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="font-heading text-xl font-bold">Create Account</h2>
+    <div class="flex flex-wrap gap-3">
+      <button
+        type="submit"
+        form="accountForm"
+        class="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent"
+      >
+        Create Account
+      </button>
+      <a
+        href="/admin/accounts"
+        class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+      >
+        Cancel
+      </a>
+    </div>
+  </div>
+
+  <form id="accountForm" action="/admin/accounts/create" method="POST" enctype="multipart/form-data" class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <div class="grid gap-4 sm:grid-cols-2 md:col-span-1">
+      <label class="block text-sm">
+        <span class="mb-1 block text-brand-text/70">Names</span>
         <input
           type="text"
           name="names"
           value="<%= formData.names %>"
           placeholder="Alexis"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm sm:col-span-1">
+      <label class="block text-sm">
         <span class="mb-1 block text-brand-text/70">Last names</span>
         <input
           type="text"
@@ -29,11 +49,11 @@
           value="<%= formData.lastnames %>"
           placeholder="Berthou"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm sm:col-span-2">
+      <label class="block text-sm">
         <span class="mb-1 block text-brand-text/70">Email</span>
         <input
           type="email"
@@ -41,7 +61,18 @@
           value="<%= formData.email %>"
           placeholder="new.account@unitas.dev"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+        />
+      </label>
+
+      <label class="block text-sm">
+        <span class="mb-1 block text-brand-text/70">Slack username</span>
+        <input
+          type="text"
+          name="slackUsername"
+          value="<%= formData.slackUsername %>"
+          placeholder="@newmember"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
       </label>
 
@@ -54,7 +85,7 @@
           required
           minlength="6"
           placeholder="At least 6 characters"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
         <div class="mt-2 flex items-center gap-2">
           <button
@@ -76,72 +107,83 @@
           required
           minlength="6"
           placeholder="Repeat password"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Slack username</span>
-        <input
-          type="text"
-          name="slackUsername"
-          value="<%= formData.slackUsername %>"
-          placeholder="@newmember"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
-      </label>
-
-      <label class="block text-sm sm:col-span-1">
+      <label class="block text-sm sm:col-span-2">
         <span class="mb-1 block text-brand-text/70">Role</span>
         <select
           name="roleId"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         >
           <% roles.forEach((role) => { %>
             <option value="<%= role.id %>" <%= formData.roleId === role.id ? "selected" : "" %>><%= role.name %></option>
           <% }) %>
         </select>
       </label>
+    </div>
 
-      <label class="block text-sm sm:col-span-2">
-        <span class="mb-1 block text-brand-text/70">Profile image (optional)</span>
-        <input
-          id="accountImageFile"
-          type="file"
-          accept="image/*"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
-        <input id="accountImageValue" type="hidden" name="image" value="<%= formData.image %>" />
-        <p id="accountImageFilename" class="mt-1 text-xs text-brand-text/65">No file selected</p>
-      </label>
+    <div class="block text-sm md:justify-self-center">
+      <span class="mb-3 block text-brand-text/70">Profile picture</span>
+      <input
+        id="accountImageFile"
+        type="file"
+        name="image"
+        accept="image/*"
+        class="sr-only"
+      />
+      <input id="accountImageValue" type="hidden" name="currentImage" value="<%= formData.image %>" />
+      <p id="accountImageFilename" class="sr-only">No file selected</p>
 
-      <div class="flex items-center justify-center rounded-xl border border-brand-secondary bg-brand-bg p-3 sm:col-span-2">
+      <div class="relative inline-flex flex-col items-start">
         <img
           id="accountImagePreview"
           src="<%= formData.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png' %>"
           alt="Account preview"
-          class="h-20 w-20 rounded-full border border-brand-secondary object-cover"
+          class="h-36 w-36 rounded-full border border-brand-secondary object-cover"
           onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
         />
-      </div>
+        <div class="relative -mt-8 ml-3">
+          <button
+            id="accountImageMenuButton"
+            type="button"
+            aria-expanded="false"
+            aria-controls="accountImageMenu"
+            class="inline-flex items-center gap-2 rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-white active:bg-white focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-nav/20"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M4 13.5V16h2.5L14 8.5 11.5 6 4 13.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+              <path d="m12.5 5 1-1a1.4 1.4 0 0 1 2 2l-1 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+            Edit
+          </button>
 
-      <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
-        <button
-          type="submit"
-          class="rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-brand-text transition hover:bg-brand-accent"
-        >
-          Create Account
-        </button>
-        <a
-          href="/admin/accounts"
-          class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
-        >
-          Cancel
-        </a>
+          <div
+            id="accountImageMenu"
+            class="absolute left-0 top-full z-20 mt-2 hidden w-52 overflow-hidden rounded-lg border border-brand-secondary bg-white text-sm shadow-sm"
+          >
+            <button
+              id="accountImageUploadButton"
+              type="button"
+              class="block w-full bg-brand-nav px-4 py-3 text-left font-semibold text-white transition hover:bg-brand-nav/90"
+            >
+              Upload a photo...
+            </button>
+            <button
+              id="accountImageRemoveButton"
+              type="button"
+              class="block w-full px-4 py-3 text-left font-semibold text-brand-text transition hover:bg-brand-secondary/20"
+            >
+              Remove photo
+            </button>
+          </div>
+        </div>
       </div>
-    </form>
-  </section>
+    </div>
+  </form>
+</section>
 
   <aside class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
     <h2 class="font-heading text-lg font-bold text-brand-text">Before You Create</h2>
