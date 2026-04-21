@@ -50,6 +50,10 @@
                 </main>
             </div>
         <% } %>
+        <%- include("partials/shared/helpPanel", {
+            pageHelpKey: typeof pageHelpKey !== 'undefined' ? pageHelpKey : ''
+        }) %>
         <script src="/js/main.js"></script>
+        <script src="/js/helpPanel.js"></script>
     </body>
 </html>
