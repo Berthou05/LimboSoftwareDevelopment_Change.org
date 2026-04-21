@@ -431,7 +431,9 @@ sudo caddy start
 
 The following diagram shows the devices and execution environments used for the deployment of the Unitas System which will be explained in detail, paying special attention to the client and server devices and characteristics.
 
-
+<br>
+<img width="1321" height="691" alt="UnitasSystemDeploymentDiagram drawio" src="https://github.com/user-attachments/assets/526b118d-0915-45de-99f0-155659ef14ff" />
+<br>
 
 **Client Side**
 Unitas System is focused to work in MacOS in the following browsers:
