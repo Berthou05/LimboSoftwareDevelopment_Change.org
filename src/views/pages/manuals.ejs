@@ -1,14 +1,16 @@
 <%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
 
-<section class="grid gap-6 lg:grid-cols-[18rem,minmax(0,1fr)]">
-    <%- include('../partials/manuals/manualNavigation', {
-        manualLibrary,
-        selectedSection,
-        selectedEntry,
-        selectedGuide,
-    }) %>
+<section class="grid gap-6 lg:grid-cols-3">
+    <aside class="lg:col-span-1 lg:border-r lg:border-brand-secondary/60 lg:pr-6">
+        <%- include('../partials/manuals/manualNavigation', {
+            manualLibrary,
+            selectedSection,
+            selectedEntry,
+            selectedGuide,
+        }) %>
+    </aside>
 
-    <div class="min-w-0">
+    <div class="min-w-0 lg:col-span-2 lg:pl-2">
         <%- include('../partials/manuals/manualContent', {
             selectedSection,
             selectedEntry,
