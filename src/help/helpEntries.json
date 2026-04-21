@@ -101,6 +101,48 @@
       "shared.forms"
     ]
   },
+  "teams.detail": {
+    "key": "teams.detail",
+    "title": "Working with a team",
+    "summary": "Use the team page to review the team profile, follow team activity, manage participants, and inspect related project work.",
+    "whenToUse": "Open this help from the team detail page.",
+    "steps": [
+      "Review the team card to confirm the lead, description, and active team information.",
+      "Use the activity section to inspect recent team work with the available date filters.",
+      "Manage team participants from the participants card when member actions are available.",
+      "Review the related projects summary to understand how the team is contributing across projects."
+    ],
+    "rules": [
+      "Participant management depends on team permissions such as TEAM-06-02 and TEAM-07-02.",
+      "Changes on this page affect the current team context, not every project relationship for those employees."
+    ],
+    "related": [
+      "shared.membership_actions",
+      "shared.role_assignment",
+      "reports.generate"
+    ]
+  },
+  "admin.accounts": {
+    "key": "admin.accounts",
+    "title": "Managing accounts",
+    "summary": "The accounts administration page lets you filter accounts, create new ones, and update role or status from the table.",
+    "whenToUse": "Open this help from the accounts administration page.",
+    "steps": [
+      "Use the filter breadcrumbs to narrow the table by role or account status.",
+      "Create a new account from the create account action when a new user must enter the system.",
+      "Update the role or status directly from the table controls.",
+      "Review the inline feedback after each administrative change."
+    ],
+    "rules": [
+      "Administrative account actions depend on privileges such as ADMIN-01, ADMIN-05, and ADMIN-06.",
+      "Role and status updates affect access to the rest of the system."
+    ],
+    "related": [
+      "shared.permissions",
+      "shared.role_assignment",
+      "shared.flash_messages"
+    ]
+  },
   "admin.roles": {
     "key": "admin.roles",
     "title": "Managing roles and privileges",

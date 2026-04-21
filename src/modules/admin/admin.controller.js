@@ -75,6 +75,7 @@ exports.getAccounts = (request, response, next) => {
         return response.render('pages/admin-accounts',{
             csrfToken: request.csrfToken(),
             pageTitle: 'Accounts Administration',
+            pageHelpKey: 'admin.accounts',
             pageSubtitle: 'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
             totalAccounts: totalAccounts[0].count,
             accounts: accounts.map((account)=>({
@@ -207,6 +208,7 @@ exports.getRoleAdmin = (request, response, next) => {
 
             return response.render('pages/admin-roles',{
                 pageTitle: 'Roles Administration',
+                pageHelpKey: 'admin.roles',
                 pageSubtitle: 'Page responsible for the role and privilege administration',
                 csrfToken: request.csrfToken(),
                 roles: roles, 

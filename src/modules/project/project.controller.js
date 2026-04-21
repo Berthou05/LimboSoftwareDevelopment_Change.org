@@ -690,6 +690,7 @@ exports.getProjectPage = (request, response, next) => {
             isLoggedIn: request.session.isLoggedIn || '',
             username: request.session.username || '',
             pageTitle: PAGE_TITLE,
+            pageHelpKey: 'projects.detail',
             error: '',
             project: projectViewModel,
             projectName: project.name || 'Project',

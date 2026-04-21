@@ -800,6 +800,7 @@ exports.getTeamPage = (request, response, next) => {
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
                 pageTitle: `Team ${team.name}`,
+                pageHelpKey: 'teams.detail',
                 pageSubtitle: '',
                 team,
                 defaultReportType: 'TEAM',

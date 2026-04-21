@@ -217,6 +217,7 @@ exports.getReport = (request, response, next) => {
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
                 pageTitle: subject.name,
+                pageHelpKey: 'reports.view',
                 title: subject.name,
                 pageSubtitle: '',
                 reportType: reportRow.content_type,
