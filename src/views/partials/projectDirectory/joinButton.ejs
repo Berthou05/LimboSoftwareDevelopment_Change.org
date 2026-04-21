@@ -1,16 +1,74 @@
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <form action="/projects/<%= project?.id || project?.project_id %>/<%= projectMembership?.isMember ? 'leave' : 'join' %>" method="POST">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+    <% const projectId = project?.id || project?.project_id; %>
+
+    <% if (projectMembership?.canToggle) { %>
+
+        <% if (!projectMembership?.isMember) { %>
+
+            <!-- JOIN PROJECT -->
+            <button
+                type="button"
+                data-popup-open="projectJoinPopup-<%= projectId %>"
+                class="app-cta-button w-full app-cta-button--highlight"
+            >
+                <%= projectMembership?.buttonLabel || 'Join Project' %>
+            </button>
+
+            <%- include('../shared/actionPopup', {
+                popupId: `projectJoinPopup-${projectId}`,
+                popupTitle: 'Choose Role',
+                popupDescription: 'Select your role in this project.',
+                popupAction: `/projects/${projectId}/join`,
+                popupMethod: 'POST',
+                popupSubmitLabel: 'Join Project',
+                csrfToken,
+                popupFields: [
+                    {
+                        name: 'role',
+                        label: 'Role',
+                        type: 'text',
+                        placeholder: 'e.g. Backend, QA, UX',
+                    },
+                ],
+            }) %>
+
+        <% } else { %>
+
+            <!-- LEAVE PROJECT -->
+            <button
+                type="button"
+                data-popup-open="projectLeavePopup-<%= projectId %>"
+                class="app-cta-button w-full app-cta-button--neutral"
+            >
+                <%= projectMembership?.buttonLabel || 'Leave Project' %>
+            </button>
+
+            <%- include('../shared/actionPopup', {
+                popupId: `projectLeavePopup-${projectId}`,
+                popupTitle: 'Leave Project',
+                popupDescription: 'Are you sure you want to leave this project?',
+                popupAction: `/projects/${projectId}/leave`,
+                popupMethod: 'POST',
+                popupSubmitLabel: 'Leave',
+                popupSubmitTone: 'danger',
+                csrfToken,
+                popupFields: [],
+            }) %>
+
+        <% } %>
+
+    <% } else { %>
+
+        <!-- DISABLED STATE -->
         <button
-            type="submit"
-            <%= projectMembership?.canToggle ? '' : 'disabled' %>
-            class="app-cta-button w-full <%= projectMembership?.canToggle
-                ? (projectMembership?.isMember
-                    ? 'app-cta-button--neutral'
-                    : 'app-cta-button--highlight')
-                : 'cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50' %>"
+            type="button"
+            disabled
+            class="app-cta-button w-full cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50"
         >
             <%= projectMembership?.buttonLabel || 'Join Project' %>
         </button>
-    </form>
+
+    <% } %>
+
 </div>
