@@ -5,13 +5,14 @@ const slackStandups = require('./dailyEntry/slackStandups');
 const reports = require('./reports/reports');
 const teams = require('./team/team');
 const employees = require('./employee/employee');
+const account = require('./account/account');
 
 module.exports = [
     quickStart,
     {
         key: 'modules',
-        title: 'Workspace guides',
-        description: 'Task-focused guides grouped by module instead of duplicating each CRUD action.',
+        title: 'Modules',
+        description: 'Task-focused guides grouped by module so related actions stay together.',
         entries: [
             projects,
             teams,
@@ -19,6 +20,7 @@ module.exports = [
             admin,
             slackStandups,
             reports,
+            account,
         ],
     },
 ];
