@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" fill="none">
+  <rect width="1200" height="700" rx="24" fill="#F6F5F6"/>
+  <rect x="56" y="56" width="1088" height="588" rx="20" stroke="#C8C6C7" stroke-width="4" stroke-dasharray="14 14"/>
+  <rect x="116" y="142" width="180" height="24" rx="12" fill="#003CD9" fill-opacity=".12"/>
+  <rect x="116" y="192" width="520" height="32" rx="16" fill="#403A49"/>
+  <rect x="116" y="248" width="820" height="22" rx="11" fill="#C8C6C7"/>
+  <rect x="116" y="286" width="760" height="22" rx="11" fill="#C8C6C7"/>
+  <rect x="116" y="324" width="688" height="22" rx="11" fill="#C8C6C7"/>
+  <rect x="116" y="408" width="968" height="164" rx="20" fill="#FFFFFF" stroke="#C8C6C7" stroke-width="4"/>
+  <path d="M212 502h92l62-82 78 98 98-128 124 156H212Z" fill="#FFDB00"/>
+  <circle cx="330" cy="460" r="26" fill="#F34E49"/>
+  <text x="116" y="112" fill="#003CD9" font-family="Arial, sans-serif" font-size="28" font-weight="700">Manual image required</text>
+  <text x="116" y="616" fill="#403A49" font-family="Arial, sans-serif" font-size="26">Add a screenshot in src/public/images/manuals and update the step image path.</text>
+</svg>

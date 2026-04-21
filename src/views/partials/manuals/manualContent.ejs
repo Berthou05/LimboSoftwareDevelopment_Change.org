@@ -41,18 +41,13 @@
                     <p class="mt-2 text-sm text-brand-text/70"><%= step.body %></p>
 
                     <div class="mt-4 rounded-xl bg-brand-secondary/10 px-4 py-3">
-                        <% if (step.image && step.image.src) { %>
-                            <img
-                                src="<%= step.image.src %>"
-                                alt="<%= step.image.alt || step.title %>"
-                                class="w-full rounded-lg border border-brand-secondary/60"
-                            />
-                            <% if (step.image.caption) { %>
-                                <p class="mt-2 text-sm text-brand-text/70"><%= step.image.caption %></p>
-                            <% } %>
-                        <% } else { %>
-                            <p class="text-sm font-semibold text-brand-text">Screenshot slot</p>
-                            <p class="mt-1 text-sm text-brand-text/70">Attach the image that explains this step without changing the page structure.</p>
+                        <img
+                            src="<%= step.image.src %>"
+                            alt="<%= step.image.alt || step.title %>"
+                            class="w-full rounded-lg border border-brand-secondary/60"
+                        />
+                        <% if (step.image.caption) { %>
+                            <p class="mt-2 text-sm text-brand-text/70"><%= step.image.caption %></p>
                         <% } %>
                     </div>
                 </section>

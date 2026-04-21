@@ -38,5 +38,6 @@ Each entry should keep the same structure:
 
 - Put shared behavior in `shared.js` instead of repeating it in every module guide.
 - Keep one file per module area when possible so ownership stays clear.
+- Every manual step must include an `image` object with a valid `src`.
 - Add screenshot paths directly inside the related step once the image exists in `src/public/images/manuals`.
 - Only update `index.js` when a new module file or section is added.

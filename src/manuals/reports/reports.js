@@ -5,8 +5,32 @@ module.exports = {
     appliesTo: ['Reports', 'Home'],
     helpKey: 'reports.generate',
     steps: [
-        { title: 'Choose the report scope', body: 'Start with employee, team, or project so the same guide can cover the shared report generator used across the system.' },
-        { title: 'Set the date range and filters', body: 'Reuse the shared tables and validation language for date rules instead of rewriting it inside each report type.' },
-        { title: 'Review or regenerate the output', body: 'Close with how to validate the generated report and when to adjust the input before trying again.' },
+        {
+            title: 'Choose the report scope',
+            body: 'Start with employee, team, or project so the same guide can cover the shared report generator used across the system.',
+            image: {
+                src: '/images/manuals/manual-image-required.svg',
+                alt: 'Placeholder for report scope screenshot',
+                caption: 'Replace this placeholder with the report scope screenshot.',
+            },
+        },
+        {
+            title: 'Set the date range and filters',
+            body: 'Reuse the shared tables and validation language for date rules instead of rewriting it inside each report type.',
+            image: {
+                src: '/images/manuals/manual-image-required.svg',
+                alt: 'Placeholder for report filters screenshot',
+                caption: 'Replace this placeholder with the report filters screenshot.',
+            },
+        },
+        {
+            title: 'Review or regenerate the output',
+            body: 'Close with how to validate the generated report and when to adjust the input before trying again.',
+            image: {
+                src: '/images/manuals/manual-image-required.svg',
+                alt: 'Placeholder for report output screenshot',
+                caption: 'Replace this placeholder with the report output screenshot.',
+            },
+        },
     ],
 };
