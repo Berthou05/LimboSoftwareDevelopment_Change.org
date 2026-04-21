@@ -17,13 +17,35 @@
 
             <div class="space-y-1">
                 <% section.entries.forEach((entry) => { %>
-                    <a
-                        href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
-                        class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition <%= selectedEntry && selectedEntry.key === entry.key ? 'bg-brand-nav/10 font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
-                    >
-                        <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedEntry && selectedEntry.key === entry.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
-                        <span class="min-w-0"><%= entry.title %></span>
-                    </a>
+                    <% if (Array.isArray(entry.children) && entry.children.length > 0) { %>
+                        <div class="space-y-1 rounded-lg px-2 py-1.5 <%= selectedEntry && selectedEntry.key === entry.key ? 'bg-brand-secondary/15' : '' %>">
+                            <a
+                                href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
+                                class="block text-sm font-semibold transition <%= selectedEntry && selectedEntry.key === entry.key ? 'text-brand-nav' : 'text-brand-text/80 hover:text-brand-nav' %>"
+                            >
+                                <%= entry.title %>
+                            </a>
+                            <div class="space-y-1 border-l border-brand-secondary/60 pl-3">
+                                <% entry.children.forEach((child) => { %>
+                                    <a
+                                        href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>&child=<%= encodeURIComponent(child.key) %>"
+                                        class="flex items-start gap-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === child.key ? 'font-semibold text-brand-nav' : 'text-brand-text/70 hover:text-brand-nav' %>"
+                                    >
+                                        <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedGuide && selectedGuide.key === child.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
+                                        <span class="min-w-0"><%= child.title %></span>
+                                    </a>
+                                <% }) %>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <a
+                            href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
+                            class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition <%= selectedGuide && selectedGuide.key === entry.key ? 'bg-brand-nav/10 font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
+                        >
+                            <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedGuide && selectedGuide.key === entry.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
+                            <span class="min-w-0"><%= entry.title %></span>
+                        </a>
+                    <% } %>
                 <% }) %>
             </div>
         </section>
