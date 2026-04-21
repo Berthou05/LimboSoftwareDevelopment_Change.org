@@ -9,22 +9,22 @@
             <div class="flex items-baseline justify-between gap-3">
                 <a
                     href="/manuals?section=<%= encodeURIComponent(section.key) %>"
-                    class="block rounded-lg px-2 py-1 text-sm font-semibold transition <%= selectedSection.key === section.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
+                    class="block rounded-lg py-1 text-sm font-semibold transition <%= selectedSection.key === section.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                 >
                     <%= section.title %>
                 </a>
             </div>
             <p class="text-xs leading-5 text-brand-text/60"><%= section.description %></p>
 
-            <div class="space-y-1">
+            <div class="space-y-1 pl-4">
                 <% section.entries.forEach((entry) => { %>
                     <% if (Array.isArray(entry.children) && entry.children.length > 0) { %>
-                        <div class="space-y-2 ml-4">
+                        <div class="space-y-2">
                             <a
                                 href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
                                 class="block rounded-lg px-2 py-1 text-sm font-semibold transition <%= selectedEntry && selectedEntry.key === entry.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                             >
-                                <span class="block pl-2"><%= entry.title %></span>
+                                <%= entry.title %>
                             </a>
                             <div class="space-y-1 pl-3">
                                 <% entry.children.forEach((child) => { %>
@@ -42,7 +42,9 @@
                             href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
                             class="block rounded-lg px-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === entry.key ? 'font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                         >
-                            <span class="block min-w-0"><%= entry.title %></span>
+                            <span class="block min-w-0">
+                                <%= entry.title %>
+                            </span>
                         </a>
                     <% } %>
                 <% }) %>
