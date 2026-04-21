@@ -1,0 +1,256 @@
+{
+  "projects.detail": {
+    "key": "projects.detail",
+    "title": "Working with a project",
+    "summary": "Use the project page to review project information, follow activity, manage progress items, and maintain participants.",
+    "whenToUse": "Open this help from the project detail page.",
+    "steps": [
+      "Review the project details card to confirm the owner, status, and main description.",
+      "Use the activity section to inspect recent work with the available date filters.",
+      "Manage achievements, goals, and highlights from their respective cards on the page.",
+      "Use the team and member sections to add or remove participants when your permissions allow it."
+    ],
+    "rules": [
+      "Some actions only appear for users with the required project permissions.",
+      "Destructive actions such as delete require confirmation before the change is sent."
+    ],
+    "related": [
+      "projects.members",
+      "projects.teams",
+      "reports.generate",
+      "shared.action_popup",
+      "shared.forms"
+    ]
+  },
+  "projects.members": {
+    "key": "projects.members",
+    "title": "Managing project members",
+    "summary": "Project members are managed directly from the project page through add, role update, and remove actions.",
+    "whenToUse": "Use this help in the members card on a project page.",
+    "steps": [
+      "Open the project page and locate the members section.",
+      "Add a member from the available employee list when the add action is visible.",
+      "Complete any required fields such as role or collaboration description before saving.",
+      "Use the existing member actions to update their role or remove them from the project."
+    ],
+    "rules": [
+      "Member management depends on project permissions such as PROJ-05-02 and PROJ-06-02.",
+      "Changes in this section should update the current project context, not a global employee profile."
+    ],
+    "related": [
+      "shared.membership_actions",
+      "shared.role_assignment",
+      "shared.action_popup"
+    ]
+  },
+  "projects.teams": {
+    "key": "projects.teams",
+    "title": "Managing project teams",
+    "summary": "Teams can be attached to a project from the project page so their work is tracked inside the same project context.",
+    "whenToUse": "Use this help in the teams card on a project page.",
+    "steps": [
+      "Open the teams section in the project page.",
+      "Select an available team to connect it to the project.",
+      "Complete any required assignment field such as the team role before saving.",
+      "Remove a team from the project from the same section if it should no longer be associated."
+    ],
+    "rules": [
+      "Team assignment belongs to the project-team relationship, not to the team record itself.",
+      "Removing a team from a project only affects that project relationship."
+    ],
+    "related": [
+      "shared.membership_actions",
+      "shared.action_popup"
+    ]
+  },
+  "reports.view": {
+    "key": "reports.view",
+    "title": "Viewing a generated report",
+    "summary": "The report page shows the generated sections for the selected employee, team, or project and lets you copy the output.",
+    "whenToUse": "Open this help from the report view page.",
+    "steps": [
+      "Use the report sections to review the generated summary in order.",
+      "Use the copy button to copy the full report content.",
+      "Use the back button to return to the page where the report was generated."
+    ],
+    "rules": [
+      "A report view depends on an existing generated report.",
+      "The page displays the saved output instead of regenerating the report."
+    ],
+    "related": [
+      "reports.generate"
+    ]
+  },
+  "reports.generate": {
+    "key": "reports.generate",
+    "title": "Generating a report",
+    "summary": "The report generator creates a report for an employee, team, or project using a selected subject and date range.",
+    "whenToUse": "Use this help from the home page generator or the compact generator shown on detail pages.",
+    "steps": [
+      "Select the report content type when the full generator is shown.",
+      "Choose the subject or keep the current page subject in compact mode.",
+      "Pick a quick range or open the calendar to set a custom period.",
+      "Submit the form and open the generated result from the confirmation area."
+    ],
+    "rules": [
+      "The start date must be before the end date.",
+      "The generator only succeeds when the selected subject has activity in the requested range."
+    ],
+    "related": [
+      "shared.report_date_range",
+      "shared.forms"
+    ]
+  },
+  "admin.roles": {
+    "key": "admin.roles",
+    "title": "Managing roles and privileges",
+    "summary": "The roles administration page lets you create roles, remove roles, and toggle privileges in the matrix.",
+    "whenToUse": "Open this help from the roles administration page.",
+    "steps": [
+      "Review the privilege matrix to see which role currently has each permission.",
+      "Use the toggle in a matrix cell to enable or disable a privilege for a role.",
+      "Create a new role from the create role action when a new access profile is needed.",
+      "Remove a role from its delete action after confirming it is no longer needed."
+    ],
+    "rules": [
+      "The page depends on admin permissions such as ADMIN-01, ADMIN-02, ADMIN-03, and ADMIN-04.",
+      "Privilege changes affect which actions are visible in other modules."
+    ],
+    "related": [
+      "shared.permissions",
+      "shared.action_popup",
+      "shared.flash_messages"
+    ]
+  },
+  "shared.action_popup": {
+    "key": "shared.action_popup",
+    "title": "Using popup forms",
+    "summary": "Many actions in the system open a popup to confirm a change or complete a short form.",
+    "whenToUse": "Used across project, team, and administration screens.",
+    "steps": [
+      "Open the popup from the action button.",
+      "Review the title and the short description before continuing.",
+      "Complete the required fields and submit the form.",
+      "Use cancel to close the popup without saving."
+    ],
+    "rules": [
+      "Delete and remove actions should always be reviewed before submission.",
+      "Popup forms reuse the same validation and flash message patterns as other forms."
+    ],
+    "related": [
+      "shared.forms",
+      "shared.flash_messages"
+    ]
+  },
+  "shared.forms": {
+    "key": "shared.forms",
+    "title": "Completing forms",
+    "summary": "Forms in this app follow the same pattern for required fields, validation, submission, and feedback.",
+    "whenToUse": "Used by create, edit, and popup flows across the system.",
+    "steps": [
+      "Complete the required fields shown in the current form.",
+      "Review field formats such as dates, text length, and selected relationships.",
+      "Submit the form and wait for the page or section to refresh.",
+      "Review the success or error message after the request finishes."
+    ],
+    "rules": [
+      "Required fields must be completed before the request can succeed.",
+      "Server-side validation still applies even when the form uses AJAX."
+    ],
+    "related": [
+      "shared.flash_messages"
+    ]
+  },
+  "shared.membership_actions": {
+    "key": "shared.membership_actions",
+    "title": "Membership actions",
+    "summary": "Membership actions are used to connect employees or teams to a project or team and to remove those relationships later.",
+    "whenToUse": "Used in project members, project teams, and team participants sections.",
+    "steps": [
+      "Open the section where the relationship is managed.",
+      "Choose the person or team you want to add.",
+      "Complete any required contextual field such as role, description, or assignment.",
+      "Save the relationship and verify it appears in the current section."
+    ],
+    "rules": [
+      "Membership data belongs to the relationship record, not only to the employee or team record.",
+      "Removing a relationship should only affect the current module context."
+    ],
+    "related": [
+      "shared.role_assignment",
+      "shared.action_popup"
+    ]
+  },
+  "shared.role_assignment": {
+    "key": "shared.role_assignment",
+    "title": "Role assignment",
+    "summary": "Role fields define the responsibility of a member inside a specific project, team, or administration context.",
+    "whenToUse": "Used in project member management, team member management, and admin role assignment.",
+    "steps": [
+      "Locate the current role control in the section you are editing.",
+      "Select the new role or submit the role field in the add form.",
+      "Confirm the role change in the current page after the request succeeds."
+    ],
+    "rules": [
+      "A role change in one context does not automatically change unrelated contexts.",
+      "Only users with the matching permission should be able to change role assignments."
+    ],
+    "related": [
+      "shared.permissions"
+    ]
+  },
+  "shared.permissions": {
+    "key": "shared.permissions",
+    "title": "Permissions and hidden actions",
+    "summary": "The application hides or blocks actions when the current account does not have the required permission.",
+    "whenToUse": "Relevant on all administration and management pages.",
+    "steps": [
+      "If an expected action is missing, verify the current account role and privilege assignment.",
+      "Check the related administration page if the action depends on a role privilege.",
+      "Refresh the page after a role or privilege change to confirm the updated access."
+    ],
+    "rules": [
+      "Permissions control both page access and specific actions inside a page.",
+      "An action may be visible only to the project responsible person or to a role with the right privilege."
+    ],
+    "related": [
+      "admin.roles"
+    ]
+  },
+  "shared.flash_messages": {
+    "key": "shared.flash_messages",
+    "title": "Status and flash messages",
+    "summary": "Success, warning, and error messages confirm whether a form or AJAX action completed correctly.",
+    "whenToUse": "Used after create, update, delete, toggle, and report generation actions.",
+    "steps": [
+      "Submit the action from the current page or popup.",
+      "Read the returned flash message to confirm the result.",
+      "Retry the action only after reviewing the message when an error appears."
+    ],
+    "rules": [
+      "A success message confirms the backend accepted the change.",
+      "An error message means the page or section should be reviewed before repeating the request."
+    ],
+    "related": [
+      "shared.forms"
+    ]
+  },
+  "shared.report_date_range": {
+    "key": "shared.report_date_range",
+    "title": "Choosing a report date range",
+    "summary": "The report generator supports quick presets and manual calendar selection for the reporting period.",
+    "whenToUse": "Use this help inside the report generator.",
+    "steps": [
+      "Start with a quick range if one matches the reporting period you need.",
+      "Open the calendar when you need a custom start and end date.",
+      "Apply the range and verify both dates before generating the report."
+    ],
+    "rules": [
+      "The available preset behavior may change depending on the report type.",
+      "A range with no activity will not generate a report."
+    ],
+    "related": [
+      "reports.generate"
+    ]
+  }
+}

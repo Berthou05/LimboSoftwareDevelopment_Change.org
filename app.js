@@ -168,6 +168,10 @@ app.use('/account', routesAccount);
 const routesReport = require('./src/modules/report/report.routes');
 app.use('/reports', routesReport);
 
+//Help
+const routesHelp = require('./src/modules/help/help.routes');
+app.use('/help', routesHelp);
+
 //Admin
 const routesAdmin = require('./src/modules/admin/admin.routes');
 app.use('/admin', routesAdmin);
