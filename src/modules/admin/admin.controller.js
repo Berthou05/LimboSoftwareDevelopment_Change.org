@@ -60,7 +60,7 @@ Function responsible for the page render of the Account Administration page*/
 
 exports.getAccounts = (request, response, next) => {
     const roleFilter   = request.query.role   || 'all';
-    const statusFilter = request.query.status || 'all';
+    const statusFilter = request.query.status || 'active';
 
     Promise.all([
         Account.fetchAll(roleFilter,statusFilter),
@@ -92,7 +92,7 @@ exports.getAccounts = (request, response, next) => {
                 id: role.role_id,
                 name: role.name
             })),
-            statusFilter:'all',
+            statusFilter:'active',
             roleFilter:'all'
         });
 
