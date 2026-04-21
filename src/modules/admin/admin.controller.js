@@ -321,22 +321,56 @@ Function responsible for the role creation and redirect to
 roleAdministration page render*/
 
 exports.createRole = (request, response, next)=>{
-    const role = new Role(request.body.name);
+    const roleName = request.body.name;
 
-    role.save().then(()=>{
+    if (!roleName || roleName.trim() === "") {
         return response.json({
-            type: 'success',
-            message: `The Role ${request.body.name} was created successfully`
+            type: 'error',
+            message: `Role name is required.`
         });
+    }
+
+    if (roleName && roleName.length > 100) {
+        return response.json({
+            type: 'error',
+            message: `The Role name must be 100 characters or less.`
+        });
+    }
+
+    Role.compareName(roleName).then(([sameName, fielName])=>{
+        if(sameName.length < 1){
+            const role = new Role(roleName);
+
+            role.save().then(()=>{
+                return response.json({
+                    type: 'success',
+                    message: `The Role was created successfully`
+                });
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.json({
+                    type: 'error',
+                    message: `The Role could not be created`
+                });
+            })
+        }
+        else{
+            return response.json({
+                type: 'error',
+                message: `The Role name already exists. Type a different one.`
+            });
+        }
     })
     .catch((error)=>{
         console.log(error);
         return response.json({
             type: 'error',
-            message: `The Role ${request.body.name} could not be created`
+            message: `Role name comparison could not be performed. Try again`
         });
     })
 };
+
 
 const buildCreateAccountFormData = (formData = {}) => ({
     names: formData.names || '',
