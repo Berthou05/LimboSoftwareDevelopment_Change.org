@@ -38,7 +38,7 @@
             <% } %>
         </div>
 
-        <div class="space-y-8">
+        <div class="space-y-10">
             <% for (const section of safeSections) { %>
                 <% if (section.results.length) { %>
                     <section id="<%= section.id %>">
@@ -46,7 +46,7 @@
                             <%= section.title %>
                         </h2>
 
-                        <div class="space-y-3">
+                        <div class="grid gap-4 lg:grid-cols-2">
                             <% for (const result of section.results) { %>
                                 <a
                                     href="<%= result.url %>"
