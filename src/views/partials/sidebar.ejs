@@ -1,4 +1,4 @@
-<aside id="sidebar" class="group/sidebar sticky top-0 flex h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white px-4 py-6 transition-all duration-300 data-[collapsed]:w-20 data-[collapsed]:px-2 max-lg:fixed max-lg:left-0 max-lg:top-0 max-lg:z-40 max-lg:translate-x-[-100%] max-lg:shadow-panel data-[mobile-open]:translate-x-0">
+<aside id="sidebar" <% if (activeRoute === '/manuals') { %>data-collapsed="true"<% } %> class="group/sidebar sticky top-0 flex h-screen w-72 shrink-0 flex-col border-r border-brand-secondary/60 bg-white px-4 py-6 transition-all duration-300 data-[collapsed]:w-20 data-[collapsed]:px-2 max-lg:fixed max-lg:left-0 max-lg:top-0 max-lg:z-40 max-lg:translate-x-[-100%] max-lg:shadow-panel data-[mobile-open]:translate-x-0">
   <div class="flex items-center justify-between px-3 group-data-[collapsed]/sidebar:justify-center group-data-[collapsed]/sidebar:px-0">
     <div class="group-data-[collapsed]/sidebar:hidden">
       <p class="app-brand-title font-heading text-2xl font-extrabold">Unitas</p>
