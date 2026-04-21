@@ -1,7 +1,7 @@
 const quickStart = require('./quickStart');
 const projects = require('./projects/projects');
 const admin = require('./admin/admin');
-const dailyEntries = require('./dailyEntry/dailyEntries');
+const slackStandups = require('./dailyEntry/slackStandups');
 const reports = require('./reports/reports');
 const teams = require('./team/team');
 const employees = require('./employee/employee');
@@ -17,7 +17,7 @@ module.exports = [
             teams,
             employees,
             admin,
-            dailyEntries,
+            slackStandups,
             reports,
         ],
     },
