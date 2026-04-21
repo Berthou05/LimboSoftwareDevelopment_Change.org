@@ -1,6 +1,6 @@
 const projects = require('./projects');
-const roles = require('./roles');
-const dailyEntries = require('./dailyEntries');
+const roles = require('./admin');
+const dailyEntries = require('./dailyEntry');
 const reports = require('./reports');
 
 module.exports = {
