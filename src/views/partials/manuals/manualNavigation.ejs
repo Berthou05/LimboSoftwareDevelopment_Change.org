@@ -8,18 +8,17 @@
     }
 </style>
 
-<aside class="space-y-5">
+<aside class="space-y-4">
     <div>
         <p class="text-sm font-semibold text-brand-text">Manual index</p>
         <p class="mt-1 text-sm text-brand-text/70">Browse by section first, then open the exact guide you want to read.</p>
     </div>
 
     <% manualLibrary.forEach((section) => { %>
-        <details class="space-y-3" <%= selectedSection.key === section.key ? 'open' : '' %>>
+        <details class="space-y-2" <%= selectedSection.key === section.key ? 'open' : '' %>>
             <summary class="manual-nav-summary cursor-pointer rounded-lg py-1 text-sm font-semibold transition <%= selectedSection.key === section.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>">
                 <span class="flex items-center justify-between gap-3">
-                    <span><%= section.title %></span>
-                    <span class="text-xs text-brand-text/50"><%= selectedSection.key === section.key ? '▾' : '▸' %></span>
+                    <span class="text-lg"><%= section.title %></span>
                 </span>
             </summary>
             <p class="text-xs leading-5 text-brand-text/60"><%= section.description %></p>
@@ -31,7 +30,6 @@
                             <summary class="manual-nav-summary cursor-pointer rounded-lg px-2 py-1 text-sm font-semibold transition <%= selectedEntry && selectedEntry.key === entry.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>">
                                 <span class="flex items-center justify-between gap-3">
                                     <span><%= entry.title %></span>
-                                    <span class="text-xs text-brand-text/50"><%= selectedEntry && selectedEntry.key === entry.key ? '▾' : '▸' %></span>
                                 </span>
                             </summary>
                             <div class="space-y-1 pl-3">
