@@ -5,6 +5,7 @@ Manual content is split by ownership area so each module can update its own guid
 ## Files
 
 - `shared.js`: reusable flows used by many modules
+- `quickStart/`: first-use guides grouped as onboarding-style tasks
 - `projects.js`, `roles.js`, `dailyEntries.js`, `reports.js`: module-specific guides
 - `index.js`: registers sections and controls manual navigation grouping
 
