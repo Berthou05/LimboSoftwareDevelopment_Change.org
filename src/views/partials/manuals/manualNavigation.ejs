@@ -1,26 +1,29 @@
-<aside class="space-y-6">
+<aside class="space-y-5">
     <div>
-        <p class="text-sm font-semibold text-brand-text">Guide sections</p>
-        <p class="mt-1 text-sm text-brand-text/70">Open a module flow, then move across guides with the next and previous links.</p>
+        <p class="text-sm font-semibold text-brand-text">Manual index</p>
+        <p class="mt-1 text-sm text-brand-text/70">Choose a guide on the left, then read its overview and steps on the right.</p>
     </div>
 
     <% manualLibrary.forEach((section) => { %>
-        <section class="border-l-2 <%= selectedSection.key === section.key ? 'border-brand-nav pl-4' : 'border-brand-secondary/60 pl-4' %>">
-            <a
-                href="/manuals?section=<%= encodeURIComponent(section.key) %>"
-                class="block text-base font-semibold text-brand-text transition hover:text-brand-nav"
-            >
-                <%= section.title %>
-            </a>
-            <p class="mt-1 text-sm text-brand-text/70"><%= section.description %></p>
+        <section class="space-y-2">
+            <div class="flex items-baseline justify-between gap-3">
+                <a
+                    href="/manuals?section=<%= encodeURIComponent(section.key) %>"
+                    class="block text-sm font-semibold transition <%= selectedSection.key === section.key ? 'text-brand-nav' : 'text-brand-text hover:text-brand-nav' %>"
+                >
+                    <%= section.title %>
+                </a>
+                <span class="text-xs text-brand-text/50"><%= section.entries.length %></span>
+            </div>
 
-            <div class="mt-3 space-y-1">
+            <div class="space-y-1">
                 <% section.entries.forEach((entry) => { %>
                     <a
                         href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
-                        class="block py-1 text-sm transition <%= selectedEntry && selectedEntry.key === entry.key ? 'font-semibold text-brand-nav' : 'text-brand-text/80 hover:text-brand-nav' %>"
+                        class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm transition <%= selectedEntry && selectedEntry.key === entry.key ? 'bg-brand-nav/10 font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                     >
-                        <%= entry.title %>
+                        <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedEntry && selectedEntry.key === entry.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
+                        <span class="min-w-0"><%= entry.title %></span>
                     </a>
                 <% }) %>
             </div>
