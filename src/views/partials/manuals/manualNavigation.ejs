@@ -30,10 +30,9 @@
                                 <% entry.children.forEach((child) => { %>
                                     <a
                                         href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>&child=<%= encodeURIComponent(child.key) %>"
-                                        class="flex items-start gap-2 rounded-lg px-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === child.key ? 'font-semibold text-brand-nav' : 'text-brand-text/70 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
+                                        class="block rounded-lg px-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === child.key ? 'font-semibold text-brand-nav' : 'text-brand-text/70 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                                     >
-                                        <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedGuide && selectedGuide.key === child.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
-                                        <span class="min-w-0"><%= child.title %></span>
+                                        <span class="block min-w-0"><%= child.title %></span>
                                     </a>
                                 <% }) %>
                             </div>
@@ -41,10 +40,9 @@
                     <% } else { %>
                         <a
                             href="/manuals?section=<%= encodeURIComponent(section.key) %>&entry=<%= encodeURIComponent(entry.key) %>"
-                            class="flex items-start gap-2 rounded-lg px-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === entry.key ? 'font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
+                            class="block rounded-lg px-2 py-1 text-sm transition <%= selectedGuide && selectedGuide.key === entry.key ? 'font-semibold text-brand-nav' : 'text-brand-text/80 hover:bg-brand-secondary/20 hover:text-brand-nav' %>"
                         >
-                            <span class="mt-1 h-1.5 w-1.5 shrink-0 rounded-full <%= selectedGuide && selectedGuide.key === entry.key ? 'bg-brand-nav' : 'bg-brand-secondary' %>"></span>
-                            <span class="min-w-0"><%= entry.title %></span>
+                            <span class="block min-w-0"><%= entry.title %></span>
                         </a>
                     <% } %>
                 <% }) %>
