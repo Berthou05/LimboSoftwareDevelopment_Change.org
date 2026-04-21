@@ -3,6 +3,7 @@ const projects = require('./projects/projects');
 const roles = require('./admin/roles');
 const dailyEntries = require('./dailyEntry/dailyEntries');
 const reports = require('./reports/reports');
+const teams = require('./team/team');
 
 module.exports = [
     quickStart,
@@ -12,6 +13,7 @@ module.exports = [
         description: 'Task-focused guides grouped by module instead of duplicating each CRUD action.',
         entries: [
             projects,
+            teams,
             roles,
             dailyEntries,
             reports,
