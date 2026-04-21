@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <section class="grid gap-5 border-b border-brand-secondary/60 pb-6 lg:grid-cols-[minmax(0,1fr),16rem]">
+        <section class="grid gap-5 pb-6 lg:grid-cols-[minmax(0,1fr),16rem]">
             <div>
                 <p class="text-sm font-semibold text-brand-text">Overview</p>
                 <p class="mt-2 max-w-3xl text-sm leading-6 text-brand-text/70"><%= selectedGuide.summary %></p>
@@ -45,7 +45,7 @@
             </div>
             <div class="mt-4 space-y-6">
             <% selectedGuide.steps.forEach((step, index) => { %>
-                <section class="<%= index > 0 ? 'border-t border-brand-secondary/60 pt-6' : '' %>">
+                <section class="<%= index > 0 ? 'pt-6' : '' %>">
                     <p class="text-xs font-semibold uppercase tracking-wide text-brand-nav">Step <%= index + 1 %></p>
                     <h3 class="mt-2 text-lg font-semibold text-brand-text"><%= step.title %></h3>
                     <p class="mt-2 text-sm text-brand-text/70"><%= step.body %></p>
