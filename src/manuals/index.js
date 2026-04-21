@@ -4,6 +4,7 @@ const roles = require('./admin/roles');
 const dailyEntries = require('./dailyEntry/dailyEntries');
 const reports = require('./reports/reports');
 const teams = require('./team/team');
+const employees = require('./employee/employee');
 
 module.exports = [
     quickStart,
@@ -14,6 +15,7 @@ module.exports = [
         entries: [
             projects,
             teams,
+            employees,
             roles,
             dailyEntries,
             reports,
