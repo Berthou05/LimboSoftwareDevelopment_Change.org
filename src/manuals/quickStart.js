@@ -1,7 +1,7 @@
-const createProject = require('./createProject');
-const submitDailyStandup = require('./submitDailyStandup');
-const generateReport = require('./generateReport');
-const assignTeamMember = require('./assignTeamMember');
+const createProject = require('./projects/createProject');
+const submitDailyStandup = require('./dailyEntry/submitDailyStandup');
+const generateReport = require('./reports/generateReport');
+const assignTeamMember = require('./team/assignTeamMember');
 
 module.exports = {
     key: 'quick-start',
