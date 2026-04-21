@@ -1,0 +1,17 @@
+<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+
+<section class="grid gap-6 lg:grid-cols-3">
+    <%- include('../partials/manuals/manualNavigation', {
+        manualLibrary,
+        selectedSection,
+        selectedEntry,
+    }) %>
+
+    <div class="lg:col-span-2">
+        <%- include('../partials/manuals/manualContent', {
+            selectedEntry,
+            previousEntry,
+            nextEntry,
+        }) %>
+    </div>
+</section>

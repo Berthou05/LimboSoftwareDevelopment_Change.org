@@ -4786,6 +4786,16 @@ input[type="password"]::-ms-reveal, input[type="password"]::-ms-clear {
   syntax: "*";
   inherits: false;
 }
+@media (min-width: 64rem) {
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 80rem) {
+  .xl\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @property --tw-duration {
   syntax: "*";
   inherits: false;
