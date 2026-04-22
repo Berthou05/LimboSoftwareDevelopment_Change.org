@@ -141,7 +141,7 @@
                                     <%- include('../partials/shared/actionPopup', {
                                         popupId: projectPopupId,
                                         popupTitle: 'Change Activity Project',
-                                        popupDescription: 'Select the project this activity belongs to.',
+                                        popupDescription: 'Select the project this activity belongs to or move it back to general activity.',
                                         popupAction: `/employees/${employee.employee_id}/activities/${item.id}/project`,
                                         popupMethod: 'POST',
                                         popupSubmitLabel: 'Save',
@@ -154,7 +154,7 @@
                                                 type: 'select',
                                                 value: item.projectId || '',
                                                 options: [
-                                                    { value: '', label: 'No project' },
+                                                    { value: '', label: 'General Activity' },
                                                     ...(projectRows || []).map((row) => ({
                                                         value: row.project.id,
                                                         label: row.project.name,
