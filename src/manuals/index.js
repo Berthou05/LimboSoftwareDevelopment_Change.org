@@ -9,18 +9,5 @@ const account = require('./account/account');
 
 module.exports = [
     quickStart,
-    {
-        key: 'modules',
-        title: 'Modules',
-        description: 'Task-focused guides grouped by module so related actions stay together.',
-        entries: [
-            projects,
-            teams,
-            employees,
-            admin,
-            slackStandups,
-            reports,
-            account,
-        ],
-    },
+    projects
 ];

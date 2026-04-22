@@ -15,7 +15,7 @@
     </div>
 
     <% manualLibrary.forEach((section) => { %>
-        <details class="space-y-2" <%= selectedSection.key === section.key ? 'open' : '' %>>
+        <details <%= selectedSection.key === section.key ? 'open' : '' %>>
             <summary class="manual-nav-summary cursor-pointer rounded-lg py-1 text-sm font-semibold transition <%= selectedSection.key === section.key ? 'text-brand-nav' : 'text-brand-text hover:bg-brand-secondary/20 hover:text-brand-nav' %>">
                 <span class="flex items-center justify-between gap-3">
                     <span class="text-lg"><%= section.title %></span>
