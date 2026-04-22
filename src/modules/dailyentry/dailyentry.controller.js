@@ -5,6 +5,7 @@ Modified by: Alexis Berthou
 */
 
 const crypto = require('crypto');
+const { z } = require('zod');
 
 const Account = require('../../models/account');
 const Team = require('../../models/team');
@@ -19,6 +20,54 @@ const MAX_URL_LENGTH = 2048;
 const SLACK_MAX_SIGNATURE_AGE_SECONDS = 300;
 const AUTO_JOIN_ROLE = 'EMPLOYEE';
 const AUTO_JOIN_PROJECT_DESCRIPTION = 'Auto-joined from Slack standup.';
+
+// Keep the webhook contract local to this controller because this payload is only consumed here.
+const SlackDailyEntryPayloadSchema = z.object({
+    // Slack identifies the sender through the display name currently mapped to account.slack_username.
+    user: z.object({
+        displayName: z.string().trim().min(1),
+    }),
+    // Accept only calendar-valid YYYY-MM-DD dates so invalid payloads fail as 400 before hitting persistence.
+    date: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/)
+        .refine((value) => {
+            const dateParts = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+            if (!dateParts) {
+                return false;
+            }
+
+            const parsedYear = Number(dateParts[1]);
+            const parsedMonth = Number(dateParts[2]);
+            const parsedDay = Number(dateParts[3]);
+            const parsedDate = new Date(Date.UTC(parsedYear, parsedMonth - 1, parsedDay));
+
+            // Prevent impossible dates such as 2026-04-31 from reaching the DB layer as 500s.
+            return parsedDate.getUTCFullYear() === parsedYear
+                && parsedDate.getUTCMonth() === parsedMonth - 1
+                && parsedDate.getUTCDate() === parsedDay;
+        }),
+    // didToday and doingTomorrow are the required standup sections used by the rest of the workflow.
+    standup: z.object({
+        didToday: z.string().trim().min(1).transform((value) => value.slice(0, MAX_TEXT_LENGTH)),
+        doingTomorrow: z.string().trim().min(1).transform((value) => value.slice(0, MAX_TEXT_LENGTH)),
+        // Blockers can be omitted by the sender, but we still normalize the stored value.
+        blockers: z.string().optional().default('')
+            .transform((value) => value.trim().slice(0, MAX_TEXT_LENGTH)),
+    }),
+    // Normalize optional URL and text fields during validation so downstream logic can stay simple.
+    standup_url: z.string().optional().default('')
+        .transform((value) => value.trim().slice(0, MAX_URL_LENGTH)),
+    team: z.object({
+        name: z.string().trim().min(1),
+    }).optional(),
+    // Slack test payloads have used channel as either a string or an object with a name field.
+    channel: z.union([
+        z.object({
+            name: z.string().trim().min(1),
+        }),
+        z.string().trim().min(1),
+    ]).optional(),
+});
 
 /*getAiWrapper()
 Function responsible for loading the AI wrapper ESM module from a
@@ -75,24 +124,24 @@ exports.submitFromSlack = async (request, response) => {
         //     });
         // }
 
-        // Extract and validate necessary data from Slack payload
-        const body = request.body || {};
-        const slackUsername = String(body.user?.displayName || '').trim();
-        const entryDate = String(body.date || '').trim();
-        const toDo = String(body.standup?.doingTomorrow || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const done = String(body.standup?.didToday || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const blockers = String(body.standup?.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const slackStandupURL = String(body.standup_url || '').trim().slice(0, MAX_URL_LENGTH);
-        const slackTeamName = String(body.team?.name || body.channel?.name || body.channel || '').trim();
-        const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(entryDate)
-            && !Number.isNaN(new Date(`${entryDate}T00:00:00`).getTime());
+        // Keep webhook payload validation close to the controller so malformed requests fail fast with 400s.
+        const parsedPayload = SlackDailyEntryPayloadSchema.safeParse(request.body || {});
 
-        // Basic validation of required fields
-        if (!slackUsername || !isValidDate) {
+        if (!parsedPayload.success) {
             return response.status(400).json({
                 message: 'Invalid Slack payload',
             });
         }
+
+        // From this point forward, rely on the normalized schema output instead of re-reading raw request fields.
+        const body = parsedPayload.data;
+        const slackUsername = body.user.displayName;
+        const entryDate = body.date;
+        const toDo = body.standup.doingTomorrow;
+        const done = body.standup.didToday;
+        const blockers = body.standup.blockers;
+        const slackStandupURL = body.standup_url;
+        const slackTeamName = body.team?.name || body.channel?.name || body.channel || '';
 
         // Find employee account, team and check for existing entry for the day
         const [accountRows] = await Account.findBySlackUsername(slackUsername);
