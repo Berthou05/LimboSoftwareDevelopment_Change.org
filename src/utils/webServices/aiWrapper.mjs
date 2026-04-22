@@ -538,86 +538,6 @@ const ActivityExtractionSchema = z.object({
     .describe("Normalized activities extracted from the standup"),
 });
 
-/*findMentionedProjects(text, projects)
-Function responsible for locating candidate project names mentioned in a
-standup fragment so the extractor can reuse nearby project context.*/
-
-const findMentionedProjects = function findMentionedProjects(text, projects) {
-  const normalizedText = String(text || '').toLowerCase();
-
-  return projects.filter((project) => {
-    return normalizedText.includes(project.name.toLowerCase());
-  }).sort((leftProject, rightProject) => rightProject.name.length - leftProject.name.length);
-};
-
-/*splitStandupFragments(text)
-Function responsible for splitting free-form standup prose into smaller
-fragments without forcing users into a single writing style.*/
-
-const splitStandupFragments = function splitStandupFragments(text) {
-  return String(text || '')
-    .replace(/\r/g, '')
-    .split(/\n+/)
-    .flatMap((line) => {
-      const trimmedLine = line.trim();
-
-      if (!trimmedLine) {
-        return [];
-      }
-
-      const cleanedLine = trimmedLine.replace(/^[-*•]\s+/, '').trim();
-
-      return cleanedLine
-        .split(/(?<=[.!?;])\s+/)
-        .map((fragment) => fragment.trim())
-        .filter(Boolean);
-    });
-};
-
-/*normalizeStandupDone(done, projects)
-Function responsible for making grouped or paragraph-based standups more
-explicit before activity extraction by carrying forward known project scope.*/
-
-const normalizeStandupDone = function normalizeStandupDone(done, projects) {
-  const fragments = splitStandupFragments(done);
-  const normalizedFragments = [];
-  let activeProjectName = '';
-
-  fragments.forEach((fragment) => {
-    const mentionedProjects = findMentionedProjects(fragment, projects);
-    const projectName = mentionedProjects[0]?.name || '';
-
-    if (projectName) {
-      activeProjectName = projectName;
-
-      const headingPrefixPattern = new RegExp(
-        `^${projectName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[:.\\-–—\\s]*`,
-        'i',
-      );
-      const headingRemainder = fragment.replace(headingPrefixPattern, '').trim();
-
-      // When the fragment is only a heading such as "Project A.", keep the project in scope for following items.
-      if (!headingRemainder && headingPrefixPattern.test(fragment)) {
-        return;
-      }
-
-      normalizedFragments.push(
-        `[${projectName}] ${headingPrefixPattern.test(fragment) ? headingRemainder : fragment}`,
-      );
-      return;
-    }
-
-    if (activeProjectName) {
-      normalizedFragments.push(`[${activeProjectName}] ${fragment}`);
-      return;
-    }
-
-    normalizedFragments.push(fragment);
-  });
-
-  return normalizedFragments.join('\n');
-};
-
 /*extractActivities(payload)
 Function responsible for extracting normalized activities from standup
 sections so they can be stored as activity rows.*/
@@ -634,10 +554,6 @@ export async function extractActivities(payload = {}) {
           .filter((project) => project.id && project.name)
       : [],
   };
-  const normalizedDone = normalizeStandupDone(
-    normalizedPayload.done,
-    normalizedPayload.projects,
-  );
 
   if (!normalizedPayload.done) {
     return [];
@@ -653,8 +569,10 @@ Use these rules:
 - Put a fuller explanation in "description".
 - If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
 - Prefer exact project names from the candidate list below when they match the standup text.
-- Treat a project mention as active context for following bullets or sentences until another project is clearly mentioned.
-- Use the normalized project-scoped content below as the strongest hint when the raw standup was written in grouped or paragraph form.
+- When a project mention appears once and is followed by multiple bullets, sentences, or clauses, check whether that project remains the active context until another project or an explicit general-activity cue is mentioned.
+- Explicit general-activity cues such as "general activity", "general activities", "no project", or clearly non-project coordination work should break project inheritance.
+- Use nearby context across the whole standup before deciding whether an activity belongs to a project or should remain general activity.
+- Keep concrete coordination, planning, review, or alignment work as general activity when it is specific enough to persist and not clearly tied to one project.
 - Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
 - Ignore greetings, filler text, and generic statements with no actionable work.
 - If there are no valid activities, return an empty array.
@@ -665,11 +583,8 @@ ${normalizedPayload.projects.length
   : '- No candidate projects were provided.'}
 
 Standup content:
-didToday raw:
+didToday:
 ${normalizedPayload.done}
-
-didToday normalized:
-${normalizedDone}
 `;
 
   console.log("Extracting activities with prompt");
