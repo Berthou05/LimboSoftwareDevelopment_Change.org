@@ -427,6 +427,14 @@ exports.postCreateAccount = async (request, response, next) => {
             return response.redirect('/admin/accounts/create');
         }
 
+        const employeeParts = parseEmployeeNameParts(formData.names, formData.lastnames);
+
+        const [existingFullNameRows] = await Employee.findByFullname(employeeParts.fullName);
+        if (existingFullNameRows.length > 0) {
+            request.session.error = 'An account with that full name already exists.';
+            return response.redirect('/admin/accounts/create');
+        }
+
         if (formData.slackUsername) {
             const [existingSlackRows] = await Account.findBySlackUsername(formData.slackUsername);
             if (existingSlackRows.length > 0) {
@@ -435,7 +443,6 @@ exports.postCreateAccount = async (request, response, next) => {
             }
         }
 
-        const employeeParts = parseEmployeeNameParts(formData.names, formData.lastnames);
         const employee = new Employee(employeeParts.fullName, employeeParts.names, employeeParts.lastnames);
         await employee.save();
 

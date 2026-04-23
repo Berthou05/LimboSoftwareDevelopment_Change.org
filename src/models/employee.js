@@ -98,6 +98,14 @@ module.exports = class Employee {
             [fullname]);
     }
 
+    /* findByFullname(fullname)
+    Function responsible for checking if an employee exists with the given full_name*/
+
+    static findByFullname(fullname){
+        return db.execute('SELECT employee_id, full_name FROM employee WHERE full_name=?',
+            [fullname]);
+    }
+
     /*getNamesByEmployeeId(employee_id)
     Function responsible for obtaining an Employee name(s) based on employee_id*/
 
