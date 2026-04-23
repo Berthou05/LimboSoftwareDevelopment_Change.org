@@ -26,6 +26,31 @@ const getAiWrapper = async function getAiWrapper() {
 };
 
 //---------------------- Auxiliar functions ---------------------------
+
+/*capitalizeWords(str)
+Function responsible for capitalizig the first char of each word of the given string*/
+function capitalizeWords(str) {
+    return str.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+/*formatDayLabel(value)
+Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
+month, day, year*/
+
+const formatDayLabel = function formatDayLabel(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return 'Unknown date';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
+};
+
+
 function respondWithError(statusCode, message, wantsJson, response, request) {
     const flash = {
         type: 'error',
@@ -62,22 +87,6 @@ function groupByTwoLevels(array, key1, key2) {
         if (!acc[k1][k2]) acc[k1][k2] = [];
 
         acc[k1][k2].push(item);
-
-        return acc;
-    }, {});
-}
-
-function groupByThreeLevels(array, key1, key2, key3) {
-    return array.reduce((acc, item) => {
-        const k1 = item[key1]; // project
-        const k2 = item[key2]; // team
-        const k3 = item[key3]; // employee
-
-        if (!acc[k1]) acc[k1] = {};
-        if (!acc[k1][k2]) acc[k1][k2] = {};
-        if (!acc[k1][k2][k3]) acc[k1][k2][k3] = [];
-
-        acc[k1][k2][k3].push(item);
 
         return acc;
     }, {});
@@ -189,9 +198,6 @@ exports.ensureReportExists = (request, response, next) => {
         .catch(next);
 };
 
-/*getReport
-Function responsible for returning a concrete report page*/
-
 exports.getReport = (request, response, next) => {
     const reportType = normalizeReportType(request.params.content_type || request.query.type || 'EMPLOYEE') || 'EMPLOYEE';
     const redirectTo = typeof request.query.redirectTo === 'string'
@@ -212,12 +218,20 @@ exports.getReport = (request, response, next) => {
                 return renderNotFound(request, response);
             }
 
+            const filters = typeof reportRow.filters_json === 'string'
+                ? JSON.parse(reportRow.filters_json)
+                : reportRow.filters_json;
+
             return response.render('pages/report',{
                 csrfToken: request.csrfToken(),
                 isLoggedIn: request.session.isLoggedIn || '',
                 username: request.session.username || '',
-                pageTitle: subject.name,
+                pageTitle: subject.name, 
                 title: subject.name,
+                start_date: filters.startDate,
+                end_date: filters.endDate,
+                keyRange: typeof filters.key !== 'undefined' || typeof filters.key !== 'null' ? capitalizeWords(filters.key) : null,
+                activityDate: typeof filters.activityDate !== 'null' ? filters.activityDate : null,
                 pageSubtitle: '',
                 reportType: reportRow.content_type,
                 reportFormat: JSON.parse(reportRow.ai_output_text),
@@ -255,13 +269,11 @@ async function getEmployeeContext(employee_id, start_date, end_date){
         };
 
         const [project_ids] = await Project.getEmployeeProjectIDsBtw(employee_id,start_date,end_date);
-
         const [activities] = await Activity.getNullProjectActivities(employee_id,start_date, end_date);
-        console.log(activities);
+
         if(activities.length > 0){
             project_ids.push({project_id: null, name: 'General Activities'});
         }
-        console.log(project_ids);
 
         return {
             context,
@@ -369,9 +381,13 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
         ]);
 
         let normalizedActivities = '';
+        let activityDate = null;
 
         if(activities[0].length == 0){
             return respondWithError(400, 'No activities between the selected range. A report can not be generated. Try again with a different date range.',wantsJson, response, request);
+        }
+        else{
+            activityDate = new Date(activities[0][0].completed_at);
         }
 
         //Normalization of activities
@@ -422,7 +438,8 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
         return{
             context: context,
             projects: enrichedProjects,
-            prompts: promptsOrdered
+            prompts: promptsOrdered,
+            activityDate,
         }
         
     }
@@ -453,6 +470,7 @@ exports.generateReport = async (request, response, next)=>{
     const endDate = new Date(end_date);
     const reportType = normalizeReportType(type);
     const wantsJson = request.xhr || request.headers.accept?.includes('json');
+    const presetKey = request.body.presetKey;
 
     if (!type || !id || !start_date || !end_date) {
         return respondWithError(400, 'Complete the report type, subject, and date range before generating a report.', wantsJson, response, request);
@@ -471,7 +489,7 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Context + Data Obtention
-    const {context, projects, prompts} = await getContext(reportType, id, start_date, end_date, route, wantsJson, response, request);  
+    const {context, projects, prompts, activityDate} = await getContext(reportType, id, start_date, end_date, route, wantsJson, response, request);  
     
     //Report Generation
     //What went well? section
@@ -487,10 +505,6 @@ exports.generateReport = async (request, response, next)=>{
             context: context,
             project: projectData,
         };
-
-        if (projectData.project_id === null) {
-            console.log(projectData.activities);
-        }
 
         const promise = limit(async () => {
             const section = await AiWrapper.beBetterProject(
@@ -534,11 +548,11 @@ exports.generateReport = async (request, response, next)=>{
 
     // Assembly of the report object
     const sections = [];
+    sections.push(normalizeSection(whatToImprove));
     sections.push(buildWhatWentWellSection(hasGoneWell));
     if (TeamImpact) {
     sections.push(normalizeSection(TeamImpact));
     }
-    sections.push(normalizeSection(whatToImprove));
     if (companyValues) {
     sections.push(normalizeSection(companyValues));
     }
@@ -556,10 +570,24 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     const filters_json = {
-        startDate: start_date,
-        endDate: end_date,
+        startDate: startDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    }),
+        endDate: endDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    }),
+        activityDate: activityDate.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    }),
         id: id,
-        type: reportType
+        type: reportType,
+        key: presetKey
     }
 
     //Report Object creation
