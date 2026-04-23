@@ -8,7 +8,7 @@ Modified by: Alexis Berthou
 Function responsible for extracting normalized activities from a standup
 payload. This wrapper can later be replaced with an external AI provider.*/
 
-import { generateText, streamText, Output} from "ai";
+import { generateText, streamText, Output, zodSchema} from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
@@ -93,6 +93,7 @@ const WhatWentWellProjectSectionSchema = z.object({
     .max(10, "Exactly 10 bullet points are required")
     .describe("Exactly 10 evidence-based bullet points describing positive progress, outcomes, or effective practices in the project"),
 });
+
 /*TeamImpactGroupSchema
 Defined schema for the team impact section in a team report.*/
 
@@ -140,6 +141,62 @@ const ValuesSectionSchema = z.object({
     ),
 });
 
+
+/**/
+const WhatHasGoneWellProject = z.object({
+  title: z
+    .literal("What went well?")
+    .describe("Section focused on what went well in the project based on goals and achievements"),
+  items: z.array(
+    z.string()
+      .min(1)
+      .describe(
+        "Outcome-focused statement describing a goal achieved, key milestone, or measurable impact. Do not describe activities or processes."
+      )
+  ).max(10, "Exactly 10 bullet points are required"),
+});
+
+
+/** */
+const ProjectStatusSectionSchema = z.object({
+  items: z
+    .array(
+      z.string().min(1).describe(
+        "A specific, evidence-based bullet point evaluating project performance based on goals, their status, achievements, and highlights"
+      )
+    )
+    .max(5, "Maximum of 5 bullet points")
+    .describe(
+      "Up to 5 concise, evidence-based bullet points explaining whether the project is going well or not"
+    ),
+});
+
+
+/** */
+const TeamStatusSectionSchema = z.object({
+  title: z
+    .string()
+    .min(0)
+    .describe("Project title. Only project title direct"),
+
+  items: z
+    .array(
+      z.string().min(1).describe(
+        "A specific, evidence-based bullet point evaluating the team's impact on project performance based on goals, their status, achievements, and highlights"
+      )
+    )
+    .max(5, "Maximum of 5 bullet points")
+    .describe(
+      "Up to 5 concise, evidence-based bullet points explaining how the team is performing within the project"
+    ),
+});
+
+
+const statusSchema = {
+  PROJECT: "statusProject",
+  TEAM: "statusTeam"
+}
+
 const reportSchemas = {
   whatWentWellEmployee: WhatWentWellEmployeeSectionSchema,
   whatWentWellTeam: WhatWentWellTeamSectionSchema,
@@ -147,6 +204,9 @@ const reportSchemas = {
   teamImpact: TeamImpactGroupSchema,
   whatCanBeImproved: WhatCanBeImprovedSectionSchema,
   companyValues: ValuesSectionSchema,
+  WhatHasGoneWellProject: WhatHasGoneWellProject,
+  statusProject:ProjectStatusSectionSchema,
+  statusTeam:TeamStatusSectionSchema
 }
 
 //---------------------- PROMPTS SECTION ----------------------------
@@ -396,8 +456,135 @@ Based on the project's "What Went Well?" analysis and the original project data,
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - Tone: constructive, direct, and forward-looking. Surface gaps clearly without being punitive.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change and why.
+`;
+
+const PROJECT_GONE_WELL_PROMPT = `
+You are generating the "What Went Well?" section of a Project Report.
+
+## Your Task
+Analyze the project's goals, milestones, and achievements, then produce a focused list of outcome-oriented successes.
+
+## Rules
+1. **Outcome-focused only** — Every bullet must describe a goal achieved, milestone reached, or measurable impact delivered. Do NOT describe activities, processes, or tasks.
+2. **Use only what's necessary** — Do not pad to fill a number. Only include bullets that surface new, non-redundant, meaningful insight. Maximum 10.
+3. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}). Only highlight goals that were completed on time or ahead of schedule as wins.
+4. **Be specific** — Reference actual goal names, target metrics, or milestones from the project data. Avoid vague generalities.
+5. **No repetition** — Each bullet must convey distinct information not already covered by another bullet.
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "title": "What went well?",
+  "items": string[] // Array of up to 10 outcome-focused achievement statements
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD bullets
+- "Revenue target of $500K for Q2 was reached 2 weeks ahead of schedule, closing at $523K."
+- "User onboarding milestone of 500 active users was achieved by June 15, 15 days before the June 30 deadline."
+- "Partnership agreement with Distributor B was signed, fulfilling the Q1 expansion goal."
+
+## Examples of BAD bullets (do not produce these)
+- "The team collaborated well." ← activity/process, not an outcome
+- "Meetings were held regularly." ← activity, not tied to a goal
+- "The project stayed organized." ← vague, no measurable impact
+`;
 
 
+const STATUS_PROJECT = `
+You are generating the "Status" section of a Project Report.
+
+## Your Task
+Produce up to 5 concise, evidence-based bullet points delivering an honest verdict on how the project is performing overall — drawing exclusively from its goals, their completion status, achievements, and highlights.
+
+## Rules
+1. **Evidence-based only** — Every bullet must be grounded in the project's actual goals and their status. Do not speculate, infer intent, or introduce information not present in the project data.
+2. **Use only what's necessary** — Do not pad to reach 5. Only include bullets that deliver distinct, non-redundant insight. Minimum 2, maximum 5.
+3. **Balanced and honest** — If the project is on track, say so and cite why. If it is struggling, say so and cite why. If mixed, reflect that nuance accurately across bullets.
+4. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}) when evaluating whether goals are on track, overdue, or at risk.
+5. **Complement other sections** — This section synthesizes the bigger picture. Do not repeat bullet-by-bullet what What Went Well or What Can Be Improved already detail. Draw an overall conclusion from the same evidence.
+6. **No filler language** — Avoid phrases like "the project is progressing", "there is room for improvement", or other vague non-statements. Every bullet must carry factual weight.
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "items": string[]  // 2–5 evidence-based bullet points on overall project status
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD output
+{
+  "items": [
+    "7 of 10 goals are completed on or ahead of schedule, with the primary revenue milestone surpassed by 4.6%.",
+    "2 goals tied to the Distributor B partnership and the mobile onboarding module are overdue, introducing moderate risk to the final delivery timeline.",
+    "If the 2 overdue goals are not resolved within the next 2 weeks, the final delivery date is at risk of slipping."
+  ]
+}
+
+## Examples of BAD output
+{
+  "items": [
+    "The project has had its ups and downs.",
+    "The team is doing their best to meet goals.",
+    "Overall things are moving in a positive direction."
+  ]
+}
+— BAD because: vague, no evidence cited, no goal status referenced, no time awareness.
+`;
+
+
+const STATUS_TEAM =  `
+You are generating a "Status" entry for a specific project within a Team Report.
+
+## Your Task
+Produce up to 5 concise, evidence-based bullet points evaluating how the team is performing on this specific project — focusing on the team's actions and how these directly influence progress toward the project's goals.
+
+## Rules
+1. **Team-action lens** — Each bullet must connect a specific team action (or inaction) to a goal outcome, milestone, or measurable impact. This is a team impact assessment, not a general project health summary.
+2. **Evidence-based only** — Every bullet must be grounded in the project's goals, their status, achievements, highlights, and the team's recorded actions. Do not speculate or introduce information not present in the data.
+3. **Use only what's necessary** — Do not pad to reach 5. Only include bullets that deliver distinct, non-redundant insight. Minimum 2, maximum 5.
+4. **Balanced and honest** — Include both positive impact and shortfalls where the evidence supports it. Do not default to optimism or pessimism.
+5. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}) when assessing whether the team's contributions are keeping the project on track, at risk, or overdue.
+6. **No filler language** — Avoid phrases like "the team is working hard" or "collaboration has been key". Every bullet must carry factual weight tied to a goal or outcome.
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "title": string,   // The project title, exactly as provided — nothing else
+  "items": string[]  // 2–5 evidence-based bullet points from the team's perspective
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD output
+{
+  "title": "Q2 Market Expansion",
+  "items": [
+    "The team's early delivery of the Distributor B outreach campaign enabled the partnership goal to close 10 days ahead of its deadline.",
+    "The mobile onboarding module is 12 days past its due date with no updated timeline, putting the 500-user adoption goal at direct risk.",
+    "Content team exceeded the Q2 publishing milestone, delivering 18 of 15 planned assets before the quarter closed.",
+    "No progress has been recorded on the competitive analysis goal since its assignment 3 weeks ago, leaving a key strategic deliverable stalled."
+  ]
+}
+
+## Examples of BAD output
+{
+  "title": "Q2 Market Expansion",
+  "items": [
+    "The team has been working hard to meet deadlines.",
+    "There have been some challenges but the team is addressing them.",
+    "Overall collaboration has been positive across workstreams."
+  ]
+}
+— BAD because: no specific actions cited, no goals referenced, no time awareness, pure filler.
 `;
 
 const doingGoodPrompts = {
@@ -416,6 +603,12 @@ const toImprovePrompts = {
   PROJECT: TO_IMPROVE_PROJECT,
   TEAM: TO_IMPROVE_TEAM
 }
+
+const statusPrompts = {
+  PROJECT: STATUS_PROJECT,
+  TEAM: STATUS_TEAM,
+}
+
 
 
 //---------------------- AI Wrapper Functions ----------------------------
@@ -472,6 +665,22 @@ export async function companyValues(sections, prompt, schema, reportType=''){
   return await generateReportSection(sections, PROMPT, schema);
 }
 
+/*whatHasBeenDone
+Auxiliar function responsible to obtain the improved what has gone well of project*/
+
+export async function whatHasBeenDone(sections){
+  return await generateReportSection(sections, PROJECT_GONE_WELL_PROMPT, "WhatHasGoneWellProject");
+}
+
+
+export async function getStatus(sections, prompt='', schema='', reportType=''){
+  let PROMPT = statusPrompts[reportType];
+  let SCHEMA = statusSchema[reportType];
+  return await generateReportSection(sections, PROMPT, SCHEMA);
+}
+
+
+
 /*generateReportSection(body, prompt, schema)
 Function responsible for obtaining a section of the report based on the given
 prompt, schema and information.
@@ -488,7 +697,7 @@ const generateReportSection = async function generateReportSection(body, prompt,
 
   const {output, totalUsage} = await generateText({
     model: openai(MODEL),
-    output: Output.object({schema: reportSchema}),
+    output: Output.object({ schema: zodSchema(reportSchema) }),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt),
     maxRetries: 0
