@@ -1362,9 +1362,6 @@
   .h-16 {
     height: calc(var(--spacing) * 16);
   }
-  .h-20 {
-    height: calc(var(--spacing) * 20);
-  }
   .h-36 {
     height: calc(var(--spacing) * 36);
   }
@@ -1501,9 +1498,6 @@
   }
   .w-16 {
     width: calc(var(--spacing) * 16);
-  }
-  .w-20 {
-    width: calc(var(--spacing) * 20);
   }
   .w-36 {
     width: calc(var(--spacing) * 36);
@@ -1815,6 +1809,9 @@
         border-color: color-mix(in oklab, var(--color-brand-secondary) 70%, transparent);
       }
     }
+  }
+  .self-start {
+    align-self: flex-start;
   }
   .truncate {
     overflow: hidden;
@@ -2371,6 +2368,9 @@
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
   }
+  .pt-0 {
+    padding-top: calc(var(--spacing) * 0);
+  }
   .pt-2 {
     padding-top: calc(var(--spacing) * 2);
   }
@@ -2417,6 +2417,9 @@
   .pr-10 {
     padding-right: calc(var(--spacing) * 10);
   }
+  .pb-0 {
+    padding-bottom: calc(var(--spacing) * 0);
+  }
   .pb-1 {
     padding-bottom: calc(var(--spacing) * 1);
   }
@@ -2439,6 +2442,9 @@
   }
   .text-left {
     text-align: left;
+  }
+  .text-right {
+    text-align: right;
   }
   .font-heading {
     font-family: var(--font-heading);
@@ -2617,6 +2623,9 @@
   .text-black {
     color: var(--color-black);
   }
+  .text-blue-600 {
+    color: var(--color-blue-600);
+  }
   .text-body {
     color: var(--color-body);
   }
@@ -2751,6 +2760,9 @@
   }
   .uppercase {
     text-transform: uppercase;
+  }
+  .italic {
+    font-style: italic;
   }
   .opacity-0 {
     opacity: 0%;
@@ -3320,11 +3332,6 @@
       box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
     }
   }
-  .sm\:col-span-1 {
-    @media (width >= 40rem) {
-      grid-column: span 1 / span 1;
-    }
-  }
   .sm\:col-span-2 {
     @media (width >= 40rem) {
       grid-column: span 2 / span 2;
@@ -3449,11 +3456,6 @@
   .md\:grid-cols-\[minmax\(0\,1fr\)_12rem\] {
     @media (width >= 48rem) {
       grid-template-columns: minmax(0,1fr) 12rem;
-    }
-  }
-  .md\:grid-cols-\[minmax\(0\,1fr\)_320px\] {
-    @media (width >= 48rem) {
-      grid-template-columns: minmax(0,1fr) 320px;
     }
   }
   .md\:justify-self-center {
