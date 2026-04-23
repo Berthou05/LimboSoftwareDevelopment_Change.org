@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (firstContent){
             firstContent.classList.remove('hidden');
             buttons[0].classList.add('border-b');
+            buttons[0].querySelector('[data-icon]').classList.toggle('rotate-180');
         }
     }
 });
