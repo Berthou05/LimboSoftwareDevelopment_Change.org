@@ -46,6 +46,7 @@ FROM employee AS E
 INNER JOIN account AS A
     ON A.employee_id = E.employee_id
 WHERE E.employee_id IN (${LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY})
+    AND A.status = 'ACTIVE'
     AND (
         ? = ''
         OR E.full_name LIKE ?
