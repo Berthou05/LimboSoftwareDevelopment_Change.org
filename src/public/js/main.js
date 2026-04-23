@@ -76,6 +76,23 @@ const initializeAccountMenu = function initializeAccountMenu() {
     }
 };
 
+const initializeBackButtons = function initializeBackButtons() {
+    document.querySelectorAll('[data-back-button]').forEach((backButton) => {
+        backButton.addEventListener('click', () => {
+            const fallbackUrl = backButton.getAttribute('data-fallback-url') || '/home';
+            const referrer = document.referrer || '';
+            const hasInternalReferrer = referrer.startsWith(window.location.origin);
+
+            if (window.history.length > 1 && hasInternalReferrer) {
+                window.history.back();
+                return;
+            }
+
+            window.location.href = fallbackUrl;
+        });
+    });
+};
+
 const initializePopups = function initializePopups() {
     const openPopup = function openPopup(popupId) {
         const popup = document.querySelector(`[data-popup="${popupId}"]`);
@@ -212,6 +229,7 @@ const initializePasswordToggles = function initializePasswordToggles() {
 document.addEventListener('DOMContentLoaded', () => {
     initializeSidebar();
     initializeAccountMenu();
+    initializeBackButtons();
     initializePopups();
     initializePasswordToggles();
 });
