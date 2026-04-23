@@ -17,6 +17,7 @@
             <% } %>
             <% teamsDetailed.forEach((team) => { %>
                 <% const removePopupId = `project-remove-team-${project.id || project.project_id}-${team.id}`; %>
+                <% const editPopupId = `project-edit-team-${project.id || project.project_id}-${team.id}`; %>
                 <div class="group flex items-center gap-2 rounded-lg p-2 transition hover:bg-brand-bg/50">
                     <a href="/teams/<%= team.id %>" class="flex min-w-0 flex-1 items-center gap-2">
                         <div class="app-directory-avatar flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold">
@@ -34,14 +35,24 @@
                             <% } %>
                         </div>
                     </a>
-                    <button
-                        type="button"
-                        data-popup-open="<%= removePopupId %>"
-                        class="ml-2 rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100"
-                        title="Remove from project"
-                    >
-                        Remove
-                    </button>
+                    <div class="ml-2 flex items-center gap-2">
+                        <button
+                            type="button"
+                            data-popup-open="<%= editPopupId %>"
+                            class="rounded border border-brand-secondary px-2 py-1 text-xs text-brand-text/80 opacity-0 transition group-hover:opacity-100 hover:bg-brand-secondary/20"
+                            title="Edit team description"
+                        >
+                            Edit
+                        </button>
+                        <button
+                            type="button"
+                            data-popup-open="<%= removePopupId %>"
+                            class="remove-member-btn rounded border border-red-200 px-2 py-1 text-xs text-red-500 opacity-0 transition group-hover:opacity-100"
+                            title="Remove from project"
+                        >
+                            Remove
+                        </button>
+                    </div>
                 </div>
                 <%- include('../shared/actionPopup', {
                     popupId: removePopupId,
@@ -54,6 +65,25 @@
                     popupErrorMessage: 'Failed to remove team.',
                     csrfToken,
                     popupFields: [],
+                }) %>
+                <%- include('../shared/actionPopup', {
+                    popupId: editPopupId,
+                    popupTitle: `Edit Team Description: ${team.name || 'Team'}`,
+                    popupDescription: 'Update the description for this team\'s participation.',
+                    popupAction: `/projects/${project.id || project.project_id}/teams/${team.id}/description`,
+                    popupMethod: 'POST',
+                    popupSubmitLabel: 'Save Description',
+                    popupErrorMessage: 'Failed to update team description.',
+                    csrfToken,
+                    popupFields: [
+                        {
+                            name: 'description',
+                            label: 'Description',
+                            type: 'text',
+                            value: team.assignmentDescription || '',
+                            placeholder: 'Describe this team\'s participation...',
+                        },
+                    ],
                 }) %>
             <% }) %>
         </div>

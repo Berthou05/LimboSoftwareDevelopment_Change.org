@@ -1013,6 +1013,60 @@ exports.removeProjectTeam = (request, response, next) => {
         });
 };
 
+exports.updateProjectTeamDescription = (request, response, next) => {
+    const projectId = request.params.project_id;
+    const teamId = request.params.team_id;
+    const description = resolveProjectTeamDescription(request.body.description);
+
+    if (!description) {
+        return respondMembershipRequest(request, response, projectId, 400, {
+            error: `Provide a description of up to ${PROJECT_TEAM_DESCRIPTION_MAX_LENGTH} characters.`,
+        });
+    }
+
+    return Project.findById(projectId)
+        .then(([projectRows]) => {
+            const project = projectRows[0];
+
+            if (!project) {
+                return respondMembershipRequest(request, response, projectId, 404, {
+                    error: 'The selected project was not found.',
+                });
+            }
+
+            return ProjectTeam.fetchByTeamAndProject(teamId, projectId)
+                .then(([assignments]) => {
+                    const assignment = assignments[0];
+
+                    if (!assignment) {
+                        return respondMembershipRequest(request, response, projectId, 404, {
+                            error: 'That team is not currently assigned to this project.',
+                        });
+                    }
+
+                    if ((assignment.team_role || '') === description) {
+                        return respondMembershipRequest(request, response, projectId, 200, {
+                            success: true,
+                            warningMessage: 'That team already has the selected description.',
+                        });
+                    }
+
+                    return ProjectTeam.update(teamId, projectId, {
+                        team_role: description,
+                    }).then(() => respondMembershipRequest(request, response, projectId, 200, {
+                        success: true,
+                        successMessage: 'Team description updated successfully.',
+                    }));
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return respondMembershipRequest(request, response, projectId, 500, {
+                error: `Error updating team description in project ${projectId}.`,
+            });
+        });
+};
+
 exports.joinProject = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
