@@ -6,7 +6,10 @@
     <div class="flex items-start justify-between gap-4">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-4">
             <% if (team?.image) { %>
-                <img src="<%= team.image %>" alt="<%= team.name %>" class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover" />
+                <img src="<%= team.image %>" 
+                    alt="<%= team.name %>" 
+                    class="h-16 w-16 shrink-0 rounded-full border border-brand-secondary object-cover"
+                    onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'" />
             <% } else { %>
                 <div class="app-directory-avatar flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-brand-secondary bg-brand-bg text-xl font-bold">
                     <%= teamInitials %>

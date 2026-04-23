@@ -87,6 +87,7 @@
     <form action="/reports/generate" method="POST" class="space-y-5" data-report-generator="enhanced" data-current-year="<%= currentYear %>" data-report-generator-mode="ajax">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
+      <input type="hidden" name="presetKey" data-preset-key value="">
 
       <%# Row 1: Content type and Search %>
       <div class="grid gap-4 md:grid-cols-2">
@@ -237,6 +238,7 @@
       <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
       <input type="hidden" name="redirectTo" value="<%= redirectTo || '/reports' %>" />
       <input type="hidden" name="contentType" value="<%= currentType %>" />
+      <input type="hidden" name="presetKey" data-preset-key value="">
       
       <% if (defaultSubjectId) { %>
         <%# On detail pages, always use the page's subject %>

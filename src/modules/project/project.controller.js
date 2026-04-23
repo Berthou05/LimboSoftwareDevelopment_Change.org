@@ -1070,6 +1070,7 @@ exports.updateProjectTeamDescription = (request, response, next) => {
 exports.joinProject = (request, response, next) => {
     const projectId = request.params.project_id;
     const employeeId = request.session.employeeId || '';
+    const role = request.body.role;
 
     Project.findById(projectId).then(([projectRows]) => {
         if (!projectRows.length) {
@@ -1089,7 +1090,7 @@ exports.joinProject = (request, response, next) => {
                     return response.redirect(`/projects/${projectId}`);
                 }
 
-                return Collaboration.joinProject(projectId, employeeId).then(() => {
+                return Collaboration.joinProject(projectId, employeeId, '', role).then(() => {
                     request.session.success = `You joined ${projectRows[0].name || 'the project'}.`;
                     return response.redirect(`/projects/${projectId}`);
                 });
