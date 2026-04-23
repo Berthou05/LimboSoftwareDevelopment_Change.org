@@ -16,31 +16,83 @@ function buildReportText() {
     return output.trim();
 }
 
+async function hasClipboardPermission() {
+    try {
+        if (!navigator.permissions) return false;
+
+        const result = await navigator.permissions.query({ name: 'clipboard-write' });
+        return result.state === 'granted' || result.state === 'prompt';
+    } catch {
+        return false;
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    let success = false;
+
+    try {
+        success = document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy failed', err);
+    }
+
+    document.body.removeChild(textarea);
+    return success;
+}
+
+async function copyText(text) {
+    const canUseClipboardAPI =
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        window.isSecureContext;
+
+    if (canUseClipboardAPI) {
+        const hasPermission = await hasClipboardPermission();
+
+        if (hasPermission) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.warn('Clipboard API failed, using fallback', err);
+            }
+        }
+    }
+    return fallbackCopy(text);
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.querySelector('.js-copy-report');
-
     if (!copyBtn) return;
 
     copyBtn.addEventListener('click', async () => {
         const report = document.getElementById('report-content');
-
         if (!report) return;
+
         const text = buildReportText();
 
-        try {
-        await navigator.clipboard.writeText(text);
+        const success = await copyText(text);
 
-        // Optional feedback
-        copyBtn.innerText = 'Copied!';
+        copyBtn.innerText = success ? 'Copied!' : 'Failed to copy';
+
         setTimeout(() => {
             copyBtn.innerText = 'Copy report';
         }, 2000);
-
-        } catch (err) {
-        console.error('Copy failed', err);
-        }
     });
 });
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('[data-toggle-section]');
