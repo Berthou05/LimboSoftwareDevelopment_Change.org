@@ -12,7 +12,7 @@ const key = keyRange!=='' ? keyRange : null;
         <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
           Report Format
         </p>
-        <h1 class="mt-2 font-heading text-3xl font-bold text-brand-text">
+        <h1 data-report-title class="mt-2 font-heading text-3xl font-bold text-brand-text">
           <%= title || 'Report Format' %>
         </h1>
       </div>
@@ -20,7 +20,7 @@ const key = keyRange!=='' ? keyRange : null;
       <!-- RIGHT: Meta info -->
       <div class="text-right">
         <!-- RANGE -->
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+        <p data-report-range class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
           Range:
           <span><%= start_date %></span>
           -

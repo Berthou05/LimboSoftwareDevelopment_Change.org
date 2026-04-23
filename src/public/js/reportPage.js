@@ -1,16 +1,64 @@
+function cleanText(text) {
+    return text
+        .replace(/\s+/g, ' ')   // collapse multiple spaces
+        .replace(/\n+/g, '\n')  // normalize line breaks
+        .trim();
+}
+
 function buildReportText() {
     let output = '';
 
-    document.querySelectorAll('#report-content section').forEach(section => {
-        const title = section.querySelector('h2')?.textContent.trim() || '';
-        const content = section.querySelector('[data-content]')?.textContent.trim() || '';
+    // -------- HEADER (title + range) --------
+    const reportTitle = document.querySelector('[data-report-title]')?.textContent.trim();
+    const rangeText = document.querySelector('[data-report-range]')?.textContent.trim();
 
-        if (title) {
-            output += `=== ${title} ===\n`;
+    if (reportTitle) {
+        output += `${reportTitle}\n`;
+    }
+
+    if (rangeText) {
+        output += `${rangeText}\n`;
+    }
+
+    output += '\n';
+
+    // -------- SECTIONS --------
+    document.querySelectorAll('#report-content section').forEach(section => {
+        const title = section.querySelector('h2')?.textContent.trim();
+        if (!title) return;
+
+        output += `=== ${title} ===\n`;
+
+        const content = section.querySelector('[data-content]');
+        if (!content) return;
+
+        // Groups
+        const groups = content.querySelectorAll('h3');
+        if (groups.length > 0) {
+            groups.forEach(group => {
+                const groupTitle = cleanText(group.textContent);
+                output += `\n${groupTitle}\n`;
+
+                // Items under this group
+                let el = group.nextElementSibling;
+
+                while (el && el.tagName !== 'H3') {
+                    if (el.tagName === 'UL') {
+                        el.querySelectorAll('li').forEach(li => {
+                            output += `- ${cleanText(li.textContent)}\n`;
+                        });
+                    }
+                    el = el.nextElementSibling;
+                }
+            });
+        } else {
+            // Flat list
+            content.querySelectorAll('li').forEach(li => {
+                output += `- ${cleanText(li.textContent)}\n`;
+            });
         }
-        if (content) {
-            output += content + '\n\n';
-        }
+
+        output += '\n';
     });
 
     return output.trim();
