@@ -121,7 +121,7 @@ function normalizeSection(section) {
     return normalized;
 }
 
-function buildWhatWentWellSection(wentWell) {
+function buildWhatWentWellSection(wentWell, reportType) {
     const groups = Object.values(wentWell).map(project => {
         const group = {
         title: project.title,
@@ -137,11 +137,23 @@ function buildWhatWentWellSection(wentWell) {
     });
 
     return {
-        title: "What went well?",
+        title: reportType=='PROJECT'? "What has been done?" :"What went well?" ,
         groups,
     };
 }
 
+
+function buildStatusSection(status, reportType) {
+    const groups = Object.values(status).map(project => ({
+        title: project.title || '',
+        items: project.items || []
+    }));
+
+    return {
+        title: reportType === 'PROJECT' ? "Status" : "Project's Status",
+        groups,
+    };
+}
 
 //---------------------------------------------------------------------
 
@@ -527,34 +539,36 @@ exports.generateReport = async (request, response, next)=>{
     };
 
     //Statuses Sections
-    // if(reportType == 'TEAM' || reportType == 'PROJECT'){
-    //     let promptStatus = prompts.find(p => p.name === "BeBetter");
+    let status = false;
+    if(reportType == 'TEAM' || reportType == 'PROJECT'){
+        const statusPromises = [];
+        // let promptStatus = prompts.find(p => p.name === "Status");
 
-    //     for (const [projectId, projectData] of Object.entries(projects)) {
-    //         let collective = {
-    //             context: context,
-    //             project: projectData,
-    //         };
+        for (const [projectId, projectData] of Object.entries(projects)) {
+            let collective = {
+                context: context,
+                project: projectData,
+                today
+            };
 
-    //         const promise = limit(async () => {
-    //             const section = await AiWrapper.getStatus(
-    //                 collective,
-    //                 promptStatus.prompt, 
-    //                 promptStatus.schema,
-    //                 reportType);
-    //             return { projectId, section};
-    //         });
+            const promise = limit(async () => {
+                const section = await AiWrapper.getStatus(
+                    collective,
+                    '',
+                    '',
+                    reportType);
+                return { projectId, section};
+            });
 
-    //         promises.push(promise);
-    //     }
+            statusPromises.push(promise);
+        }
 
-    //     const statusResults = await Promise.all(promises);
-    //     const status = {};
-    //     for (const { projectId, section } of statusResults) {
-    //         status[projectId] = section;
-    //     };
-
-    // }
+        const statusResults = await Promise.all(statusPromises);
+        status = {};
+        for (const { projectId, section } of statusResults) {
+            status[projectId] = section;
+        };
+    }
     
 
 
@@ -575,14 +589,16 @@ exports.generateReport = async (request, response, next)=>{
         TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema);
     }
 
-    // if(reportType == 'PROJECT'){
-    //     let promptProjectWell = prompts.find(p => p.name === "BeDone");
-    //     let object = {
-    //         context,
-    //         projects
-    //     }
-    //     HasBeenDone = await AiWrapper.whatHasBeenDone(object, promptProjectWell.prompt, promptProjectWell.schema);
-    // }
+    let HasBeenDone = false;
+    if(reportType == 'PROJECT'){
+        // let promptProjectWell = prompts.find(p => p.name === "BeDone");
+        let object = {
+            context,
+            projects,
+            today
+        }
+        HasBeenDone = await AiWrapper.whatHasBeenDone(object);
+    }
 
     let companyValues = false;
     if(!(reportType == 'PROJECT')){
@@ -593,12 +609,18 @@ exports.generateReport = async (request, response, next)=>{
     // Assembly of the report object
     const sections = [];
     if (TeamImpact) {
-    sections.push(normalizeSection(TeamImpact));
+        sections.push(normalizeSection(TeamImpact));
     }
-    sections.push(buildWhatWentWellSection(hasGoneWell));
+    if(status){
+        sections.push(buildStatusSection(status));
+    }
+    if (HasBeenDone) {
+        sections.push(normalizeSection(HasBeenDone));
+    }
+    sections.push(buildWhatWentWellSection(hasGoneWell,reportType));
     sections.push(normalizeSection(whatToImprove));
     if (companyValues) {
-    sections.push(normalizeSection(companyValues));
+        sections.push(normalizeSection(companyValues));
     }
 
     const reportObject = {
