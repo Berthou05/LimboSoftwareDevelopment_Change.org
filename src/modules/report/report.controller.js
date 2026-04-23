@@ -353,7 +353,7 @@ const handlers = {
 Asyncronous function responsible foe obtaining context and common project
 elements as activities, goals and achievements*/
 
-async function getContext(reportType, id, start_date, end_date, route, wantsJson, response, request){
+async function getContext(reportType, id, start_date, end_date, route, wantsJson, response, request, isBetween){
     try{
         const handler = handlers[reportType];
         if(!handler){
@@ -414,7 +414,7 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
                 goals: normalizedGoals[projectIds[0]],
                 achievements: normalizedAchievements[projectIds[0]],
                 activities: normalizedActivities[projectIds[0]],
-                highlights: normalizedHighlights[projectIds[0]]
+                highlights: normalizedHighlights[projectIds[0]],
             }]
         }
         else{
@@ -471,6 +471,8 @@ exports.generateReport = async (request, response, next)=>{
     const reportType = normalizeReportType(type);
     const wantsJson = request.xhr || request.headers.accept?.includes('json');
     const presetKey = request.body.presetKey;
+    const today = new Date();
+    const isBetween = today >= startDate && today <= endDate;
 
     if (!type || !id || !start_date || !end_date) {
         return respondWithError(400, 'Complete the report type, subject, and date range before generating a report.', wantsJson, response, request);
@@ -489,7 +491,7 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Context + Data Obtention
-    const {context, projects, prompts, activityDate} = await getContext(reportType, id, start_date, end_date, route, wantsJson, response, request);  
+    const {context, projects, prompts, activityDate} = await getContext(reportType, id, start_date, end_date, route, wantsJson, response, request, isBetween);  
     
     //Report Generation
     //What went well? section
@@ -524,6 +526,38 @@ exports.generateReport = async (request, response, next)=>{
         hasGoneWell[projectId] = section;
     };
 
+    //Statuses Sections
+    // if(reportType == 'TEAM' || reportType == 'PROJECT'){
+    //     let promptStatus = prompts.find(p => p.name === "BeBetter");
+
+    //     for (const [projectId, projectData] of Object.entries(projects)) {
+    //         let collective = {
+    //             context: context,
+    //             project: projectData,
+    //         };
+
+    //         const promise = limit(async () => {
+    //             const section = await AiWrapper.getStatus(
+    //                 collective,
+    //                 promptStatus.prompt, 
+    //                 promptStatus.schema,
+    //                 reportType);
+    //             return { projectId, section};
+    //         });
+
+    //         promises.push(promise);
+    //     }
+
+    //     const statusResults = await Promise.all(promises);
+    //     const status = {};
+    //     for (const { projectId, section } of statusResults) {
+    //         status[projectId] = section;
+    //     };
+
+    // }
+    
+
+
     // What can be improved Section
     const promptWhatToImprove = prompts.find(p => p.name === "Improve");
     const allInfo = {
@@ -535,10 +569,20 @@ exports.generateReport = async (request, response, next)=>{
 
     // Team Impact Section
     let TeamImpact = false;
+
     if(reportType == 'TEAM'){
         let promptTeamImpact = prompts.find(p => p.name === "TeamImpact");
-        TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema); 
+        TeamImpact = await AiWrapper.teamImpact(projects, promptTeamImpact.prompt,promptTeamImpact.schema);
     }
+
+    // if(reportType == 'PROJECT'){
+    //     let promptProjectWell = prompts.find(p => p.name === "BeDone");
+    //     let object = {
+    //         context,
+    //         projects
+    //     }
+    //     HasBeenDone = await AiWrapper.whatHasBeenDone(object, promptProjectWell.prompt, promptProjectWell.schema);
+    // }
 
     let companyValues = false;
     if(!(reportType == 'PROJECT')){
@@ -548,11 +592,11 @@ exports.generateReport = async (request, response, next)=>{
 
     // Assembly of the report object
     const sections = [];
-    sections.push(normalizeSection(whatToImprove));
-    sections.push(buildWhatWentWellSection(hasGoneWell));
     if (TeamImpact) {
     sections.push(normalizeSection(TeamImpact));
     }
+    sections.push(buildWhatWentWellSection(hasGoneWell));
+    sections.push(normalizeSection(whatToImprove));
     if (companyValues) {
     sections.push(normalizeSection(companyValues));
     }
