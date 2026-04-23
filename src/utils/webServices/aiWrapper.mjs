@@ -569,6 +569,10 @@ Use these rules:
 - Put a fuller explanation in "description".
 - If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
 - Prefer exact project names from the candidate list below when they match the standup text.
+- When a project mention appears once and is followed by multiple bullets, sentences, or clauses, check whether that project remains the active context until another project or an explicit general-activity cue is mentioned.
+- Explicit general-activity cues such as "general activity", "general activities", "no project", or clearly non-project coordination work should break project inheritance.
+- Use nearby context across the whole standup before deciding whether an activity belongs to a project or should remain general activity.
+- Keep concrete coordination, planning, review, or alignment work as general activity when it is specific enough to persist and not clearly tied to one project.
 - Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
 - Ignore greetings, filler text, and generic statements with no actionable work.
 - If there are no valid activities, return an empty array.
