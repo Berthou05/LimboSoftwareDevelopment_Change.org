@@ -18,7 +18,7 @@ function buildReportText() {
     output += '\n';
 
     // -------- SECTIONS --------
-    document.querySelectorAll('#report-content section').forEach(section => {
+    document.querySelectorAll('#report-content > div').forEach(section => {
         const title = section.querySelector('h2')?.textContent.trim();
         if (!title) return;
 
@@ -35,34 +35,26 @@ function buildReportText() {
                 const groupTitle = cleanText(group.textContent);
                 output += `\n${groupTitle}\n`;
 
-                let el = group.nextElementSibling;
+                const groupContainer = group.parentElement;
 
-                while (el && el.tagName !== 'H3') {
-
-                    // -------- STATUS BLOCK (NEW SUPPORT) --------
-                    if (el.querySelector && el.querySelector('.grid')) {
-                        const rows = el.querySelectorAll('.grid div');
-
-                        rows.forEach(row => {
-                            const text = cleanText(row.textContent);
-                            if (text) output += `- ${text}\n`;
-                        });
-                    }
-
-                    // -------- LISTS --------
-                    if (el.tagName === 'UL') {
-                        el.querySelectorAll('li').forEach(li => {
-                            output += `- ${cleanText(li.textContent)}\n`;
-                        });
-                    }
-
-                    el = el.nextElementSibling;
+                // -------- STATUS BLOCK --------
+                const grid = groupContainer.querySelector('.grid');
+                if (grid) {
+                    grid.querySelectorAll(':scope > div').forEach(row => {
+                        const text = cleanText(row.textContent);
+                        if (text) output += `- ${text}\n`;
+                    });
                 }
+
+                // -------- LIST ITEMS --------
+                groupContainer.querySelectorAll('ul li').forEach(li => {
+                    output += `- ${cleanText(li.textContent)}\n`;
+                });
             });
 
         } else {
             // -------- FLAT CONTENT --------
-            content.querySelectorAll('li').forEach(li => {
+            content.querySelectorAll('ul li').forEach(li => {
                 output += `- ${cleanText(li.textContent)}\n`;
             });
         }
@@ -151,18 +143,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('[data-toggle-section]');
 
     buttons.forEach(button => {
-        // ✅ FIX: use parent container (div), not section
         const container = button.parentElement;
         const content = container.querySelector('[data-content]');
         const icon = button.querySelector('[data-icon]');
 
         if (!content) return;
 
-        // ✅ OPEN ALL BY DEFAULT
+        // Open by default
         content.classList.remove('hidden');
         if (icon) icon.classList.add('rotate-180');
 
-        // Toggle behavior
         button.addEventListener('click', () => {
             const isHidden = content.classList.contains('hidden');
 
