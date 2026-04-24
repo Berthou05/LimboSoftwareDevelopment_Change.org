@@ -8,9 +8,16 @@ const Employee = require('../../models/employee');
 const Team = require('../../models/team');
 const Project = require('../../models/project');
 const { getInitials } = require('../../utils/avatar.util');
+const AUTOCOMPLETE_SECTION_LIMIT = 3;
+const AUTOCOMPLETE_TOTAL_LIMIT = 5;
 
 const normalizeSearchQuery = function normalizeSearchQuery(value) {
     return typeof value === 'string' ? value.trim() : '';
+};
+
+const wantsJsonResponse = function wantsJsonResponse(request) {
+    const acceptHeader = request.get('Accept') || '';
+    return acceptHeader.includes('application/json');
 };
 
 const mapEmployeeResult = function mapEmployeeResult(employee, currentEmployeeId) {
@@ -83,6 +90,72 @@ const buildResultSections = function buildResultSections(employees, teams, proje
     ];
 };
 
+const buildAutocompleteSuggestions = function buildAutocompleteSuggestions(
+    employees,
+    teams,
+    projects,
+    employeeId,
+) {
+    const employeeSuggestions = employees
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((employee) => {
+            const result = mapEmployeeResult(employee, employeeId);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: employee.employee_id === employeeId ? 'My profile' : 'Employee',
+                url: result.url,
+            };
+        });
+    const teamSuggestions = teams
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((team) => {
+            const result = mapTeamResult(team);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: team.is_member ? 'My team' : 'Team',
+                url: result.url,
+            };
+        });
+    const projectSuggestions = projects
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((project) => {
+            const result = mapProjectResult(project);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: project.is_member ? 'My project' : 'Project',
+                url: result.url,
+            };
+        });
+
+    const suggestionBuckets = [
+        [...employeeSuggestions],
+        [...teamSuggestions],
+        [...projectSuggestions],
+    ];
+    const suggestions = [];
+
+    while (
+        suggestions.length < AUTOCOMPLETE_TOTAL_LIMIT
+        && suggestionBuckets.some((bucket) => bucket.length > 0)
+    ) {
+        suggestionBuckets.forEach((bucket) => {
+            if (suggestions.length >= AUTOCOMPLETE_TOTAL_LIMIT || bucket.length === 0) {
+                return;
+            }
+
+            suggestions.push(bucket.shift());
+        });
+    }
+
+    return suggestions;
+};
+
 const renderSearchPage = function renderSearchPage(request, response, statusCode, viewData) {
     return response.status(statusCode).render('pages/search', {
         csrfToken: request.csrfToken(),
@@ -100,8 +173,16 @@ const renderSearchPage = function renderSearchPage(request, response, statusCode
 exports.getSearch = (request, response, next) => {
     const employeeId = request.session.employeeId || '';
     const query = normalizeSearchQuery(request.query.q);
+    const isJsonRequest = wantsJsonResponse(request);
 
     if (!query) {
+        if (isJsonRequest) {
+            return response.status(200).json({
+                query,
+                suggestions: [],
+            });
+        }
+
         return renderSearchPage(request, response, 200, {
             query,
             resultSections: [],
@@ -109,16 +190,31 @@ exports.getSearch = (request, response, next) => {
         });
     }
 
-    return Promise.all([
-        Employee.searchDirectoryByLeadScope(employeeId, query),
-        Team.searchDirectory(employeeId, query),
-        Project.searchDirectory(employeeId, query),
-    ])
+    const searchPromises = isJsonRequest
+        ? [
+            Employee.getDirectorySuggestionsByLeadScope(employeeId, query),
+            Team.getDirectorySuggestions(employeeId, query),
+            Project.getDirectorySuggestions(employeeId, query),
+        ]
+        : [
+            Employee.searchDirectoryByLeadScope(employeeId, query),
+            Team.searchDirectory(employeeId, query),
+            Project.searchDirectory(employeeId, query),
+        ];
+
+    return Promise.all(searchPromises)
         .then(([
             [employees],
             [teams],
             [projects],
         ]) => {
+            if (isJsonRequest) {
+                return response.status(200).json({
+                    query,
+                    suggestions: buildAutocompleteSuggestions(employees, teams, projects, employeeId),
+                });
+            }
+
             const resultSections = buildResultSections(employees, teams, projects, employeeId);
             const totalResults = resultSections.reduce((total, section) => {
                 return total + section.results.length;
@@ -132,6 +228,15 @@ exports.getSearch = (request, response, next) => {
         })
         .catch((error) => {
             console.log(error);
+
+            if (isJsonRequest) {
+                return response.status(500).json({
+                    query,
+                    suggestions: [],
+                    error: 'Unable to search right now.',
+                });
+            }
+
             return renderSearchPage(request, response, 500, {
                 query,
                 resultSections: [],
