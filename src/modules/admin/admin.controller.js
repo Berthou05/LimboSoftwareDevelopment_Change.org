@@ -53,6 +53,15 @@ const getResetExpiration = function getResetExpiration() {
     return expirationDate;
 };
 
+const getUploadedAccountImage = function getUploadedAccountImage(request) {
+    if (!request.file) {
+        return '';
+    }
+
+    return `/${path.relative(PUBLIC_DIRECTORY, request.file.path).replace(/\\/g, '/')}`;
+};
+
+
 //------------------- Main Functions --------------------
 
 /*getAccounts
@@ -434,7 +443,7 @@ exports.postCreateAccount = async (request, response, next) => {
         confirmPassword: String(request.body.confirmPassword || ''),
         slackUsername: String(request.body.slackUsername || '').trim(),
         roleId: String(request.body.roleId || '').trim(),
-        image: String(request.body.image || '').trim()
+        image: getUploadedAccountImage(request) || String(request.body.image || '').trim()
     };
 
     request.session.createAccountFormData = buildCreateAccountFormData(formData);
