@@ -12,23 +12,18 @@ const Account = require('../../models/account');
 const Employee = require('../../models/employee');
 const resendService = require('../../utils/webServices/resendService');
 const crypto = require('crypto');
-const req = require('express/lib/request');
+const path = require('path');
+const { DEFAULT_AVATAR } = require('../../utils/avatar.util');
+
+const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
 
 //------------ Auxiliar Functions -----------------
 
-/*formatDateLabel
-Function responsible for giving a concrete format to the given data
-for normalization purposes*/
-
-const formatDateLabel = function formatDateLabel(value, fallback = '') {
-    if (!value) {
-        return fallback;
-    }
+const formatDateLabel = function (value, fallback = '') {
+    if (!value) return fallback;
 
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-        return fallback;
-    }
+    if (Number.isNaN(date.getTime())) return fallback;
 
     return date.toLocaleDateString('en-US', {
         month: 'short',
@@ -39,140 +34,137 @@ const formatDateLabel = function formatDateLabel(value, fallback = '') {
 
 const RESET_TOKEN_EXPIRATION_MINUTES = 8;
 
-const createResetToken = function createResetToken() {
-    return String(crypto.randomInt(100000, 1000000));
-};
+const createResetToken = () => String(crypto.randomInt(100000, 1000000));
 
-const hashResetToken = function hashResetToken(token) {
-    return crypto.createHash('sha256').update(token).digest('hex');
-};
+const hashResetToken = (token) =>
+    crypto.createHash('sha256').update(token).digest('hex');
 
-const getResetExpiration = function getResetExpiration() {
+const getResetExpiration = () => {
     const expirationDate = new Date();
-    expirationDate.setMinutes(expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES);
+    expirationDate.setMinutes(
+        expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES
+    );
     return expirationDate;
+};
+
+const getUploadedAccountImage = (request) => {
+    if (!request.file) return '';
+    return `/${path
+        .relative(PUBLIC_DIRECTORY, request.file.path)
+        .replace(/\\/g, '/')}`;
 };
 
 //------------------- Main Functions --------------------
 
-/*getAccounts
-Function responsible for the page render of the Account Administration page*/
-
 exports.getAccounts = (request, response, next) => {
-    const roleFilter   = request.query.role   || 'all';
+    const roleFilter = request.query.role || 'all';
     const statusFilter = request.query.status || 'active';
 
     Promise.all([
-        Account.fetchAll(roleFilter,statusFilter),
+        Account.fetchAll(roleFilter, statusFilter),
         Account.countAll(),
-        Role.fetchAll()
-    ]).then(([
-        [accounts],
-        [totalAccounts],
-        [roles]
-    ])=>{
-
-        return response.render('pages/admin-accounts',{
-            csrfToken: request.csrfToken(),
-            pageTitle: 'Accounts Administration',
-            pageSubtitle: 'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
-            totalAccounts: totalAccounts[0].count,
-            accounts: accounts.map((account)=>({
-                id: account.account_id,
-                employee:{
-                    fullName:account.full_name 
-                },
-                email:account.email,
-                slackUsername: account.slack_username,
-                status: account.status,
-                createdAt:formatDateLabel(account.created_at),
-                roleId:account.role_id
-            })),
-            roles: roles.map((role)=>({
-                id: role.role_id,
-                name: role.name
-            })),
-            statusFilter:'active',
-            roleFilter:'all'
+        Role.fetchAll(),
+    ])
+        .then(([[accounts], [totalAccounts], [roles]]) => {
+            return response.render('pages/admin-accounts', {
+                csrfToken: request.csrfToken(),
+                pageTitle: 'Accounts Administration',
+                pageSubtitle:
+                    'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
+                totalAccounts: totalAccounts[0].count,
+                accounts: accounts.map((account) => ({
+                    id: account.account_id,
+                    employee: {
+                        fullName: account.full_name,
+                    },
+                    email: account.email,
+                    slackUsername: account.slack_username,
+                    status: account.status,
+                    createdAt: formatDateLabel(account.created_at),
+                    roleId: account.role_id,
+                })),
+                roles: roles.map((role) => ({
+                    id: role.role_id,
+                    name: role.name,
+                })),
+                statusFilter: 'active',
+                roleFilter: 'all',
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            request.flash('error', error);
+            return response.redirect('/home');
         });
-
-    }).catch((error) => {
-        console.log(error);
-        request.flash('error',error);
-        return response.redirect('/home');
-    });
 };
 
+//---------------- ROLE / STATUS ----------------
 
-
-
-/*assignRole
-Function responsible for assigning a role to an account*/
-
-exports.assignRole = (request,response,next)=>{
+exports.assignRole = (request, response, next) => {
     const accountId = request.params.account_id;
     const roleId = request.body.roleId;
-    AccountRole.countActiveAdminsExcluding(accountId).then(([count,fieldData])=>{
-        if(count[0].admin_count > 0){
-            AccountRole.updateRole(accountId, roleId).then(()=>{
-                AccountRole.fetchRoleByAccount(accountId).then(([accountRoleRow, fieldData])=>{
-                    return response.status(200).json({ success: true, message: 'Role updated successfully.', data:{ account_id: accountRoleRow[0].account_id, role_name: accountRoleRow[0].name}});
-                })
-                .catch((error)=>{
-                    console.log(error);
-                    return response.status(500).json({ error: 'Account information could not be updated.' })
-                })
-            })  
-            .catch((error)=>{
-                console.log(error);
-                return response.status(500).json({ error: 'Role could not be updated right now.' })
-            })
-        }
-        else{
+
+    AccountRole.countActiveAdminsExcluding(accountId)
+        .then(([count]) => {
+            if (count[0].admin_count <= 0) {
+                return response
+                    .status(409)
+                    .json({ error: 'At least one Admin account is required.' });
+            }
+
+            return AccountRole.updateRole(accountId, roleId)
+                .then(() => AccountRole.fetchRoleByAccount(accountId))
+                .then(([rows]) => {
+                    return response.status(200).json({
+                        success: true,
+                        message: 'Role updated successfully.',
+                        data: {
+                            account_id: rows[0].account_id,
+                            role_name: rows[0].name,
+                        },
+                    });
+                });
+        })
+        .catch((error) => {
             console.log(error);
-            return response.status(409).json({ error: 'At least one Admin account is required.' })
-        }
-    })
-    .catch((error)=>{
-        console.log(error);
-        request.flash('error',error);
-        return response.redirect('/admin/accounts');
-    })
-}
+            return response
+                .status(500)
+                .json({ error: 'Role could not be updated right now.' });
+        });
+};
 
-
-/*assignStatus
-Function responsible for assigning a role to an account*/
-
-exports.assignStatus = (request,response,next)=>{
+exports.assignStatus = (request, response, next) => {
     const accountId = request.params.account_id;
     const status = request.body.status;
-    AccountRole.countActiveAdminsExcluding(accountId).then(([count,fieldData])=>{
-        if(count[0].admin_count > 0){
-            Account.updateStatus(status,accountId).then(()=>{
-                Account.fetchById(accountId).then(([accountInfo, fieldData])=>{
-                    return response.status(200).json({ success: true, message: 'Status updated successfully.', data:{ account_id: accountInfo[0].account_id, status: accountInfo[0].status}});
-                })
-                .catch((error)=>{
-                    console.log(error);
-                    return response.status(500).json({ error: 'Account information could not be updated.' })
-                })
-            }).catch((error)=>{
-                console.log(error);
-                return response.status(409).json({ error: 'Status couldn\'t be updated.'});
-            })
-        }
-        else{
-            console.log(error);
-            return response.status(409).json({ error: 'At least one Admin account is required.' });
-        }
-    })
-    .catch((error)=>{
-        console.log(error);
-        return response.status(409).json({ error: 'Admin count could\'t be validated'});
-    })
-}
 
+    AccountRole.countActiveAdminsExcluding(accountId)
+        .then(([count]) => {
+            if (count[0].admin_count <= 0) {
+                return response
+                    .status(409)
+                    .json({ error: 'At least one Admin account is required.' });
+            }
+
+            return Account.updateStatus(status, accountId)
+                .then(() => Account.fetchById(accountId))
+                .then(([rows]) => {
+                    return response.status(200).json({
+                        success: true,
+                        message: 'Status updated successfully.',
+                        data: {
+                            account_id: rows[0].account_id,
+                            status: rows[0].status,
+                        },
+                    });
+                });
+        })
+        .catch((error) => {
+            console.log(error);
+            return response
+                .status(500)
+                .json({ error: 'Status could not be updated.' });
+        });
+};
 
 /*getRoleAdmin
 Function responsible for the page render of the Role Administration page*/
@@ -223,38 +215,6 @@ exports.getRoleAdmin = (request, response, next) => {
         return response.redirect('/home');
     })
 };
-
-/*AssignPrivilege
-Function responsible for returning a status response that changes or maintains the intentioned toggle*/
-exports.AssignPrivilege = (request,response,next)=>{
-    const roleId = request.params.role_id; 
-    const privilegeId = request.params.privilege_id;
-    RolePrivilege.fetchByRoleAndPrivilege(roleId, privilegeId).then(([count,fieldData])=>{
-        if(count[0].privilege_count>0){
-            RolePrivilege.delete(roleId,privilegeId).then(()=>{
-                return response.status(200).json({enabled:false});
-            })
-            .catch((error)=>{
-                console.log(error);
-                return response.status(500).json({message: 'Privilege cound not be deleted from Role'});
-            })
-        }
-        else{
-            const privilegeRole = new RolePrivilege(roleId, privilegeId);
-            privilegeRole.save().then(()=>{
-                return response.status(200).json({enabled:true});
-            })
-            .catch((error)=>{
-                console.log(error);
-                return response.status(500).json({message: 'Privilege cound not be added to Role'});
-            })
-        }
-    })
-    .catch((error)=>{
-        console.log(error);
-        return response.status(500).json({message: 'Privilege/Role invalid'});
-    })
-}
 
 
 /*deleteRole
@@ -316,27 +276,100 @@ exports.deleteRole = (request, response, next) =>{
     })    
 };
 
+
 /*createRole
 Function responsible for the role creation and redirect to
 roleAdministration page render*/
 
 exports.createRole = (request, response, next)=>{
-    const role = new Role(request.body.name);
+    const roleName = request.body.name;
 
-    role.save().then(()=>{
+    if (!roleName || roleName.trim() === "") {
         return response.json({
-            type: 'success',
-            message: `The Role ${request.body.name} was created successfully`
+            type: 'error',
+            message: `Role name is required.`
         });
+    }
+
+    if (roleName && roleName.length > 100) {
+        return response.json({
+            type: 'error',
+            message: `The Role name must be 100 characters or less.`
+        });
+    }
+
+    Role.compareName(roleName).then(([sameName, fielName])=>{
+        if(sameName.length < 1){
+            const role = new Role(roleName);
+
+            role.save().then(()=>{
+                return response.json({
+                    type: 'success',
+                    message: `The Role was created successfully`
+                });
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.json({
+                    type: 'error',
+                    message: `The Role could not be created`
+                });
+            })
+        }
+        else{
+            return response.json({
+                type: 'error',
+                message: `The Role name already exists. Type a different one.`
+            });
+        }
     })
     .catch((error)=>{
         console.log(error);
         return response.json({
             type: 'error',
-            message: `The Role ${request.body.name} could not be created`
+            message: `Role name comparison could not be performed. Try again`
         });
     })
 };
+
+
+
+/*AssignPrivilege
+Function responsible for returning a status response that changes or maintains the intentioned toggle*/
+exports.AssignPrivilege = (request,response,next)=>{
+    const roleId = request.params.role_id; 
+    const privilegeId = request.params.privilege_id;
+    RolePrivilege.fetchByRoleAndPrivilege(roleId, privilegeId).then(([count,fieldData])=>{
+        if(count[0].privilege_count>0){
+            RolePrivilege.delete(roleId,privilegeId).then(()=>{
+                return response.status(200).json({enabled:false});
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.status(500).json({message: 'Privilege cound not be deleted from Role'});
+            })
+        }
+        else{
+            const privilegeRole = new RolePrivilege(roleId, privilegeId);
+            privilegeRole.save().then(()=>{
+                return response.status(200).json({enabled:true});
+            })
+            .catch((error)=>{
+                console.log(error);
+                return response.status(500).json({message: 'Privilege cound not be added to Role'});
+            })
+        }
+    })
+    .catch((error)=>{
+        console.log(error);
+        return response.status(500).json({message: 'Privilege/Role invalid'});
+    })
+}
+
+
+
+
+//---------------- CREATE ACCOUNT ----------------
 
 const buildCreateAccountFormData = (formData = {}) => ({
     names: formData.names || '',
@@ -346,52 +379,63 @@ const buildCreateAccountFormData = (formData = {}) => ({
     confirmPassword: formData.confirmPassword || '',
     slackUsername: formData.slackUsername || '',
     roleId: formData.roleId || '',
-    image: formData.image || ''
+    image: formData.image || '',
 });
 
 const parseEmployeeNameParts = (names, lastnames) => {
     const trimmedNames = String(names || '').trim();
     const trimmedLastnames = String(lastnames || '').trim();
-    const fullName = [trimmedNames, trimmedLastnames].filter(Boolean).join(' ');
 
     return {
-        fullName,
+        fullName: [trimmedNames, trimmedLastnames].join(' ').trim(),
         names: trimmedNames,
-        lastnames: trimmedLastnames
+        lastnames: trimmedLastnames,
     };
 };
 
-const getBaseUrl = (request) => `${request.protocol}://${request.get('host')}`;
-
-/*getCreateAccount
-Function responsible for rendering the create account page from admin accounts.*/
+const getBaseUrl = (request) =>
+    `${request.protocol}://${request.get('host')}`;
 
 exports.getCreateAccount = (request, response, next) => {
-    const storedFormData = buildCreateAccountFormData(request.session.createAccountFormData);
+    const storedFormData = buildCreateAccountFormData(
+        request.session.createAccountFormData
+    );
     delete request.session.createAccountFormData;
 
-    Role.fetchAll().then(([roles]) => {
-        return response.render('pages/admin-createAccount', {
-            csrfToken: request.csrfToken(),
-            pageTitle: 'Create Account',
-            pageSubtitle: 'Page responsible for the creation of accounts in the Unitas System',
-            roles: roles.map((role) => ({
-                id: role.role_id,
-                name: role.name
-            })),
-            formData: storedFormData
+    Role.fetchAll()
+        .then(([roles]) => {
+            return response.render('pages/admin-createAccount', {
+                csrfToken: request.csrfToken(),
+                pageTitle: 'Create Account',
+                pageSubtitle:
+                    'Page responsible for the creation of accounts in the Unitas System',
+                roles: roles.map((role) => ({
+                    id: role.role_id,
+                    name: role.name,
+                })),
+                formData: storedFormData,
+            });
+        })
+        .catch((error) => {
+            console.log(error);
+            request.session.error =
+                'We could not load the create account view right now.';
+            return response.redirect('/admin/accounts');
         });
-    }).catch((error) => {
-        console.log(error);
-        request.session.error = 'We could not load the create account view right now.';
-        return response.redirect('/admin/accounts');
-    });
 };
 
-/*postCreateAccount
-Implementation for creating an account and sending a notification email.*/
-
 exports.postCreateAccount = async (request, response, next) => {
+    if (request.fileValidationError) {
+        request.session.error = request.fileValidationError;
+        return response.redirect('/admin/accounts/create');
+    }
+
+    const uploadedImage = getUploadedAccountImage(request);
+    const image = uploadedImage || DEFAULT_AVATAR;
+
+    console.log('Uploaded file:', request.file);
+    console.log('Final image value:', image);
+
     const formData = {
         names: String(request.body.names || '').trim(),
         lastnames: String(request.body.lastnames || '').trim(),
@@ -400,13 +444,29 @@ exports.postCreateAccount = async (request, response, next) => {
         confirmPassword: String(request.body.confirmPassword || ''),
         slackUsername: String(request.body.slackUsername || '').trim(),
         roleId: String(request.body.roleId || '').trim(),
-        image: String(request.body.image || '').trim()
+        image: image,
     };
 
-    request.session.createAccountFormData = buildCreateAccountFormData(formData);
+    request.session.createAccountFormData =
+        buildCreateAccountFormData(formData);
 
-    if (!formData.names || !formData.lastnames || !formData.email || !formData.password || !formData.confirmPassword || !formData.roleId) {
-        request.session.error = 'Names, last names, email, password, confirm password, and role are required to create an account.';
+    // -------- VALIDATIONS --------
+
+    if (
+        !formData.names ||
+        !formData.lastnames ||
+        !formData.email ||
+        !formData.password ||
+        !formData.confirmPassword ||
+        !formData.roleId
+    ) {
+        request.session.error =
+            'Names, last names, email, password, confirm password, and role are required.';
+        return response.redirect('/admin/accounts/create');
+    }
+
+    if (image.length > 1024) {
+        request.session.error = 'The selected profile image is too large.';
         return response.redirect('/admin/accounts/create');
     }
 
@@ -416,66 +476,131 @@ exports.postCreateAccount = async (request, response, next) => {
     }
 
     if (formData.password !== formData.confirmPassword) {
-        request.session.error = 'Password and confirm password must match.';
+        request.session.error =
+            'Password and confirm password must match.';
         return response.redirect('/admin/accounts/create');
     }
 
     try {
-        const [existingEmailRows] = await Account.fetchByEmail(formData.email);
+        // -------- DUPLICATES --------
+
+        const [existingEmailRows] = await Account.fetchByEmail(
+            formData.email
+        );
         if (existingEmailRows.length > 0) {
-            request.session.error = 'An account with that email already exists.';
+            request.session.error =
+                'An account with that email already exists.';
+            return response.redirect('/admin/accounts/create');
+        }
+
+        const employeeParts = parseEmployeeNameParts(
+            formData.names,
+            formData.lastnames
+        );
+
+        const [existingFullNameRows] =
+            await Employee.findByFullname(employeeParts.fullName);
+        if (existingFullNameRows.length > 0) {
+            request.session.error =
+                'An account with that full name already exists.';
             return response.redirect('/admin/accounts/create');
         }
 
         if (formData.slackUsername) {
-            const [existingSlackRows] = await Account.findBySlackUsername(formData.slackUsername);
+            const [existingSlackRows] =
+                await Account.findBySlackUsername(
+                    formData.slackUsername
+                );
+
             if (existingSlackRows.length > 0) {
-                request.session.error = 'An account with that Slack username already exists.';
+                request.session.error =
+                    'An account with that Slack username already exists.';
                 return response.redirect('/admin/accounts/create');
             }
         }
 
-        const employeeParts = parseEmployeeNameParts(formData.names, formData.lastnames);
-        const employee = new Employee(employeeParts.fullName, employeeParts.names, employeeParts.lastnames);
+        // -------- CREATION --------
+
+        const employee = new Employee(
+            employeeParts.fullName,
+            employeeParts.names,
+            employeeParts.lastnames
+        );
         await employee.save();
 
-        const [employeeRows] = await Employee.getEmployeeIdByFullname(employeeParts.fullName);
+        const [employeeRows] =
+            await Employee.getEmployeeIdByFullname(
+                employeeParts.fullName
+            );
+
         const employeeId = employeeRows[0]?.employee_id;
 
         if (!employeeId) {
-            throw new Error('Unable to determine the newly created employee id.');
+            throw new Error('Employee ID not found after creation.');
         }
 
-        const account = new Account(employeeId, formData.email, formData.password, formData.slackUsername, formData.image || null);
+        const account = new Account(
+            employeeId,
+            formData.email,
+            formData.password,
+            formData.slackUsername,
+            formData.image
+        );
+        
         await account.save();
 
-        const [insertedAccountRows] = await Account.getAccountIdByEmailSlack(formData.email, formData.slackUsername);
-        const accountId = insertedAccountRows[0]?.account_id;
+        const [accountRows] =
+            await Account.getAccountIdByEmailSlack(
+                formData.email,
+                formData.slackUsername
+            );
+
+        const accountId = accountRows[0]?.account_id;
 
         if (!accountId) {
-            throw new Error('Unable to determine the newly created account id.');
+            throw new Error('Account ID not found after creation.');
         }
 
-        const accountRole = new AccountRole(accountId, formData.roleId);
-        await accountRole.save();
+        await new AccountRole(accountId, formData.roleId).save();
+
+        // -------- EMAIL (NON-BLOCKING) --------
 
         const resetUrl = `${getBaseUrl(request)}/reset`;
-        await resendService.sendAccountCreatedEmail(formData.email, formData.fullName, resetUrl);
+
+        let emailFailed = false;
+
+        try {
+            await resendService.sendAccountCreatedEmail(
+                formData.email,
+                employeeParts.fullName,
+                resetUrl
+            );
+        } catch (err) {
+            console.log('Email failed:', err.message);
+            emailFailed = true;
+        }
+
+        // -------- RESPONSE --------
 
         delete request.session.createAccountFormData;
-        request.session.success = 'Account created successfully and a notification email has been sent.';
+
+        request.session.success = emailFailed
+            ? 'Account created successfully, but email could not be sent.'
+            : 'Account created successfully and notification email sent.';
+
         return response.redirect('/admin/accounts');
     } catch (error) {
         console.log(error);
-        request.session.error = 'Could not create the account right now. Please try again later.';
+        request.session.error =
+            'Could not create the account right now. Please try again later.';
         return response.redirect('/admin/accounts/create');
     }
 };
 
-/*deleteAccount
-Temporary placeholder while account deletion backend is pending implementation.*/
+//---------------- DELETE ----------------
 
 exports.deleteAccount = (request, response, next) => {
-    request.session.error = 'Account deletion backend is not implemented yet.';
+    request.session.error =
+        'Account deletion backend is not implemented yet.';
     return response.redirect('/admin/accounts');
 };

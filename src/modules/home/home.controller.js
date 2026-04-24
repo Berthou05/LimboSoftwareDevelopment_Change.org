@@ -9,6 +9,8 @@ const Achievement = require('../../models/achievement');
 const Highlight = require('../../models/highlight');
 const { getInitials, resolveAvatarImage } = require('../../utils/avatar.util');
 
+const GENERAL_ACTIVITY_FILTER = 'general';
+
 const formatDayLabel = function formatDayLabel(value) {
     const date = new Date(value);
 
@@ -266,11 +268,13 @@ exports.getHome = async (request, response, next) => {
 
         const accountInfo = accountRows[0] || {};
         const employeeInfo = employeeRows[0] || {};
-        const filteredActivities = selectedActivityProjectId
-            ? activityRows.filter((activity) => {
-                return String(activity.project_id || '') === selectedActivityProjectId;
-            })
-            : activityRows;
+        const filteredActivities = selectedActivityProjectId === GENERAL_ACTIVITY_FILTER
+            ? activityRows.filter((activity) => !activity.project_id)
+            : selectedActivityProjectId
+                ? activityRows.filter((activity) => {
+                    return String(activity.project_id || '') === selectedActivityProjectId;
+                })
+                : activityRows;
         // Home renders the personal timeline grouped by day while the filter still works by project.
         const latestActivitySections = buildActivitySections(filteredActivities);
         const projectRows = employeeProjectRows.map((project) => ({

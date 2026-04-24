@@ -17,6 +17,8 @@ const Report = require('../../models/report');
 const Search = require('../../models/search');
 const { search } = require('../report/report.routes');
 
+const GENERAL_ACTIVITY_FILTER = 'general';
+
 //--------------------------- Auxiliar Functions ---------------------------
 
 /*getLatestReport(content_id)
@@ -484,11 +486,13 @@ exports.getEmployeePage = async (request, response, next) => {
                         return renderNotFound(request, response);
                     }
 
-                    const filteredActivities = selectedActivityProjectId
-                        ? activities.filter((activity) => {
-                            return String(activity.project_id || '') === selectedActivityProjectId;
-                        })
-                        : activities;
+                    const filteredActivities = selectedActivityProjectId === GENERAL_ACTIVITY_FILTER
+                        ? activities.filter((activity) => !activity.project_id)
+                        : selectedActivityProjectId
+                            ? activities.filter((activity) => {
+                                return String(activity.project_id || '') === selectedActivityProjectId;
+                            })
+                            : activities;
 
                     const projectRows = employeeProjects.map((project) => ({
                         project: {

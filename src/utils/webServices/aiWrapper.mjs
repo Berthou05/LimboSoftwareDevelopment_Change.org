@@ -8,7 +8,7 @@ Modified by: Alexis Berthou
 Function responsible for extracting normalized activities from a standup
 payload. This wrapper can later be replaced with an external AI provider.*/
 
-import { generateText, streamText, Output} from "ai";
+import { generateText, streamText, Output, zodSchema} from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
 
@@ -93,6 +93,7 @@ const WhatWentWellProjectSectionSchema = z.object({
     .max(10, "Exactly 10 bullet points are required")
     .describe("Exactly 10 evidence-based bullet points describing positive progress, outcomes, or effective practices in the project"),
 });
+
 /*TeamImpactGroupSchema
 Defined schema for the team impact section in a team report.*/
 
@@ -140,6 +141,96 @@ const ValuesSectionSchema = z.object({
     ),
 });
 
+
+/**/
+const WhatHasGoneWellProject = z.object({
+  title: z
+    .literal("What went well?")
+    .describe("Section focused on what went well in the project based on goals and achievements"),
+  items: z.array(
+    z.string()
+      .min(1)
+      .describe(
+        "Outcome-focused statement describing a goal achieved, key milestone, or measurable impact. Do not describe activities or processes."
+      )
+  ).max(10, "Exactly 10 bullet points are required"),
+});
+
+
+/** */
+const ProjectStatusSectionSchema = z.object({
+  projectStatus: z
+    .string()
+    .min(1)
+    .describe("Current status of the project (e.g., On Track, At Risk, Delayed)"),
+
+  projectLead: z
+    .string()
+    .min(1)
+    .describe("Name of the person leading the project"),
+
+  startDate: z
+    .string()
+    .min(1)
+    .describe("Project start date (ISO format preferred)"),
+
+  endDate: z
+    .string(),
+  items: z
+    .array(
+      z.string().min(1).describe(
+        "A specific, evidence-based bullet point evaluating project performance based on goals, status, achievements, and highlights"
+      )
+    )
+    .max(5, "Maximum of 5 bullet points")
+    .describe(
+      "Up to 5 concise, evidence-based bullet points explaining whether the project is going well or not"
+    ),
+});
+
+
+/** */
+const TeamStatusSectionSchema = z.object({
+  title: z
+    .string()
+    .min(0)
+    .describe("Project title. Only project title direct"),
+
+  projectStatus: z
+    .string()
+    .min(1)
+    .describe("Current status of the project (e.g., On Track, At Risk, Delayed)"),
+
+  projectLead: z
+    .string()
+    .min(1)
+    .describe("Name of the person leading the project"),
+
+  startDate: z
+    .string()
+    .min(1)
+    .describe("Project start date (ISO format preferred)"),
+
+  endDate: z
+    .string(),
+  items: z
+    .array(
+      z.string().min(1).describe(
+        "A specific, evidence-based bullet point evaluating the team's impact on project performance based on goals, status, achievements, and highlights"
+      )
+    )
+    .max(5, "Maximum of 5 bullet points")
+    .describe(
+      "Up to 5 concise, evidence-based bullet points explaining how the team is performing within the project"
+    ),
+});
+
+
+const statusSchema = {
+  PROJECT: "statusProject",
+  TEAM: "statusTeam"
+}
+
 const reportSchemas = {
   whatWentWellEmployee: WhatWentWellEmployeeSectionSchema,
   whatWentWellTeam: WhatWentWellTeamSectionSchema,
@@ -147,6 +238,9 @@ const reportSchemas = {
   teamImpact: TeamImpactGroupSchema,
   whatCanBeImproved: WhatCanBeImprovedSectionSchema,
   companyValues: ValuesSectionSchema,
+  WhatHasGoneWellProject: WhatHasGoneWellProject,
+  statusProject:ProjectStatusSectionSchema,
+  statusTeam:TeamStatusSectionSchema
 }
 
 //---------------------- PROMPTS SECTION ----------------------------
@@ -396,8 +490,181 @@ Based on the project's "What Went Well?" analysis and the original project data,
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - Tone: constructive, direct, and forward-looking. Surface gaps clearly without being punitive.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change and why.
+`;
 
+const PROJECT_GONE_WELL_PROMPT = `
+You are generating the "What Went Well?" section of a Project Report.
 
+## Your Task
+Analyze the project's goals, milestones, and achievements, then produce a focused list of outcome-oriented successes.
+
+## Rules
+1. **Outcome-focused only** — Every bullet must describe a goal achieved, milestone reached, or measurable impact delivered. Do NOT describe activities, processes, or tasks.
+2. **Use only what's necessary** — Do not pad to fill a number. Only include bullets that surface new, non-redundant, meaningful insight. Maximum 10.
+3. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}). Only highlight goals that were completed on time or ahead of schedule as wins.
+4. **Be specific** — Reference actual goal names, target metrics, or milestones from the project data. Avoid vague generalities.
+5. **No repetition** — Each bullet must convey distinct information not already covered by another bullet.
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "title": "What went well?",
+  "items": string[] // Array of up to 10 outcome-focused achievement statements
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD bullets
+- "Revenue target of $500K for Q2 was reached 2 weeks ahead of schedule, closing at $523K."
+- "User onboarding milestone of 500 active users was achieved by June 15, 15 days before the June 30 deadline."
+- "Partnership agreement with Distributor B was signed, fulfilling the Q1 expansion goal."
+
+## Examples of BAD bullets (do not produce these)
+- "The team collaborated well." ← activity/process, not an outcome
+- "Meetings were held regularly." ← activity, not tied to a goal
+- "The project stayed organized." ← vague, no measurable impact
+`;
+
+const STATUS_PROJECT = `
+You are generating the "Status" section of a Project Report.
+
+## Your Task
+Produce a structured status summary including project metadata and up to 5 concise, evidence-based bullet points delivering an honest verdict on how the project is performing overall — drawing exclusively from its goals, their completion status, achievements, and highlights.
+
+## Rules
+1. **Evidence-based only** — Every bullet must be grounded in the project's actual goals and their status. Do not speculate, infer intent, or introduce information not present in the project data.
+2. **Use only what's necessary** — Do not pad to reach 5. Only include bullets that deliver distinct, non-redundant insight. Minimum 2, maximum 5.
+3. **Balanced and honest** — If the project is on track, say so and cite why. If it is struggling, say so and cite why. If mixed, reflect that nuance accurately across bullets.
+4. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}) when evaluating whether goals are on track, overdue, or at risk. Use startDate and endDate to assess overall project timeline health. If a date is null or missing, do not fabricate one — omit or note it as undefined.
+5. **Complement other sections** — This section synthesizes the bigger picture. Do not repeat bullet-by-bullet what What Went Well or What Can Be Improved already detail. Draw an overall conclusion from the same evidence.
+6. **No filler language** — Avoid phrases like "the project is progressing", "there is room for improvement", or other vague non-statements. Every bullet must carry factual weight.
+7. **Status field** — Derive "projectStatus" from the project's current status field and the evidence in the bullets. Map it to a human-readable label: "IN PROGRESS" → "On Track" or "At Risk" depending on goal health; "COMPLETED" → "Completed"; "DELAYED" → "Delayed". It must be consistent with the evidence in the bullet points.
+
+## Field Mapping
+The input uses these field names — map them to the output as follows:
+- name          → (not in output, used for context only)
+- status        → projectStatus (apply Rule 7 to convert to human-readable label)
+- lead_name     → projectLead
+- start_date    → startDate (convert to YYYY-MM-DD; if null, use "TBD")
+- end_date      → endDate (convert to YYYY-MM-DD; if null, use "TBD")
+- goals         → use to evaluate overall project health in bullet points
+- achievements  → use as evidence of completed work in bullet points
+- highlights    → use as supporting context in bullet points
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "projectStatus": string,   // Human-readable status label (e.g., "On Track", "At Risk", "Delayed", "Completed")
+  "projectLead": string,     // Taken directly from lead_name
+  "startDate": string,       // ISO format YYYY-MM-DD, or "TBD" if null
+  "endDate": string,         // ISO format YYYY-MM-DD, or "TBD" if null
+  "items": string[]          // 2–5 evidence-based bullet points on overall project status
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD output
+{
+  "projectStatus": "At Risk",
+  "projectLead": "Ana López",
+  "startDate": "2026-01-01",
+  "endDate": "TBD",
+  "items": [
+    "1 of 1 active goals (Increase Notification CTR by 7%) remains in progress with no due date, making delivery risk impossible to quantify against a deadline.",
+    "The notification batching refactor was completed and delivered, establishing the technical foundation required to pursue the CTR goal.",
+    "With no end date defined and the sole goal still open, the project lacks the timeline structure needed to assess whether it is on track for closure."
+  ]
+}
+
+## Examples of BAD output
+{
+  "projectStatus": "Good",
+  "projectLead": "Someone",
+  "startDate": "January",
+  "endDate": "June",
+  "items": [
+    "The project has had its ups and downs.",
+    "The team is doing their best to meet goals.",
+    "Overall things are moving in a positive direction."
+  ]
+}
+— BAD because: vague status label, non-ISO dates, items contain no evidence, no goal status referenced, no time awareness.
+`;
+
+const STATUS_TEAM = `
+You are generating a "Status" entry for a specific project within a Team Report.
+
+## Your Task
+Produce a structured status summary including project metadata and up to 5 concise, evidence-based bullet points evaluating how the team is performing on this specific project — focusing on the team's actions and how these directly influence progress toward the project's goals.
+
+## Rules
+1. **Team-action lens** — Each bullet must connect a specific team action (or inaction) to a goal outcome, milestone, or measurable impact. This is a team impact assessment, not a general project health summary.
+2. **Evidence-based only** — Every bullet must be grounded in the project's goals, their status, achievements, highlights, and the team's recorded actions. Do not speculate or introduce information not present in the data.
+3. **Use only what's necessary** — Do not pad to reach 5. Only include bullets that deliver distinct, non-redundant insight. Minimum 2, maximum 5.
+4. **Balanced and honest** — Include both positive impact and shortfalls where the evidence supports it. Do not default to optimism or pessimism.
+5. **Respect time context** — Factor in due dates vs. the current date ({{CURRENT_DATE}}) when assessing whether the team's contributions are keeping the project on track, at risk, or overdue. Use startDate and endDate to assess overall project timeline health. If a date is null or missing, do not fabricate one — omit or note it as undefined.
+6. **No filler language** — Avoid phrases like "the team is working hard" or "collaboration has been key". Every bullet must carry factual weight tied to a goal or outcome.
+7. **Status field** — Derive "projectStatus" from the project's current status field and the evidence in the bullets. Map it to a human-readable label: "IN PROGRESS" → "On Track" or "At Risk" depending on goal health; "COMPLETED" → "Completed"; "DELAYED" → "Delayed". It must be consistent with the evidence in the bullet points.
+
+## Field Mapping
+The input uses these field names — map them to the output as follows:
+- name          → title
+- status        → projectStatus (apply Rule 7 to convert to human-readable label)
+- lead_name     → projectLead
+- start_date    → startDate (convert to YYYY-MM-DD; if null, use "TBD")
+- end_date      → endDate (convert to YYYY-MM-DD; if null, use "TBD")
+- goals         → use to evaluate team performance in bullet points
+- achievements  → use as evidence of completed work in bullet points
+- highlights    → use as supporting context in bullet points
+- activities    → use to assess team-level actions per team ID
+
+## Output Format
+Return a JSON object matching this exact schema:
+{
+  "title": string,           // Project name, exactly as provided — nothing else
+  "projectStatus": string,   // Human-readable status label (e.g., "On Track", "At Risk", "Delayed", "Completed")
+  "projectLead": string,     // Taken directly from lead_name
+  "startDate": string,       // ISO format YYYY-MM-DD, or "TBD" if null
+  "endDate": string,         // ISO format YYYY-MM-DD, or "TBD" if null
+  "items": string[]          // 2–5 evidence-based bullet points from the team's perspective
+}
+
+## Input
+Project data:
+{{PROJECT_DATA}}
+
+## Examples of GOOD output
+{
+  "title": "Supporter Notification Revamp",
+  "projectStatus": "At Risk",
+  "projectLead": "Ana López",
+  "startDate": "2026-01-01",
+  "endDate": "TBD",
+  "items": [
+    "The team completed a full refactor of the notification batching logic, eliminating duplicate sends and directly supporting the reliability foundation needed for the CTR goal.",
+    "The Increase Notification CTR goal (target: +7%) is still in progress with no due date set, making timeline accountability impossible to assess.",
+    "No completed goals are recorded yet; the single active goal lacks a due date, leaving the team's delivery cadence unmeasurable against a concrete deadline."
+  ]
+}
+
+## Examples of BAD output
+{
+  "title": "Supporter Notification Revamp",
+  "projectStatus": "Good",
+  "projectLead": "Someone",
+  "startDate": "January",
+  "endDate": "June",
+  "items": [
+    "The team has been working hard to meet deadlines.",
+    "There have been some challenges but the team is addressing them.",
+    "Overall collaboration has been positive across workstreams."
+  ]
+}
+— BAD because: vague status label, non-ISO dates, no specific actions cited, no goals referenced, no time awareness, pure filler.
 `;
 
 const doingGoodPrompts = {
@@ -416,6 +683,12 @@ const toImprovePrompts = {
   PROJECT: TO_IMPROVE_PROJECT,
   TEAM: TO_IMPROVE_TEAM
 }
+
+const statusPrompts = {
+  PROJECT: STATUS_PROJECT,
+  TEAM: STATUS_TEAM,
+}
+
 
 
 //---------------------- AI Wrapper Functions ----------------------------
@@ -472,6 +745,22 @@ export async function companyValues(sections, prompt, schema, reportType=''){
   return await generateReportSection(sections, PROMPT, schema);
 }
 
+/*whatHasBeenDone
+Auxiliar function responsible to obtain the improved what has gone well of project*/
+
+export async function whatHasBeenDone(sections){
+  return await generateReportSection(sections, PROJECT_GONE_WELL_PROMPT, "WhatHasGoneWellProject");
+}
+
+
+export async function getStatus(sections, prompt='', schema='', reportType=''){
+  let PROMPT = statusPrompts[reportType];
+  let SCHEMA = statusSchema[reportType];
+  return await generateReportSection(sections, PROMPT, SCHEMA);
+}
+
+
+
 /*generateReportSection(body, prompt, schema)
 Function responsible for obtaining a section of the report based on the given
 prompt, schema and information.
@@ -482,16 +771,16 @@ const generateReportSection = async function generateReportSection(body, prompt,
 
   const buildMessages = (body, prompt) => ([
     { role: "user", content: "Context data:" },
-    { role: "user", content: JSON.stringify(body) },
+    { role: "user", content: JSON.stringify(body, null, 2)},
     { role: "user", content: prompt }
   ]);
 
   const {output, totalUsage} = await generateText({
     model: openai(MODEL),
-    output: Output.object({schema: reportSchema}),
+    output: Output.object({ schema: zodSchema(reportSchema) }),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt),
-    maxRetries: 0
+    maxRetries: 2
   });
   return output
 };
@@ -569,6 +858,10 @@ Use these rules:
 - Put a fuller explanation in "description".
 - If a project name, squad name, ticket, or clear project reference appears, place the best project clue in "project_hint".
 - Prefer exact project names from the candidate list below when they match the standup text.
+- When a project mention appears once and is followed by multiple bullets, sentences, or clauses, check whether that project remains the active context until another project or an explicit general-activity cue is mentioned.
+- Explicit general-activity cues such as "general activity", "general activities", "no project", or clearly non-project coordination work should break project inheritance.
+- Use nearby context across the whole standup before deciding whether an activity belongs to a project or should remain general activity.
+- Keep concrete coordination, planning, review, or alignment work as general activity when it is specific enough to persist and not clearly tied to one project.
 - Set "worked_on_project" to true only when the activity clearly describes actual work on a project.
 - Ignore greetings, filler text, and generic statements with no actionable work.
 - If there are no valid activities, return an empty array.

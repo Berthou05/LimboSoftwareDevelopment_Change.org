@@ -136,7 +136,10 @@ validation: existance of account, password matching, privilege loading.
 Available without authentication*/
 
 exports.postLogin = (request, response, next)=>{
-    Account.fetchByEmail(request.body.email).then(([rows,fieldData])=>{
+    const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
+    const password = request.body.password;
+
+    Account.fetchByEmail(email).then(([rows,fieldData])=>{
         if(rows.length<1){
             request.session.error = 'Email not found';
             return response.redirect('/');
@@ -144,7 +147,7 @@ exports.postLogin = (request, response, next)=>{
             request.session.error = 'Disabled Account. Login is not possible. Please contact the System Administrator';
             return response.redirect('/');
         }else{
-            bcrypt.compare(request.body.password, rows[0].password_hash).then((doMatch)=>{
+            bcrypt.compare(password, rows[0].password_hash).then((doMatch)=>{
                 if(doMatch){
                     request.session.isAuth = true;
                     request.session.isLoggedIn = true;
@@ -167,8 +170,10 @@ exports.postLogin = (request, response, next)=>{
                                 id: rows[0].account_id,
                                 employeeId: rows[0].employee_id,
                                 username: request.session.username || '',
-                                image: rows[0].image || '',
+                                image:rows[0].image || '',
                                 privilege,
+                                fullName: rows[0].full_name || '',
+                                name: rows[0].names || ''
                             };
 
                             request.session.success = 'Welcome back.';

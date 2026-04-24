@@ -216,7 +216,8 @@ static getProjectActivities(project_ids, start_date, end_date) {
         FROM activity AS A
         INNER JOIN employee AS E ON A.employee_id = E.employee_id 
         WHERE (completed_at BETWEEN ? AND ?)
-        AND (${conditions.join(' OR ')});
+        AND (${conditions.join(' OR ')})
+        ORDER BY A.completed_at ASC;
     `, params);
 }
     /*getNullProjectActivities(employee_id, start_date, end_date)

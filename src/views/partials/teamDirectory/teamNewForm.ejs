@@ -32,38 +32,43 @@
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <div class="grid gap-5">
+      <!-- Team name -->
       <label class="block text-sm">
-        <span class="mb-1 block font-semibold text-brand-text/70">Team name</span>
+        <span class="mb-1 block font-semibold text-brand-text">Team name</span>
         <input
           type="text"
           name="name"
           value="<%= formState.name %>"
           required
           maxlength="120"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
           placeholder="Growth Analytics Team"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Description -->
       <label class="block text-sm">
-        <span class="mb-1 block font-semibold text-brand-text/70">Description</span>
+        <span class="mb-1 block font-semibold text-brand-text">Description</span>
         <textarea
           name="description"
           rows="4"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
           placeholder="Describe the team's purpose, responsibilities, and focus areas."
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         ><%= formState.description %></textarea>
       </label>
 
+      <!-- Team image -->
       <label class="block text-sm">
-        <span class="mb-1 block font-semibold text-brand-text/70">Team image</span>
+        <span class="mb-1 block font-semibold text-brand-text">Team image</span>
         <input
           type="file"
           name="image"
           accept="image/png,image/jpg,image/jpeg"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 text-sm text-brand-text/70 outline-none ring-brand-primary/30 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-secondary/40 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-text/80 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 text-sm text-brand-text/70 outline-none ring-brand-primary/30 focus:ring file:mr-4 file:rounded-lg file:border-0 file:bg-brand-secondary/40 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-text/80"
         />
-        <span class="mt-1 block text-xs text-brand-text/50">Optional. Upload a PNG or JPG image that represents the team.</span>
+        <span class="mt-1 block text-xs text-brand-text/50">
+          Optional. Upload a PNG or JPG image that represents the team.
+        </span>
       </label>
     </div>
 

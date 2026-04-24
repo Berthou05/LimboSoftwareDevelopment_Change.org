@@ -837,7 +837,6 @@ exports.getTeamPage = (request, response, next) => {
 };
 
 
-//!Function to modify as approval is considered on Roles instead of Privilege
 /*toggleTeamMembership
 */
 
@@ -911,7 +910,9 @@ by creating a relationship between EmployeeTeam*/
 
 exports.addTeamMember = (request, response, next) => {
     const teamId = request.params.team_id;
-    const employeeId = String(request.body.employeeId || '').trim();
+    const employeeId = request.body.employeeId
+        ? String(request.body.employeeId).trim()
+        : request.session.employeeId;
     const role = resolveTeamMemberRole(request.body.role);
 
     if (!employeeId) {
@@ -1085,6 +1086,25 @@ exports.removeTeamMember = (request, response, next) => {
             error: `Error removing a member from team ${teamId}.`,
         });
     });
+};
+
+
+/*leaveTeam
+Function responsible for eliminating the user account from a team*/
+exports.leaveTeam = (req, res) => {
+    const employeeId = req.session.employeeId;
+    const teamId = req.params.team_id;
+
+    return EmployeeTeamMembership.leave(employeeId, teamId)
+        .then(() => {
+            req.session.success = 'You left the team.';
+            res.redirect(`/teams/${teamId}`);
+        })
+        .catch(err => {
+            console.log(err);
+            req.session.error = 'Error leaving team.';
+            res.redirect(`/teams/${teamId}`);
+        });
 };
 
 /*deleteTeam

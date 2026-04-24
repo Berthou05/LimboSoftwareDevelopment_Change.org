@@ -28,6 +28,7 @@ router.post('/:project_id/members', isAuth, isAuth.requirePermission('PROJ-05-02
 router.post('/:project_id/members/:employee_id/role', isAuth, isAuth.requirePermission('PROJ-06-02'), projectController.updateProjectMemberRole);
 router.post('/:project_id/members/:employee_id/remove', isAuth, isAuth.requirePermission('PROJ-06-02'), projectController.removeProjectMember);
 router.post('/:project_id/teams', isAuth, projectController.addProjectTeam);
+router.post('/:project_id/teams/:team_id/description', isAuth, projectController.updateProjectTeamDescription);
 router.post('/:project_id/teams/:team_id/remove', isAuth, projectController.removeProjectTeam);
 router.post('/:project_id/join', isAuth, projectController.joinProject);
 router.post('/:project_id/leave', isAuth, projectController.leaveProject);
