@@ -28,32 +28,35 @@
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
 
     <div class="grid gap-5">
+      <!-- Project name -->
       <label class="block text-sm">
-        <span class="mb-1 block font-semibold text-brand-text/70">Project name</span>
+        <span class="mb-1 block font-semibold text-brand-text">Project name</span>
         <input
           type="text"
           name="name"
           value="<%= formState.name %>"
           required
           maxlength="120"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
           placeholder="AI Assisted Classification"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Description -->
       <label class="block text-sm">
-        <span class="mb-1 block font-semibold text-brand-text/70">Description</span>
+        <span class="mb-1 block font-semibold text-brand-text">Description</span>
         <textarea
           name="description"
           rows="4"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
           placeholder="Describe the scope and purpose of the project."
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         ><%= formState.description %></textarea>
       </label>
 
+      <!-- Dates -->
       <div class="grid gap-5 md:grid-cols-2">
         <label class="block text-sm">
-          <span class="mb-1 block font-semibold text-brand-text/70">Start date</span>
+          <span class="mb-1 block font-semibold text-brand-text">Start date</span>
           <input
             type="date"
             name="startDate"
@@ -64,7 +67,7 @@
         </label>
 
         <label class="block text-sm">
-          <span class="mb-1 block font-semibold text-brand-text/70">End date</span>
+          <span class="mb-1 block font-semibold text-brand-text">End date</span>
           <input
             type="date"
             name="endDate"

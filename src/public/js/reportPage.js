@@ -1,77 +1,166 @@
+function cleanText(text) {
+    return text
+        .replace(/\s+/g, ' ')
+        .replace(/\n+/g, '\n')
+        .trim();
+}
+
 function buildReportText() {
     let output = '';
 
-    document.querySelectorAll('#report-content section').forEach(section => {
-        const title = section.querySelector('h2')?.textContent.trim() || '';
-        const content = section.querySelector('[data-content]')?.textContent.trim() || '';
+    // -------- HEADER --------
+    const reportTitle = document.querySelector('[data-report-title]')?.textContent.trim();
+    const rangeText = document.querySelector('[data-report-range]')?.textContent.trim();
 
-        if (title) {
-            output += `=== ${title} ===\n`;
+    if (reportTitle) output += `${reportTitle}\n`;
+    if (rangeText) output += `${rangeText}\n`;
+
+    output += '\n';
+
+    // -------- SECTIONS --------
+    document.querySelectorAll('#report-content > div').forEach(section => {
+        const title = section.querySelector('h2')?.textContent.trim();
+        if (!title) return;
+
+        output += `=== ${title} ===\n`;
+
+        const content = section.querySelector('[data-content]');
+        if (!content) return;
+
+        // -------- GROUPS --------
+        const groups = content.querySelectorAll('h3');
+
+        if (groups.length > 0) {
+            groups.forEach(group => {
+                const groupTitle = cleanText(group.textContent);
+                output += `\n${groupTitle}\n`;
+
+                const groupContainer = group.parentElement;
+
+                // -------- STATUS BLOCK --------
+                const grid = groupContainer.querySelector('.grid');
+                if (grid) {
+                    grid.querySelectorAll(':scope > div').forEach(row => {
+                        const text = cleanText(row.textContent);
+                        if (text) output += `- ${text}\n`;
+                    });
+                }
+
+                // -------- LIST ITEMS --------
+                groupContainer.querySelectorAll('ul li').forEach(li => {
+                    output += `- ${cleanText(li.textContent)}\n`;
+                });
+            });
+
+        } else {
+            // -------- FLAT CONTENT --------
+            content.querySelectorAll('ul li').forEach(li => {
+                output += `- ${cleanText(li.textContent)}\n`;
+            });
         }
-        if (content) {
-            output += content + '\n\n';
-        }
+
+        output += '\n';
     });
 
     return output.trim();
 }
 
+async function hasClipboardPermission() {
+    try {
+        if (!navigator.permissions) return false;
+
+        const result = await navigator.permissions.query({ name: 'clipboard-write' });
+        return result.state === 'granted' || result.state === 'prompt';
+    } catch {
+        return false;
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    textarea.style.pointerEvents = 'none';
+
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    let success = false;
+
+    try {
+        success = document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy failed', err);
+    }
+
+    document.body.removeChild(textarea);
+    return success;
+}
+
+async function copyText(text) {
+    const canUseClipboardAPI =
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        window.isSecureContext;
+
+    if (canUseClipboardAPI) {
+        const hasPermission = await hasClipboardPermission();
+
+        if (hasPermission) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                console.warn('Clipboard API failed, using fallback', err);
+            }
+        }
+    }
+    return fallbackCopy(text);
+}
+
+// -------- COPY BUTTON --------
 document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.querySelector('.js-copy-report');
-
     if (!copyBtn) return;
 
     copyBtn.addEventListener('click', async () => {
-        const report = document.getElementById('report-content');
-
-        if (!report) return;
         const text = buildReportText();
+        const success = await copyText(text);
 
-        try {
-        await navigator.clipboard.writeText(text);
+        copyBtn.innerText = success ? 'Copied!' : 'Failed to copy';
 
-        // Optional feedback
-        copyBtn.innerText = 'Copied!';
         setTimeout(() => {
-            copyBtn.innerText = 'Copy report';
+            copyBtn.innerText = 'Copy';
         }, 2000);
-
-        } catch (err) {
-        console.error('Copy failed', err);
-        }
     });
 });
 
+// -------- COLLAPSIBLE SECTIONS --------
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('[data-toggle-section]');
 
     buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            const section = button.closest('section');
-            const content = section.querySelector('[data-content]');
-            const icon = button.querySelector('[data-icon]');
+        const container = button.parentElement;
+        const content = container.querySelector('[data-content]');
+        const icon = button.querySelector('[data-icon]');
 
-            if (!content) return;
+        if (!content) return;
+
+        // Open by default
+        content.classList.remove('hidden');
+        if (icon) icon.classList.add('rotate-180');
+
+        button.addEventListener('click', () => {
             const isHidden = content.classList.contains('hidden');
+
             content.classList.toggle('hidden');
-            button.classList.toggle('border-b', isHidden);
 
             if (icon) {
-                icon.classList.toggle('rotate-180');
+                icon.classList.toggle('rotate-180', isHidden);
             }
         });
     });
-
-        // Open first section
-    if (buttons.length > 0) {
-        const firstContent = buttons[0]
-            .closest('section')
-            .querySelector('[data-content]');
-        
-        if (firstContent){
-            firstContent.classList.remove('hidden');
-            buttons[0].classList.add('border-b');
-            buttons[0].querySelector('[data-icon]').classList.toggle('rotate-180');
-        }
-    }
 });

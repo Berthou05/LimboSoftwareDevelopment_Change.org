@@ -13,6 +13,7 @@ function navigationMiddleware(req, res, next) {
   const user = sessionUser
     ? {
       id: sessionUser.id || null,
+      fullName: sessionUser.fullName || 'Unitas User',
       name: sessionUser.username || 'Unitas User',
       image: userImage,
       role: isAdmin ? 'admin' : 'employee',

@@ -1,21 +1,16 @@
-<%# Template: pages/createAccount.ejs
-   Purpose: Admin create-account page.
-   Expected locals: roles, formData.
-%>
-
-<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
-
 <section class="w-full rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
   <div class="flex flex-wrap items-center justify-between gap-3">
     <h2 class="font-heading text-xl font-bold">Create Account</h2>
+
     <div class="flex flex-wrap gap-3">
       <button
         type="submit"
         form="accountForm"
-        class="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-accent"
+        class="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-black transition hover:bg-brand-accent"
       >
         Create Account
       </button>
+
       <a
         href="/admin/accounts"
         class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
@@ -25,60 +20,74 @@
     </div>
   </div>
 
-  <form id="accountForm" action="/admin/accounts/create" method="POST" enctype="multipart/form-data" class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]">
+  <form
+    id="accountForm"
+    action="/admin/accounts/create"
+    method="POST"
+    enctype="multipart/form-data"
+    class="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]"
+  >
     <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
 
-    <div class="grid gap-4 sm:grid-cols-2 md:col-span-1">
+    <!-- LEFT SIDE -->
+    <div class="grid gap-4 sm:grid-cols-2">
+
+      <!-- Names -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Names</span>
+        <span class="mb-1 block font-semibold text-brand-text">Names</span>
         <input
           type="text"
           name="names"
           value="<%= formData.names %>"
           placeholder="Alexis"
           required
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Last Names -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Last names</span>
+        <span class="mb-1 block font-semibold text-brand-text">Last names</span>
         <input
           type="text"
           name="lastnames"
           value="<%= formData.lastnames %>"
           placeholder="Berthou"
           required
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Email -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Email</span>
+        <span class="mb-1 block font-semibold text-brand-text">Email</span>
         <input
           type="email"
           name="email"
           value="<%= formData.email %>"
           placeholder="new.account@unitas.dev"
           required
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Slack -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Slack username</span>
+        <span class="mb-1 block font-semibold text-brand-text">Slack username</span>
         <input
           type="text"
           name="slackUsername"
           value="<%= formData.slackUsername %>"
           placeholder="@newmember"
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Password -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Password</span>
-        <span class="relative block">
+        <span class="mb-1 block font-semibold text-brand-text">Password</span>
+
+        <div class="relative">
           <input
             id="createAccountPassword"
             type="password"
@@ -86,186 +95,151 @@
             required
             minlength="6"
             placeholder="At least 6 characters"
-            class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 pr-10 outline-none ring-brand-primary/30 focus:ring"
+            class="w-full rounded-xl border border-brand-secondary px-3 py-2 pr-10 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
           />
+
           <button
             type="button"
-            class="absolute right-3 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center text-brand-text/55 transition hover:text-brand-text focus:outline-none"
             data-password-toggle="createAccountPassword"
             aria-label="Show password"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text/55 hover:text-brand-text"
           >
-            <svg data-password-eye class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12s3.75-6.75 9.75-6.75S21.75 12 21.75 12s-3.75 6.75-9.75 6.75S2.25 12 2.25 12Z" />
-              <circle cx="12" cy="12" r="2.25" />
+            <!-- Eye open (password hidden) -->
+            <svg data-eye-open class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
             </svg>
-            <svg data-password-eye-off class="hidden h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2.25 2.25 0 0 0 2.84 2.84" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.48A8.96 8.96 0 0 1 12 5.25c6 0 9.75 6.75 9.75 6.75a16.65 16.65 0 0 1-2.22 2.99" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6.34 6.88C3.76 8.63 2.25 12 2.25 12s3.75 6.75 9.75 6.75c1.63 0 3.08-.5 4.32-1.22" />
+            <!-- Eye closed (password visible) -->
+            <svg data-eye-closed class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
             </svg>
           </button>
-        </span>
+        </div>
+
         <div class="mt-2 flex items-center gap-2">
           <button
             id="generateAccountPasswordBtn"
             type="button"
-            class="rounded-lg border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
+            class="rounded-lg border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/80 hover:bg-brand-secondary/20"
           >
             Auto-generate
           </button>
-          <span id="generateAccountPasswordHint" class="text-xs font-medium text-brand-text/70"></span>
+
+          <span id="generateAccountPasswordHint" class="text-xs text-brand-text/70"></span>
         </div>
       </label>
 
+      <!-- Confirm Password -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Confirm password</span>
-        <input
-          type="password"
-          name="confirmPassword"
-          required
-          minlength="6"
-          placeholder="Repeat password"
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
+        <span class="mb-1 block font-semibold text-brand-text">Confirm password</span>
+
+        <div class="relative">
+          <input
+            id="createAccountConfirmPassword"
+            type="password"
+            name="confirmPassword"
+            required
+            minlength="6"
+            placeholder="Repeat password"
+            class="w-full rounded-xl border border-brand-secondary px-3 py-2 pr-10 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
+          />
+
+          <button
+            type="button"
+            data-password-toggle="createAccountConfirmPassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text/55 hover:text-brand-text"
+          >
+            <svg data-eye-open class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <svg data-eye-closed class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
       </label>
 
+
+      <!-- Role -->
       <label class="block text-sm sm:col-span-2">
-        <span class="mb-1 block text-brand-text/70">Role</span>
+        <span class="mb-1 block font-semibold text-brand-text">Role</span>
         <select
           name="roleId"
           required
-          class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         >
           <% roles.forEach((role) => { %>
-            <option value="<%= role.id %>" <%= formData.roleId === role.id ? "selected" : "" %>><%= role.name %></option>
+            <option value="<%= role.id %>" <%= formData.roleId === role.id ? "selected" : "" %>>
+              <%= role.name %>
+            </option>
           <% }) %>
         </select>
       </label>
+
     </div>
 
-    <div class="block text-sm md:justify-self-center">
-      <span class="mb-3 block text-brand-text/70">Profile picture</span>
-      <input
-        id="accountImageFile"
-        type="file"
-        name="image"
-        accept="image/*"
-        class="sr-only"
-      />
-      <input id="accountImageValue" type="hidden" name="currentImage" value="<%= formData.image %>" />
-      <p id="accountImageFilename" class="sr-only">No file selected</p>
+    <!-- RIGHT SIDE -->
+    <div class="text-sm md:justify-self-center">
+      <span class="mb-3 block font-semibold text-brand-text">Profile picture</span>
 
-      <div class="relative inline-flex flex-col items-start">
-        <img
-          id="accountImagePreview"
-          src="<%= formData.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png' %>"
-          alt="Account preview"
-          class="h-36 w-36 rounded-full border border-brand-secondary object-cover"
-          onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
-        />
-        <div class="relative -mt-8 ml-3">
+      <input id="accountImageFile" type="file" name="image" accept="image/*" class="sr-only" />
+      <input id="accountImageValue" type="hidden" name="currentImage" value="<%= formData.image %>" />
+
+      <div class="relative flex flex-col items-start">
+        <div class="relative h-36 w-36">
+          <!-- Fallback (initials) -->
+          <div
+            id="accountImageFallback"
+            class="app-directory-avatar flex h-36 w-36 items-center justify-center rounded-full border border-brand-secondary bg-blue-100 text-2xl font-bold"
+          >
+            <!-- JS fills this -->
+          </div>
+
+          <!-- Image -->
+          <img
+            id="accountImagePreview"
+            src="<%= formData.image || '' %>"
+            class="absolute inset-0 h-36 w-36 rounded-full object-cover <%= formData.image ? '' : 'hidden' %>"
+          />
+        </div>
+
+        <div class="-mt-8 ml-3 z-10">
           <button
             id="accountImageMenuButton"
             type="button"
             aria-expanded="false"
-            aria-controls="accountImageMenu"
-            class="inline-flex items-center gap-2 rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-white active:bg-white focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-nav/20"
+            class="rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-brand-secondary/20"
           >
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M4 13.5V16h2.5L14 8.5 11.5 6 4 13.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
-              <path d="m12.5 5 1-1a1.4 1.4 0 0 1 2 2l-1 1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-            </svg>
             Edit
           </button>
+        </div>
 
-          <div
-            id="accountImageMenu"
-            class="absolute left-0 top-full z-20 mt-2 hidden w-52 overflow-hidden rounded-lg border border-brand-secondary bg-white text-sm shadow-sm"
+        <!-- MENU -->
+        <div
+          id="accountImageMenu"
+          class="hidden absolute top-28 left-3 z-10 w-44 rounded-xl border border-brand-secondary bg-white shadow-lg"
+        >
+          <button
+            id="accountImageUploadButton"
+            type="button"
+            class="block w-full px-4 py-2 text-left text-sm hover:bg-brand-secondary/20"
           >
-            <button
-              id="accountImageUploadButton"
-              type="button"
-              class="block w-full bg-brand-nav px-4 py-3 text-left font-semibold text-white transition hover:bg-brand-nav/90"
-            >
-              Upload a photo...
-            </button>
-            <button
-              id="accountImageRemoveButton"
-              type="button"
-              class="block w-full px-4 py-3 text-left font-semibold text-brand-text transition hover:bg-brand-secondary/20"
-            >
-              Remove photo
-            </button>
-          </div>
+            Upload image
+          </button>
+
+          <button
+            id="accountImageRemoveButton"
+            type="button"
+            class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          >
+            Remove image
+          </button>
         </div>
       </div>
     </div>
+
   </form>
 </section>
 
-  <aside class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <h2 class="font-heading text-lg font-bold text-brand-text">Before You Create</h2>
-    <ul class="mt-3 space-y-2 text-sm text-brand-text/75">
-      <li>Use a unique email for each account.</li>
-      <li>New accounts are created with Active status by default.</li>
-      <li>If no image is uploaded, the default account avatar is used.</li>
-    </ul>
-  </aside>
-</div>
-
-<script>
-  function generateSecurePassword() {
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    const specials = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-    // Ensure at least one of each required character
-    let password = '';
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += specials[Math.floor(Math.random() * specials.length)];
-
-    // Fill the rest to make at least 8 characters
-    const allChars = lowercase + uppercase + numbers + specials;
-    while (password.length < 8) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
-    }
-
-    // Shuffle the password
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-
-    return password;
-  }
-
-  document.getElementById('generateAccountPasswordBtn').addEventListener('click', function() {
-    const password = generateSecurePassword();
-    const passwordInput = document.getElementById('createAccountPassword');
-    const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
-
-    passwordInput.value = password;
-    confirmPasswordInput.value = password;
-
-    // Add light background color to indicate auto-generated
-    passwordInput.classList.add('bg-yellow-50');
-    confirmPasswordInput.classList.add('bg-yellow-50');
-
-    // Update hint
-    const hint = document.getElementById('generateAccountPasswordHint');
-    if (hint) {
-      hint.textContent = 'Password generated and copied to both fields.';
-    }
-  });
-
-  // Remove background color when user types
-  document.getElementById('createAccountPassword').addEventListener('input', function() {
-    this.classList.remove('bg-yellow-50');
-  });
-
-  document.querySelector('input[name="confirmPassword"]').addEventListener('input', function() {
-    this.classList.remove('bg-yellow-50');
-  });
-</script>
-<script src="/js/passwordVisibility.js"></script>
+<script src="/js/createAccount.js"></script>
