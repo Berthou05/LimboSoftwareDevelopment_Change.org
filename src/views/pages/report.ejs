@@ -1,127 +1,206 @@
 <%
 const diffActivity = activityDate;
-const key = keyRange!=='' ? keyRange : null;
+const key = keyRange !== '' ? keyRange : null;
+
+function getStatusColor(status) {
+  if (!status) return 'bg-gray-100 text-gray-700';
+
+  const s = status.toLowerCase();
+
+  if (s.includes('on track') || s.includes('green') || s.includes('good')) {
+    return 'bg-emerald-100 text-emerald-700';
+  }
+  if (s.includes('risk') || s.includes('warning') || s.includes('medium')) {
+    return 'bg-amber-100 text-amber-700';
+  }
+  if (s.includes('delay') || s.includes('blocked') || s.includes('critical') || s.includes('red')) {
+    return 'bg-red-100 text-red-700';
+  }
+
+  return 'bg-gray-100 text-gray-700';
+}
 %>
 
-
 <div class="mx-auto max-w-4xl space-y-6">
-  <section class="rounded-2xl border border-brand-secondary bg-white p-6 shadow-panel">
-    <div class="flex items-start justify-between gap-4">
-      <!-- LEFT: Title -->
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
-          Report Format
-        </p>
-        <h1 data-report-title class="mt-2 font-heading text-3xl font-bold text-brand-text">
-          <%= title || 'Report Format' %>
-        </h1>
-      </div>
 
-      <!-- RIGHT: Meta info -->
-      <div class="text-right">
-      <!-- RANGE -->
-      <p data-report-range class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
-        Range:
-        <% if (diffActivity) { %>
-          <span class="text-blue-600"><%= diffActivity %></span>
-        <% } else { %>
-          <span><%= start_date %></span>
-        <% } %>
-        -
-        <span><%= end_date %></span>
-      </p>
+  <!-- ✅ SINGLE UNIFIED CARD -->
+  <section class="rounded-2xl border border-brand-secondary bg-white shadow-panel overflow-hidden">
 
-      <% if (diffActivity) { %>
-        <p class="mt-1 text-[11px] text-brand-text/50 italic">
-          * First activity in range registered
-        </p>
-      <% } %>
-
-        <!-- KEY -->
-        <% if (key) { %>
-          <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-brand-text/60">
-            Key: <%= key %>
+    <!-- HEADER -->
+    <div class="p-6 border-b border-brand-secondary">
+      <div class="flex items-start justify-between gap-4">
+        
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+            Report Format
           </p>
-        <% } %>
+          <h1 class="mt-2 font-heading text-3xl font-bold text-brand-text">
+            <%= title || 'Report Format' %>
+          </h1>
+        </div>
+
+        <div class="text-right">
+          <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+            Range:
+            <% if (diffActivity) { %>
+              <span class="text-blue-600"><%= diffActivity %></span>
+            <% } else { %>
+              <span><%= start_date %></span>
+            <% } %>
+            -
+            <span><%= end_date %></span>
+          </p>
+
+          <% if (diffActivity) { %>
+            <p class="mt-1 text-[11px] text-brand-text/50 italic">
+              * First activity in range registered
+            </p>
+          <% } %>
+
+          <% if (key) { %>
+            <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+              Key: <%= key %>
+            </p>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="mt-3 flex items-center gap-3">
+        <a href="<%= redirectTo || '/home' %>"
+          class="panel-action-button--compact inline-flex items-center justify-center rounded-xl border border-brand-secondary text-xs font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
+          Back
+        </a>
+
+        <%- include('../partials/shared/actionButton', {
+          buttonLabel: 'Copy',
+          buttonIcon: 'copy',
+          buttonVariant: 'compact',
+          buttonTone: 'highlight',
+          buttonClasses: 'js-copy-report'
+        }) %>
       </div>
     </div>
 
-    <div class="mt-2 flex items-center gap-3">
-      <a href="<%= redirectTo || '/home' %>"
-        class="panel-action-button--compact inline-flex items-center justify-center rounded-xl border border-brand-secondary text-xs font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30">
-        Back
-      </a>
+    <!-- ✅ SECTIONS (NO CARDS, JUST DIVIDERS) -->
+    <div id="report-content" class="divide-y divide-brand-secondary">
 
-      <%- include('../partials/shared/actionButton', {
-        buttonLabel: 'Copy',
-        buttonIcon: 'copy',
-        buttonVariant: 'compact',
-        buttonTone: 'highlight',
-        buttonClasses: 'js-copy-report'
-      }) %>
-    </div>
-  </section>
+      <% (reportFormat?.sections || []).forEach((section) => { %>
 
-  <div id="report-content" class="mx-auto max-w-4xl space-y-6">
-  <% (reportFormat?.sections || []).forEach((section) => { %>
-    <section class="rounded-2xl border border-brand-secondary bg-white shadow-panel">
-    <!-- Header (clickable) -->
-    <button
-      type="button"
-      class="w-full flex items-center justify-between p-6 pb-0 text-left border-brand-secondary"
-      data-toggle-section
-    >
-      <h2 class="font-heading text-xl font-semibold text-brand-text">
-        <%= section.title %>
-      </h2>
-      <span class="text-brand-text/60 transition-transform duration-300" data-icon>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </span>
-    </button>
+        <div class="px-6 py-4">
 
-    <!-- Collapsible content -->
-    <div class="p-6 pt-0 hidden" data-content>
+          <!-- Section Header -->
+          <button
+            type="button"
+            class="w-full flex items-center justify-between text-left"
+            data-toggle-section
+          >
+            <h2 class="font-heading text-xl font-semibold text-brand-text">
+              <%= section.title %>
+            </h2>
+            <span class="text-brand-text/60 transition-transform duration-300" data-icon>
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </button>
 
-      <% if (section.groups && section.groups.length) { %>
-        <div class="space-y-5">
-          <% section.groups.forEach((group) => { %>
-              <h3 class="font-heading text-lg font-bold text-brand-text"><%= group.title %></h3>
+          <!-- Section Content -->
+          <div class="mt-4 hidden" data-content>
 
-              <% if (group.subgroups && group.subgroups.length) { %>
-                <div class="space-y-4">
-                  <% group.subgroups.forEach((subgroup) => { %>
-                    <div>
-                      <h4 class="text-sm font-semibold text-brand-text"><%= subgroup.title %></h4>
-                      <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
-                        <% (subgroup.items || []).forEach((item) => { %>
+            <% if (section.groups && section.groups.length) { %>
+              <div class="space-y-5">
+
+                <% section.groups.forEach((group) => { %>
+                  <div>
+                    <h3 class="font-heading text-lg font-bold text-brand-text">
+                      <%= group.title %>
+                    </h3>
+
+                    <% if (group.projectStatus) { %>
+                      <div class="mt-3 space-y-3 text-sm text-brand-text/80">
+
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                          <div>
+                            <span class="font-semibold text-brand-text/60">Status:</span>
+                            <span class="ml-1 px-2 py-0.5 rounded-full text-xs font-semibold <%= getStatusColor(group.projectStatus) %>">
+                              <%= group.projectStatus %>
+                            </span>
+                          </div>
+
+                          <div>
+                            <span class="font-semibold text-brand-text/60">Lead:</span>
+                            <span class="ml-1"><%= group.projectLead %></span>
+                          </div>
+
+                          <div>
+                            <span class="font-semibold text-brand-text/60">Start:</span>
+                            <span class="ml-1"><%= group.startDate %></span>
+                          </div>
+
+                          <div>
+                            <span class="font-semibold text-brand-text/60">End:</span>
+                            <span class="ml-1"><%= group.endDate || 'TBD' %></span>
+                          </div>
+                        </div>
+
+                        <div class="border-t border-brand-secondary"></div>
+
+                        <% if (group.items && group.items.length) { %>
+                          <ul class="list-disc space-y-2 pl-5">
+                            <% group.items.forEach((item) => { %>
+                              <li><%= item %></li>
+                            <% }) %>
+                          </ul>
+                        <% } %>
+
+                      </div>
+
+                    <% } else if (group.subgroups && group.subgroups.length) { %>
+                      <div class="space-y-4 mt-2">
+                        <% group.subgroups.forEach((subgroup) => { %>
+                          <div>
+                            <h4 class="text-sm font-semibold text-brand-text">
+                              <%= subgroup.title %>
+                            </h4>
+                            <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
+                              <% (subgroup.items || []).forEach((item) => { %>
+                                <li><%= item %></li>
+                              <% }) %>
+                            </ul>
+                          </div>
+                        <% }) %>
+                      </div>
+
+                    <% } else if (group.items && group.items.length) { %>
+                      <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
+                        <% group.items.forEach((item) => { %>
                           <li><%= item %></li>
                         <% }) %>
                       </ul>
-                    </div>
-                  <% }) %>
-                </div>
-              <% } else { %>
-                <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
-                  <% (group.items || []).forEach((item) => { %>
-                    <li><%= item %></li>
-                  <% }) %>
-                </ul>
-              <% } %>
-          <% }) %>
+                    <% } %>
+
+                  </div>
+                <% }) %>
+
+              </div>
+
+            <% } else if (section.items && section.items.length) { %>
+              <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
+                <% section.items.forEach((item) => { %>
+                  <li><%= item %></li>
+                <% }) %>
+              </ul>
+            <% } %>
+
+          </div>
+
         </div>
-      <% } else if (section.items && section.items.length) { %>
-        <ul class="mt-4 list-disc space-y-2 pl-5 text-sm text-brand-text/80">
-          <% section.items.forEach((item) => { %>
-            <li><%= item %></li>
-          <% }) %>
-        </ul>
-      <% } %>
+
+      <% }) %>
+
     </div>
-    </section>
-  <% }) %>
-  </div>
+
+  </section>
 </div>
 
 <script src="/js/reportPage.js"></script>

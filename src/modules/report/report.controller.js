@@ -146,6 +146,10 @@ function buildWhatWentWellSection(wentWell, reportType) {
 function buildStatusSection(status, reportType) {
     const groups = Object.values(status).map(project => ({
         title: project.title || '',
+        projectStatus: project.projectStatus || '',
+        projectLead: project.projectLead || '',
+        startDate: project.startDate || '',
+        endDate: project.endDate || '',
         items: project.items || []
     }));
 
@@ -339,6 +343,10 @@ async function getProjectContext(project_id, start_date, end_date){
             name: project_info[0].name,
             responsible:project_info[0].lead_name,
             description:project_info[0].description,
+            startDate: project_info[0].start_date,
+            endDate: project_info[0].end_date,
+            lead: project_info[0].full_name,
+            status: project_info[0].status
         }
 
         return {
@@ -568,6 +576,8 @@ exports.generateReport = async (request, response, next)=>{
         for (const { projectId, section } of statusResults) {
             status[projectId] = section;
         };
+
+        console.log(status);
     }
     
 
@@ -612,7 +622,7 @@ exports.generateReport = async (request, response, next)=>{
         sections.push(normalizeSection(TeamImpact));
     }
     if(status){
-        sections.push(buildStatusSection(status));
+        sections.push(buildStatusSection(status, reportType));
     }
     if (HasBeenDone) {
         sections.push(normalizeSection(HasBeenDone));

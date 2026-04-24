@@ -1,24 +1,19 @@
 function cleanText(text) {
     return text
-        .replace(/\s+/g, ' ')   // collapse multiple spaces
-        .replace(/\n+/g, '\n')  // normalize line breaks
+        .replace(/\s+/g, ' ')
+        .replace(/\n+/g, '\n')
         .trim();
 }
 
 function buildReportText() {
     let output = '';
 
-    // -------- HEADER (title + range) --------
+    // -------- HEADER --------
     const reportTitle = document.querySelector('[data-report-title]')?.textContent.trim();
     const rangeText = document.querySelector('[data-report-range]')?.textContent.trim();
 
-    if (reportTitle) {
-        output += `${reportTitle}\n`;
-    }
-
-    if (rangeText) {
-        output += `${rangeText}\n`;
-    }
+    if (reportTitle) output += `${reportTitle}\n`;
+    if (rangeText) output += `${rangeText}\n`;
 
     output += '\n';
 
@@ -32,27 +27,41 @@ function buildReportText() {
         const content = section.querySelector('[data-content]');
         if (!content) return;
 
-        // Groups
+        // -------- GROUPS --------
         const groups = content.querySelectorAll('h3');
+
         if (groups.length > 0) {
             groups.forEach(group => {
                 const groupTitle = cleanText(group.textContent);
                 output += `\n${groupTitle}\n`;
 
-                // Items under this group
                 let el = group.nextElementSibling;
 
                 while (el && el.tagName !== 'H3') {
+
+                    // -------- STATUS BLOCK (NEW SUPPORT) --------
+                    if (el.querySelector && el.querySelector('.grid')) {
+                        const rows = el.querySelectorAll('.grid div');
+
+                        rows.forEach(row => {
+                            const text = cleanText(row.textContent);
+                            if (text) output += `- ${text}\n`;
+                        });
+                    }
+
+                    // -------- LISTS --------
                     if (el.tagName === 'UL') {
                         el.querySelectorAll('li').forEach(li => {
                             output += `- ${cleanText(li.textContent)}\n`;
                         });
                     }
+
                     el = el.nextElementSibling;
                 }
             });
+
         } else {
-            // Flat list
+            // -------- FLAT CONTENT --------
             content.querySelectorAll('li').forEach(li => {
                 output += `- ${cleanText(li.textContent)}\n`;
             });
@@ -120,58 +129,48 @@ async function copyText(text) {
     return fallbackCopy(text);
 }
 
-
+// -------- COPY BUTTON --------
 document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.querySelector('.js-copy-report');
     if (!copyBtn) return;
 
     copyBtn.addEventListener('click', async () => {
-        const report = document.getElementById('report-content');
-        if (!report) return;
-
         const text = buildReportText();
-
         const success = await copyText(text);
 
         copyBtn.innerText = success ? 'Copied!' : 'Failed to copy';
 
         setTimeout(() => {
-            copyBtn.innerText = 'Copy report';
+            copyBtn.innerText = 'Copy';
         }, 2000);
     });
 });
 
-
+// -------- COLLAPSIBLE SECTIONS --------
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('[data-toggle-section]');
 
     buttons.forEach(button => {
-        button.addEventListener('click', () => {
-            const section = button.closest('section');
-            const content = section.querySelector('[data-content]');
-            const icon = button.querySelector('[data-icon]');
+        // ✅ FIX: use parent container (div), not section
+        const container = button.parentElement;
+        const content = container.querySelector('[data-content]');
+        const icon = button.querySelector('[data-icon]');
 
-            if (!content) return;
+        if (!content) return;
+
+        // ✅ OPEN ALL BY DEFAULT
+        content.classList.remove('hidden');
+        if (icon) icon.classList.add('rotate-180');
+
+        // Toggle behavior
+        button.addEventListener('click', () => {
             const isHidden = content.classList.contains('hidden');
+
             content.classList.toggle('hidden');
-            button.classList.toggle('border-b', isHidden);
 
             if (icon) {
-                icon.classList.toggle('rotate-180');
+                icon.classList.toggle('rotate-180', isHidden);
             }
         });
     });
-
-        // Open first section
-    if (buttons.length > 0) {
-        const firstContent = buttons[0]
-            .closest('section')
-            .querySelector('[data-content]');
-        
-        if (firstContent){
-            firstContent.classList.remove('hidden');
-            buttons[0].classList.add('border-b');
-            buttons[0].querySelector('[data-icon]').classList.toggle('rotate-180');
-        }
-    }
 });
