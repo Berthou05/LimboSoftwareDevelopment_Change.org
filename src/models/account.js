@@ -72,8 +72,9 @@ module.exports = class Account {
 
     static fetchByEmail(email) {
         return db.execute(`
-            SELECT * 
-            FROM account 
+            SELECT * , E.full_name, E.names
+            FROM account AS A
+            INNER JOIN employee AS E ON E.employee_id=A.employee_id
             WHERE email=?;`,
             [email]);
     }

@@ -172,6 +172,8 @@ exports.postLogin = (request, response, next)=>{
                                 username: request.session.username || '',
                                 image: rows[0].image || '',
                                 privilege,
+                                fullName: rows[0].full_name || '',
+                                name: rows[0].names || ''
                             };
 
                             request.session.success = 'Welcome back.';
