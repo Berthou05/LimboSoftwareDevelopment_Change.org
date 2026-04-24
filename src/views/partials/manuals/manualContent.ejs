@@ -28,22 +28,20 @@
 
             <div>
                 <p class="text-sm font-semibold text-brand-text">Guide details</p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    <span class="rounded-full border border-brand-secondary/60 px-3 py-1 text-xs font-semibold text-brand-text/70">
-                        <%= selectedGuide.type %>
-                    </span>
-                    <span class="rounded-full border border-brand-secondary/60 px-3 py-1 text-xs font-semibold <%= selectedGuide.status === 'draft' ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-brand-text/70' %>">
-                        <%= selectedGuide.status %>
-                    </span>
-                </div>
-                <p class="mt-4 text-sm font-semibold text-brand-text">Applies to</p>
-                <div class="mt-2 flex flex-wrap gap-2">
-                <% (selectedGuide.appliesTo || []).forEach((item) => { %>
-                    <span class="rounded-full border border-brand-secondary/60 px-3 py-1 text-xs font-semibold text-brand-text/70">
-                        <%= item %>
-                    </span>
-                <% }) %>
-                </div>
+                <dl class="mt-2 space-y-2 text-sm text-brand-text/70">
+                    <div class="flex gap-2">
+                        <dt class="w-16 shrink-0 font-semibold text-brand-text/80">Type</dt>
+                        <dd><%= selectedGuide.type %></dd>
+                    </div>
+                    <div class="flex gap-2">
+                        <dt class="w-16 shrink-0 font-semibold text-brand-text/80">Status</dt>
+                        <dd class="<%= selectedGuide.status === 'draft' ? 'font-semibold text-amber-700' : '' %>"><%= selectedGuide.status %></dd>
+                    </div>
+                    <div class="flex gap-2">
+                        <dt class="w-16 shrink-0 font-semibold text-brand-text/80">Areas</dt>
+                        <dd><%= (selectedGuide.appliesTo || []).join(', ') %></dd>
+                    </div>
+                </dl>
             </div>
         </section>
 
@@ -53,9 +51,9 @@
                     <p class="text-sm font-semibold text-brand-text"><%= selectedGuide.type === 'reference' ? 'Reference' : 'Guide sections' %></p>
                     <p class="text-sm text-brand-text/60"><%= selectedGuide.sections.length %> sections</p>
                 </div>
-                <div class="mt-4 space-y-5">
+                <div class="mt-2 divide-y divide-brand-secondary/60">
                 <% selectedGuide.sections.forEach((section) => { %>
-                    <section class="rounded-2xl border border-brand-secondary/70 bg-white p-5">
+                    <section class="py-5 first:pt-3">
                         <h3 class="text-lg font-semibold text-brand-text"><%= section.title %></h3>
                         <% if (section.body) { %>
                             <p class="mt-2 text-sm leading-6 text-brand-text/70"><%= section.body %></p>
@@ -70,9 +68,9 @@
                         <% } %>
 
                         <% if (Array.isArray(section.rules) && section.rules.length) { %>
-                            <ul class="mt-3 space-y-2 text-sm text-brand-text/75">
+                            <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-brand-text/75">
                                 <% section.rules.forEach((rule) => { %>
-                                    <li class="rounded-xl border border-brand-secondary/60 bg-brand-secondary/10 px-3 py-2"><%= rule %></li>
+                                    <li><%= rule %></li>
                                 <% }) %>
                             </ul>
                         <% } %>
@@ -117,16 +115,16 @@
                     <p class="mt-2 text-sm text-brand-text/70"><%= step.body %></p>
 
                     <% if (step.image && step.image.src) { %>
-                    <div class="mt-4 max-w-xl mx-auto rounded-xl bg-brand-secondary/10 px-4 py-3">
+                    <figure class="mt-4 max-w-xl">
                         <img
                             src="<%= step.image.src %>"
                             alt="<%= step.image.alt || step.title %>"
-                            class="mx-auto w-full rounded-lg border border-brand-secondary/60"
+                            class="w-full border border-brand-secondary/60"
                         />
                         <% if (step.image.caption) { %>
-                            <p class="mt-2 text-sm text-brand-text/70"><%= step.image.caption %></p>
+                            <figcaption class="mt-2 text-sm text-brand-text/70"><%= step.image.caption %></figcaption>
                         <% } %>
-                    </div>
+                    </figure>
                     <% } %>
                 </section>
             <% }) %>
