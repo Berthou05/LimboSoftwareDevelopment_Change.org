@@ -15,7 +15,7 @@
             type="text"
             name="q"
             value="<%= topbarSearchQuery %>"
-            placeholder="Search employee, team, or project..."
+            placeholder="Search for activities, employees, teams, or projects"
             autocomplete="off"
             aria-autocomplete="list"
             aria-controls="globalSearchSuggestions"
@@ -27,8 +27,9 @@
         <div
             id="globalSearchSuggestions"
             role="listbox"
-            class="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 hidden overflow-hidden
+            class="absolute z-30 hidden overflow-hidden
                 rounded-2xl border border-brand-secondary bg-white shadow-panel"
+            style="left: -0.75rem; right: 0; top: calc(100% + 0.75rem);"
             data-global-search-suggestions
         ></div>
     </div>

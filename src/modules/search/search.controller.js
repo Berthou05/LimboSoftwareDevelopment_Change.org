@@ -8,7 +8,6 @@ const Employee = require('../../models/employee');
 const Team = require('../../models/team');
 const Project = require('../../models/project');
 const { getInitials } = require('../../utils/avatar.util');
-
 const AUTOCOMPLETE_SECTION_LIMIT = 3;
 
 const normalizeSearchQuery = function normalizeSearchQuery(value) {

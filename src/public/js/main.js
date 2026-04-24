@@ -175,7 +175,7 @@ const initializeGlobalSearch = function initializeGlobalSearch() {
         suggestionButton.dataset.globalSearchSuggestion = 'true';
         suggestionButton.dataset.suggestionIndex = String(index);
         suggestionButton.className = (
-            'flex w-full items-center justify-between gap-3 px-4 py-3 text-left '
+            'flex w-full items-center justify-between gap-3 px-3 py-3 text-left '
             + 'transition hover:bg-brand-bg focus:bg-brand-bg focus:outline-none'
         );
         suggestionButton.setAttribute('role', 'option');
