@@ -9,6 +9,7 @@ const Team = require('../../models/team');
 const Project = require('../../models/project');
 const { getInitials } = require('../../utils/avatar.util');
 const AUTOCOMPLETE_SECTION_LIMIT = 3;
+const AUTOCOMPLETE_TOTAL_LIMIT = 5;
 
 const normalizeSearchQuery = function normalizeSearchQuery(value) {
     return typeof value === 'string' ? value.trim() : '';
@@ -132,11 +133,27 @@ const buildAutocompleteSuggestions = function buildAutocompleteSuggestions(
             };
         });
 
-    return [
-        ...employeeSuggestions,
-        ...teamSuggestions,
-        ...projectSuggestions,
+    const suggestionBuckets = [
+        [...employeeSuggestions],
+        [...teamSuggestions],
+        [...projectSuggestions],
     ];
+    const suggestions = [];
+
+    while (
+        suggestions.length < AUTOCOMPLETE_TOTAL_LIMIT
+        && suggestionBuckets.some((bucket) => bucket.length > 0)
+    ) {
+        suggestionBuckets.forEach((bucket) => {
+            if (suggestions.length >= AUTOCOMPLETE_TOTAL_LIMIT || bucket.length === 0) {
+                return;
+            }
+
+            suggestions.push(bucket.shift());
+        });
+    }
+
+    return suggestions;
 };
 
 const renderSearchPage = function renderSearchPage(request, response, statusCode, viewData) {
