@@ -46,21 +46,22 @@
         </section>
 
         <% if (Array.isArray(selectedGuide.sections) && selectedGuide.sections.length) { %>
-            <section>
-                <div class="flex items-center justify-between gap-3">
+            <section class="pt-2">
+                <div class="flex items-end justify-between gap-3 border-b border-brand-secondary/60 pb-3">
                     <p class="text-sm font-semibold text-brand-text"><%= selectedGuide.type === 'reference' ? 'Reference' : 'Guide sections' %></p>
                     <p class="text-sm text-brand-text/60"><%= selectedGuide.sections.length %> sections</p>
                 </div>
-                <div class="mt-2 divide-y divide-brand-secondary/60">
-                <% selectedGuide.sections.forEach((section) => { %>
-                    <section class="py-5 first:pt-3">
-                        <h3 class="text-lg font-semibold text-brand-text"><%= section.title %></h3>
+                <div class="mt-6 space-y-8">
+                <% selectedGuide.sections.forEach((section, index) => { %>
+                    <section class="border-l-2 border-brand-secondary/80 pl-5">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-brand-nav">Section <%= index + 1 %></p>
+                        <h3 class="mt-2 text-xl font-semibold text-brand-text"><%= section.title %></h3>
                         <% if (section.body) { %>
-                            <p class="mt-2 text-sm leading-6 text-brand-text/70"><%= section.body %></p>
+                            <p class="mt-3 max-w-3xl text-sm leading-7 text-brand-text/70"><%= section.body %></p>
                         <% } %>
 
                         <% if (Array.isArray(section.items) && section.items.length) { %>
-                            <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-brand-text/75">
+                            <ul class="mt-4 max-w-3xl list-disc space-y-2.5 pl-5 text-sm leading-6 text-brand-text/75">
                                 <% section.items.forEach((item) => { %>
                                     <li><%= item %></li>
                                 <% }) %>
@@ -68,7 +69,7 @@
                         <% } %>
 
                         <% if (Array.isArray(section.rules) && section.rules.length) { %>
-                            <ul class="mt-3 list-disc space-y-2 pl-5 text-sm text-brand-text/75">
+                            <ul class="mt-4 max-w-3xl list-disc space-y-2.5 pl-5 text-sm leading-6 text-brand-text/75">
                                 <% section.rules.forEach((rule) => { %>
                                     <li><%= rule %></li>
                                 <% }) %>
@@ -76,19 +77,19 @@
                         <% } %>
 
                         <% if (Array.isArray(section.fields) && section.fields.length) { %>
-                            <div class="mt-3 overflow-x-auto">
+                            <div class="mt-5 overflow-x-auto">
                                 <table class="min-w-full text-left text-sm">
                                     <thead class="text-xs uppercase tracking-wide text-brand-text/50">
                                         <tr>
-                                            <th class="border-b border-brand-secondary/60 py-2 pr-4">Field</th>
-                                            <th class="border-b border-brand-secondary/60 py-2">Details</th>
+                                            <th class="border-b border-brand-secondary/60 pb-3 pr-4">Field</th>
+                                            <th class="border-b border-brand-secondary/60 pb-3">Details</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <% section.fields.forEach((field) => { %>
                                             <tr>
-                                                <td class="border-b border-brand-secondary/40 py-2 pr-4 font-semibold text-brand-text"><%= field.name %></td>
-                                                <td class="border-b border-brand-secondary/40 py-2 text-brand-text/70"><%= field.description %></td>
+                                                <td class="border-b border-brand-secondary/40 py-3 pr-4 font-semibold text-brand-text"><%= field.name %></td>
+                                                <td class="border-b border-brand-secondary/40 py-3 leading-6 text-brand-text/70"><%= field.description %></td>
                                             </tr>
                                         <% }) %>
                                     </tbody>
