@@ -54,7 +54,7 @@ module.exports = class Account {
             return db.execute(`
                 INSERT INTO account(account_id, employee_id, email, password_hash, slack_username, status, first_login, last_login, image, created_at) 
                 VALUES(UUID(),?,?,?,?,?,?,?,?,NOW())`,
-                [this.employee_id, this.email,password_cifred, this.slack_username, AccountStatus.ACTIVE, 0,null, null]);
+                [this.employee_id, this.email,password_cifred, this.slack_username, AccountStatus.ACTIVE, 0,null, this.image]);
         });
     }
 

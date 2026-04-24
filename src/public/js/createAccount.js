@@ -12,6 +12,8 @@ const removeButton = document.getElementById('accountImageRemoveButton');
 const namesInput = document.querySelector('input[name="names"]');
 const lastnamesInput = document.querySelector('input[name="lastnames"]');
 
+const passwordInput = document.getElementById("createAccountPassword");
+const confirmInput  = document.getElementById("createAccountConfirmPassword");
 
 // --- MENU TOGGLE ---
 const closeMenu = () => {
@@ -179,4 +181,28 @@ document.getElementById("generateAccountPasswordBtn").addEventListener("click", 
 
     hint.textContent = "Password copied to both fields.";
     setTimeout(() => { hint.textContent = ""; }, 3000);
+
+    validatePasswordMatch();
 });
+
+function validatePasswordMatch() {
+    const password = passwordInput.value;
+    const confirm  = confirmInput.value;
+
+    // Only validate once the confirm field has content
+    if (!confirm) {
+    passwordInput.classList.remove("border-green-500", "border-red-500");
+    confirmInput.classList.remove("border-green-500", "border-red-500");
+    return;
+    }
+
+    const match = password === confirm;
+
+    passwordInput.classList.toggle("border-green-500", match);
+    passwordInput.classList.toggle("border-red-500", !match);
+    confirmInput.classList.toggle("border-green-500", match);
+    confirmInput.classList.toggle("border-red-500", !match);
+}
+
+passwordInput.addEventListener("input", validatePasswordMatch);
+confirmInput.addEventListener("input", validatePasswordMatch);
