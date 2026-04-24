@@ -34,13 +34,17 @@ function getStatusColor(status) {
           <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
             Report Format
           </p>
-          <h1 class="mt-2 font-heading text-3xl font-bold text-brand-text">
+          <h1 
+          data-report-title
+          class="mt-2 font-heading text-3xl font-bold text-brand-text">
             <%= title || 'Report Format' %>
           </h1>
         </div>
 
         <div class="text-right">
-          <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
+          <p 
+          data-report-range
+          class="text-xs font-semibold uppercase tracking-wide text-brand-text/60">
             Range:
             <% if (diffActivity) { %>
               <span class="text-blue-600"><%= diffActivity %></span>
