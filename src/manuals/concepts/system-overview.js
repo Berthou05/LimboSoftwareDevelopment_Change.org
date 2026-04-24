@@ -1,24 +1,24 @@
 module.exports = {
     key: 'concepts.system-overview',
-    title: 'System overview',
+    title: 'Use Unitas efficiently',
     type: 'concept',
     status: 'complete',
     order: 10,
-    summary: 'Understand the main areas of Unitas System and how they fit together.',
+    summary: 'Use the main areas of Unitas System without repeating work across pages.',
     appliesTo: ['Home', 'Projects', 'Teams', 'Employees', 'Reports', 'Admin'],
     helpKey: 'concepts.system-overview',
     sections: [
         {
-            title: 'Main modules',
-            body: 'Unitas System organizes work around employees, teams, projects, activity entries, and generated reports.',
+            title: 'Start from the page that matches your goal',
+            body: 'Use Projects when you are managing work, Teams when you are managing a group, Employees when you need one person\'s activity, and Reports when you need a reusable summary.',
         },
         {
-            title: 'Daily work flow',
-            body: 'Employees submit activity through Slack. The application displays that activity on home, employee, team, and project pages.',
+            title: 'Avoid entering the same context twice',
+            body: 'When work already belongs to a project or team page, use the actions on that page instead of leaving for another module. This keeps membership, activity, reports, goals, and highlights tied to the same context.',
         },
         {
-            title: 'Management flow',
-            body: 'Project and team leads maintain membership, key project information, goals, achievements, highlights, and reports.',
+            title: 'Use Home for scanning, details pages for decisions',
+            body: 'Home is best for checking recent activity and quick report generation. Open a project, team, or employee page when you need to make a change or review the full context.',
         },
     ],
 };

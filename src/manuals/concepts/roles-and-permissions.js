@@ -1,24 +1,24 @@
 module.exports = {
     key: 'concepts.roles-and-permissions',
-    title: 'How roles and permissions work',
+    title: 'Use roles safely',
     type: 'concept',
     status: 'complete',
     order: 30,
-    summary: 'Understand how account roles control access to administrative and member-management actions.',
+    summary: 'Assign roles and privileges in a way that keeps access clear and easy to review.',
     appliesTo: ['Admin', 'Projects', 'Teams'],
     helpKey: 'concepts.roles-and-permissions',
     sections: [
         {
-            title: 'Roles group privileges',
-            body: 'A role is a named collection of privilege codes. Admin users turn privileges on or off for each role in the Roles Administration matrix.',
+            title: 'Create roles by responsibility',
+            body: 'Name roles after the work people are expected to do, such as administrator, project lead, or team lead. Avoid creating roles for one temporary exception.',
         },
         {
-            title: 'Privileges protect actions',
-            body: 'Some routes require specific privileges, such as adding project members, managing team members, creating accounts, or changing role privileges.',
+            title: 'Grant the smallest useful set of privileges',
+            body: 'Turn on only the privileges the role needs. This makes the Roles Administration matrix easier to audit and reduces accidental access to admin or member-management actions.',
         },
         {
-            title: 'Lead ownership still matters',
-            body: 'Some actions are limited by ownership. For example, only the responsible project lead can delete that project, and only the responsible team lead can delete that team.',
+            title: 'Check lead ownership before troubleshooting',
+            body: 'If a user cannot delete a project or team, first confirm whether they are the responsible lead. Some lead-only actions are not solved by changing role privileges.',
         },
     ],
 };

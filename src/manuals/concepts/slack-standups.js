@@ -1,24 +1,24 @@
 module.exports = {
     key: 'concepts.slack-standups',
-    title: 'How Slack standups connect to the system',
+    title: 'Write standups the system can use',
     type: 'concept',
     status: 'draft',
     order: 50,
-    summary: 'Understand the Slack webhook flow that creates daily entries and activity data.',
+    summary: 'Write Slack standups that are convenient for you and useful later in the app.',
     appliesTo: ['Slack', 'Home', 'Employees', 'Teams', 'Projects'],
     helpKey: 'concepts.slack-standups',
     sections: [
         {
-            title: 'Slack is the entry point',
-            body: 'The application exposes a Slack webhook route for daily standup submissions.',
+            title: 'Write one clear activity per line',
+            body: 'Use short lines that describe completed work. A line like `Finished login validation` is easier to review later than a long paragraph with several unrelated updates.',
         },
         {
-            title: 'Employee matching',
-            body: 'Standups depend on Slack user information matching an employee record. If matching data is missing, the entry may not appear where the user expects.',
+            title: 'Mention the project only when it changes context',
+            body: 'You should not need to repeat the project title for every activity. Group related lines together and mention the project once when the next few lines belong to the same project.',
         },
         {
-            title: 'Draft status',
-            body: 'This guide is marked draft because the visible Slack prompt experience is outside the application screens in this codebase.',
+            title: 'Make blockers actionable',
+            body: 'Write blockers as the next action you need from someone else, such as `Need approval for the report date range`, instead of only saying that you are blocked.',
         },
     ],
 };
