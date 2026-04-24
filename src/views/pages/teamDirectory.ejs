@@ -46,12 +46,15 @@
         >
             Search
         </button>
-        <a
-            href="/team/new"
-            class="ml-auto rounded-xl border border-brand-secondary bg-white px-5 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
-        >
-            Create team
-        </a>
+
+        <% if(hasPermission('TEAM-01')) {%>
+            <a
+                href="/team/new"
+                class="ml-auto rounded-xl border border-brand-secondary bg-white px-5 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+            >
+                Create team
+            </a>
+        <% } %>
     </form>
 
     <p

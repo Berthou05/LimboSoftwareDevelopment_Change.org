@@ -23,16 +23,18 @@
         <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
     </div>
     <section class="min-w-0 space-y-4 sm:space-y-6">
-        <%- include('../partials/reportGenerator/reportGenerator', {
-            layout: 'full',
-            redirectTo: '/home',
-            defaultReportType: 'EMPLOYEE',
-            defaultSubjectId: '',
-            reportSubjects: homeReportSubjects,
-            latestReport: null,
-            quickReport: '',
-            csrfToken: homeCsrfToken
-        }) %>
+        <% if(hasPermission('REP-01')) {%>
+            <%- include('../partials/reportGenerator/reportGenerator', {
+                layout: 'full',
+                redirectTo: '/home',
+                defaultReportType: 'EMPLOYEE',
+                defaultSubjectId: '',
+                reportSubjects: homeReportSubjects,
+                latestReport: null,
+                quickReport: '',
+                csrfToken: homeCsrfToken
+            }) %>
+        <% } %>
 
         <%- include('../partials/HOME/latestActivity', {
             latestActivitySections: homeLatestActivitySections,

@@ -4,13 +4,15 @@
             <h2 class="font-heading text-xl font-semibold text-brand-text">Goals</h2>
             <p class="mt-1 text-sm text-brand-text/60">Current goals and milestones tracked for this project</p>
         </div>
-        <%- include('../shared/actionButton', {
-            buttonPopupOpen: 'project-add-goal',
-            buttonIcon: 'plus',
-            buttonLabel: 'Add',
-            buttonVariant: 'small',
-            buttonAriaLabel: 'Add goal',
-        }) %>
+        <% if(hasPermission('PROJ-09')) {%>
+            <%- include('../shared/actionButton', {
+                buttonPopupOpen: 'project-add-goal',
+                buttonIcon: 'plus',
+                buttonLabel: 'Add',
+                buttonVariant: 'small',
+                buttonAriaLabel: 'Add goal',
+            }) %>
+        <% } %>
     </div>
 
     <% const goalsDetailed = project?.goalsDetailed || []; %>
@@ -26,20 +28,26 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-brand-text/50"><%= goal.dueDateLabel || 'No due date' %></span>
+
+                        <% if(hasPermission('PROJ-10')) {%>
+                            <%- include('../shared/actionButton', {
+                                buttonPopupOpen: 'edit-goal-' + goal.id,
+                                buttonIcon: 'edit',
+                                buttonLabel: 'Edit',
+                                buttonVariant: 'small',
+                                buttonAriaLabel: 'Edit goal',
+                            }) %>
+                        <% } %>
+
+                        <% if(hasPermission('PROJ-11')) {%>
                         <%- include('../shared/actionButton', {
-                            buttonPopupOpen: 'edit-goal-' + goal.id,
-                            buttonIcon: 'edit',
-                            buttonLabel: 'Edit',
-                            buttonVariant: 'small',
-                            buttonAriaLabel: 'Edit goal',
-                        }) %>
-                        <%- include('../shared/actionButton', {
-                            buttonPopupOpen: 'delete-goal-' + goal.id,
-                            buttonIcon: 'trash',
-                            buttonLabel: 'Delete',
-                            buttonVariant: 'small',
-                            buttonAriaLabel: 'Delete goal',
-                        }) %>
+                                buttonPopupOpen: 'delete-goal-' + goal.id,
+                                buttonIcon: 'trash',
+                                buttonLabel: 'Delete',
+                                buttonVariant: 'small',
+                                buttonAriaLabel: 'Delete goal',
+                            }) %>
+                        <% } %>
                     </div>
                 </div>
                 <p class="mt-2 text-sm text-brand-text/70"><%= goal.description %></p>

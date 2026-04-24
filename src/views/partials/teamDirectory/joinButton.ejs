@@ -2,6 +2,7 @@
 
     <% if (!isMember) { %>
 
+        <% if(hasPermission('TEAM-06-01')) {%>
         <button 
             type="button" 
             data-popup-open="joinRolePopup-<%= team.id %>"
@@ -27,9 +28,18 @@
                 }
             ]
         }) %>
+        <% } else { %>     
+            <button
+                type="button"
+                disabled
+                class="app-cta-button w-full cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50">
+                You are not allowed to Join a Team. Contact Administrator.
+            </button>
+        <% } %>
 
     <% } else { %>
 
+        <% if(hasPermission('TEAM-07-01')) {%>
         <button 
             type="button" 
             data-popup-open="leavePopup-<%= team.id %>"
@@ -48,6 +58,14 @@
             csrfToken,
             popupFields: []
         }) %>
+        <% } else {%>
+            <button
+                type="button"
+                disabled
+                class="app-cta-button w-full cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50">
+                You are not allowed to Leave a Team. Contact Administrator.
+            </button>
+        <% } %>
 
     <% } %>
 

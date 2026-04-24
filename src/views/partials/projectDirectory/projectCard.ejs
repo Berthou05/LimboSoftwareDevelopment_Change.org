@@ -15,17 +15,20 @@
         <div>
             <h3 class="font-heading text-lg font-bold text-brand-text"><%= project.name %></h3>
             <p class="text-sm text-brand-text/70">Lead: <%= project.leadName %></p>
+        
         </div>
-        <% if (canDeleteProject) { %>
-            <%- include('../shared/actionButton', {
-                buttonPopupOpen: 'delete-project-' + project.id,
-                buttonIcon: 'trash',
-                buttonLabel: 'Delete',
-                buttonVariant: 'small',
-                buttonClasses: 'panel-action-button--delete-hover',
-                buttonAriaLabel: 'Delete project',
-                actionTone: 'danger'
-            }) %>
+        <% if(hasPermission('PROJ-03')){%>
+            <% if (canDeleteProject) { %>
+                <%- include('../shared/actionButton', {
+                    buttonPopupOpen: 'delete-project-' + project.id,
+                    buttonIcon: 'trash',
+                    buttonLabel: 'Delete',
+                    buttonVariant: 'small',
+                    buttonClasses: 'panel-action-button--delete-hover',
+                    buttonAriaLabel: 'Delete project',
+                    actionTone: 'danger'
+                }) %>
+            <% } %>
         <% } %>
     </div>
     <p class="mt-3 text-sm text-brand-text/80">
