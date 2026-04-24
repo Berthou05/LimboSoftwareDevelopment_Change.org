@@ -52,10 +52,9 @@
                     <p class="text-sm text-brand-text/60"><%= selectedGuide.sections.length %> sections</p>
                 </div>
                 <div class="mt-6 space-y-8">
-                <% selectedGuide.sections.forEach((section, index) => { %>
+                <% selectedGuide.sections.forEach((section) => { %>
                     <section class="border-l-2 border-brand-secondary/80 pl-5">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-brand-nav">Section <%= index + 1 %></p>
-                        <h3 class="mt-2 text-xl font-semibold text-brand-text"><%= section.title %></h3>
+                        <h3 class="text-xl font-semibold text-brand-text"><%= section.title %></h3>
                         <% if (section.body) { %>
                             <p class="mt-3 max-w-3xl text-sm leading-7 text-brand-text/70"><%= section.body %></p>
                         <% } %>
