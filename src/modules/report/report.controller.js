@@ -34,6 +34,8 @@ function capitalizeWords(str) {
     return str.replace(/\b\w/g, char => char.toUpperCase());
 }
 
+const REPORT_HISTORY_SECTION_LIMIT = '6';
+
 /*formatDayLabel(value)
 Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
 month, day, year*/
@@ -49,6 +51,19 @@ const formatDayLabel = function formatDayLabel(value) {
         day: 'numeric',
         year: 'numeric',
     });
+};
+
+const buildReportHistoryCards = function buildReportHistoryCards(reports, redirectTo = '/reports') {
+    return reports.map((report) => ({
+        id: report.report_id,
+        subjectLabel: report.subject_name || 'Unknown subject',
+        type: report.content_type || '',
+        createdAt: report.created_at || null,
+        periodStart: report.period_start || null,
+        periodEnd: report.period_end || null,
+        url: `/reports/view/${String(report.content_type || '').toLowerCase()}/${report.report_id}`
+            + `?redirectTo=${encodeURIComponent(redirectTo)}`,
+    }));
 };
 
 /*respondWithError(statusCode, message, wantsJson, response, request)
@@ -447,6 +462,35 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
 }
 
 //---------------------- Main functions ---------------------------
+
+exports.getReportHistory = (request, response, next) => {
+    const employeeId = request.session.employeeId || '';
+
+    return Promise.all([
+        Report.fetchLatestByEmployeeAndType(employeeId, 'EMPLOYEE', REPORT_HISTORY_SECTION_LIMIT),
+        Report.fetchLatestByEmployeeAndType(employeeId, 'PROJECT', REPORT_HISTORY_SECTION_LIMIT),
+        Report.fetchLatestByEmployeeAndType(employeeId, 'TEAM', REPORT_HISTORY_SECTION_LIMIT),
+    ]).then(([
+        [employeeReports],
+        [projectReports],
+        [teamReports],
+    ]) => {
+        return response.render('pages/reportHistory', {
+            csrfToken: request.csrfToken(),
+            isLoggedIn: request.session.isLoggedIn || '',
+            username: request.session.username || '',
+            pageTitle: 'Report history',
+            pageSubtitle: 'Your most recent generated reports, grouped by employee, project, and team.',
+            employeeReports: buildReportHistoryCards(employeeReports),
+            projectReports: buildReportHistoryCards(projectReports),
+            teamReports: buildReportHistoryCards(teamReports),
+        });
+    }).catch((error) => {
+        console.log(error);
+        request.session.error = 'The report history could not be loaded.';
+        return response.redirect('/home');
+    });
+};
 
 /*getReport
 Function responsible for rendering a report page based on the given report_id.*/
