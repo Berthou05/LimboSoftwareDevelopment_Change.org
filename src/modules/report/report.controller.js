@@ -17,6 +17,9 @@ const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
 const { end } = require('../../utils/database');
 
+
+//---------------------- Auxiliar functions ---------------------------
+
 /*getAiWrapper()
 Function responsible for loading the AI wrapper ESM module from a
 CommonJS controller.*/
@@ -24,8 +27,6 @@ CommonJS controller.*/
 const getAiWrapper = async function getAiWrapper() {
     return import('../../utils/webServices/aiWrapper.mjs');
 };
-
-//---------------------- Auxiliar functions ---------------------------
 
 /*capitalizeWords(str)
 Function responsible for capitalizig the first char of each word of the given string*/
@@ -50,6 +51,10 @@ const formatDayLabel = function formatDayLabel(value) {
     });
 };
 
+/*respondWithError(statusCode, message, wantsJson, response, request)
+Auxiliar function responsible for handling error of the report generation
+in a similar way that enforces the application of the flash report
+messages.*/
 
 function respondWithError(statusCode, message, wantsJson, response, request) {
     const flash = {
@@ -68,6 +73,10 @@ function respondWithError(statusCode, message, wantsJson, response, request) {
     return response.redirect(route);
 };
 
+/*groupBy(array, key)
+Auxiliar function responsible for the grouping and integration
+of elements of an array by a given key.*/
+
 function groupBy(array, key) {
     return array.reduce((acc, item) => {
         const groupKey = item[key];
@@ -77,6 +86,10 @@ function groupBy(array, key) {
     }, {});
 }
 
+/*groupByTwoLevels(array, key)
+Auxiliar function responsible for the grouping and integration
+of elements of an array by two given keys depending
+on their order.*/
 
 function groupByTwoLevels(array, key1, key2) {
     return array.reduce((acc, item) => {
@@ -91,6 +104,10 @@ function groupByTwoLevels(array, key1, key2) {
         return acc;
     }, {});
 }
+
+/*normalizeSection(section)
+Auxiliar function responsible for the normalization of a given AI section
+in order to match the report visualization structure.*/
 
 function normalizeSection(section) {
     const normalized = {
@@ -121,6 +138,11 @@ function normalizeSection(section) {
     return normalized;
 }
 
+/*buildWhatWentWellSection(wentWell, reportType)
+Auxiliar function responsible for the normalization of the section
+What Went Well of Reports, changing over thier title depending
+on the reportType.*/
+
 function buildWhatWentWellSection(wentWell, reportType) {
     const groups = Object.values(wentWell).map(project => {
         const group = {
@@ -142,6 +164,10 @@ function buildWhatWentWellSection(wentWell, reportType) {
     };
 }
 
+/*buildStatusSection(status, reportType)
+Auxiliar function responsible for the normalization of the section
+Projects Status of Reports, changing over thier title depending
+on the reportType.*/
 
 function buildStatusSection(status, reportType) {
     const groups = Object.values(status).map(project => ({
@@ -158,9 +184,6 @@ function buildStatusSection(status, reportType) {
         groups,
     };
 }
-
-//---------------------------------------------------------------------
-
 
 /*normalizeReportRequest(body)
 Function responsible for normalizing report generator payloads coming from
@@ -192,6 +215,9 @@ const normalizeReportRequest = function normalizeReportRequest(body = {}) {
     };
 };
 
+/*normalizeReportType(value = '')
+Auxiliar function responsible for the validation of the reportType*/
+
 const normalizeReportType = function normalizeReportType(value = '') {
     const reportType = String(value || '').trim().toUpperCase();
 
@@ -201,6 +227,10 @@ const normalizeReportType = function normalizeReportType(value = '') {
 
     return '';
 };
+
+/*ensureReportExists
+Auxiliar function responsible for the existance validation of a report
+based on its id.*/
 
 exports.ensureReportExists = (request, response, next) => {
     return Report.fetchById(request.params.id)
@@ -212,59 +242,6 @@ exports.ensureReportExists = (request, response, next) => {
             return next();
         })
         .catch(next);
-};
-
-exports.getReport = (request, response, next) => {
-    const reportType = normalizeReportType(request.params.content_type || request.query.type || 'EMPLOYEE') || 'EMPLOYEE';
-    const redirectTo = typeof request.query.redirectTo === 'string'
-        ? request.query.redirectTo
-        : '/home';
-
-    Report.fetchById(request.params.id).then(([report,fieldData])=>{
-        const reportRow = report[0];
-
-        if (!reportRow) {
-            return renderNotFound(request, response);
-        }
-
-        Search.getNameFromId(reportRow.content_id).then(([name, fieldData])=>{
-            const subject = name[0];
-
-            if (!subject) {
-                return renderNotFound(request, response);
-            }
-
-            const filters = typeof reportRow.filters_json === 'string'
-                ? JSON.parse(reportRow.filters_json)
-                : reportRow.filters_json;
-
-            return response.render('pages/report',{
-                csrfToken: request.csrfToken(),
-                isLoggedIn: request.session.isLoggedIn || '',
-                username: request.session.username || '',
-                pageTitle: subject.name, 
-                title: subject.name,
-                start_date: filters.startDate,
-                end_date: filters.endDate,
-                keyRange: typeof filters.key !== 'undefined' || typeof filters.key !== 'null' ? capitalizeWords(filters.key) : null,
-                activityDate: typeof filters.activityDate !== 'null' ? filters.activityDate : null,
-                pageSubtitle: '',
-                reportType: reportRow.content_type,
-                reportFormat: JSON.parse(reportRow.ai_output_text),
-                redirectTo,
-            });
-        })
-        .catch((error)=>{
-            console.log(error);
-            request.session.error = 'The report could not be loaded.';
-            return response.redirect(redirectTo); 
-        })
-    })
-    .catch((error)=>{
-        console.log(error);
-        request.session.error = 'The report could not be loaded.';
-        return response.redirect(redirectTo);
-    })
 };
 
 
@@ -469,7 +446,63 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
     }
 }
 
-//----------------------------------------------
+//---------------------- Main functions ---------------------------
+
+/*getReport
+Function responsible for rendering a report page based on the given report_id.*/
+
+exports.getReport = (request, response, next) => {
+    const reportType = normalizeReportType(request.params.content_type || request.query.type || 'EMPLOYEE') || 'EMPLOYEE';
+    const redirectTo = typeof request.query.redirectTo === 'string'
+        ? request.query.redirectTo
+        : '/home';
+
+    Report.fetchById(request.params.id).then(([report,fieldData])=>{
+        const reportRow = report[0];
+
+        if (!reportRow) {
+            return renderNotFound(request, response);
+        }
+
+        Search.getNameFromId(reportRow.content_id).then(([name, fieldData])=>{
+            const subject = name[0];
+
+            if (!subject) {
+                return renderNotFound(request, response);
+            }
+
+            const filters = typeof reportRow.filters_json === 'string'
+                ? JSON.parse(reportRow.filters_json)
+                : reportRow.filters_json;
+
+            return response.render('pages/report',{
+                csrfToken: request.csrfToken(),
+                isLoggedIn: request.session.isLoggedIn || '',
+                username: request.session.username || '',
+                pageTitle: subject.name, 
+                title: subject.name,
+                start_date: filters.startDate,
+                end_date: filters.endDate,
+                keyRange: typeof filters.key !== 'undefined' || typeof filters.key !== 'null' ? capitalizeWords(filters.key) : null,
+                activityDate: typeof filters.activityDate !== 'null' ? filters.activityDate : null,
+                pageSubtitle: '',
+                reportType: reportRow.content_type,
+                reportFormat: JSON.parse(reportRow.ai_output_text),
+                redirectTo,
+            });
+        })
+        .catch((error)=>{
+            console.log(error);
+            request.session.error = 'The report could not be loaded.';
+            return response.redirect(redirectTo); 
+        })
+    })
+    .catch((error)=>{
+        console.log(error);
+        request.session.error = 'The report could not be loaded.';
+        return response.redirect(redirectTo);
+    })
+};
 
 
 /*generateReport
@@ -579,8 +612,6 @@ exports.generateReport = async (request, response, next)=>{
 
         console.log(status);
     }
-    
-
 
     // What can be improved Section
     const promptWhatToImprove = prompts.find(p => p.name === "Improve");
@@ -667,7 +698,6 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Report Object creation
-
     const report = new Report(request.session.employeeId, id, reportType, start_date, end_date, content_json, filters_json, model, version, reportObject);
     report.save().then(()=>{
         //LatestReports obtention
