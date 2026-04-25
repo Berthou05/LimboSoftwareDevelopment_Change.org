@@ -7,6 +7,7 @@ Modified by: Hurtado, R.
 const Employee = require('../../models/employee');
 const Team = require('../../models/team');
 const Project = require('../../models/project');
+const Activity = require('../../models/activity');
 const { getInitials } = require('../../utils/avatar.util');
 const AUTOCOMPLETE_SECTION_LIMIT = 3;
 const AUTOCOMPLETE_TOTAL_LIMIT = 5;
@@ -18,6 +19,24 @@ const normalizeSearchQuery = function normalizeSearchQuery(value) {
 const wantsJsonResponse = function wantsJsonResponse(request) {
     const acceptHeader = request.get('Accept') || '';
     return acceptHeader.includes('application/json');
+};
+
+const formatSearchDate = function formatSearchDate(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
 };
 
 const mapEmployeeResult = function mapEmployeeResult(employee, currentEmployeeId) {
@@ -70,8 +89,63 @@ const mapProjectResult = function mapProjectResult(project) {
     };
 };
 
-const buildResultSections = function buildResultSections(employees, teams, projects, employeeId) {
+const mapActivityResult = function mapActivityResult(activity, currentEmployeeId) {
+    const title = activity.title || 'Untitled activity';
+    const authorName = activity.full_name || 'Unknown employee';
+    const projectName = activity.project_name || '';
+    const teamName = activity.team_name || '';
+    const completedAtLabel = formatSearchDate(activity.completed_at);
+    const hasProjectContext = Boolean(activity.project_id && projectName);
+    const metadata = [];
+    const subtitleParts = [`By: ${authorName}`];
+
+    if (hasProjectContext) {
+        metadata.push(`Project: ${projectName}`);
+        subtitleParts.push(`Project: ${projectName}`);
+    } else {
+        metadata.push('General activity');
+    }
+
+    if (teamName) {
+        metadata.push(`Team: ${teamName}`);
+    }
+
+    if (completedAtLabel) {
+        metadata.push(`Completed: ${completedAtLabel}`);
+    }
+
+    return {
+        type: 'activity',
+        label: 'Activity',
+        title,
+        subtitle: subtitleParts.join(' | '),
+        description: activity.description || metadata.join(' | '),
+        image: '',
+        initials: getInitials(title, 'A'),
+        url: hasProjectContext
+            ? `/projects/${activity.project_id}`
+            : `/employees/${activity.employee_id}`,
+        badge: activity.employee_id === currentEmployeeId
+            ? 'My activity'
+            : hasProjectContext
+                ? 'Project activity'
+                : 'Activity',
+    };
+};
+
+const buildResultSections = function buildResultSections(
+    activities,
+    employees,
+    teams,
+    projects,
+    employeeId,
+) {
     return [
+        {
+            id: 'activities',
+            title: 'Activities',
+            results: activities.map((activity) => mapActivityResult(activity, employeeId)),
+        },
         {
             id: 'employees',
             title: 'Employees',
@@ -91,11 +165,24 @@ const buildResultSections = function buildResultSections(employees, teams, proje
 };
 
 const buildAutocompleteSuggestions = function buildAutocompleteSuggestions(
+    activities,
     employees,
     teams,
     projects,
     employeeId,
 ) {
+    const activitySuggestions = activities
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((activity) => {
+            const result = mapActivityResult(activity, employeeId);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: activity.employee_id === employeeId ? 'My activity' : 'Activity',
+                url: result.url,
+            };
+        });
     const employeeSuggestions = employees
         .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
         .map((employee) => {
@@ -134,6 +221,7 @@ const buildAutocompleteSuggestions = function buildAutocompleteSuggestions(
         });
 
     const suggestionBuckets = [
+        [...activitySuggestions],
         [...employeeSuggestions],
         [...teamSuggestions],
         [...projectSuggestions],
@@ -192,11 +280,13 @@ exports.getSearch = (request, response, next) => {
 
     const searchPromises = isJsonRequest
         ? [
+            Activity.getDirectorySuggestions(employeeId, query),
             Employee.getDirectorySuggestionsByLeadScope(employeeId, query),
             Team.getDirectorySuggestions(employeeId, query),
             Project.getDirectorySuggestions(employeeId, query),
         ]
         : [
+            Activity.searchDirectory(employeeId, query),
             Employee.searchDirectoryByLeadScope(employeeId, query),
             Team.searchDirectory(employeeId, query),
             Project.searchDirectory(employeeId, query),
@@ -204,6 +294,7 @@ exports.getSearch = (request, response, next) => {
 
     return Promise.all(searchPromises)
         .then(([
+            [activities],
             [employees],
             [teams],
             [projects],
@@ -211,11 +302,23 @@ exports.getSearch = (request, response, next) => {
             if (isJsonRequest) {
                 return response.status(200).json({
                     query,
-                    suggestions: buildAutocompleteSuggestions(employees, teams, projects, employeeId),
+                    suggestions: buildAutocompleteSuggestions(
+                        activities,
+                        employees,
+                        teams,
+                        projects,
+                        employeeId,
+                    ),
                 });
             }
 
-            const resultSections = buildResultSections(employees, teams, projects, employeeId);
+            const resultSections = buildResultSections(
+                activities,
+                employees,
+                teams,
+                projects,
+                employeeId,
+            );
             const totalResults = resultSections.reduce((total, section) => {
                 return total + section.results.length;
             }, 0);
