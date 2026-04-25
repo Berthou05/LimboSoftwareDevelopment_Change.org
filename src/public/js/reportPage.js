@@ -5,6 +5,111 @@ function cleanText(text) {
         .trim();
 }
 
+function highlightButton(button) {
+    if (!button) return;
+
+    const icon = button.querySelector('svg');
+
+    // Button background
+    button.style.setProperty('background-color', '#fad14b', 'important');
+    button.style.setProperty('opacity', '1', 'important');
+    button.style.transform = 'scale(0.95)';
+    button.style.transition = 'all 0.5s ease';
+
+    // Icon color (THIS is the real fix)
+    if (icon) {
+        icon.style.setProperty('stroke', '#000000', 'important');
+        icon.style.setProperty('color', '#000000', 'important');
+    };
+
+    setTimeout(() => {
+        button.style.removeProperty('background-color');
+        button.style.removeProperty('opacity');
+        button.style.transform = '';
+
+        if (icon) {
+            icon.style.removeProperty('stroke');
+            icon.style.removeProperty('color');
+        }
+    }, 600);
+
+
+}
+
+/* ----------------------------------
+   GENERIC BUILDER (NEW)
+---------------------------------- */
+
+function buildTextFromRoot(root) {
+    let output = '';
+    if (!root) return '';
+
+    const groups = root.querySelectorAll('h3');
+
+    // ----------------------------------
+    // ✅ CASE 1: HAS GROUPS (your current working case)
+    // ----------------------------------
+    if (groups.length > 0) {
+
+        groups.forEach(group => {
+            const title = cleanText(group.textContent);
+            output += `\n${title}\n`;
+
+            const container = group.closest('div').parentElement;
+            if (!container) return;
+
+            // -------- PROJECT GRID --------
+            const grid = container.querySelector('.grid');
+            if (grid) {
+                grid.querySelectorAll(':scope > div').forEach(row => {
+                    const text = cleanText(row.textContent);
+                    if (text) output += `- ${text}\n`;
+                });
+            }
+
+            // -------- SUBGROUPS --------
+            const subgroups = container.querySelectorAll('h4');
+            if (subgroups.length > 0) {
+                subgroups.forEach(sub => {
+                    const subTitle = cleanText(sub.textContent);
+                    output += `  ${subTitle}\n`;
+
+                    const subContainer = sub.parentElement;
+
+                    subContainer.querySelectorAll('li').forEach(li => {
+                        const text = cleanText(li.textContent);
+                        if (text) output += `  - ${text}\n`;
+                    });
+                });
+
+                return;
+            }
+
+            // -------- NORMAL LISTS --------
+            container.querySelectorAll('li').forEach(li => {
+                const text = cleanText(li.textContent);
+                if (text) output += `- ${text}\n`;
+            });
+        });
+
+    } else {
+
+        // ----------------------------------
+        // ✅ CASE 2: NO GROUPS (THIS IS YOUR BUG)
+        // ----------------------------------
+
+        root.querySelectorAll('li').forEach(li => {
+            const text = cleanText(li.textContent);
+            if (text) output += `- ${text}\n`;
+        });
+    }
+
+    return output.trim();
+}
+
+/* ----------------------------------
+   FULL REPORT (UNCHANGED BEHAVIOR)
+---------------------------------- */
 function buildReportText() {
     let output = '';
 
@@ -27,44 +132,66 @@ function buildReportText() {
         const content = section.querySelector('[data-content]');
         if (!content) return;
 
-        // -------- GROUPS --------
-        const groups = content.querySelectorAll('h3');
-
-        if (groups.length > 0) {
-            groups.forEach(group => {
-                const groupTitle = cleanText(group.textContent);
-                output += `\n${groupTitle}\n`;
-
-                const groupContainer = group.parentElement;
-
-                // -------- STATUS BLOCK --------
-                const grid = groupContainer.querySelector('.grid');
-                if (grid) {
-                    grid.querySelectorAll(':scope > div').forEach(row => {
-                        const text = cleanText(row.textContent);
-                        if (text) output += `- ${text}\n`;
-                    });
-                }
-
-                // -------- LIST ITEMS --------
-                groupContainer.querySelectorAll('ul li').forEach(li => {
-                    output += `- ${cleanText(li.textContent)}\n`;
-                });
-            });
-
-        } else {
-            // -------- FLAT CONTENT --------
-            content.querySelectorAll('ul li').forEach(li => {
-                output += `- ${cleanText(li.textContent)}\n`;
-            });
-        }
-
-        output += '\n';
+        const sectionText = buildTextFromRoot(content);
+        if (sectionText) output += sectionText + '\n\n';
     });
 
     return output.trim();
 }
 
+/* ----------------------------------
+   SECTION COPY (NEW)
+---------------------------------- */
+function buildSectionText(section) {
+    const title = section.querySelector('h2')?.textContent.trim();
+    const content = section.querySelector('[data-section-content]');
+
+    if (!content) return '';
+
+    let output = '';
+    if (title) output += `=== ${title} ===\n`;
+
+    const text = buildTextFromRoot(content);
+    if (text) output += text;
+
+    return output.trim();
+}
+
+/* ----------------------------------
+   PROJECT COPY (NEW)
+---------------------------------- */
+function buildProjectText(projectContainer) {
+    if (!projectContainer) return '';
+
+    let output = '';
+
+    // TITLE
+    const title = projectContainer.querySelector('h3')?.textContent.trim();
+    if (title) output += `${title}\n`;
+
+    const content = projectContainer.querySelector('[data-project-content]');
+    if (!content) return output.trim();
+
+    // STATUS GRID
+    const grid = content.querySelector('.grid');
+    if (grid) {
+        grid.querySelectorAll(':scope > div').forEach(row => {
+            const text = cleanText(row.textContent);
+            if (text) output += `- ${text}\n`;
+        });
+    }
+
+    // LIST ITEMS
+    content.querySelectorAll('li').forEach(li => {
+        const text = cleanText(li.textContent);
+        if (text) output += `- ${text}\n`;
+    });
+
+    return output.trim();
+}
+/* ----------------------------------
+   CLIPBOARD HELPERS (UNCHANGED)
+---------------------------------- */
 async function hasClipboardPermission() {
     try {
         if (!navigator.permissions) return false;
@@ -121,30 +248,72 @@ async function copyText(text) {
     return fallbackCopy(text);
 }
 
-// -------- COPY BUTTON --------
+/* ----------------------------------
+   BUTTON HANDLERS
+---------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
-    const copyBtn = document.querySelector('.js-copy-report');
-    if (!copyBtn) return;
 
-    copyBtn.addEventListener('click', async () => {
-        const text = buildReportText();
-        const success = await copyText(text);
+    // -------- FULL REPORT --------
+    const copyBtn = document.querySelector('[data-copy-report]');
 
-        copyBtn.innerText = success ? 'Copied!' : 'Failed to copy';
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            const text = buildReportText();
+            const success = await copyText(text);
 
-        setTimeout(() => {
-            copyBtn.innerText = 'Copy';
-        }, 2000);
+            copyBtn.innerText = success ? 'Copied!' : 'Failed to copy';
+
+            setTimeout(() => {
+                copyBtn.innerText = 'Copy';
+            }, 2000);
+        });
+    }
+
+    // -------- SECTION COPY --------
+    document.querySelectorAll('[data-copy-section]').forEach(btn => {
+        console.log(btn);
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            
+
+            const section = btn.closest('.px-6.py-4');
+            const text = buildSectionText(section);
+
+            const success = await copyText(text);
+
+            if (success) {
+                highlightButton(btn);
+            }
+        });
+    });
+
+    // -------- PROJECT COPY --------
+    document.querySelectorAll('[data-copy-project]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            const project = btn.closest('.space-y-5 > div'); // ✅ FIX
+
+            const text = buildProjectText(project);
+            const success = await copyText(text);
+
+            if (success) {
+                highlightButton(btn);
+            }
+        });
     });
 });
 
-// -------- COLLAPSIBLE SECTIONS --------
+/* ----------------------------------
+   COLLAPSIBLE SECTIONS (UNCHANGED)
+---------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('[data-toggle-section]');
 
     buttons.forEach(button => {
-        const container = button.parentElement;
-        const content = container.querySelector('[data-content]');
+        const container = button.closest('.px-6.py-4');
+        const content = container?.querySelector('[data-content]');
         const icon = button.querySelector('[data-icon]');
 
         if (!content) return;

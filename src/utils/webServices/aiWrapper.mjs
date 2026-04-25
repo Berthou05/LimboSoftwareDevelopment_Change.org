@@ -441,6 +441,7 @@ Based on the employee's "What Went Well?" analysis, identify gaps, underdevelope
 - Each bullet must contain two elements:
     a) A specific, observable gap or underdeveloped area identified from the data.
     b) A realistic, concrete recommendation for how the employee can address it.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - This section is intentionally separate from the Company Values Alignment section. Do not frame improvements around company values — focus purely on performance, work habits, project contributions, and overall impact.
 - Tone: constructive, direct, and growth-oriented. Surface gaps clearly without being punitive.
@@ -462,11 +463,11 @@ Based on the team's "What Went Well?" analysis, identify collective gaps, underd
 - Each bullet must contain two elements:
     a) A specific, observable collective gap or underdeveloped area identified from the data.
     b) A realistic, concrete recommendation for how the team can address it together.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented team activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - This section is intentionally separate from the Company Values Alignment section. Do not frame improvements around company values — focus purely on team performance, collaborative dynamics, project contributions, and overall collective impact.
 - Tone: constructive, direct, and growth-oriented. Surface gaps clearly without being punitive toward the team or any individual within it.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change collectively and why.
-
 `;
 const TO_IMPROVE_PROJECT = `
 You are writing the "What Can Be Improved" section of a professional Project Performance Report.
@@ -487,6 +488,7 @@ Based on the project's "What Went Well?" analysis and the original project data,
 - Each bullet must contain two elements:
     a) A specific, observable gap or underdeveloped area identified from the project data or "What Went Well?" output.
     b) A realistic, concrete recommendation for how the project could address it going forward.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented project activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - Tone: constructive, direct, and forward-looking. Surface gaps clearly without being punitive.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change and why.
