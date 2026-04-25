@@ -844,7 +844,11 @@ INSERT INTO `privilege` (`privilege_id`, `name`, `description`) VALUES
 ('TEAM-06-01', 'Add Themselve to Team', NULL),
 ('TEAM-06-02', 'Add Others to Team', NULL),
 ('TEAM-07-01', 'Remove themselve from Team', NULL),
-('TEAM-07-02', 'Remove others from Team', NULL);
+('TEAM-07-02', 'Remove others from Team', NULL),
+('HIGH-01','Register highlights',NULL),
+('HIGH-02','Edit highlights',NULL),
+('HIGH-03','Delete highlights',NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -1454,7 +1458,10 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('role-003', 'TEAM-06-01'),
 ('role-003', 'TEAM-06-02'),
 ('role-003', 'TEAM-07-01'),
-('role-003', 'TEAM-07-02');
+('role-003', 'TEAM-07-02'),
+('role-003', 'HIGH-01'),
+('role-003', 'HIGH-02'),
+('role-003', 'HIGH-03');
 -- --------------------------------------------------------
 
 --

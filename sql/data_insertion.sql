@@ -69,7 +69,10 @@ INSERT INTO `privilege` (`privilege_id`, `name`, `description`) VALUES
 ('TEAM-06-01', 'Add Themselve to Team', NULL),
 ('TEAM-06-02', 'Add Others to Team', NULL),
 ('TEAM-07-01', 'Remove themselve from Team', NULL),
-('TEAM-07-02', 'Remove others from Team', NULL);
+('TEAM-07-02', 'Remove others from Team', NULL),
+('HIGH-01','Register highlights',NULL),
+('HIGH-02','Edit highlights',NULL),
+('HIGH-03','Delete highlights',NULL);
 -- --------------------------------------------------------
 --
 -- Dumping data for table `prompt`
@@ -279,5 +282,14 @@ INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
 ('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'TEAM-06-01'),
 ('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'TEAM-06-02'),
 ('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'TEAM-07-01'),
-('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'TEAM-07-02');
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'TEAM-07-02'),
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-01'),
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-02'),
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-03');
 -- --------------------------------------------------------
+
+
+INSERT INTO `roleprivilege` (`role_id`, `privilege_id`) VALUES
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-01'),
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-02'),
+('5b9d8d0d-32fc-4a02-aca9-b03a9b8b14d9', 'HIGH-03');
