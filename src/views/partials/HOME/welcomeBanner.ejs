@@ -1,15 +1,38 @@
 <section class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel sm:p-5 lg:col-span-2">
     <div class="flex items-center gap-3 sm:gap-4">
-        <div class="h-10 w-10 shrink-0 overflow-hidden rounded-full border border-brand-secondary bg-brand-bg sm:h-12 sm:w-12">
-            <img
-                src="<%= homeAccountImage %>"
-                alt="Profile"
-                class="h-full w-full object-cover"
-                onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
-            >
+
+        <% 
+        const initials = homeEmployeeFullName
+            ? homeEmployeeFullName
+                .split(' ')
+                .map(p => p[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase()
+            : '?'; 
+        %>
+
+        <div class="relative h-10 w-10 shrink-0 sm:h-12 sm:w-12">
+
+            <!-- Fallback (initials) -->
+            <div class="app-directory-avatar flex h-full w-full items-center justify-center rounded-full text-sm font-bold">
+                <%= initials %>
+            </div>
+
+            <!-- Image -->
+            <% if (homeAccountImage) { %>
+                <img
+                    src="<%= homeAccountImage || ''%>"
+                    alt="<%= homeEmployeeFullName %>"
+                    class="absolute inset-0 h-full w-full rounded-full object-cover"
+                    onerror="this.style.display='none'"
+                />
+            <% } %>
+
         </div>
+
         <h1 class="font-heading text-xl font-bold text-brand-text sm:text-2xl lg:text-4xl">
-            Welcome <%= homeEmployeeFirstName %>
+            Welcome <%= homeEmployeeFullName.split(' ')[0] %>
         </h1>
     </div>
 </section>
