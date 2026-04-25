@@ -127,8 +127,8 @@ function getStatusColor(status) {
           <div class="mt-4 hidden" data-content data-section-content>
 
             <% if (section.groups && section.groups.length) { %>
-              <div class="space-y-5">
-
+              <div class="space-y-5"> 
+                <% const hasMultipleProjects = section.groups && section.groups.length > 1; %>
                 <% section.groups.forEach((group) => { %>
                   <div class="ml-4 pl-4 border-l border-brand-secondary">
 
@@ -136,7 +136,7 @@ function getStatusColor(status) {
                     <div class="flex flex-col gap-1">
                       <div class="flex items-center gap-2">
   
-                        <% if (group.projectStatus) { %>
+                        <% if (group.projectStatus && hasMultipleProjects) { %>
                           <%- include('../partials/shared/actionButton', {
                             buttonIcon: 'copy',
                             buttonVariant: 'icon-only',
