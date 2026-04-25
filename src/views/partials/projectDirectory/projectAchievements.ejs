@@ -68,7 +68,7 @@
                     { name: 'title', label: 'Title', value: achievement.title || '', placeholder: 'Achievement title' },
                     { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: achievement.description || '', placeholder: 'Describe the achievement.' },
                     { name: 'achievementDate', label: 'Achievement date', type: 'date', value: achievement.achievementDate || '' },
-                    { name: 'evidenceLink', label: 'Evidence link', value: achievement.evidenceLink || '', placeholder: 'https://...' },
+                    { name: 'evidenceLink', label: 'Evidence link', type: 'url', value: achievement.evidenceLink || '', placeholder: 'https://...' },
                 ],
             }) %>
 
@@ -98,7 +98,7 @@
         { name: 'title', label: 'Title', value: '', placeholder: 'Delivered MVP' },
         { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the outcome delivered by the team.' },
         { name: 'achievementDate', label: 'Achievement date', type: 'date', value: '' },
-        { name: 'evidenceLink', label: 'Evidence link', value: '', placeholder: 'https://...' },
+        { name: 'evidenceLink', label: 'Evidence link', type: 'url', value: '', placeholder: 'https://...' },
     ],
 }) %>
 

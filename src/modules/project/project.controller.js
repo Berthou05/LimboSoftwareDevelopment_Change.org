@@ -167,6 +167,19 @@ const isValidDateInput = function isValidDateInput(value) {
     return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
 };
 
+const isValidEvidenceLink = function isValidEvidenceLink(value) {
+    if (!value) {
+        return true;
+    }
+
+    try {
+        const parsedUrl = new URL(value);
+        return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch (error) {
+        return false;
+    }
+};
+
 /*formatDateInput(value)
 Function responsible for converting DB date values into YYYY-MM-DD strings, so date inputs in popups can show existing values.*/
 
@@ -1445,6 +1458,12 @@ exports.createAchievement = (request, response, next) => {
         });
     }
 
+    if (!isValidEvidenceLink(evidenceLink)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid evidence link starting with http:// or https://',
+        });
+    }
+
     return Achievement.create(
         projectId,
         employeeId,
@@ -1484,6 +1503,12 @@ exports.updateAchievement = (request, response, next) => {
     if (!achievementDate || !isValidDateInput(achievementDate)) {
         return respondProjectPopupRequest(request, response, projectId, 400, {
             error: 'Provide a valid achievement date.',
+        });
+    }
+
+    if (!isValidEvidenceLink(evidenceLink)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid evidence link starting with http:// or https://',
         });
     }
 
