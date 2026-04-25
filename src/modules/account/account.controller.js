@@ -144,7 +144,7 @@ exports.postEditAccount = (request, response, next) => {
     const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
     const slackUsername = typeof request.body.slackUsername === 'string' ? request.body.slackUsername.trim() : '';
     const currentImage = typeof request.body.currentImage === 'string' ? request.body.currentImage.trim() : '';
-    const image = getUploadedAccountImage(request) || currentImage || DEFAULT_ACCOUNT_IMAGE;
+    const image = getUploadedAccountImage(request) || currentImage || '';
     const names = typeof request.body.names === 'string' ? request.body.names.trim() : '';
     const lastnames = typeof request.body.lastnames === 'string' ? request.body.lastnames.trim() : '';
     const fullName = buildFullName(names, lastnames);

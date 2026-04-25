@@ -1,15 +1,18 @@
-const DEFAULT_AVATAR = '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png';
+const DEFAULT_AVATAR = '';
 
 const isGeneratedPlaceholderImage = function isGeneratedPlaceholderImage(image) {
-    if (!image || typeof image !== 'string') {
-        return true;
-    }
+    if (!image || typeof image !== 'string') return true;
 
-    return image.includes('ui-avatars.com') || image.includes('dicebear');
+    const normalized = image.trim().toLowerCase();
+
+    return (
+        normalized.includes('ui-avatars.com') ||
+        normalized.includes('dicebear')
+    );
 };
 
 const resolveAvatarImage = function resolveAvatarImage(image) {
-    return isGeneratedPlaceholderImage(image) ? DEFAULT_AVATAR : image;
+    return isGeneratedPlaceholderImage(image) ? '' : image;
 };
 
 const getInitials = function getInitials(value, fallback = '?') {
