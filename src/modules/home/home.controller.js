@@ -1,3 +1,9 @@
+/*
+Title: home.controller.js
+Last modification: -
+Modified by: Berthou, A.
+*/
+
 const Project = require('../../models/project');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
@@ -8,8 +14,13 @@ const Goal = require('../../models/goal');
 const Achievement = require('../../models/achievement');
 const Highlight = require('../../models/highlight');
 const { getInitials, resolveAvatarImage } = require('../../utils/avatar.util');
-
 const GENERAL_ACTIVITY_FILTER = 'general';
+
+//--------------------------- Auxiliar Functions ---------------------------
+
+/*formatDayLabel(value)
+Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
+month, day, year*/
 
 const formatDayLabel = function formatDayLabel(value) {
     const date = new Date(value);
@@ -24,6 +35,10 @@ const formatDayLabel = function formatDayLabel(value) {
         year: 'numeric',
     });
 };
+
+/*buildActivitySections(activities)
+Auxiliar function responsible for creating the format of activities
+required for the activity visualization modal.*/
 
 const buildActivitySections = function buildActivitySections(activities) {
     const grouped = new Map();
@@ -59,6 +74,10 @@ const buildActivitySections = function buildActivitySections(activities) {
             items,
         }));
 };
+
+/*buildEmployeeActivityProjects(activities)
+Auxiliar function responsible for grouping employee activities by project so the
+employee page can display one project section with all matching activity rows.*/
 
 const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(activities) {
     const grouped = new Map();
@@ -113,6 +132,10 @@ const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(act
         });
 };
 
+/*buildHomeTeamActivityGroups(teams, teamActivityRowsByTeam)
+Auxiliar function responsible for the normalization of given teams and activity 
+creation to a given object.*/
+
 const buildHomeTeamActivityGroups = function buildHomeTeamActivityGroups(teams, teamActivityRowsByTeam) {
     return teams.map((team, index) => ({
         id: team.team_id,
@@ -121,6 +144,9 @@ const buildHomeTeamActivityGroups = function buildHomeTeamActivityGroups(teams, 
     }));
 };
 
+/*isValidDateInput
+Auxiliar function responsible for validating a date input or given value*/
+
 const isValidDateInput = function isValidDateInput(value) {
     if (!value) {
         return true;
@@ -128,6 +154,10 @@ const isValidDateInput = function isValidDateInput(value) {
 
     return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
 };
+
+/*resolveActivityFilter
+Auxiliar function responsible for the activity collection of a given content 
+type based on its declared filters*/
 
 const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     const preset = typeof query.activityPreset === 'string' ? query.activityPreset.trim() : '';
@@ -232,6 +262,12 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
         error: '',
     };
 };
+
+//--------------------------- Main Functions ---------------------------
+
+/*getHome
+Function responsible for the data obtention, validation, normalization
+and render of the Home page.*/
 
 exports.getHome = async (request, response, next) => {
     const sessionUser = request.session.user || {};
