@@ -37,35 +37,6 @@ const formatDateLabel = function (value, fallback = '') {
     });
 };
 
-/*createResetToken 
--Not in use-
-Function responsible for the reset of a token using
-crypto.*/
-
-const createResetToken = () => String(crypto.randomInt(100000, 1000000));
-
-/*hashResetToken
--Not in use-
-Function responsible for the creation of the hash password
-using crypto.*/
-
-const hashResetToken = (token) =>
-    crypto.createHash('sha256').update(token).digest('hex');
-
-/*getResetExpiration
--Not in use-
-Function responsible for the time reset based on declaring 
-the actual time plus the RESET_TOKEN_EXPIRATION_MINUTES
-constant.*/
-
-const getResetExpiration = () => {
-    const expirationDate = new Date();
-    expirationDate.setMinutes(
-        expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES
-    );
-    return expirationDate;
-};
-
 /*getUploadedAccountImage
 Function responsible for the obtention of the account image.*/
 
