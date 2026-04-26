@@ -51,6 +51,27 @@ module.exports = class Goal {
         );
     }
 
+    /*fetchByResponsibleEmployee(employee_responsible_id)
+    Function responsible for returning all goals for which the employee is responsible.*/
+
+    static fetchByResponsibleEmployee(employee_responsible_id) {
+        return db.execute(
+            `SELECT
+                G.goal_id,
+                G.project_id,
+                G.employee_responsible_id,
+                G.title,
+                G.description,
+                G.due_date,
+                G.status,
+                G.created_at
+            FROM goal AS G
+            WHERE G.employee_responsible_id = ?
+            ORDER BY G.created_at DESC;`,
+            [employee_responsible_id],
+        );
+    }
+
     /*create(project_id, employee_responsible_id, title, description, due_date, status)
     Function responsible for creating a new goal for a project. This is used by the popup "Add Goal" flow.*/
 

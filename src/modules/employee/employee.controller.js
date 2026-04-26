@@ -11,6 +11,7 @@ const Activity = require('../../models/activity');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
+const Highlight = require('../../models/highlight');
 const renderNotFound = require('../../utils/renderNotFound');
 const { getInitials, resolveAvatarImage } = require('../../utils/avatar.util');
 const Report = require('../../models/report');
@@ -20,6 +21,34 @@ const { search } = require('../report/report.routes');
 const GENERAL_ACTIVITY_FILTER = 'general';
 
 //--------------------------- Auxiliar Functions ---------------------------
+
+/*processHighlightsForChart(highlights)
+Auxiliar function responsible for processing highlights data for the line chart.
+Groups highlights by month and returns labels and data arrays.*/
+
+const processHighlightsForChart = function processHighlightsForChart(highlights) {
+    const monthlyCounts = {};
+
+    // Group highlights by month-year
+    highlights.forEach(highlight => {
+        const date = new Date(highlight.created_at);
+        const monthYear = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
+        });
+
+        monthlyCounts[monthYear] = (monthlyCounts[monthYear] || 0) + 1;
+    });
+
+    // Sort by date
+    const sortedEntries = Object.entries(monthlyCounts)
+        .sort(([a], [b]) => new Date(a) - new Date(b));
+
+    return {
+        labels: sortedEntries.map(([label]) => label),
+        data: sortedEntries.map(([, count]) => count)
+    };
+};
 
 /*getLatestReport(content_id)
 Auxiliar function respondible for returning the optimal information required to show the 
@@ -156,6 +185,61 @@ const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(act
 
             return 0;
         });
+};
+
+const GOAL_STATUS_ORDER = [
+    Goal.Status.PLANNED,
+    Goal.Status.IN_PROGRESS,
+    Goal.Status.ON_HOLD,
+    Goal.Status.COMPLETED,
+    Goal.Status.CANCELLED,
+];
+
+const GOAL_STATUS_LABELS = {
+    [Goal.Status.PLANNED]: 'Planned',
+    [Goal.Status.IN_PROGRESS]: 'In progress',
+    [Goal.Status.ON_HOLD]: 'On hold',
+    [Goal.Status.COMPLETED]: 'Completed',
+    [Goal.Status.CANCELLED]: 'Cancelled',
+};
+
+const buildGoalStatusStats = function buildGoalStatusStats(goals) {
+    const counts = GOAL_STATUS_ORDER.reduce((acc, status) => {
+        acc[status] = 0;
+        return acc;
+    }, {});
+
+    goals.forEach((goal) => {
+        const status = goal.status || Goal.Status.PLANNED;
+        if (typeof counts[status] === 'undefined') {
+            counts[status] = 0;
+        }
+        counts[status] += 1;
+    });
+
+    return {
+        labels: GOAL_STATUS_ORDER.map((status) => GOAL_STATUS_LABELS[status]),
+        data: GOAL_STATUS_ORDER.map((status) => counts[status] || 0),
+        total: GOAL_STATUS_ORDER.reduce((sum, status) => sum + (counts[status] || 0), 0),
+    };
+};
+
+const buildAchievementChartData = function buildAchievementChartData(employeeProjects, projectTotals, employeeTotals) {
+    const totalCountByProject = projectTotals.reduce((acc, row) => {
+        acc[String(row.project_id)] = row.total_count || 0;
+        return acc;
+    }, {});
+
+    const employeeCountByProject = employeeTotals.reduce((acc, row) => {
+        acc[String(row.project_id)] = row.employee_count || 0;
+        return acc;
+    }, {});
+
+    const labels = employeeProjects.map((project) => project.name || 'Unnamed project');
+    const totalData = employeeProjects.map((project) => totalCountByProject[String(project.project_id)] || 0);
+    const employeeData = employeeProjects.map((project) => employeeCountByProject[String(project.project_id)] || 0);
+
+    return { labels, totalData, employeeData };
 };
 
 /*isValidDateInput
@@ -472,14 +556,42 @@ exports.getEmployeePage = async (request, response, next) => {
                 Employee.fetchById(employeeId),
                 activityPromise,
                 Project.getProjectByEmployeeId(employeeId),
-                getLatestReport(employeeId, currentEmployeeId)
+                getLatestReport(employeeId, currentEmployeeId),
+                Highlight.fetchByEmployee(employeeId),
+                Goal.fetchByResponsibleEmployee(employeeId),
             ])
                 .then(([
                     [team],
                     [info],
                     [activities],
                     [employeeProjects],
-                    latestReport
+                    latestReport,
+                    [highlights],
+                    [goalRows],
+                ]) => {
+                    const projectIds = employeeProjects.map((project) => project.project_id);
+                    return Promise.all([
+                        Promise.resolve([team]),
+                        Promise.resolve([info]),
+                        Promise.resolve([activities]),
+                        Promise.resolve([employeeProjects]),
+                        Promise.resolve(latestReport),
+                        Promise.resolve([highlights]),
+                        Promise.resolve([goalRows]),
+                        Achievement.countByProjects(projectIds),
+                        Achievement.countByEmployeeAndProjects(employeeId, projectIds),
+                    ]);
+                })
+                .then(([
+                    [team],
+                    [info],
+                    [activities],
+                    [employeeProjects],
+                    latestReport,
+                    [highlights],
+                    [goalRows],
+                    [projectTotals],
+                    [employeeTotals],
                 ]) => {
                     if (!info.length) {
                         return renderNotFound(request, response);
@@ -533,6 +645,28 @@ exports.getEmployeePage = async (request, response, next) => {
                         projects: [],
                     };
 
+                    const projectOptions = [
+                        { id: 'all', name: 'All projects' },
+                        ...employeeProjects.map((project) => ({
+                            id: project.project_id,
+                            name: project.name || 'Unnamed project',
+                        })),
+                    ];
+
+                    const projectGoalStats = {
+                        all: buildGoalStatusStats(goalRows),
+                    };
+
+                    employeeProjects.forEach((project) => {
+                        const goalsForProject = goalRows.filter((goal) => String(goal.project_id) === String(project.project_id));
+                        projectGoalStats[project.project_id] = buildGoalStatusStats(goalsForProject);
+                    });
+
+                    const achievementChartData = buildAchievementChartData(employeeProjects, projectTotals, employeeTotals);
+
+                    // Process highlights for line chart
+                    const highlightChartData = processHighlightsForChart(highlights);
+
                     return response.render('pages/employeeDetails', {
                         csrfToken: request.csrfToken(),
                         isLoggedIn: request.session.isLoggedIn || '',
@@ -552,6 +686,10 @@ exports.getEmployeePage = async (request, response, next) => {
                         reportSubjects,
                         latestReport:latestReport,
                         quickReport: '',
+                        highlightChartData,
+                        achievementChartData,
+                        projectOptions,
+                        projectGoalStats,
                     });
                 })
                 .catch((error) => {

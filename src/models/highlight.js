@@ -99,6 +99,25 @@ module.exports = class Highlight {
         return db.execute('DELETE FROM highlight WHERE highlight_id = ?', [highlight_id]);
     }
 
+    /*fetchByEmployee(employee_id)
+    Function responsible for reading all highlights created by an employee, ordered by creation date.*/
+
+    static fetchByEmployee(employee_id) {
+        return db.execute(
+            `SELECT
+                highlight_id,
+                employee_id,
+                project_id,
+                title,
+                content,
+                created_at
+            FROM highlight
+            WHERE employee_id = ?
+            ORDER BY created_at DESC`,
+            [employee_id],
+        );
+    }
+
     /**/
 
         static getProjectHighlights(project_ids, start_date, end_date){

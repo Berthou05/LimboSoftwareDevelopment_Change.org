@@ -37,6 +37,37 @@ module.exports = class Achievement {
         );
     }
 
+    static countByProjects(project_ids) {
+        if (!project_ids.length) {
+            return Promise.resolve([[]]);
+        }
+
+        const placeholders = project_ids.map(() => '?').join(',');
+        return db.execute(
+            `SELECT project_id, COUNT(*) AS total_count
+            FROM achievement
+            WHERE project_id IN (${placeholders})
+            GROUP BY project_id;`,
+            project_ids,
+        );
+    }
+
+    static countByEmployeeAndProjects(employee_responsible_id, project_ids) {
+        if (!project_ids.length) {
+            return Promise.resolve([[]]);
+        }
+
+        const placeholders = project_ids.map(() => '?').join(',');
+        return db.execute(
+            `SELECT project_id, COUNT(*) AS employee_count
+            FROM achievement
+            WHERE employee_responsible_id = ?
+                AND project_id IN (${placeholders})
+            GROUP BY project_id;`,
+            [employee_responsible_id, ...project_ids],
+        );
+    }
+
     /*create(project_id, employee_responsible_id, title, description, achievement_date, evidence_link)
     Function responsible for creating a new achievement for a project from the add popup.*/
 

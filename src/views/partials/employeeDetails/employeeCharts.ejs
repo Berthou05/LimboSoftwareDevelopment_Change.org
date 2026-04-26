@@ -1,0 +1,201 @@
+<section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+    <div class="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="font-heading text-xl font-semibold text-brand-text">Employee Insights</h2>
+            <p class="text-sm text-brand-text/60">Quick visual overview of recent performance and engagement.</p>
+        </div>
+    </div>
+
+    <div class="grid gap-4 xl:grid-cols-3">
+        <div class="rounded-3xl border border-brand-secondary bg-brand-bg p-4 shadow-sm">
+            <div class="mb-3">
+                <span class="text-sm font-semibold text-brand-text">Achievements by project</span>
+            </div>
+            <div class="h-64">
+                <canvas id="employeeBarChart" aria-label="Achievement counts per project bar chart" role="img"></canvas>
+            </div>
+        </div>
+
+        <div class="rounded-3xl border border-brand-secondary bg-brand-bg p-4 shadow-sm">
+            <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <span class="text-sm font-semibold text-brand-text">Goal status</span>
+                </div>
+                <div class="min-w-[12rem]">
+                    <label for="goalProjectSelect" class="sr-only">Choose project</label>
+                    <select
+                        id="goalProjectSelect"
+                        class="w-full rounded-xl border border-brand-secondary bg-white px-3 py-2 text-sm text-brand-text outline-none ring-brand-primary/30 focus:ring"
+                    >
+                        <% (projectOptions || []).forEach((project) => { %>
+                            <option value="<%= project.id %>"><%= project.name %></option>
+                        <% }) %>
+                    </select>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="employeePieChart" aria-label="Goal status pie chart" role="img"></canvas>
+            </div>
+        </div>
+
+        <div class="rounded-3xl border border-brand-secondary bg-brand-bg p-4 shadow-sm">
+            <div class="mb-3">
+                <span class="text-sm font-semibold text-brand-text">Highlights over time</span>
+            </div>
+            <div class="h-64">
+                <canvas id="employeeLineChart" aria-label="Performance trend line chart" role="img"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const employeeBarChart = document.getElementById('employeeBarChart');
+        const employeePieChart = document.getElementById('employeePieChart');
+        const employeeLineChart = document.getElementById('employeeLineChart');
+        const achievementChartData = <%- JSON.stringify(achievementChartData || { labels: [], totalData: [], employeeData: [] }) %>;
+
+        const projectLabels = achievementChartData.labels.length > 0 ? achievementChartData.labels : ['No projects'];
+        const compactProjectLabels = projectLabels.map((label) => {
+            const maxLength = 16;
+            return label.length > maxLength ? `${label.slice(0, maxLength).trim()}…` : label;
+        });
+
+        if (employeeBarChart) {
+            new Chart(employeeBarChart, {
+                type: 'bar',
+                data: {
+                    labels: compactProjectLabels,
+                    datasets: [
+                        {
+                            label: 'Total achievements',
+                            data: achievementChartData.totalData.length > 0 ? achievementChartData.totalData : [0],
+                            backgroundColor: '#4F46E5',
+                            borderRadius: 8,
+                        },
+                        {
+                            label: 'Employee achievements',
+                            data: achievementChartData.employeeData.length > 0 ? achievementChartData.employeeData : [0],
+                            backgroundColor: '#0EA5E9',
+                            borderRadius: 8,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 10, padding: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const index = items[0].dataIndex;
+                                    return projectLabels[index] || '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: {
+                                maxRotation: 0,
+                                minRotation: 0,
+                                callback: (value) => value,
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            stacked: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        const projectGoalStats = <%- JSON.stringify(projectGoalStats || {}) %>;
+        const employeeGoalProjectSelect = document.getElementById('goalProjectSelect');
+
+        const makePieData = (stats) => ({
+            labels: stats.labels || ['No goals'],
+            datasets: [{
+                data: stats.data || [0],
+                backgroundColor: ['#4F46E5', '#0EA5E9', '#F59E0B', '#22C55E', '#A855F7'],
+            }]
+        });
+
+        const goalPieOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 10, padding: 16 }
+                }
+            }
+        };
+
+        let goalStatusChart = null;
+
+        if (employeePieChart) {
+            const defaultStats = projectGoalStats.all || { labels: ['No goals'], data: [0] };
+            goalStatusChart = new Chart(employeePieChart, {
+                type: 'pie',
+                data: makePieData(defaultStats),
+                options: goalPieOptions,
+            });
+        }
+
+        if (employeeGoalProjectSelect && goalStatusChart) {
+            employeeGoalProjectSelect.addEventListener('change', (event) => {
+                const selectedProjectId = event.target.value || 'all';
+                const selectedStats = projectGoalStats[selectedProjectId] || projectGoalStats.all || { labels: ['No goals'], data: [0] };
+                goalStatusChart.data = makePieData(selectedStats);
+                goalStatusChart.update();
+            });
+        }
+
+        if (employeeLineChart) {
+            const highlightData = <%- JSON.stringify(highlightChartData || { labels: [], data: [] }) %>;
+
+            new Chart(employeeLineChart, {
+                type: 'line',
+                data: {
+                    labels: highlightData.labels.length > 0 ? highlightData.labels : ['No data'],
+                    datasets: [{
+                        label: 'Highlights created',
+                        data: highlightData.data.length > 0 ? highlightData.data : [0],
+                        borderColor: '#4F46E5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.15)',
+                        tension: 0.35,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4F46E5'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</section>
