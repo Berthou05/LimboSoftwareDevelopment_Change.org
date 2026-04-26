@@ -66,7 +66,7 @@
                     <%= section.emptyMessage %>
                 </p>
             <% } else { %>
-                <div class="grid gap-3 md:grid-flow-col md:grid-rows-3 md:auto-cols-fr">
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <% section.reports.forEach((report) => { %>
                         <a
                             href="<%= report.url %>"
