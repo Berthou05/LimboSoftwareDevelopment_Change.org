@@ -337,16 +337,10 @@ const initializeTeamImageEditor = function initializeTeamImageEditor() {
                 filenameLabel.textContent = 'No file selected';
             }
 
-            preview.src = defaultImage;
-
-            if (defaultImage) {
-                preview.classList.remove('hidden');
-                fallback?.classList.add('hidden');
-            } else {
-                preview.classList.add('hidden');
-                fallback?.classList.remove('hidden');
-            }
-
+            preview.src = '';            
+            preview.classList.add('hidden');
+            fallback?.classList.remove('hidden');
+            
             closeImageMenu();
         });
     }
