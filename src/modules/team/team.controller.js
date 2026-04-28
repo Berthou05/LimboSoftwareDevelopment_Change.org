@@ -8,6 +8,7 @@ const Team = require('../../models/team');
 const Employee = require('../../models/employee');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
 const Activity = require('../../models/activity');
+const Blocker = require('../../models/blocker');
 const Project = require('../../models/project');
 const Achievement = require('../../models/achievement');
 const Goal = require('../../models/goal');
@@ -27,6 +28,38 @@ const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
 const TEAM_MEMBER_ROLES = [
     EmployeeTeamMembership.EmployeeRole.LEAD,
     EmployeeTeamMembership.EmployeeRole.EMPLOYEE,
+];
+const BLOCKER_CATEGORY_LEGEND = [
+    {
+        key: Blocker.BlockerCategory.TECHNICAL,
+        label: 'Technical',
+        description: 'Code, systems, or infrastructure issues blocking implementation.',
+    },
+    {
+        key: Blocker.BlockerCategory.DEPENDENCIES,
+        label: 'Dependencies',
+        description: 'Work blocked while waiting on another team, person, approval, or external input.',
+    },
+    {
+        key: Blocker.BlockerCategory.COMMUNICATION,
+        label: 'Communication',
+        description: 'Misalignment, delayed responses, or missing coordination between people or teams.',
+    },
+    {
+        key: Blocker.BlockerCategory.PROCESS,
+        label: 'Process',
+        description: 'Internal workflow, approvals, handoffs, or bureaucracy slowing execution.',
+    },
+    {
+        key: Blocker.BlockerCategory.CAPACITY,
+        label: 'Capacity',
+        description: 'Limited time, bandwidth, focus, or competing priorities blocking progress.',
+    },
+    {
+        key: Blocker.BlockerCategory.PERSONAL,
+        label: 'Personal',
+        description: 'Personal circumstances affecting availability or focus.',
+    },
 ];
 
 exports.ensureTeamExists = (request, response, next) => {
@@ -377,6 +410,52 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     };
 };
 
+const resolveBlockerFilter = function resolveBlockerFilter(query = {}) {
+    const preset = typeof query.blockerPreset === 'string' ? query.blockerPreset.trim() : '';
+    const normalizedPreset = preset === 'week' || preset === 'quarter' ? preset : 'month';
+    const days = normalizedPreset === 'week'
+        ? 7
+        : normalizedPreset === 'month'
+            ? 30
+            : 90;
+    const rangeStart = new Date();
+    const rangeEnd = new Date();
+
+    rangeStart.setHours(0, 0, 0, 0);
+    rangeEnd.setHours(23, 59, 59, 999);
+    rangeStart.setDate(rangeStart.getDate() - (days - 1));
+
+    return {
+        preset: normalizedPreset,
+        rangeStart,
+        rangeEnd,
+    };
+};
+
+const buildBlockerSummary = function buildBlockerSummary(rows = []) {
+    const countsByCategory = new Map(
+        rows.map((row) => [
+            String(row.category || '').trim().toUpperCase(),
+            Number(row.total || 0),
+        ]),
+    );
+    const items = BLOCKER_CATEGORY_LEGEND.map((category) => ({
+        ...category,
+        count: countsByCategory.get(category.key) || 0,
+    }));
+    const maxCount = items.reduce((highestCount, item) => Math.max(highestCount, item.count), 0);
+    const totalCount = items.reduce((sum, item) => sum + item.count, 0);
+
+    return {
+        totalCount,
+        hasData: totalCount > 0,
+        items: items.map((item) => ({
+            ...item,
+            barHeight: maxCount > 0 ? `${Math.max((item.count / maxCount) * 100, item.count > 0 ? 12 : 0)}%` : '0%',
+        })),
+    };
+};
+
 /* respondMembershipRequest(request,response,teamId,statusCode,payload)
 Function responsible for regulating and controlling error handling*/
 
@@ -646,10 +725,13 @@ exports.getTeamPage = (request, response, next) => {
     const teamId = request.params.team_id;
     const wantsActivityPartial = (request.get('Accept') || '').includes('application/json')
         && request.query.ajax === 'activity';
+    const wantsBlockerPartial = (request.get('Accept') || '').includes('application/json')
+        && request.query.ajax === 'blocker';
     const privilegeMap = request.session?.user?.privilege || {};
     const canAddTeamMembers = Boolean(privilegeMap['TEAM-06-02']);
     const canManageTeamMembers = Boolean(privilegeMap['TEAM-07-02']);
     const activityFilter = resolveActivityFilter(request.query);
+    const blockerFilter = resolveBlockerFilter(request.query);
     const activityPromise = activityFilter.error
         ? Promise.resolve({
             rows: [],
@@ -669,19 +751,99 @@ exports.getTeamPage = (request, response, next) => {
                     error: 'The activity log could not be loaded. Please try again.',
                 };
             });
+    const blockerPromise = Blocker.getTeamCategoryCounts(
+            teamId,
+            blockerFilter.rangeStart,
+            blockerFilter.rangeEnd,
+        )
+        .then(([rows]) => ({
+            rows,
+            error: '',
+        }))
+        .catch((error) => {
+            console.log(error);
+            return {
+                rows: [],
+                error: 'The blockers summary could not be loaded. Please try again.',
+            };
+        });
+
+    if (wantsBlockerPartial) {
+        return Promise.all([
+            Team.findById(teamId),
+            blockerPromise,
+        ])
+            .then(([[teamInfo], blockerResponse]) => {
+                const teamRow = teamInfo[0];
+
+                if (!teamRow) {
+                    return response.status(404).json({
+                        error: 'Team not found.',
+                    });
+                }
+
+                const team = {
+                    id: teamRow.team_id,
+                    name: teamRow.name,
+                };
+                const blockerRows = blockerResponse.rows || [];
+                const blockerError = blockerResponse.error || '';
+                const blockerSummary = buildBlockerSummary(blockerRows);
+
+                return response.render('partials/teamDirectory/teamBlockers', {
+                    layout: false,
+                    team,
+                    activityFilter,
+                    blockerFilter,
+                    blockerSummary,
+                    blockerError,
+                }, (renderError, html) => {
+                    if (renderError) {
+                        console.log(renderError);
+                        return response.status(500).json({
+                            error: 'The blockers summary could not be loaded. Please try again.',
+                        });
+                    }
+
+                    const nextUrl = new URL(`/teams/${teamId}`, `${request.protocol}://${request.get('host')}`);
+
+                    if (activityFilter?.preset) {
+                        nextUrl.searchParams.set('activityPreset', activityFilter.preset);
+                    }
+
+                    if (blockerFilter?.preset) {
+                        nextUrl.searchParams.set('blockerPreset', blockerFilter.preset);
+                    }
+
+                    return response.json({
+                        html,
+                        url: `${nextUrl.pathname}${nextUrl.search}`,
+                    });
+                });
+            })
+            .catch((error) => {
+                console.log(error);
+                return response.status(500).json({
+                    error: 'The blockers summary could not be loaded. Please try again.',
+                });
+            });
+    }
 
     Promise.all([
         Team.findById(teamId),
         Employee.getEmployeeByTeamId(teamId),
         activityPromise,
+        blockerPromise,
         Project.getProjectsByTeamId(teamId),
         Employee.fetchAll(),
         getLatestReport(teamId, request.session.employeeId)
     ])
-        .then(async ([[teamInfo], [teamMembers], activityResponse, [teamProjects], [allEmployees], latestReport]) => {
+        .then(async ([[teamInfo], [teamMembers], activityResponse, blockerResponse, [teamProjects], [allEmployees], latestReport]) => {
             const teamRow = teamInfo[0];
             const memberActivities = activityResponse.rows || [];
             const activityError = activityResponse.error || '';
+            const blockerRows = blockerResponse.rows || [];
+            const blockerError = blockerResponse.error || '';
 
             if (!teamRow) {
                 return renderNotFound(request, response);
@@ -765,7 +927,9 @@ exports.getTeamPage = (request, response, next) => {
                     initials: getInitials(employee.full_name, '?'),
                 }));
             const activitySections = buildActivitySections(memberActivities);
+            const blockerSummary = buildBlockerSummary(blockerRows);
             const normalizedActivityError = activityFilter.error || activityError || '';
+            const normalizedBlockerError = blockerError || '';
 
             if (wantsActivityPartial) {
                 return response.render('partials/teamDirectory/teamActivity', {
@@ -824,6 +988,9 @@ exports.getTeamPage = (request, response, next) => {
                 activitySections,
                 activityFilter,
                 activityError: normalizedActivityError,
+                blockerFilter,
+                blockerSummary,
+                blockerError: normalizedBlockerError,
                 availableEmployees,
                 canAddTeamMembers,
                 canManageTeamMembers,
