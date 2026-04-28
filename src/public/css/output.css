@@ -31,7 +31,6 @@
     --color-amber-100: oklch(96.2% 0.059 95.617);
     --color-amber-200: oklch(92.4% 0.12 95.746);
     --color-amber-300: oklch(87.9% 0.169 91.605);
-    --color-amber-500: oklch(76.9% 0.188 70.08);
     --color-amber-600: oklch(66.6% 0.179 58.318);
     --color-amber-700: oklch(55.5% 0.163 48.998);
     --color-amber-800: oklch(47.3% 0.137 46.201);
@@ -66,7 +65,6 @@
     --color-emerald-100: oklch(95% 0.052 163.051);
     --color-emerald-200: oklch(90.5% 0.093 164.15);
     --color-emerald-300: oklch(84.5% 0.143 164.978);
-    --color-emerald-500: oklch(69.6% 0.17 162.48);
     --color-emerald-600: oklch(59.6% 0.145 163.225);
     --color-emerald-700: oklch(50.8% 0.118 165.612);
     --color-emerald-800: oklch(43.2% 0.095 166.913);
@@ -93,7 +91,6 @@
     --color-cyan-900: oklch(39.8% 0.07 227.392);
     --color-cyan-950: oklch(30.2% 0.056 229.695);
     --color-sky-50: oklch(97.7% 0.013 236.62);
-    --color-sky-100: oklch(95.1% 0.026 236.824);
     --color-sky-200: oklch(90.1% 0.058 230.902);
     --color-sky-400: oklch(74.6% 0.16 232.661);
     --color-sky-500: oklch(68.5% 0.169 237.323);
@@ -122,11 +119,8 @@
     --color-indigo-900: oklch(35.9% 0.144 278.697);
     --color-indigo-950: oklch(25.7% 0.09 281.288);
     --color-violet-100: oklch(94.3% 0.029 294.588);
-<<<<<<< HEAD
+    --color-violet-200: oklch(89.4% 0.057 293.283);
     --color-violet-300: oklch(81.1% 0.111 293.571);
-=======
-    --color-violet-500: oklch(60.6% 0.25 292.717);
->>>>>>> 1c474ba83ced5feadbdc90c09b0ef65c036fb348
     --color-violet-700: oklch(49.1% 0.27 292.581);
     --color-purple-50: oklch(97.7% 0.014 308.299);
     --color-purple-100: oklch(94.6% 0.033 307.174);
@@ -232,7 +226,6 @@
     --container-3xl: 48rem;
     --container-4xl: 56rem;
     --container-5xl: 64rem;
-    --container-6xl: 72rem;
     --container-7xl: 80rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
@@ -300,9 +293,7 @@
     --spacing-8xl: 90rem;
     --leading-9: 36px;
     --leading-6: 24px;
-    --leading-4: 16px;
     --leading-none: 1px;
-    --leading-5: 20px;
     --radius-base: 12px;
     --color-body: var(--color-gray-600);
     --color-heading: var(--color-gray-900);
@@ -2051,9 +2042,6 @@
   .border-amber-300 {
     border-color: var(--color-amber-300);
   }
-  .border-blue-300 {
-    border-color: var(--color-blue-300);
-  }
   .border-brand {
     border-color: var(--color-brand);
   }
@@ -2123,8 +2111,8 @@
   .border-transparent {
     border-color: transparent;
   }
-  .border-violet-300 {
-    border-color: var(--color-violet-300);
+  .border-violet-200 {
+    border-color: var(--color-violet-200);
   }
   .apexcharts-active {
     .apexcharts-canvas .apexcharts-tooltip-series-group& .apexcharts-tooltip-y-group {
@@ -2253,8 +2241,8 @@
       background-color: color-mix(in oklab, var(--color-brand-title) 20%, transparent);
     }
   }
-  .bg-cyan-100 {
-    background-color: var(--color-cyan-100);
+  .bg-cyan-200 {
+    background-color: var(--color-cyan-200);
   }
   .bg-dark-backdrop\/70 {
     background-color: color-mix(in srgb, oklch(13% 0.028 261.692) 70%, transparent);
@@ -2783,9 +2771,6 @@
   }
   .text-brand-primary {
     color: var(--color-brand-primary);
-  }
-  .text-brand-secondary {
-    color: var(--color-brand-secondary);
   }
   .text-brand-text {
     color: var(--color-brand-text);
@@ -3643,21 +3628,6 @@
   .md\:col-span-1 {
     @media (width >= 48rem) {
       grid-column: span 1 / span 1;
-    }
-  }
-  .md\:ml-auto {
-    @media (width >= 48rem) {
-      margin-left: auto;
-    }
-  }
-  .md\:w-\[20rem\] {
-    @media (width >= 48rem) {
-      width: 20rem;
-    }
-  }
-  .md\:max-w-none {
-    @media (width >= 48rem) {
-      max-width: none;
     }
   }
   .md\:grid-cols-2 {
