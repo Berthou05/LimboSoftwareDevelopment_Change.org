@@ -122,7 +122,11 @@
     --color-indigo-900: oklch(35.9% 0.144 278.697);
     --color-indigo-950: oklch(25.7% 0.09 281.288);
     --color-violet-100: oklch(94.3% 0.029 294.588);
+<<<<<<< HEAD
+    --color-violet-300: oklch(81.1% 0.111 293.571);
+=======
     --color-violet-500: oklch(60.6% 0.25 292.717);
+>>>>>>> 1c474ba83ced5feadbdc90c09b0ef65c036fb348
     --color-violet-700: oklch(49.1% 0.27 292.581);
     --color-purple-50: oklch(97.7% 0.014 308.299);
     --color-purple-100: oklch(94.6% 0.033 307.174);
@@ -2038,6 +2042,9 @@
       stroke: var(--color-default) !important;
     }
   }
+  .border-\[\#8eeec9\] {
+    border-color: #8eeec9;
+  }
   .border-amber-200 {
     border-color: var(--color-amber-200);
   }
@@ -2070,6 +2077,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-brand-secondary) 70%, transparent);
     }
+  }
+  .border-cyan-300 {
+    border-color: var(--color-cyan-300);
   }
   .border-default-medium {
     border-color: var(--color-default-medium);
@@ -2113,6 +2123,9 @@
   .border-transparent {
     border-color: transparent;
   }
+  .border-violet-300 {
+    border-color: var(--color-violet-300);
+  }
   .apexcharts-active {
     .apexcharts-canvas .apexcharts-tooltip-series-group& .apexcharts-tooltip-y-group {
       padding: 0 !important;
@@ -2143,6 +2156,9 @@
     .dark & {
       background-color: var(--color-neutral-secondary-medium);
     }
+  }
+  .bg-\[\#e8fff4\] {
+    background-color: #e8fff4;
   }
   .bg-amber-50 {
     background-color: var(--color-amber-50);
@@ -2237,6 +2253,9 @@
       background-color: color-mix(in oklab, var(--color-brand-title) 20%, transparent);
     }
   }
+  .bg-cyan-100 {
+    background-color: var(--color-cyan-100);
+  }
   .bg-dark-backdrop\/70 {
     background-color: color-mix(in srgb, oklch(13% 0.028 261.692) 70%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2296,6 +2315,9 @@
   }
   .bg-transparent {
     background-color: transparent;
+  }
+  .bg-violet-100 {
+    background-color: var(--color-violet-100);
   }
   .bg-white {
     background-color: var(--color-white);
@@ -2732,6 +2754,9 @@
       color: var(--color-heading);
     }
   }
+  .text-\[\#087a55\] {
+    color: #087a55;
+  }
   .text-amber-600 {
     color: var(--color-amber-600);
   }
@@ -2746,9 +2771,6 @@
   }
   .text-blue-600 {
     color: var(--color-blue-600);
-  }
-  .text-blue-700 {
-    color: var(--color-blue-700);
   }
   .text-body {
     color: var(--color-body);
@@ -2828,6 +2850,9 @@
       color: color-mix(in oklab, var(--color-brand-text) 90%, transparent);
     }
   }
+  .text-cyan-700 {
+    color: var(--color-cyan-700);
+  }
   .text-emerald-700 {
     color: var(--color-emerald-700);
   }
@@ -2881,6 +2906,9 @@
   }
   .text-slate-700 {
     color: var(--color-slate-700);
+  }
+  .text-violet-700 {
+    color: var(--color-violet-700);
   }
   .text-white {
     color: var(--color-white);
