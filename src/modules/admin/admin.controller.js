@@ -48,42 +48,39 @@ const getUploadedAccountImage = (request) => {
 };
 
 /*buildCreateAccountFormData
-Auxiliar function responsible for the normalization of the data obtained
-in the account creation form.*/
+Function responsible for keeping safe default values when the create
+account form is rendered after a failed submission.*/
 
 const buildCreateAccountFormData = (formData = {}) => ({
     names: formData.names || '',
     lastnames: formData.lastnames || '',
     email: formData.email || '',
-    password: formData.password || '',
-    confirmPassword: formData.confirmPassword || '',
     slackUsername: formData.slackUsername || '',
     roleId: formData.roleId || '',
-    image: formData.image || '',
+    image: formData.image || DEFAULT_AVATAR,
 });
 
 /*parseEmployeeNameParts
-Function responsible for the creation of full_name for
-the employee creation and returining names and lastnames
-trimmed*/
+Function responsible for keeping employee names normalized before
+employee/account creation.*/
 
 const parseEmployeeNameParts = (names, lastnames) => {
-    const trimmedNames = String(names || '').trim();
-    const trimmedLastnames = String(lastnames || '').trim();
+    const normalizedNames = names.trim().replace(/\s+/g, ' ');
+    const normalizedLastnames = lastnames.trim().replace(/\s+/g, ' ');
 
     return {
-        fullName: [trimmedNames, trimmedLastnames].join(' ').trim(),
-        names: trimmedNames,
-        lastnames: trimmedLastnames,
+        names: normalizedNames,
+        lastnames: normalizedLastnames,
+        fullName: `${normalizedNames} ${normalizedLastnames}`.trim(),
     };
 };
 
 /*getBaseUrl
-Function responsible for the obtention of the BaseUrl
-for the email validation in the account creation.*/
+Function responsible for building links used in transactional emails.*/
 
-const getBaseUrl = (request) =>
-    `${request.protocol}://${request.get('host')}`;
+const getBaseUrl = (request) => `${request.protocol}://${request.get('host')}`;
+
+const ACCOUNTS_PER_PAGE = 8;
 
 //------------------- Main Functions --------------------
 
@@ -94,19 +91,30 @@ page, making data obtention, normalization and render.*/
 exports.getAccounts = (request, response, next) => {
     const roleFilter = request.query.role || 'all';
     const statusFilter = request.query.status || 'active';
+    const requestedPage = parseInt(request.query.page, 10);
+    const currentPage = requestedPage > 0 ? requestedPage : 1;
+    const offset = (currentPage - 1) * ACCOUNTS_PER_PAGE;
 
     Promise.all([
-        Account.fetchAll(roleFilter, statusFilter),
-        Account.countAll(),
+        Account.fetchAll(roleFilter, statusFilter, ACCOUNTS_PER_PAGE, offset),
+        Account.countAll(roleFilter, statusFilter),
         Role.fetchAll(),
     ])
         .then(([[accounts], [totalAccounts], [roles]]) => {
+            const total = totalAccounts[0].count;
+            const totalPages = Math.max(Math.ceil(total / ACCOUNTS_PER_PAGE), 1);
+
+            // Keep manually entered page numbers inside the available result range.
+            if(currentPage > totalPages){
+                return response.redirect(`/admin/accounts?role=${encodeURIComponent(roleFilter)}&status=${encodeURIComponent(statusFilter)}&page=${totalPages}`);
+            }
+
             return response.render('pages/admin-accounts', {
                 csrfToken: request.csrfToken(),
                 pageTitle: 'Accounts Administration',
                 pageSubtitle:
                     'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
-                totalAccounts: totalAccounts[0].count,
+                totalAccounts: total,
                 accounts: accounts.map((account) => ({
                     id: account.account_id,
                     employee: {
@@ -122,8 +130,10 @@ exports.getAccounts = (request, response, next) => {
                     id: role.role_id,
                     name: role.name,
                 })),
-                statusFilter: 'active',
-                roleFilter: 'all',
+                statusFilter,
+                roleFilter,
+                currentPage,
+                totalPages,
             });
         })
         .catch((error) => {

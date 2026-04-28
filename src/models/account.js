@@ -103,7 +103,7 @@ module.exports = class Account {
 
     /*fetchAll()
     Function responsible for returning all accounts of the application.*/
-    static fetchAll(role = null, status = null){
+    static fetchAll(role = null, status = null, limit = null, offset = null){
         const conditions = ['WHERE A.account_id=A.account_id'];
         const parameters = [];
 
@@ -114,7 +114,15 @@ module.exports = class Account {
 
         if(status && status !== 'all'){
             conditions.push('A.status=?');
-            parameters.push(status);
+            parameters.push(status.toUpperCase());
+        }
+
+        const pagination = Number.isInteger(limit) && Number.isInteger(offset)
+            ? 'LIMIT ? OFFSET ?'
+            : '';
+
+        if(pagination){
+            parameters.push(limit, offset);
         }
 
         return db.execute(`
@@ -123,14 +131,34 @@ module.exports = class Account {
             INNER JOIN accountrole AS AR ON AR.account_id=A.account_id
             INNER JOIN role as R ON R.role_id=AR.role_id
             ${conditions.join(' AND ')}
-            ORDER BY E.full_name ASC;`,
+            ORDER BY E.full_name ASC
+            ${pagination};`,
             parameters);
     }
 
     /*countAll()
     Function responsible for counting all the accounts of the table*/
-    static countAll(){
-        return db.execute('SELECT COUNT(*) AS count FROM account;');
+    static countAll(role = null, status = null){
+        const conditions = ['WHERE A.account_id=A.account_id'];
+        const parameters = [];
+
+        if(role && role !== 'all'){
+            conditions.push('R.name=?');
+            parameters.push(role);
+        }
+
+        if(status && status !== 'all'){
+            conditions.push('A.status=?');
+            parameters.push(status.toUpperCase());
+        }
+
+        return db.execute(`
+            SELECT COUNT(DISTINCT A.account_id) AS count
+            FROM account AS A
+            INNER JOIN accountrole AS AR ON AR.account_id=A.account_id
+            INNER JOIN role as R ON R.role_id=AR.role_id
+            ${conditions.join(' AND ')};`,
+            parameters);
     }
 
     /*updateStatus(account_id)
