@@ -7,9 +7,9 @@
     const startDateFilter = safeFilters.startDate || '';
     const endDateFilter = safeFilters.endDate || '';
     const reportTypeStyles = {
-        EMPLOYEE: 'text-blue-700',
-        PROJECT: 'text-emerald-700',
-        TEAM: 'text-rose-700',
+        EMPLOYEE: 'border-blue-300 bg-blue-100 text-blue-700',
+        PROJECT: 'border-green-300 bg-green-100 text-green-700',
+        TEAM: 'border-red-300 bg-red-100 text-red-700',
     };
 
     const formatHistoryDate = function formatHistoryDate(value, options) {
@@ -97,17 +97,14 @@
                         </div>
                         <div class="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-brand-secondary pt-3">
                             <div data-date-shortcuts class="flex flex-wrap gap-2"></div>
-                            <button type="button" data-date-apply class="app-cta-button app-cta-button--nav px-4 py-1.5 text-sm">Apply</button>
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" data-date-clear class="app-cta-button app-cta-button--neutral px-4 py-1.5 text-sm">Clear dates</button>
+                                <button type="button" data-date-apply class="app-cta-button app-cta-button--nav px-4 py-1.5 text-sm">Apply</button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    class="app-breadcrumb app-breadcrumb--active"
-                >
-                    Filter
-                </button>
                 <a
                     href="/reports"
                     class="app-breadcrumb app-breadcrumb--interactive"
@@ -139,7 +136,7 @@
                 <% const reportType = String(report.type || '').toUpperCase(); %>
                 <div class="grid min-w-[860px] grid-cols-[0.9fr_1.8fr_1.3fr_1fr_0.7fr] items-center gap-2 rounded-xl border border-brand-secondary px-3 py-2 text-sm">
                     <div>
-                        <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold <%= reportTypeStyles[reportType] || 'text-brand-text/70' %>">
+                        <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <%= reportTypeStyles[reportType] || 'border-brand-secondary bg-white text-brand-text/70' %>">
                             <%= formatReportType(report.type) %>
                         </span>
                     </div>
@@ -168,13 +165,23 @@
 
 <script src="/js/dateRangePicker.js"></script>
 <script>
-    (function filterReportHistorySubjects() {
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('[data-report-history-filter]');
         const typeSelect = document.querySelector('[data-report-history-type]');
         const subjectSelect = document.querySelector('[data-report-history-subject]');
+        const dateApplyButton = document.querySelector('[data-date-apply]');
+        const dateClearButton = document.querySelector('[data-date-clear]');
+        const startInput = document.querySelector('[data-start-value]');
+        const endInput = document.querySelector('[data-end-value]');
+        const dateLabel = document.querySelector('[data-start-display]');
 
-        if (!typeSelect || !subjectSelect) {
+        if (!form || !typeSelect || !subjectSelect) {
             return;
         }
+
+        const submitFilters = function submitFilters() {
+            form.requestSubmit();
+        };
 
         const syncSubjects = function syncSubjects() {
             const selectedType = typeSelect.value;
@@ -190,7 +197,37 @@
             });
         };
 
-        typeSelect.addEventListener('change', syncSubjects);
+        typeSelect.addEventListener('change', () => {
+            syncSubjects();
+            submitFilters();
+        });
+
+        subjectSelect.addEventListener('change', submitFilters);
+
+        if (dateApplyButton) {
+            dateApplyButton.addEventListener('click', () => {
+                setTimeout(submitFilters, 0);
+            });
+        }
+
+        if (dateClearButton) {
+            dateClearButton.addEventListener('click', () => {
+                if (startInput) {
+                    startInput.value = '';
+                }
+
+                if (endInput) {
+                    endInput.value = '';
+                }
+
+                if (dateLabel) {
+                    dateLabel.textContent = 'Select Date Range';
+                }
+
+                submitFilters();
+            });
+        }
+
         syncSubjects();
-    })();
+    });
 </script>
