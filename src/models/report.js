@@ -137,6 +137,28 @@ module.exports = class Report {
         );
     }
 
+    static fetchHistorySubjectsByEmployee(generated_by_employee_id) {
+        return db.execute(
+            `SELECT DISTINCT
+                R.content_id,
+                R.content_type,
+                COALESCE(E.full_name, P.name, T.name, 'Unknown subject') AS subject_name
+            FROM report AS R
+            LEFT JOIN employee AS E
+                ON R.content_type = 'EMPLOYEE'
+                AND E.employee_id = R.content_id
+            LEFT JOIN project AS P
+                ON R.content_type = 'PROJECT'
+                AND P.project_id = R.content_id
+            LEFT JOIN team AS T
+                ON R.content_type = 'TEAM'
+                AND T.team_id = R.content_id
+            WHERE R.generated_by_employee_id = ?
+            ORDER BY subject_name ASC;`,
+            [generated_by_employee_id],
+        );
+    }
+
     static fetchLatestByProjectAndEmployee(project_id, employee_id, limit = '5') {
         return db.execute(
             `SELECT

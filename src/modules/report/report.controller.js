@@ -482,7 +482,10 @@ exports.getReportHistory = (request, response, next) => {
     const employeeId = request.session.employeeId || '';
     const filters = normalizeReportHistoryFilters(request.query);
 
-    return Report.fetchHistoryByEmployee(employeeId, filters).then(([reports]) => {
+    return Promise.all([
+        Report.fetchHistoryByEmployee(employeeId, filters),
+        Report.fetchHistorySubjectsByEmployee(employeeId),
+    ]).then(([[reports], [subjects]]) => {
         return response.render('pages/reportHistory', {
             csrfToken: request.csrfToken(),
             isLoggedIn: request.session.isLoggedIn || '',
@@ -490,6 +493,10 @@ exports.getReportHistory = (request, response, next) => {
             pageTitle: 'Report history',
             pageSubtitle: 'Your generated reports in one filtered table.',
             reports: buildReportHistoryCards(reports),
+            subjects: subjects.map((subject) => ({
+                name: subject.subject_name || 'Unknown subject',
+                type: subject.content_type || '',
+            })),
             filters,
         });
     }).catch((error) => {
