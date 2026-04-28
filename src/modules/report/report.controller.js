@@ -805,6 +805,6 @@ exports.generateReport = async (request, response, next)=>{
     })
     .catch((error)=>{
         console.log(error);
-        return respondWithError(500, 'Report object could not be stores successfully, Try again.',wantsJson, response, request);
+        return respondWithError(500, 'Report object could not be stored successfully, Try again.',wantsJson, response, request);
     })
 };
