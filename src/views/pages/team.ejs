@@ -56,6 +56,20 @@
       canAddTeamMembers: typeof canAddTeamMembers !== 'undefined' ? canAddTeamMembers : false,
       canManageTeamMembers: typeof canManageTeamMembers !== 'undefined' ? canManageTeamMembers : false
     }) %>
+
+    <%- include('../partials/teamDirectory/teamBlockers', {
+      team,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      blockerFilter: typeof blockerFilter !== 'undefined'
+        ? blockerFilter
+        : { preset: 'month' },
+      blockerSummary: typeof blockerSummary !== 'undefined'
+        ? blockerSummary
+        : { totalCount: 0, hasData: false, items: [] },
+      blockerError: typeof blockerError !== 'undefined' ? blockerError : ''
+    }) %>
     
   </section>
 </div>
@@ -113,3 +127,4 @@
 <script src="/js/teamDetails.js"></script>
 <script src="/js/dateRangePicker.js"></script>
 <script src="/js/activityFilters.js"></script>
+<script src="/js/blockerFilters.js?v=2"></script>

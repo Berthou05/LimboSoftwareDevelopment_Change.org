@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const Account = require('../../models/account');
 const Team = require('../../models/team');
 const Activity = require('../../models/activity');
+const Blocker = require('../../models/blocker');
 const DailyEntry = require('../../models/dailyentry');
 const Collaboration = require('../../models/collaboration');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
@@ -184,6 +185,29 @@ exports.submitFromSlack = async (request, response) => {
                 done,
                 projects: projectCandidates,
             });
+            const normalizedBlockers = String(blockers || '').trim();
+            const classifiedBlockers = !normalizedBlockers
+                ? []
+                : await aiWrapper.extractBlockers({
+                    blockers: normalizedBlockers,
+                });
+            for (const blocker of classifiedBlockers) {
+                const category = String(blocker?.category || '').trim();
+                const content = String(blocker?.content || '').trim();
+
+                if (!category || !content) {
+                    continue;
+                }
+
+                await Blocker.create(
+                    entryId,
+                    account.employee_id,
+                    team.team_id,
+                    category,
+                    content,
+                    entryDate,
+                );
+            }
 
             for (const activity of activities) {
                 const title = String(activity.title || '').trim();
