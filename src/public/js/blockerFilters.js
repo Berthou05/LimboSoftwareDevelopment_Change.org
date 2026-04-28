@@ -41,7 +41,6 @@ const initializeBlockerFilters = function initializeBlockerFilters() {
 
     const fetchBlockerPartial = async function fetchBlockerPartial(targetUrl, blockerContainer) {
         const requestUrl = new URL(targetUrl, window.location.origin);
-        const previousTop = blockerContainer.getBoundingClientRect().top;
 
         requestUrl.searchParams.set('ajax', 'blocker');
 
@@ -61,16 +60,11 @@ const initializeBlockerFilters = function initializeBlockerFilters() {
 
         nextContainer.innerHTML = payload.html.trim();
 
-        const replacement = nextContainer.firstElementChild;
-
-        if (!replacement) {
+        if (!nextContainer.firstElementChild) {
             throw new Error('Unable to load blockers right now.');
         }
 
-        blockerContainer.replaceWith(replacement);
-        const nextTop = replacement.getBoundingClientRect().top;
-
-        window.scrollBy(0, nextTop - previousTop);
+        blockerContainer.replaceWith(nextContainer.firstElementChild);
         window.history.replaceState({}, '', payload.url || requestUrl.pathname);
     };
 
@@ -89,10 +83,9 @@ const initializeBlockerFilters = function initializeBlockerFilters() {
 
         event.preventDefault();
 
-        fetchBlockerPartial(blockerLink.href, blockerContainer)
-            .catch(() => {
-                window.location.href = blockerLink.href;
-            });
+        fetchBlockerPartial(blockerLink.href, blockerContainer).catch(() => {
+            window.location.href = blockerLink.href;
+        });
     });
 
     document.addEventListener('mouseover', (event) => {
