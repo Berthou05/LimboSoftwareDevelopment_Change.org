@@ -1,0 +1,102 @@
+<div class="w-full rounded-2xl border border-brand-secondary bg-white p-2.5 shadow-panel md:ml-auto md:w-[20rem] md:max-w-none" data-blocker-ajax>
+    <% 
+        const teamPath = `/teams/${team?.id || ''}`;
+        const currentActivityPreset = activityFilter?.preset || 'week';
+        const blockerPresetHref = (preset) => `${teamPath}?activityPreset=${currentActivityPreset}&blockerPreset=${preset}`;
+        const blockerItems = blockerSummary?.items || [];
+        const blockerPalette = {
+            TECHNICAL: { accent: '#1d4ed8', text: '#1e3a8a', tooltip: '#ffffff' },
+            DEPENDENCIES: { accent: '#2563eb', text: '#1d4ed8', tooltip: '#ffffff' },
+            COMMUNICATION: { accent: '#0284c7', text: '#075985', tooltip: '#ffffff' },
+            PROCESS: { accent: '#0ea5e9', text: '#0c4a6e', tooltip: '#ffffff' },
+            CAPACITY: { accent: '#38bdf8', text: '#0369a1', tooltip: '#ffffff' },
+            PERSONAL: { accent: '#60a5fa', text: '#1d4ed8', tooltip: '#ffffff' },
+            DEFAULT: { accent: '#2563eb', text: '#1e3a8a', tooltip: '#ffffff' },
+        };
+        const blockerDisplayLabels = {
+            DEPENDENCIES: 'Dep.',
+            COMMUNICATION: 'Com.',
+        };
+        const getBlockerStyles = (item) => {
+            const paletteKey = String(item?.key || item?.label || '').trim().toUpperCase().replace(/\s+/g, '_');
+            const palette = blockerPalette[paletteKey] || blockerPalette.DEFAULT;
+
+            return {
+                accent: palette.accent,
+                text: palette.text,
+                tooltip: palette.tooltip,
+                displayLabel: blockerDisplayLabels[paletteKey] || item?.label || '',
+            };
+        };
+    %>
+
+    <div class="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+            <h3 class="font-heading text-sm font-semibold text-brand-text">Blockers</h3>
+            <p class="mt-0.5 text-[10px] text-brand-text/55">Hover a category to see its definition.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1">
+            <a href="<%= blockerPresetHref('week') %>" data-blocker-ajax-link class="app-breadcrumb <%= blockerFilter?.preset === 'week' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+                This week
+            </a>
+            <a href="<%= blockerPresetHref('month') %>" data-blocker-ajax-link class="app-breadcrumb <%= blockerFilter?.preset === 'month' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+                This month
+            </a>
+            <a href="<%= blockerPresetHref('quarter') %>" data-blocker-ajax-link class="app-breadcrumb <%= blockerFilter?.preset === 'quarter' ? 'app-breadcrumb--active' : 'app-breadcrumb--interactive' %>">
+                This quarter
+            </a>
+        </div>
+    </div>
+
+    <% if (blockerError) { %>
+        <p class="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <%= blockerError %>
+        </p>
+    <% } %>
+
+    <div class="mt-2 space-y-2">
+        <div class="rounded-2xl bg-brand-bg/10 px-2.5 pt-2.5 pb-1.5">
+            <div class="mb-1 flex items-center justify-between gap-2">
+                <p class="text-[10px] font-semibold uppercase tracking-[0.16em] text-brand-text/55">Reported blockers</p>
+                <span class="rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-brand-text/65">
+                    <%= blockerSummary?.totalCount || 0 %> total
+                </span>
+            </div>
+
+            <% if (!blockerSummary?.hasData) { %>
+                <p class="rounded-xl border border-dashed border-brand-secondary bg-white px-4 py-6 text-center text-sm text-brand-text/55">
+                    No blockers reported for this period.
+                </p>
+            <% } else { %>
+                <div>
+                    <div class="grid grid-cols-6 items-end gap-0">
+                    <% blockerItems.forEach((item) => { %>
+                        <% const blockerStyles = getBlockerStyles(item); %>
+                        <div
+                            class="relative flex h-[8.9rem] flex-col items-center justify-end gap-1"
+                            data-blocker-tooltip-content="<%= `${item.label}: ${item.description}` %>"
+                            data-blocker-tooltip-color="<%= blockerStyles.tooltip %>"
+                        >
+                            <span class="px-0.5 text-[8px] font-semibold" style="color: <%= blockerStyles.text %>;">
+                                <%= item.count %>
+                            </span>
+
+                            <div class="flex h-[4.8rem] w-full items-end justify-center px-0 pt-1">
+                                <div
+                                    class="w-[0.45rem] rounded-t-[0.35rem]"
+                                    style="height: <%= item.barHeight %>; background-color: <%= blockerStyles.accent %>;"
+                                ></div>
+                            </div>
+
+                            <div class="min-h-[0.85rem] w-full px-0.25 text-center">
+                                <p class="whitespace-nowrap text-[8px] font-semibold leading-none" style="color: <%= blockerStyles.text %>;"><%= blockerStyles.displayLabel %></p>
+                            </div>
+                        </div>
+                    <% }) %>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
