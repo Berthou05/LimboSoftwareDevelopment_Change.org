@@ -40,7 +40,8 @@
                 <span class="app-breadcrumb app-breadcrumb--static">
                     Slack <%= employee.slack_username || 'No Slack username available'  %>
                 </span>
-                <% if (employee.accountCreatedAtLabel) { %>
+                <%# Only the logged-in employee should see the own-profile badge. %>
+                <% if (isOwnProfile) { %>
                     <span class="app-breadcrumb app-breadcrumb--static">
                         Own Profile
                     </span>
