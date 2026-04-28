@@ -756,7 +756,6 @@ exports.generateReport = async (request, response, next)=>{
     }
 
     //Report Object creation
-    console.log(request.session.employeeId, id, reportType, start_date, end_date, content_json, filters_json, model, version, reportObject);
 
     const report = new Report(request.session.employeeId, id, reportType, start_date, end_date, content_json, filters_json, model, version, reportObject);
     report.save().then(()=>{
