@@ -244,6 +244,7 @@ const initializeTeamImageEditor = function initializeTeamImageEditor() {
     const menu = document.getElementById('teamImageMenu');
     const uploadButton = document.getElementById('teamImageUploadButton');
     const removeButton = document.getElementById('teamImageRemoveButton');
+    const fallback = document.getElementById('teamImageFallback');
 
     const closeImageMenu = function closeImageMenu() {
         if (menu) {
@@ -284,6 +285,9 @@ const initializeTeamImageEditor = function initializeTeamImageEditor() {
 
             preview.onload = () => URL.revokeObjectURL(previewUrl);
             preview.src = previewUrl;
+
+            preview.classList.remove('hidden');
+            fallback?.classList.add('hidden');
 
             if (filenameLabel) {
                 filenameLabel.textContent = file.name;
@@ -334,6 +338,15 @@ const initializeTeamImageEditor = function initializeTeamImageEditor() {
             }
 
             preview.src = defaultImage;
+
+            if (defaultImage) {
+                preview.classList.remove('hidden');
+                fallback?.classList.add('hidden');
+            } else {
+                preview.classList.add('hidden');
+                fallback?.classList.remove('hidden');
+            }
+
             closeImageMenu();
         });
     }
