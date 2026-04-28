@@ -118,29 +118,28 @@
                         <p id="teamImageFilename" class="sr-only">No file selected</p>
 
                         <div class="relative inline-flex flex-col items-start">
-                              <% 
+                            <% 
                                 const hasImage = !!team?.image;
                                 const initials = team?.name
                                 ? team.name.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase()
                                 : '';
                             %>
 
-                            <% if (hasImage) { %>
-                                <img
+                            <!-- Image -->
+                            <img
                                 id="teamImagePreview"
-                                src="<%= team.image %>"
+                                src="<%= team?.image || '' %>"
                                 data-default-image="<%= team?.fallbackImage || team?.image || '' %>"
-                                alt="Team preview"
-                                class="h-36 w-36 rounded-full border border-brand-secondary object-cover"
-                                />
-                            <% } else { %>
-                                <div
+                                class="h-36 w-36 rounded-full border border-brand-secondary object-cover <%= hasImage ? '' : 'hidden' %>"
+                            />
+
+                            <!-- Fallback -->
+                            <div
                                 id="teamImageFallback"
-                                class="app-directory-avatar flex h-36 w-36 items-center justify-center rounded-full border border-brand-secondary text-3xl font-bold"
-                                >
+                                class="app-directory-avatar flex h-36 w-36 items-center justify-center rounded-full border border-brand-secondary text-3xl font-bold <%= hasImage ? 'hidden' : '' %>"
+                            >
                                 <%= initials %>
-                                </div>
-                            <% } %>
+                            </div>
                             <div class="relative -mt-8 ml-3">
                                 <button
                                     id="teamImageMenuButton"

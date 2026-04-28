@@ -80,7 +80,7 @@ Function responsible for building links used in transactional emails.*/
 
 const getBaseUrl = (request) => `${request.protocol}://${request.get('host')}`;
 
-const ACCOUNTS_PER_PAGE = 8;
+const ACCOUNTS_PER_PAGE = '8';
 
 //------------------- Main Functions --------------------
 
