@@ -2011,12 +2011,6 @@
       stroke: var(--color-default) !important;
     }
   }
-  .border-\[\#8eeec9\] {
-    border-color: #8eeec9;
-  }
-  .border-\[\#a4d2ec\] {
-    border-color: #a4d2ec;
-  }
   .border-amber-200 {
     border-color: var(--color-amber-200);
   }
@@ -2088,9 +2082,6 @@
   }
   .border-transparent {
     border-color: transparent;
-  }
-  .border-violet-200 {
-    border-color: var(--color-violet-200);
   }
   .apexcharts-active {
     .apexcharts-canvas .apexcharts-tooltip-series-group& .apexcharts-tooltip-y-group {
