@@ -7,9 +7,9 @@
     const startDateFilter = safeFilters.startDate || '';
     const endDateFilter = safeFilters.endDate || '';
     const reportTypeStyles = {
-        EMPLOYEE: 'border-blue-300 bg-blue-100 text-blue-700',
-        PROJECT: 'border-green-300 bg-green-100 text-green-700',
-        TEAM: 'border-red-300 bg-red-100 text-red-700',
+        EMPLOYEE: 'bg-[#e8fff4] text-[#087a55]',
+        PROJECT: 'bg-[#8fd1df]/80 text-[#25627f]',
+        TEAM: 'bg-violet-100 text-violet-700',
     };
 
     const formatHistoryDate = function formatHistoryDate(value, options) {
@@ -136,7 +136,7 @@
                 <% const reportType = String(report.type || '').toUpperCase(); %>
                 <div class="grid min-w-[860px] grid-cols-[0.9fr_1.8fr_1.3fr_1fr_0.7fr] items-center gap-2 rounded-xl border border-brand-secondary px-3 py-2 text-sm">
                     <div>
-                        <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold <%= reportTypeStyles[reportType] || 'border-brand-secondary bg-white text-brand-text/70' %>">
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <%= reportTypeStyles[reportType] || 'bg-white text-brand-text/70' %>">
                             <%= formatReportType(report.type) %>
                         </span>
                     </div>

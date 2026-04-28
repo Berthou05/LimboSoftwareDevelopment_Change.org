@@ -46,29 +46,41 @@ function buildTextFromRoot(root) {
 
     const groups = root.querySelectorAll('h3');
 
-    // ----------------------------------
-    // ✅ CASE 1: HAS GROUPS (your current working case)
-    // ----------------------------------
+    // -------- HAS GROUPS --------
     if (groups.length > 0) {
 
         groups.forEach(group => {
             const title = cleanText(group.textContent);
             output += `\n${title}\n`;
 
-            const container = group.closest('div').parentElement;
-            if (!container) return;
+            // ✅ CORRECT ROOT (each group block)
+            const groupBlock = group.closest('.ml-4');
+            if (!groupBlock) return;
 
-            // -------- PROJECT GRID --------
-            const grid = container.querySelector('.grid');
-            if (grid) {
-                grid.querySelectorAll(':scope > div').forEach(row => {
-                    const text = cleanText(row.textContent);
+            // -------- PROJECT CONTENT --------
+            const projectContent = groupBlock.querySelector('[data-project-content]');
+            if (projectContent) {
+
+                const grid = projectContent.querySelector('.grid');
+
+                if (grid) {
+                    grid.querySelectorAll(':scope > div').forEach(row => {
+                        const text = cleanText(row.textContent);
+                        if (text) output += `- ${text}\n`;
+                    });
+                }
+
+                projectContent.querySelectorAll('li').forEach(li => {
+                    const text = cleanText(li.textContent);
                     if (text) output += `- ${text}\n`;
                 });
+
+                return; // ✅ IMPORTANT
             }
 
             // -------- SUBGROUPS --------
-            const subgroups = container.querySelectorAll('h4');
+            const subgroups = groupBlock.querySelectorAll(':scope h4');
+
             if (subgroups.length > 0) {
                 subgroups.forEach(sub => {
                     const subTitle = cleanText(sub.textContent);
@@ -76,29 +88,25 @@ function buildTextFromRoot(root) {
 
                     const subContainer = sub.parentElement;
 
-                    subContainer.querySelectorAll('li').forEach(li => {
+                    subContainer.querySelectorAll(':scope li').forEach(li => {
                         const text = cleanText(li.textContent);
                         if (text) output += `  - ${text}\n`;
                     });
                 });
 
-                return;
+                return; // ✅ IMPORTANT
             }
 
-            // -------- NORMAL LISTS --------
-            container.querySelectorAll('li').forEach(li => {
+            // -------- DIRECT ITEMS --------
+            groupBlock.querySelectorAll(':scope > ul > li').forEach(li => {
                 const text = cleanText(li.textContent);
                 if (text) output += `- ${text}\n`;
             });
         });
 
     } else {
-
-        // ----------------------------------
-        // ✅ CASE 2: NO GROUPS (THIS IS YOUR BUG)
-        // ----------------------------------
-
-        root.querySelectorAll('li').forEach(li => {
+        // -------- NO GROUPS --------
+        root.querySelectorAll(':scope > ul > li').forEach(li => {
             const text = cleanText(li.textContent);
             if (text) output += `- ${text}\n`;
         });
@@ -160,19 +168,19 @@ function buildSectionText(section) {
 /* ----------------------------------
    PROJECT COPY (NEW)
 ---------------------------------- */
+
 function buildProjectText(projectContainer) {
     if (!projectContainer) return '';
 
     let output = '';
 
-    // TITLE
     const title = projectContainer.querySelector('h3')?.textContent.trim();
     if (title) output += `${title}\n`;
 
     const content = projectContainer.querySelector('[data-project-content]');
     if (!content) return output.trim();
 
-    // STATUS GRID
+    // GRID
     const grid = content.querySelector('.grid');
     if (grid) {
         grid.querySelectorAll(':scope > div').forEach(row => {
@@ -181,7 +189,7 @@ function buildProjectText(projectContainer) {
         });
     }
 
-    // LIST ITEMS
+    // ITEMS
     content.querySelectorAll('li').forEach(li => {
         const text = cleanText(li.textContent);
         if (text) output += `- ${text}\n`;
@@ -189,6 +197,7 @@ function buildProjectText(projectContainer) {
 
     return output.trim();
 }
+
 /* ----------------------------------
    CLIPBOARD HELPERS (UNCHANGED)
 ---------------------------------- */
@@ -277,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             
 
-            const section = btn.closest('.px-6.py-4');
+            const section = btn.closest('[data-section]');
             const text = buildSectionText(section);
 
             const success = await copyText(text);
@@ -293,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
 
-            const project = btn.closest('.space-y-5 > div'); // ✅ FIX
+            const project = btn.closest('.ml-4'); // ✅ exact group block
 
             const text = buildProjectText(project);
             const success = await copyText(text);
