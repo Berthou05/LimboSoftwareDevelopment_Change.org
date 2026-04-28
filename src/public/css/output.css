@@ -2134,8 +2134,8 @@
       background-color: var(--color-neutral-secondary-medium);
     }
   }
-  .bg-\[\#8fd1df\] {
-    background-color: #8fd1df;
+  .bg-\[\#8fd1df\]\/60 {
+    background-color: color-mix(in oklab, #8fd1df 60%, transparent);
   }
   .bg-\[\#e8fff4\] {
     background-color: #e8fff4;
