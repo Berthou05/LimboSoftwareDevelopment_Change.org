@@ -7,7 +7,7 @@
 
 <%- include("../partials/pageHeader", {
     title: 'Search results',
-    subtitle: safeQuery ? `${safeTotalResults} results for "${safeQuery}"` : 'Search employees, teams, and projects.'
+    subtitle: safeQuery ? `${safeTotalResults} results for "${safeQuery}"` : 'Search activities, employees, teams, and projects.'
 }) %>
 
 <section class="mx-auto max-w-5xl">
@@ -17,7 +17,7 @@
         </p>
     <% } else if (!safeQuery) { %>
         <p class="rounded-lg border border-brand-secondary bg-white px-4 py-3 text-sm text-brand-text/70">
-            Type a name, email, team, project, or lead to search across Unitas.
+            Type an activity, name, email, team, project, or lead to search across Unitas.
         </p>
     <% } else if (!safeTotalResults) { %>
         <p class="rounded-lg border border-brand-secondary bg-white px-4 py-3 text-sm text-brand-text/70">

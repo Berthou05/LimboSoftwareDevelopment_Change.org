@@ -3,9 +3,11 @@
 (typeof employee !== 'undefined' && employee && employee.names)
 || (typeof user !== 'undefined' && user && user.username)
 || 'Usuario'; %>
+<%const homeEmployeeFullName = 
+(typeof user !== 'undefined' && user ? user.fullName : homeEmployeeName)%>
 <%# Keep the greeting short on home and fall back to the full name when no separator exists. %>
 <% const homeEmployeeFirstName = homeEmployeeName.split(' ')[0] || homeEmployeeName; %>
-<% const homeAccountImage = homeAccount.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'; %>
+<% const homeAccountImage = homeAccount.image || ''; %>
 <% const homeReportSubjects = typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] }; %>
 <% const homeLatestReports = typeof latestReports !== 'undefined' ? latestReports : {}; %>
 <% const homeCsrfToken = typeof csrfToken !== 'undefined' ? csrfToken : ''; %>
@@ -20,19 +22,21 @@
 
 <div class="grid gap-4 sm:gap-6 lg:grid-cols-[2fr_1fr]">
     <div class="min-w-0 lg:col-span-2">
-        <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName }) %>
+        <%- include('../partials/HOME/welcomeBanner', { homeAccountImage, homeEmployeeFirstName, homeEmployeeFullName }) %>
     </div>
     <section class="min-w-0 space-y-4 sm:space-y-6">
-        <%- include('../partials/reportGenerator/reportGenerator', {
-            layout: 'full',
-            redirectTo: '/home',
-            defaultReportType: 'EMPLOYEE',
-            defaultSubjectId: '',
-            reportSubjects: homeReportSubjects,
-            latestReport: null,
-            quickReport: '',
-            csrfToken: homeCsrfToken
-        }) %>
+        <% if(hasPermission('REP-01')) {%>
+            <%- include('../partials/reportGenerator/reportGenerator', {
+                layout: 'full',
+                redirectTo: '/home',
+                defaultReportType: 'EMPLOYEE',
+                defaultSubjectId: '',
+                reportSubjects: homeReportSubjects,
+                latestReport: null,
+                quickReport: '',
+                csrfToken: homeCsrfToken
+            }) %>
+        <% } %>
 
         <%- include('../partials/HOME/latestActivity', {
             latestActivitySections: homeLatestActivitySections,

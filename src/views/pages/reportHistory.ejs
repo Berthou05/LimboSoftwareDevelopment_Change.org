@@ -1,0 +1,108 @@
+<%
+    const safeEmployeeReports = Array.isArray(employeeReports) ? employeeReports : [];
+    const safeProjectReports = Array.isArray(projectReports) ? projectReports : [];
+    const safeTeamReports = Array.isArray(teamReports) ? teamReports : [];
+
+    const formatHistoryDate = function formatHistoryDate(value, options) {
+        if (!value) {
+            return 'Unknown date';
+        }
+
+        const date = new Date(value);
+
+        if (Number.isNaN(date.getTime())) {
+            return 'Unknown date';
+        }
+
+        return date.toLocaleDateString('en-US', options || {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
+    };
+
+    const reportSections = [
+        {
+            id: 'employee-reports',
+            title: 'Employee Reports',
+            description: 'Your latest employee reports.',
+            emptyMessage: 'No employee reports generated yet.',
+            reports: safeEmployeeReports,
+        },
+        {
+            id: 'project-reports',
+            title: 'Project Reports',
+            description: 'Your latest project reports.',
+            emptyMessage: 'No project reports generated yet.',
+            reports: safeProjectReports,
+        },
+        {
+            id: 'team-reports',
+            title: 'Team Reports',
+            description: 'Your latest team reports.',
+            emptyMessage: 'No team reports generated yet.',
+            reports: safeTeamReports,
+        },
+    ];
+%>
+
+<%- include('../partials/pageHeader', {
+    title: pageTitle,
+    subtitle: pageSubtitle,
+}) %>
+
+<section class="mx-auto max-w-5xl space-y-8">
+    <% reportSections.forEach((section) => { %>
+        <section id="<%= section.id %>">
+            <div class="mb-3 flex items-end justify-between gap-3">
+                <div>
+                    <h2 class="font-heading text-xl font-semibold text-brand-text sm:text-2xl"><%= section.title %></h2>
+                    <p class="mt-1 text-sm text-brand-text/60"><%= section.description %></p>
+                </div>
+            </div>
+
+            <% if (!section.reports.length) { %>
+                <p class="rounded-2xl border border-brand-secondary bg-white px-4 py-4 text-sm text-brand-text/70">
+                    <%= section.emptyMessage %>
+                </p>
+            <% } else { %>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <% section.reports.forEach((report) => { %>
+                        <a
+                            href="<%= report.url %>"
+                            class="block rounded-xl border border-brand-secondary bg-white p-4 shadow-panel transition hover:-translate-y-0.5 hover:bg-brand-secondary/10 sm:p-4"
+                        >
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0">
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
+                                        <%= String(report.type || '').toLowerCase() %> report
+                                    </p>
+                                    <h3 class="mt-1 truncate font-heading text-lg font-bold text-brand-text sm:text-xl">
+                                        <%= report.subjectLabel %>
+                                    </h3>
+                                </div>
+                                <span class="rounded-md bg-brand-primary/10 px-2 py-1 text-[11px] font-semibold text-brand-primary">
+                                    View
+                                </span>
+                            </div>
+
+                            <div class="mt-3 space-y-1.5 text-xs text-brand-text/70 sm:text-sm">
+                                <p>
+                                    Generated: <span class="font-semibold text-brand-text"><%= formatHistoryDate(report.createdAt) %></span>
+                                </p>
+                                <p>
+                                    Period:
+                                    <span class="font-semibold text-brand-text">
+                                        <%= formatHistoryDate(report.periodStart, { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                        -
+                                        <%= formatHistoryDate(report.periodEnd, { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                    </span>
+                                </p>
+                            </div>
+                        </a>
+                    <% }) %>
+                </div>
+            <% } %>
+        </section>
+    <% }) %>
+</section>

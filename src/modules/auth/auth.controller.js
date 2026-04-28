@@ -10,22 +10,44 @@ const AccountRole = require('../../models/accountRoleAssignment');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const resendService = require('../../utils/webServices/resendService');
-
 const RESET_TOKEN_EXPIRATION_MINUTES = 8;
+
+//------------ Auxiliar Functions -----------------
+
+/*createResetToken 
+Function responsible for the reset of a token using
+crypto.*/
 
 const createResetToken = function createResetToken() {
     return String(crypto.randomInt(100000, 1000000));
 };
 
+/*hashResetToken
+Function responsible for the creation of the hash password
+using crypto.*/
+
 const hashResetToken = function hashResetToken(token) {
     return crypto.createHash('sha256').update(token).digest('hex');
 };
+
+/*getResetExpiration
+Function responsible for the time reset based on declaring 
+the actual time plus the RESET_TOKEN_EXPIRATION_MINUTES
+constant.*/
 
 const getResetExpiration = function getResetExpiration() {
     const expirationDate = new Date();
     expirationDate.setMinutes(expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES);
     return expirationDate;
 };
+
+/*getPasswordValidationError
+Auxiliar function responsible for the validation of the given
+password, given the following conditions:
+- Min. length 8 characters.
+- At least 1 Upper Case
+- At least 1 Number
+- At least 1 Special Character*/
 
 const getPasswordValidationError = function getPasswordValidationError(password) {
     if (password.length < 8) {
@@ -47,6 +69,9 @@ const getPasswordValidationError = function getPasswordValidationError(password)
     return '';
 };
 
+/*maskEmail(email)
+Function responsible for the validation of the given email.*/
+
 const maskEmail = function maskEmail(email) {
     const [name, domain] = email.split('@');
 
@@ -57,6 +82,10 @@ const maskEmail = function maskEmail(email) {
     const visibleName = name.length <= 2 ? name[0] : name.slice(0, 2);
     return `${visibleName}***@${domain}`;
 };
+
+/*renderResetConfirmPage(request, response, {email = request.session.resetEmail || '',prefilledToken = '',statusCode = 200,} 
+Function responsible for rendeing the confirmation of the password 
+modification request*/
 
 const renderResetConfirmPage = function renderResetConfirmPage(request, response, {
     email = request.session.resetEmail || '',
@@ -72,6 +101,8 @@ const renderResetConfirmPage = function renderResetConfirmPage(request, response
         prefilledToken,
     });
 };
+
+//------------ Main Functions -----------------
 
 /*getSignin
 Function that renders the sign in form.
@@ -231,6 +262,9 @@ exports.getLogout = (request, response, next)=>{
     });
 }
 
+/*getReset
+FUnction responsible for rendering the reset password page.*/
+
 exports.getReset = (request, response, next)=>{
     request.session.resetEmail = null;
 
@@ -240,6 +274,12 @@ exports.getReset = (request, response, next)=>{
         pageTitle: 'Reset Password'
     });
 }
+
+/*postReset
+Function responsible for handling the validation of an email
+related to an account, its validation and the token 
+configuration and email submittion of the code, to redirect to
+the confirmation render.*/
 
 exports.postReset = (request, response, next) => {
     const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
@@ -295,6 +335,10 @@ exports.postReset = (request, response, next) => {
         });
 };
 
+/*getResetConfirm
+Function responsible for rendering the confirmation page
+to insert the given email token.*/
+
 exports.getResetConfirm = async (request, response, next) => {
     const token = request.query.token;
     let prefilledToken = '';
@@ -323,6 +367,11 @@ exports.getResetConfirm = async (request, response, next) => {
         prefilledToken,
     });
 };
+
+/*postResetConfirm
+Function responsible for handling the obtention of the given 
+token within the specified time rate, its validation and
+the setting of the password.*/
 
 exports.postResetConfirm = (request, response, next) => {
     const email = request.session.resetEmail || '';

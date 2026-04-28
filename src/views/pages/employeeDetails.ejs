@@ -189,7 +189,9 @@
 
     <section class="space-y-4">
         <%# Report generator replaces the date display and quick report button. %>
-        <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/employees/' + employee.id, defaultReportType, defaultSubjectId, reportSubjects, latestReport, quickReport }) %>
+        <% if(hasPermission('REP-01')) {%>
+            <%- include('../partials/reportGenerator/reportGenerator', { redirectTo: '/employees/' + employee.id, defaultReportType, defaultSubjectId, reportSubjects, latestReport, quickReport }) %>
+        <% } %>
 
         <article class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
             <h2 class="font-heading text-xl font-semibold text-brand-text">Your Teams</h2>

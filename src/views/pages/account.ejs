@@ -93,18 +93,16 @@
         <div class="relative h-36 w-36 rounded-full border border-brand-secondary overflow-hidden">
 
           <!-- Fallback -->
-          <div class="app-directory-avatar absolute inset-0 flex items-center justify-center !text-brand-primary text-3xl font-bold">
+          <div class="app-directory-avatar absolute inset-0 flex items-center justify-center text-brand-secondary text-3xl font-bold">
             <%= initials %>
           </div>
 
           <!-- Image -->
           <img
             id="accountImagePreview"
-            src="<%= account.image %>"
-            data-default-image="<%= account.defaultImage %>"
+            src="<%= account.image || ''%>"
             alt="Account preview"
-            class="absolute inset-0 h-full w-full object-cover"
-            onerror="this.style.display='none'"
+            class="absolute inset-0 h-full w-full object-cover <%= account.image ? '' : 'hidden' %>"
           />
 
         </div>

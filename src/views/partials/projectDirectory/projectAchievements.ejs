@@ -4,13 +4,15 @@
             <h2 class="font-heading text-xl font-semibold text-brand-text">Achievements</h2>
             <p class="mt-1 text-sm text-brand-text/60">Key achievements delivered by this project</p>
         </div>
-        <%- include('../shared/actionButton', {
-            buttonPopupOpen: 'project-add-achievement',
-            buttonIcon: 'plus',
-            buttonLabel: 'Add',
-            buttonVariant: 'small',
-            buttonAriaLabel: 'Add achievement',
-        }) %>
+        <% if(hasPermission('PROJ-13')) {%>
+            <%- include('../shared/actionButton', {
+                buttonPopupOpen: 'project-add-achievement',
+                buttonIcon: 'plus',
+                buttonLabel: 'Add',
+                buttonVariant: 'small',
+                buttonAriaLabel: 'Add achievement',
+            }) %>
+        <% } %>
     </div>
 
     <% const achievementsDetailed = project?.achievementsDetailed || []; %>
@@ -26,20 +28,24 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs text-brand-text/50"><%= achievement.achievementDateLabel || 'Date unavailable' %></span>
-                        <%- include('../shared/actionButton', {
-                            buttonPopupOpen: 'edit-achievement-' + achievement.id,
-                            buttonIcon: 'edit',
-                            buttonLabel: 'Edit',
-                            buttonVariant: 'small',
-                            buttonAriaLabel: 'Edit achievement',
-                        }) %>
-                        <%- include('../shared/actionButton', {
-                            buttonPopupOpen: 'delete-achievement-' + achievement.id,
-                            buttonIcon: 'trash',
-                            buttonLabel: 'Delete',
-                            buttonVariant: 'small',
-                            buttonAriaLabel: 'Delete achievement',
-                        }) %>
+                        <% if(hasPermission('PROJ-14')) {%>
+                            <%- include('../shared/actionButton', {
+                                buttonPopupOpen: 'edit-achievement-' + achievement.id,
+                                buttonIcon: 'edit',
+                                buttonLabel: 'Edit',
+                                buttonVariant: 'small',
+                                buttonAriaLabel: 'Edit achievement',
+                            }) %>
+                        <% } %>
+                        <% if(hasPermission('PROJ-15')) {%>
+                            <%- include('../shared/actionButton', {
+                                buttonPopupOpen: 'delete-achievement-' + achievement.id,
+                                buttonIcon: 'trash',
+                                buttonLabel: 'Delete',
+                                buttonVariant: 'small',
+                                buttonAriaLabel: 'Delete achievement',
+                            }) %>
+                        <% } %>
                     </div>
                 </div>
                 <p class="mt-2 text-sm text-brand-text/70"><%= achievement.description %></p>
@@ -62,7 +68,7 @@
                     { name: 'title', label: 'Title', value: achievement.title || '', placeholder: 'Achievement title' },
                     { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: achievement.description || '', placeholder: 'Describe the achievement.' },
                     { name: 'achievementDate', label: 'Achievement date', type: 'date', value: achievement.achievementDate || '' },
-                    { name: 'evidenceLink', label: 'Evidence link', value: achievement.evidenceLink || '', placeholder: 'https://...' },
+                    { name: 'evidenceLink', label: 'Evidence link', type: 'url', value: achievement.evidenceLink || '', placeholder: 'https://...' },
                 ],
             }) %>
 
@@ -92,7 +98,7 @@
         { name: 'title', label: 'Title', value: '', placeholder: 'Delivered MVP' },
         { name: 'description', label: 'Description', type: 'textarea', rows: 4, value: '', placeholder: 'Describe the outcome delivered by the team.' },
         { name: 'achievementDate', label: 'Achievement date', type: 'date', value: '' },
-        { name: 'evidenceLink', label: 'Evidence link', value: '', placeholder: 'https://...' },
+        { name: 'evidenceLink', label: 'Evidence link', type: 'url', value: '', placeholder: 'https://...' },
     ],
 }) %>
 

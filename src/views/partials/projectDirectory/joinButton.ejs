@@ -3,9 +3,8 @@
     <% const projectId = project?.id || project?.project_id; %>
 
     <% if (projectMembership?.canToggle) { %>
-
         <% if (!projectMembership?.isMember) { %>
-
+            <% if(hasPermission('PROJ-05-01')) {%>
             <!-- JOIN PROJECT -->
             <button
                 type="button"
@@ -32,9 +31,20 @@
                     },
                 ],
             }) %>
+            <% } else { %>
+
+                <button
+                    type="button"
+                    disabled
+                    class="app-cta-button w-full cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50">
+                    You are not allowed to Join a Project. Contact Administrator.
+                </button>
+
+            <% } %>
 
         <% } else { %>
 
+            <% if(hasPermission('PROJ-06')) {%>
             <!-- LEAVE PROJECT -->
             <button
                 type="button"
@@ -55,6 +65,16 @@
                 csrfToken,
                 popupFields: [],
             }) %>
+            <% } else { %>
+
+                <button
+                    type="button"
+                    disabled
+                    class="app-cta-button w-full cursor-not-allowed border-brand-secondary bg-brand-bg/60 text-brand-text/50">
+                    You are not allowed to Leave a Project. Contact Administrator.
+                </button>
+
+            <% } %>
 
         <% } %>
 

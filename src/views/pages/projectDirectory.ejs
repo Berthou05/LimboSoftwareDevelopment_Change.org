@@ -46,12 +46,15 @@
         >
             Search
         </button>
+
+        <% if(hasPermission('PROJ-01')){%>
         <a
             href="/projects/new"
             class="ml-auto rounded-xl border border-brand-secondary bg-white px-5 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
         >
             Create project
         </a>
+        <% } %>
     </form>
 
     <p

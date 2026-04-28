@@ -57,6 +57,35 @@ module.exports = class Report {
         // TODO: Implement database query to fetch reports by employee
     }
 
+    static fetchLatestByEmployeeAndType(generated_by_employee_id, content_type, limit = '6') {
+        return db.execute(
+            `SELECT
+                R.report_id,
+                R.generated_by_employee_id,
+                R.content_id,
+                R.content_type,
+                R.period_start,
+                R.period_end,
+                R.created_at,
+                COALESCE(E.full_name, P.name, T.name, 'Unknown subject') AS subject_name
+            FROM report AS R
+            LEFT JOIN employee AS E
+                ON R.content_type = 'EMPLOYEE'
+                AND E.employee_id = R.content_id
+            LEFT JOIN project AS P
+                ON R.content_type = 'PROJECT'
+                AND P.project_id = R.content_id
+            LEFT JOIN team AS T
+                ON R.content_type = 'TEAM'
+                AND T.team_id = R.content_id
+            WHERE R.generated_by_employee_id = ?
+                AND R.content_type = ?
+            ORDER BY R.created_at DESC
+            LIMIT ?;`,
+            [generated_by_employee_id, content_type, limit],
+        );
+    }
+
     static fetchLatestByProjectAndEmployee(project_id, employee_id, limit = '5') {
         return db.execute(
             `SELECT

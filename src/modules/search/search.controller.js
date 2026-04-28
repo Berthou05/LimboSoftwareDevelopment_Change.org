@@ -7,10 +7,36 @@ Modified by: Hurtado, R.
 const Employee = require('../../models/employee');
 const Team = require('../../models/team');
 const Project = require('../../models/project');
+const Activity = require('../../models/activity');
 const { getInitials } = require('../../utils/avatar.util');
+const AUTOCOMPLETE_SECTION_LIMIT = 3;
+const AUTOCOMPLETE_TOTAL_LIMIT = 5;
 
 const normalizeSearchQuery = function normalizeSearchQuery(value) {
     return typeof value === 'string' ? value.trim() : '';
+};
+
+const wantsJsonResponse = function wantsJsonResponse(request) {
+    const acceptHeader = request.get('Accept') || '';
+    return acceptHeader.includes('application/json');
+};
+
+const formatSearchDate = function formatSearchDate(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+    });
 };
 
 const mapEmployeeResult = function mapEmployeeResult(employee, currentEmployeeId) {
@@ -63,8 +89,63 @@ const mapProjectResult = function mapProjectResult(project) {
     };
 };
 
-const buildResultSections = function buildResultSections(employees, teams, projects, employeeId) {
+const mapActivityResult = function mapActivityResult(activity, currentEmployeeId) {
+    const title = activity.title || 'Untitled activity';
+    const authorName = activity.full_name || 'Unknown employee';
+    const projectName = activity.project_name || '';
+    const teamName = activity.team_name || '';
+    const completedAtLabel = formatSearchDate(activity.completed_at);
+    const hasProjectContext = Boolean(activity.project_id && projectName);
+    const metadata = [];
+    const subtitleParts = [`By: ${authorName}`];
+
+    if (hasProjectContext) {
+        metadata.push(`Project: ${projectName}`);
+        subtitleParts.push(`Project: ${projectName}`);
+    } else {
+        metadata.push('General activity');
+    }
+
+    if (teamName) {
+        metadata.push(`Team: ${teamName}`);
+    }
+
+    if (completedAtLabel) {
+        metadata.push(`Completed: ${completedAtLabel}`);
+    }
+
+    return {
+        type: 'activity',
+        label: 'Activity',
+        title,
+        subtitle: subtitleParts.join(' | '),
+        description: activity.description || metadata.join(' | '),
+        image: '',
+        initials: getInitials(title, 'A'),
+        url: hasProjectContext
+            ? `/projects/${activity.project_id}`
+            : `/employees/${activity.employee_id}`,
+        badge: activity.employee_id === currentEmployeeId
+            ? 'My activity'
+            : hasProjectContext
+                ? 'Project activity'
+                : 'Activity',
+    };
+};
+
+const buildResultSections = function buildResultSections(
+    activities,
+    employees,
+    teams,
+    projects,
+    employeeId,
+) {
     return [
+        {
+            id: 'activities',
+            title: 'Activities',
+            results: activities.map((activity) => mapActivityResult(activity, employeeId)),
+        },
         {
             id: 'employees',
             title: 'Employees',
@@ -81,6 +162,86 @@ const buildResultSections = function buildResultSections(employees, teams, proje
             results: projects.map(mapProjectResult),
         },
     ];
+};
+
+const buildAutocompleteSuggestions = function buildAutocompleteSuggestions(
+    activities,
+    employees,
+    teams,
+    projects,
+    employeeId,
+) {
+    const activitySuggestions = activities
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((activity) => {
+            const result = mapActivityResult(activity, employeeId);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: activity.employee_id === employeeId ? 'My activity' : 'Activity',
+                url: result.url,
+            };
+        });
+    const employeeSuggestions = employees
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((employee) => {
+            const result = mapEmployeeResult(employee, employeeId);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: employee.employee_id === employeeId ? 'My profile' : 'Employee',
+                url: result.url,
+            };
+        });
+    const teamSuggestions = teams
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((team) => {
+            const result = mapTeamResult(team);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: team.is_member ? 'My team' : 'Team',
+                url: result.url,
+            };
+        });
+    const projectSuggestions = projects
+        .slice(0, AUTOCOMPLETE_SECTION_LIMIT)
+        .map((project) => {
+            const result = mapProjectResult(project);
+
+            return {
+                title: result.title,
+                subtitle: result.subtitle,
+                badge: project.is_member ? 'My project' : 'Project',
+                url: result.url,
+            };
+        });
+
+    const suggestionBuckets = [
+        [...activitySuggestions],
+        [...employeeSuggestions],
+        [...teamSuggestions],
+        [...projectSuggestions],
+    ];
+    const suggestions = [];
+
+    while (
+        suggestions.length < AUTOCOMPLETE_TOTAL_LIMIT
+        && suggestionBuckets.some((bucket) => bucket.length > 0)
+    ) {
+        suggestionBuckets.forEach((bucket) => {
+            if (suggestions.length >= AUTOCOMPLETE_TOTAL_LIMIT || bucket.length === 0) {
+                return;
+            }
+
+            suggestions.push(bucket.shift());
+        });
+    }
+
+    return suggestions;
 };
 
 const renderSearchPage = function renderSearchPage(request, response, statusCode, viewData) {
@@ -100,8 +261,16 @@ const renderSearchPage = function renderSearchPage(request, response, statusCode
 exports.getSearch = (request, response, next) => {
     const employeeId = request.session.employeeId || '';
     const query = normalizeSearchQuery(request.query.q);
+    const isJsonRequest = wantsJsonResponse(request);
 
     if (!query) {
+        if (isJsonRequest) {
+            return response.status(200).json({
+                query,
+                suggestions: [],
+            });
+        }
+
         return renderSearchPage(request, response, 200, {
             query,
             resultSections: [],
@@ -109,17 +278,47 @@ exports.getSearch = (request, response, next) => {
         });
     }
 
-    return Promise.all([
-        Employee.searchDirectoryByLeadScope(employeeId, query),
-        Team.searchDirectory(employeeId, query),
-        Project.searchDirectory(employeeId, query),
-    ])
+    const searchPromises = isJsonRequest
+        ? [
+            Activity.getDirectorySuggestions(employeeId, query),
+            Employee.getDirectorySuggestionsByLeadScope(employeeId, query),
+            Team.getDirectorySuggestions(employeeId, query),
+            Project.getDirectorySuggestions(employeeId, query),
+        ]
+        : [
+            Activity.searchDirectory(employeeId, query),
+            Employee.searchDirectoryByLeadScope(employeeId, query),
+            Team.searchDirectory(employeeId, query),
+            Project.searchDirectory(employeeId, query),
+        ];
+
+    return Promise.all(searchPromises)
         .then(([
+            [activities],
             [employees],
             [teams],
             [projects],
         ]) => {
-            const resultSections = buildResultSections(employees, teams, projects, employeeId);
+            if (isJsonRequest) {
+                return response.status(200).json({
+                    query,
+                    suggestions: buildAutocompleteSuggestions(
+                        activities,
+                        employees,
+                        teams,
+                        projects,
+                        employeeId,
+                    ),
+                });
+            }
+
+            const resultSections = buildResultSections(
+                activities,
+                employees,
+                teams,
+                projects,
+                employeeId,
+            );
             const totalResults = resultSections.reduce((total, section) => {
                 return total + section.results.length;
             }, 0);
@@ -132,6 +331,15 @@ exports.getSearch = (request, response, next) => {
         })
         .catch((error) => {
             console.log(error);
+
+            if (isJsonRequest) {
+                return response.status(500).json({
+                    query,
+                    suggestions: [],
+                    error: 'Unable to search right now.',
+                });
+            }
+
             return renderSearchPage(request, response, 500, {
                 query,
                 resultSections: [],

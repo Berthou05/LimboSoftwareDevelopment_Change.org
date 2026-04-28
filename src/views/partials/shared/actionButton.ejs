@@ -35,10 +35,12 @@
             ? ' panel-action-button--danger'
             : '';
     const buttonClassName = 'panel-action-button' + variantClass + toneClass + (actionClasses ? ' ' + actionClasses : '');
+    const actionData = typeof buttonData !== 'undefined' ? buttonData : '';
 %>
 
 <button
     type="<%= actionType %>"
+    <%- actionData %>
     <% if (typeof buttonPopupOpen !== 'undefined' && buttonPopupOpen) { %>data-popup-open="<%= buttonPopupOpen %>"<% } %>
     <% if (typeof buttonPopupClose !== 'undefined' && buttonPopupClose) { %>data-popup-close<% } %>
     class="<%= buttonClassName %>"
