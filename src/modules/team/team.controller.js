@@ -526,7 +526,10 @@ exports.updateTeamInfo = (request, response, next) => {
     const employeeId = request.session.employeeId || '';
     const name = typeof request.body.name === 'string' ? request.body.name.trim() : '';
     const description = typeof request.body.description === 'string' ? request.body.description.trim() : '';
-    const currentImage = typeof request.body.currentImage === 'string' ? request.body.currentImage.trim() : '';
+    const submittedCurrentImage = Array.isArray(request.body.currentImage)
+        ? request.body.currentImage.find((value) => value)
+        : request.body.currentImage;
+    const currentImage = typeof submittedCurrentImage === 'string' ? submittedCurrentImage.trim() : '';
     const image = getUploadedTeamImage(request) || currentImage || null;
 
     if (request.fileValidationError) {
