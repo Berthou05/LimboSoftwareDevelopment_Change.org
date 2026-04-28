@@ -54,24 +54,37 @@ const getUploadedAccountImage = (request) => {
         .replace(/\\/g, '/')}`;
 };
 
+const ACCOUNTS_PER_PAGE = 8;
+
 //------------------- Main Functions --------------------
 
 exports.getAccounts = (request, response, next) => {
     const roleFilter = request.query.role || 'all';
     const statusFilter = request.query.status || 'active';
+    const requestedPage = parseInt(request.query.page, 10);
+    const currentPage = requestedPage > 0 ? requestedPage : 1;
+    const offset = (currentPage - 1) * ACCOUNTS_PER_PAGE;
 
     Promise.all([
-        Account.fetchAll(roleFilter, statusFilter),
-        Account.countAll(),
+        Account.fetchAll(roleFilter, statusFilter, ACCOUNTS_PER_PAGE, offset),
+        Account.countAll(roleFilter, statusFilter),
         Role.fetchAll(),
     ])
         .then(([[accounts], [totalAccounts], [roles]]) => {
+            const total = totalAccounts[0].count;
+            const totalPages = Math.max(Math.ceil(total / ACCOUNTS_PER_PAGE), 1);
+
+            // Keep manually entered page numbers inside the available result range.
+            if(currentPage > totalPages){
+                return response.redirect(`/admin/accounts?role=${encodeURIComponent(roleFilter)}&status=${encodeURIComponent(statusFilter)}&page=${totalPages}`);
+            }
+
             return response.render('pages/admin-accounts', {
                 csrfToken: request.csrfToken(),
                 pageTitle: 'Accounts Administration',
                 pageSubtitle:
                     'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
-                totalAccounts: totalAccounts[0].count,
+                totalAccounts: total,
                 accounts: accounts.map((account) => ({
                     id: account.account_id,
                     employee: {
@@ -87,8 +100,10 @@ exports.getAccounts = (request, response, next) => {
                     id: role.role_id,
                     name: role.name,
                 })),
-                statusFilter: 'active',
-                roleFilter: 'all',
+                statusFilter,
+                roleFilter,
+                currentPage,
+                totalPages,
             });
         })
         .catch((error) => {
