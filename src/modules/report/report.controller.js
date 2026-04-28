@@ -34,7 +34,7 @@ function capitalizeWords(str) {
     return str.replace(/\b\w/g, char => char.toUpperCase());
 }
 
-const REPORT_HISTORY_SECTION_LIMIT = '6';
+const REPORT_HISTORY_LIMIT = '100';
 
 /*formatDayLabel(value)
 Auxiliar function responsible for returning a format in MM/DD/YYYY format divided into
@@ -64,6 +64,21 @@ const buildReportHistoryCards = function buildReportHistoryCards(reports, redire
         url: `/reports/view/${String(report.content_type || '').toLowerCase()}/${report.report_id}`
             + `?redirectTo=${encodeURIComponent(redirectTo)}`,
     }));
+};
+
+const normalizeReportHistoryFilters = function normalizeReportHistoryFilters(query = {}) {
+    const type = normalizeReportType(query.type) || 'ALL';
+    const subject = typeof query.subject === 'string' ? query.subject.trim() : '';
+    const startDate = typeof query.startDate === 'string' ? query.startDate.trim() : '';
+    const endDate = typeof query.endDate === 'string' ? query.endDate.trim() : '';
+
+    return {
+        type,
+        subject,
+        startDate,
+        endDate,
+        limit: REPORT_HISTORY_LIMIT,
+    };
 };
 
 /*respondWithError(statusCode, message, wantsJson, response, request)
@@ -465,25 +480,17 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
 
 exports.getReportHistory = (request, response, next) => {
     const employeeId = request.session.employeeId || '';
+    const filters = normalizeReportHistoryFilters(request.query);
 
-    return Promise.all([
-        Report.fetchLatestByEmployeeAndType(employeeId, 'EMPLOYEE', REPORT_HISTORY_SECTION_LIMIT),
-        Report.fetchLatestByEmployeeAndType(employeeId, 'PROJECT', REPORT_HISTORY_SECTION_LIMIT),
-        Report.fetchLatestByEmployeeAndType(employeeId, 'TEAM', REPORT_HISTORY_SECTION_LIMIT),
-    ]).then(([
-        [employeeReports],
-        [projectReports],
-        [teamReports],
-    ]) => {
+    return Report.fetchHistoryByEmployee(employeeId, filters).then(([reports]) => {
         return response.render('pages/reportHistory', {
             csrfToken: request.csrfToken(),
             isLoggedIn: request.session.isLoggedIn || '',
             username: request.session.username || '',
             pageTitle: 'Report history',
-            pageSubtitle: 'Your most recent generated reports, grouped by employee, project, and team.',
-            employeeReports: buildReportHistoryCards(employeeReports),
-            projectReports: buildReportHistoryCards(projectReports),
-            teamReports: buildReportHistoryCards(teamReports),
+            pageSubtitle: 'Your generated reports in one filtered table.',
+            reports: buildReportHistoryCards(reports),
+            filters,
         });
     }).catch((error) => {
         console.log(error);

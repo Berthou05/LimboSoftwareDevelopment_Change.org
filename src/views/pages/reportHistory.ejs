@@ -1,7 +1,16 @@
 <%
-    const safeEmployeeReports = Array.isArray(employeeReports) ? employeeReports : [];
-    const safeProjectReports = Array.isArray(projectReports) ? projectReports : [];
-    const safeTeamReports = Array.isArray(teamReports) ? teamReports : [];
+    const safeReports = Array.isArray(reports) ? reports : [];
+    const safeFilters = filters || {};
+    const activeType = safeFilters.type || 'ALL';
+    const subjectFilter = safeFilters.subject || '';
+    const startDateFilter = safeFilters.startDate || '';
+    const endDateFilter = safeFilters.endDate || '';
+    const preservedFilters = `subject=${encodeURIComponent(subjectFilter)}&startDate=${encodeURIComponent(startDateFilter)}&endDate=${encodeURIComponent(endDateFilter)}`;
+    const reportTypeStyles = {
+        EMPLOYEE: 'text-brand-nav',
+        PROJECT: 'text-brand-text',
+        TEAM: 'text-brand-title',
+    };
 
     const formatHistoryDate = function formatHistoryDate(value, options) {
         if (!value) {
@@ -21,29 +30,11 @@
         });
     };
 
-    const reportSections = [
-        {
-            id: 'employee-reports',
-            title: 'Employee Reports',
-            description: 'Your latest employee reports.',
-            emptyMessage: 'No employee reports generated yet.',
-            reports: safeEmployeeReports,
-        },
-        {
-            id: 'project-reports',
-            title: 'Project Reports',
-            description: 'Your latest project reports.',
-            emptyMessage: 'No project reports generated yet.',
-            reports: safeProjectReports,
-        },
-        {
-            id: 'team-reports',
-            title: 'Team Reports',
-            description: 'Your latest team reports.',
-            emptyMessage: 'No team reports generated yet.',
-            reports: safeTeamReports,
-        },
-    ];
+    const formatReportType = function formatReportType(value) {
+        const type = String(value || '').toLowerCase();
+
+        return type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Unknown';
+    };
 %>
 
 <%- include('../partials/pageHeader', {
@@ -51,58 +42,102 @@
     subtitle: pageSubtitle,
 }) %>
 
-<section class="mx-auto max-w-5xl space-y-8">
-    <% reportSections.forEach((section) => { %>
-        <section id="<%= section.id %>">
-            <div class="mb-3 flex items-end justify-between gap-3">
-                <div>
-                    <h2 class="font-heading text-xl font-semibold text-brand-text sm:text-2xl"><%= section.title %></h2>
-                    <p class="mt-1 text-sm text-brand-text/60"><%= section.description %></p>
-                </div>
+<div class="space-y-6">
+    <section class="rounded-2xl bg-white p-5 shadow-panel">
+        <div class="mb-4 flex flex-wrap items-center gap-2">
+            <form action="/reports" method="GET" class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                <select
+                    name="type"
+                    class="rounded-full border border-brand-secondary bg-white px-3 py-1 text-xs font-semibold text-brand-text/80 outline-none ring-brand-primary/30 focus:ring"
+                >
+                    <option value="ALL" <%= activeType === 'ALL' ? 'selected' : '' %>>All</option>
+                    <option value="EMPLOYEE" <%= activeType === 'EMPLOYEE' ? 'selected' : '' %>>Employee</option>
+                    <option value="PROJECT" <%= activeType === 'PROJECT' ? 'selected' : '' %>>Project</option>
+                    <option value="TEAM" <%= activeType === 'TEAM' ? 'selected' : '' %>>Team</option>
+                </select>
+
+                <input
+                    type="text"
+                    name="subject"
+                    value="<%= subjectFilter %>"
+                    placeholder="Subject"
+                    class="w-40 rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
+                />
+
+                <input
+                    type="date"
+                    name="startDate"
+                    value="<%= startDateFilter %>"
+                    class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
+                />
+
+                <input
+                    type="date"
+                    name="endDate"
+                    value="<%= endDateFilter %>"
+                    class="rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold outline-none ring-brand-primary/30 focus:ring"
+                />
+
+                <button
+                    type="submit"
+                    class="app-breadcrumb app-breadcrumb--active"
+                >
+                    Filter
+                </button>
+                <a
+                    href="/reports"
+                    class="app-breadcrumb app-breadcrumb--interactive"
+                >
+                    Clear
+                </a>
+            </form>
+            <span class="ml-auto rounded-full border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/70">
+                <%= safeReports.length %> reports shown
+            </span>
+        </div>
+
+        <div class="space-y-2 overflow-x-auto">
+            <div class="grid min-w-[860px] grid-cols-[0.9fr_1.8fr_1.3fr_1fr_0.7fr] gap-2 rounded-xl border border-brand-secondary bg-brand-bg px-3 py-2 text-xs font-bold uppercase tracking-wide text-brand-text/65">
+                <p>Type</p>
+                <p>Subject</p>
+                <p>Report Period</p>
+                <p>Generated</p>
+                <p class="text-right">Action</p>
             </div>
 
-            <% if (!section.reports.length) { %>
-                <p class="rounded-2xl border border-brand-secondary bg-white px-4 py-4 text-sm text-brand-text/70">
-                    <%= section.emptyMessage %>
+            <% if (!safeReports.length) { %>
+                <p class="rounded-xl border border-dashed border-brand-secondary p-4 text-sm text-brand-text/70">
+                    No reports match the selected filters.
                 </p>
-            <% } else { %>
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <% section.reports.forEach((report) => { %>
+            <% } %>
+
+            <% safeReports.forEach((report) => { %>
+                <% const reportType = String(report.type || '').toUpperCase(); %>
+                <div class="grid min-w-[860px] grid-cols-[0.9fr_1.8fr_1.3fr_1fr_0.7fr] items-center gap-2 rounded-xl border border-brand-secondary px-3 py-2 text-sm">
+                    <div>
+                        <span class="inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold <%= reportTypeStyles[reportType] || 'text-brand-text/70' %>">
+                            <%= formatReportType(report.type) %>
+                        </span>
+                    </div>
+                    <p class="truncate font-medium text-brand-text">
+                        <%= report.subjectLabel %>
+                    </p>
+                    <p class="text-xs font-semibold text-brand-text/70">
+                        <%= formatHistoryDate(report.periodStart) %> - <%= formatHistoryDate(report.periodEnd) %>
+                    </p>
+                    <p class="text-xs font-semibold text-brand-text/70">
+                        <%= formatHistoryDate(report.createdAt) %>
+                    </p>
+                    <div class="text-right">
                         <a
                             href="<%= report.url %>"
-                            class="block rounded-xl border border-brand-secondary bg-white p-4 shadow-panel transition hover:-translate-y-0.5 hover:bg-brand-secondary/10 sm:p-4"
+                            class="app-link-button app-link-button--nav py-1 text-xs"
                         >
-                            <div class="flex items-start justify-between gap-2">
-                                <div class="min-w-0">
-                                    <p class="text-xs font-semibold uppercase tracking-wide text-brand-text/50">
-                                        <%= String(report.type || '').toLowerCase() %> report
-                                    </p>
-                                    <h3 class="mt-1 truncate font-heading text-lg font-bold text-brand-text sm:text-xl">
-                                        <%= report.subjectLabel %>
-                                    </h3>
-                                </div>
-                                <span class="rounded-md bg-brand-primary/10 px-2 py-1 text-[11px] font-semibold text-brand-primary">
-                                    View
-                                </span>
-                            </div>
-
-                            <div class="mt-3 space-y-1.5 text-xs text-brand-text/70 sm:text-sm">
-                                <p>
-                                    Generated: <span class="font-semibold text-brand-text"><%= formatHistoryDate(report.createdAt) %></span>
-                                </p>
-                                <p>
-                                    Period:
-                                    <span class="font-semibold text-brand-text">
-                                        <%= formatHistoryDate(report.periodStart, { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                                        -
-                                        <%= formatHistoryDate(report.periodEnd, { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                                    </span>
-                                </p>
-                            </div>
+                            View
                         </a>
-                    <% }) %>
+                    </div>
                 </div>
-            <% } %>
-        </section>
-    <% }) %>
-</section>
+            <% }) %>
+        </div>
+    </section>
+</div>
