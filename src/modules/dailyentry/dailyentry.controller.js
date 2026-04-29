@@ -5,6 +5,7 @@ Modified by: Alexis Berthou
 */
 
 const crypto = require('crypto');
+const { z } = require('zod');
 
 const Account = require('../../models/account');
 const Team = require('../../models/team');
@@ -20,6 +21,41 @@ const MAX_URL_LENGTH = 2048;
 const SLACK_MAX_SIGNATURE_AGE_SECONDS = 300;
 const AUTO_JOIN_ROLE = 'EMPLOYEE';
 const AUTO_JOIN_PROJECT_DESCRIPTION = 'Auto-joined from Slack standup.';
+
+const isValidSlackDate = function isValidSlackDate(value) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    return date.getUTCFullYear() === year
+        && date.getUTCMonth() === month - 1
+        && date.getUTCDate() === day;
+};
+
+const slackPayloadSchema = z.object({
+    user: z.object({
+        displayName: z.string().trim().min(1),
+    }).passthrough(),
+    date: z.string().trim().refine(isValidSlackDate),
+    standup: z.object({
+        didToday: z.string().trim().min(1),
+        doingTomorrow: z.string().trim().min(1),
+        blockers: z.string().optional().default(''),
+    }).passthrough(),
+    standup_url: z.string().optional().default(''),
+    team: z.object({
+        name: z.string().optional().default(''),
+    }).passthrough().optional(),
+    channel: z.union([
+        z.object({
+            name: z.string().optional().default(''),
+        }).passthrough(),
+        z.string(),
+    ]).optional(),
+}).passthrough();
 
 /*getAiWrapper()
 Function responsible for loading the AI wrapper ESM module from a
@@ -76,24 +112,24 @@ exports.submitFromSlack = async (request, response) => {
         //     });
         // }
 
-        // Extract and validate necessary data from Slack payload
-        const body = request.body || {};
-        const slackUsername = String(body.user?.displayName || '').trim();
-        const entryDate = String(body.date || '').trim();
-        const toDo = String(body.standup?.doingTomorrow || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const done = String(body.standup?.didToday || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const blockers = String(body.standup?.blockers || '').trim().slice(0, MAX_TEXT_LENGTH);
-        const slackStandupURL = String(body.standup_url || '').trim().slice(0, MAX_URL_LENGTH);
-        const slackTeamName = String(body.team?.name || body.channel?.name || body.channel || '').trim();
-        const isValidDate = /^\d{4}-\d{2}-\d{2}$/.test(entryDate)
-            && !Number.isNaN(new Date(`${entryDate}T00:00:00`).getTime());
+        // Validate before normalizing so missing standup fields cannot become empty entries.
+        const parsedPayload = slackPayloadSchema.safeParse(request.body || {});
 
-        // Basic validation of required fields
-        if (!slackUsername || !isValidDate) {
+        if (!parsedPayload.success) {
             return response.status(400).json({
                 message: 'Invalid Slack payload',
             });
         }
+
+        // Extract and normalize necessary data from Slack payload
+        const body = parsedPayload.data;
+        const slackUsername = body.user.displayName;
+        const entryDate = body.date;
+        const toDo = body.standup.doingTomorrow.slice(0, MAX_TEXT_LENGTH);
+        const done = body.standup.didToday.slice(0, MAX_TEXT_LENGTH);
+        const blockers = body.standup.blockers.trim().slice(0, MAX_TEXT_LENGTH);
+        const slackStandupURL = body.standup_url.trim().slice(0, MAX_URL_LENGTH);
+        const slackTeamName = String(body.team?.name || body.channel?.name || body.channel || '').trim();
 
         // Find employee account, team and check for existing entry for the day
         const [accountRows] = await Account.findBySlackUsername(slackUsername);
