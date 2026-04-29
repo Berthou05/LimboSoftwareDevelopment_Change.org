@@ -18,7 +18,7 @@ module.exports = {
         },
         {
             title: 'Required privilege',
-            body: 'Changing role privileges requires `ADMIN-04`.',
+            body: 'Changing role privileges requires `ADMIN-04` which is only given to ADMIN users.',
         },
     ],
 };

@@ -11,6 +11,6 @@ module.exports = {
         { title: 'Open Reset Password', body: 'Click `Reset Password` from the sign in page.' },
         { title: 'Request a reset code', body: 'Enter your email and submit the reset request.' },
         { title: 'Enter the code', body: 'Open the reset confirmation page and enter the code sent to your email.' },
-        { title: 'Choose a new password', body: 'Enter and confirm a new password that meets the visible password requirements.' },
+        { title: 'Enter your new password', body: 'Enter and confirm a new password that meets the visible password requirements.' },
     ],
 };

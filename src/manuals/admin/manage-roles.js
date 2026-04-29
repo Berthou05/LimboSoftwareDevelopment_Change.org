@@ -9,6 +9,10 @@ module.exports = {
     helpKey: 'admin.manage-roles',
     sections: [
         {
+            title: 'Open Roles Administration',
+            body: 'Open de Roles Administration page.',
+        },
+        {
             title: 'Create a role',
             body: 'Click `Create Role`, enter the role name, and submit the popup.',
         },

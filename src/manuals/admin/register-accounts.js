@@ -8,7 +8,7 @@ module.exports = {
     appliesTo: ['Admin', 'Auth'],
     helpKey: 'admin.register-accounts',
     steps: [
-        { title: 'Open Accounts', body: 'Open the Admin Accounts page.' },
+        { title: 'Open Accounts Administration', body: 'Open the Accounts Administration page.' },
         { title: 'Click Create Account', body: 'Use the `Create Account` action.' },
         { title: 'Enter account details', body: 'Enter the required identity, email, password, and role details.' },
         { title: 'Create the account', body: 'Submit the form. The account is created when validation succeeds.' },
