@@ -9,6 +9,11 @@ const validateGuide = function validateGuide(guide) {
         return;
     }
 
+    // Older manual entries were created before type/status became required.
+    // Infer only from the existing content shape so those files keep working.
+    guide.type = guide.type || (Array.isArray(guide.steps) ? 'tutorial' : 'reference');
+    guide.status = guide.status || 'draft';
+
     if (!SUPPORTED_GUIDE_TYPES.includes(guide.type)) {
         throw new Error(`Manual guide has an unsupported type: ${guide.key}`);
     }

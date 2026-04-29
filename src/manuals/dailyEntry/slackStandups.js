@@ -1,11 +1,8 @@
-const dailyEntries = require('./slackStandups');
-
 module.exports = {
     key: 'slack-standups',
     title: 'Slack Standups',
     description: 'Guides for submitting and reviewing daily standup workflows from Slack.',
     entries: [
-        dailyEntries,
         {
             key: 'slack-standups.submit-standup',
             title: 'Submit a standup',

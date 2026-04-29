@@ -1,7 +1,7 @@
-const createProject = require('./projects/createProject');
-const submitDailyStandup = require('./dailyEntry/slackStandups');
-const generateReport = require('./reports/generate-report');
-const assignTeamMember = require('./teams/assignTeamMember');
+const createProject = require('./quick-start/create-your-first-project');
+const submitDailyStandup = require('./quick-start/submit-a-daily-standup');
+const generateReport = require('./quick-start/generate-a-report');
+const assignTeamMember = require('./quick-start/assign-a-team-member');
 
 module.exports = {
     key: 'quick-start',
