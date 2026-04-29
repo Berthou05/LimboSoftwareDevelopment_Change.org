@@ -398,6 +398,8 @@ async function getContext(reportType, id, start_date, end_date, route, wantsJson
             ids = projectIds.map(p => p.project_id);
         }        
 
+        console.log(projectIds);
+
         //Obtention of remaining data depending on projectIds
         const [activities, goals, achievements, highlights, prompts] = await Promise.all([
             Activity.getProjectActivities(ids,start_date,end_date),

@@ -273,7 +273,7 @@ module.exports = class Project {
 
     static getEmployeeProjectIDsBtw(employee_id, start_date, end_date){
         return db.execute(`
-            SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, E.full_name AS 'lead_name'
+            SELECT DISTINCT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, E.full_name AS 'lead_name'
             FROM project as P 
             INNER JOIN collaboration AS C ON C.project_id=P.project_id
             INNER JOIN employee AS E ON E.employee_id=P.employee_responsible_id
@@ -287,7 +287,7 @@ module.exports = class Project {
 
     static getTeamProjectIDsBtw(team_id, start_date, end_date){
         return db.execute(`
-            SELECT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, E.full_name AS 'lead_name'
+            SELECT DISTINCT P.project_id, P.name, P.description, P.status, P.start_date, P.end_date, E.full_name AS 'lead_name'
             FROM project as P 
             INNER JOIN projectteam AS PT ON PT.project_id=P.project_id 
             INNER JOIN employee AS E ON E.employee_id=P.employee_responsible_id

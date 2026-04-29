@@ -782,7 +782,7 @@ const generateReportSection = async function generateReportSection(body, prompt,
     output: Output.object({ schema: zodSchema(reportSchema) }),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt),
-    maxRetries: 2
+    maxRetries: 0
   });
   return output
 };
