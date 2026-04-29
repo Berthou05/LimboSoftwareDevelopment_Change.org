@@ -933,7 +933,7 @@ exports.addProjectTeam = (request, response, next) => {
     }
 
     if (!teamDescription) {
-        teamDescription = null;
+        teamDescription = '';
     }
 
     return Project.findById(projectId)
