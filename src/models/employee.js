@@ -46,6 +46,7 @@ FROM employee AS E
 INNER JOIN account AS A
     ON A.employee_id = E.employee_id
 WHERE E.employee_id IN (${LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY})
+    AND A.status = 'ACTIVE'
     AND (
         ? = ''
         OR E.full_name LIKE ?
@@ -95,6 +96,14 @@ module.exports = class Employee {
 
     static getEmployeeIdByFullname(fullname){
         return db.execute('SELECT employee_id FROM employee WHERE full_name=?',
+            [fullname]);
+    }
+
+    /* findByFullname(fullname)
+    Function responsible for checking if an employee exists with the given full_name*/
+
+    static findByFullname(fullname){
+        return db.execute('SELECT employee_id, full_name FROM employee WHERE full_name=?',
             [fullname]);
     }
 

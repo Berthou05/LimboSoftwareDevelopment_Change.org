@@ -14,21 +14,26 @@
 <article class="rounded-2xl bg-white p-4 shadow-panel <%= cardClasses %>">
     <div class="flex items-start justify-between gap-3">
         <div class="flex items-center gap-3">
-            <% if (team.image) { %>
-                <img
+            <div class="relative h-12 w-12">
+                <% const initials = team.name
+                    ? team.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
+                    : '?'; %>
+
+                <!-- Fallback (initials) -->
+                <div class="app-directory-avatar flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold">
+                    <%= initials %>
+                </div>
+
+                <!-- Image -->
+                <% if (team.image) { %>
+                    <img
                     src="<%= team.image %>"
                     alt="<%= team.name %>"
-                    class="h-12 w-12 rounded-full border border-brand-secondary object-cover"
-                    onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
-                />
-            <% } else { %>
-                <div
-                    class="app-directory-avatar flex h-14 w-14 items-center justify-center rounded-xl bg-brand-bg
-                        text-lg font-bold"
-                >
-                    <%= placeholderInitials %>
-                </div>
-            <% } %>
+                    class="absolute inset-0 h-12 w-12 rounded-full object-cover"
+                    onerror="this.style.display='none'"
+                    />
+                <% } %>
+            </div>
             <div>
                 <h3 class="font-heading text-lg font-bold text-brand-text"><%= team.name %></h3>
                 <p class="text-sm text-brand-text/70">Lead: <%= team.leadName %></p>

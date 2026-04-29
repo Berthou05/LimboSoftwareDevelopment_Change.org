@@ -33,6 +33,7 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     const leftLabel = form.querySelector('[data-calendar-label="left"]');
     const rightLabel = form.querySelector('[data-calendar-label="right"]');
     const applyButton = form.querySelector('[data-date-apply]');
+    const presetInput = form.querySelector('[data-preset-key]');
     const rangeBadge = document.querySelector('#reportsQuarterBadge');
     const latestReportCreatedAt = generatorCard
         ? generatorCard.querySelector('[data-latest-report-created-at]')
@@ -222,6 +223,10 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         selectedEnd = range.end;
         baseMonth = createMonthStart(selectedStart);
 
+        if (presetInput) {
+            presetInput.value = preset.key || '';
+        }
+
         syncDateInputs();
         renderCalendars();
     };
@@ -232,12 +237,14 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
             const quarter = Math.floor(today.getMonth() / 3) + 1;
 
             applyPreset({
+                key: `q${quarter}`,
                 getRange: () => createQuarterRange(today.getFullYear(), quarter),
             });
             return;
         }
 
         applyPreset({
+            key: 'last-week',
             getRange: () => createTrailingDaysRange(7),
         });
     };
@@ -416,6 +423,10 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
                     selectedStart = date;
                 } else {
                     selectedEnd = date;
+                }
+
+                if (presetInput) {
+                    presetInput.value = '';
                 }
 
                 syncDateInputs();

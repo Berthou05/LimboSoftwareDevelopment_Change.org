@@ -4,212 +4,386 @@ skinparam sequenceArrowThickness 1.2
 skinparam roundcorner 6
 autonumber
 
-actor    "User"                              as User
-boundary "pages/login.ejs"                   as LoginView
-boundary "pages/recover-email.ejs"           as RecoverEmailView
-boundary "pages/recover-token.ejs"           as RecoverTokenView
-boundary "pages/recover-reset-password.ejs"  as RecoverResetView
-boundary "auth.routes"                       as Routes
-control  "auth.controller"                   as Controller
-entity   "account.model"                     as AccountModel
-control  "email.service"                     as EmailService
-database "unitas_system"                     as DB
+actor    "User"                   as User
+boundary "pages/login.ejs"        as LoginView
+boundary "pages/reset.ejs"        as ResetView
+boundary "pages/resetConfirm.ejs" as ResetConfirmView
+boundary "auth.routes"            as AuthRoutes
+control  "auth.controller"        as AuthController
+entity   "account.model"          as AccountModel
+control  "resendService"          as ResendService
+database "unitas_system"          as DB
 
-note right of AccountModel
-  Account fields used by AUTH-03:
-  - recovery_token VARCHAR(16)
-  - recovery_token_expires_at DATETIME
-end note
+== Main Flow ==
 
-activate User
-User -> LoginView : Click "Recover Password"
-deactivate User
+User -> LoginView : Click "Reset Password"
 activate LoginView
-LoginView -> Routes : GET /recover
-activate Routes
-Routes -> Controller : getRecoverEmail(request, response)
-activate Controller
-deactivate Routes
-Controller ->> Routes : response.render('pages/recover-email',\n{ csrfToken, formErrors: [], formSuccess: '' })
-activate Routes
-Routes ->> RecoverEmailView : HTTP 200 HTML
-deactivate Routes
-RecoverEmailView --> User : Show email confirmation page
-deactivate Controller
+LoginView -> AuthRoutes : GET /reset
 deactivate LoginView
+activate AuthRoutes
+AuthRoutes -> AuthController : getReset()
+activate AuthController
+AuthController --> AuthRoutes : render('pages/reset')
+deactivate AuthController
+AuthRoutes --> ResetView : HTML
+deactivate AuthRoutes
+activate ResetView
+ResetView --> User : Show email form
+deactivate ResetView
 
-activate User
-User -> RecoverEmailView : Enter email and submit form
-deactivate User
-activate RecoverEmailView
-RecoverEmailView -> RecoverEmailView : Browser validation\n(required + type='email')
-RecoverEmailView -> Routes : POST /recover/email\n{ email, _csrf }
-activate Routes
-Routes -> Controller : postRecoverEmail(request, response)
-activate Controller
-deactivate Routes
-
-Controller -> Controller : validateEmailFormat(email)
-
-alt Invalid email format
-    Controller ->> Routes : response.status(400).render('pages/recover-email',\n{ formErrors:['Enter a valid email address.'] })
-    activate Routes
-    Routes ->> RecoverEmailView : HTTP 400 HTML
-    deactivate Routes
-    RecoverEmailView --> User : Show email format error
-end
-
-Controller -> AccountModel : fetchByEmail(email)
+User -> ResetView : Submit email
+activate ResetView
+ResetView -> AuthRoutes : POST /reset
+deactivate ResetView
+activate AuthRoutes
+AuthRoutes -> AuthController : postReset()
+activate AuthController
+AuthController -> AccountModel : fetchByEmail(email)
 activate AccountModel
-AccountModel -> DB : execute(\n  'SELECT account_id, employee_id, email, status\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
+AccountModel -> DB : Find account by email
 activate DB
-DB --> AccountModel : accountRows[]
+DB --> AccountModel : account
 deactivate DB
-AccountModel --> Controller : accountRows[]
+AccountModel --> AuthController : account
 deactivate AccountModel
 
-alt Account not found or DISABLED
-    Controller ->> Routes : response.render('pages/recover-token',\n{ recoveryEmail: email,\n  formSuccess: 'If the email exists, a passkey was sent.' })
-    activate Routes
-    Routes ->> RecoverTokenView : HTTP 200 HTML
-    deactivate Routes
-    RecoverTokenView --> User : Show token page with generic message
-end
-
-Controller -> Controller : recoveryToken = generatePasskey(8)\nexpiresAt = NOW + 15 minutes
-Controller -> AccountModel : setRecoveryToken(account_id, recoveryToken, expiresAt)
+AuthController -> AuthController : create 6-digit token\nhash token\nset expiration
+AuthController -> AccountModel : saveResetToken(account_id, tokenHash, expiresAt)
 activate AccountModel
-AccountModel -> DB : execute(\n  'UPDATE account\n   SET recovery_token = ?,\n       recovery_token_expires_at = ?\n   WHERE account_id = ?',\n  [recoveryToken, expiresAt, account_id]\n)
+AccountModel -> DB : Save token hash + expiration
 activate DB
 DB --> AccountModel : update result
 deactivate DB
-AccountModel --> Controller : token saved
+AccountModel --> AuthController : token saved
 deactivate AccountModel
 
-Controller -> EmailService : sendRecoveryPasskey(email, recoveryToken, expiresAt)
-activate EmailService
-EmailService --> Controller : delivered | failed
-deactivate EmailService
+AuthController -> ResendService : sendResetEmail(email, token, 8)
+activate ResendService
+ResendService --> AuthController : delivered
+deactivate ResendService
+AuthController -> AuthController : session.resetEmail = email
+AuthController --> AuthRoutes : redirect('/reset/confirm') + success
+deactivate AuthController
+AuthRoutes --> User : HTTP 302 /reset/confirm
+deactivate AuthRoutes
+User -> AuthRoutes : GET /reset/confirm
+activate AuthRoutes
+AuthRoutes -> AuthController : getResetConfirm()
+activate AuthController
+AuthController --> AuthRoutes : render('pages/resetConfirm')
+deactivate AuthController
+AuthRoutes --> ResetConfirmView : HTML
+deactivate AuthRoutes
+activate ResetConfirmView
+ResetConfirmView --> User : Show code + password form
+deactivate ResetConfirmView
 
-alt Email delivery failed
-    Controller -> AccountModel : clearRecoveryToken(account_id)
+User -> ResetConfirmView : Submit token + passwords
+activate ResetConfirmView
+ResetConfirmView -> AuthRoutes : POST /reset/confirm
+deactivate ResetConfirmView
+activate AuthRoutes
+AuthRoutes -> AuthController : postResetConfirm()
+activate AuthController
+AuthController -> AccountModel : fetchByEmailAndResetToken(email, tokenHash)
+activate AccountModel
+AccountModel -> DB : Find account by email + token hash
+activate DB
+DB --> AccountModel : account
+deactivate DB
+AccountModel --> AuthController : account
+deactivate AccountModel
+
+AuthController -> AuthController : bcrypt.hash(password, 12)
+AuthController -> AccountModel : updatePasswordAndClearResetToken(account_id, passwordHash)
+activate AccountModel
+AccountModel -> DB : Update password and clear token
+activate DB
+DB --> AccountModel : update result
+deactivate DB
+AccountModel --> AuthController : password updated
+deactivate AccountModel
+AuthController -> AuthController : session.resetEmail = null
+AuthController --> AuthRoutes : redirect('/') + success
+deactivate AuthController
+AuthRoutes --> User : HTTP 302 /
+deactivate AuthRoutes
+User -> AuthRoutes : GET /
+activate AuthRoutes
+AuthRoutes -> AuthController : getLogin()
+activate AuthController
+AuthController --> AuthRoutes : render('pages/login')
+deactivate AuthController
+AuthRoutes --> LoginView : HTML
+deactivate AuthRoutes
+activate LoginView
+LoginView --> User : Show login + success
+deactivate LoginView
+
+== Alternatives: POST /reset ==
+
+alt Empty email
+    User -> ResetView : Submit empty email
+    activate ResetView
+    ResetView -> AuthRoutes : POST /reset
+    deactivate ResetView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postReset()
+    activate AuthController
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show email error
+    deactivate ResetView
+end
+
+alt Account not found
+    User -> ResetView : Submit unknown email
+    activate ResetView
+    ResetView -> AuthRoutes : POST /reset
+    deactivate ResetView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postReset()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmail(email)
     activate AccountModel
-    AccountModel -> DB : execute(\n  'UPDATE account\n   SET recovery_token = NULL,\n       recovery_token_expires_at = NULL\n   WHERE account_id = ?',\n  [account_id]\n)
+    AccountModel -> DB : Find account by email
+    activate DB
+    DB --> AccountModel : no account
+    deactivate DB
+    AccountModel --> AuthController : []
+    deactivate AccountModel
+    AuthController -> AuthController : session.resetEmail = email
+    AuthController --> AuthRoutes : render('pages/resetConfirm') + generic success
+    deactivate AuthController
+    AuthRoutes --> ResetConfirmView : HTML
+    deactivate AuthRoutes
+    activate ResetConfirmView
+    ResetConfirmView --> User : Show code form
+    deactivate ResetConfirmView
+end
+
+alt Resend not configured
+    User -> ResetView : Submit valid email
+    activate ResetView
+    ResetView -> AuthRoutes : POST /reset
+    deactivate ResetView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postReset()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmail(email)
+    activate AccountModel
+    AccountModel -> DB : Find account by email
+    activate DB
+    DB --> AccountModel : account
+    deactivate DB
+    AccountModel --> AuthController : account
+    deactivate AccountModel
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show service error
+    deactivate ResetView
+end
+
+alt Email send fails
+    User -> ResetView : Submit valid email
+    activate ResetView
+    ResetView -> AuthRoutes : POST /reset
+    deactivate ResetView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postReset()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmail(email)
+    activate AccountModel
+    AccountModel -> DB : Find account by email
+    activate DB
+    DB --> AccountModel : account
+    deactivate DB
+    AccountModel --> AuthController : account
+    deactivate AccountModel
+    AuthController -> AccountModel : saveResetToken(account_id, tokenHash, expiresAt)
+    activate AccountModel
+    AccountModel -> DB : Save token hash + expiration
     activate DB
     DB --> AccountModel : update result
     deactivate DB
-    AccountModel --> Controller : token cleared
+    AccountModel --> AuthController : token saved
     deactivate AccountModel
-
-    Controller ->> Routes : response.status(500).render('pages/recover-email',\n{ formErrors:['Unable to send recovery passkey. Try again.'] })
-    activate Routes
-    Routes ->> RecoverEmailView : HTTP 500 HTML
-    deactivate Routes
-    RecoverEmailView --> User : Show email service error
+    AuthController -> ResendService : sendResetEmail(email, token, 8)
+    activate ResendService
+    ResendService --> AuthController : failed
+    deactivate ResendService
+    AuthController -> AccountModel : clearResetToken(account_id)
+    activate AccountModel
+    AccountModel -> DB : Clear token data
+    activate DB
+    DB --> AccountModel : update result
+    deactivate DB
+    AccountModel --> AuthController : token cleared
+    deactivate AccountModel
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show send error
+    deactivate ResetView
 end
 
-Controller ->> Routes : response.render('pages/recover-token',\n{ recoveryEmail: email,\n  formSuccess: 'Enter the passkey sent to your email.' })
-activate Routes
-Routes ->> RecoverTokenView : HTTP 200 HTML
-deactivate Routes
-RecoverTokenView --> User : Show token/passkey input page
-deactivate Controller
-deactivate RecoverEmailView
+== Alternatives: GET /reset/confirm ==
 
-activate User
-User -> RecoverTokenView : Enter email + passkey and submit
-deactivate User
-activate RecoverTokenView
-RecoverTokenView -> RecoverTokenView : Front-end required field validation
-RecoverTokenView -> Routes : POST /recover/token\n{ email, passkey, _csrf }
-activate Routes
-Routes -> Controller : postRecoverToken(request, response)
-activate Controller
-deactivate Routes
-
-Controller -> AccountModel : fetchRecoveryByEmail(email)
-activate AccountModel
-AccountModel -> DB : execute(\n  'SELECT account_id, email, status,\n          recovery_token, recovery_token_expires_at\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
-activate DB
-DB --> AccountModel : recoveryRows[]
-deactivate DB
-AccountModel --> Controller : recoveryRows[]
-deactivate AccountModel
-
-Controller -> Controller : validatePasskey(passkey, recovery_token)\nvalidatePasskeyExpiration(recovery_token_expires_at)
-
-alt Invalid or expired passkey
-    Controller ->> Routes : response.status(400).render('pages/recover-token',\n{ recoveryEmail: email,\n  formErrors:['Invalid or expired passkey.'] })
-    activate Routes
-    Routes ->> RecoverTokenView : HTTP 400 HTML
-    deactivate Routes
-    RecoverTokenView --> User : Show passkey validation error
+alt Token query present
+    User -> AuthRoutes : GET /reset/confirm?token=123456
+    activate AuthRoutes
+    AuthRoutes -> AuthController : getResetConfirm()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmailAndResetToken(null, tokenHash)
+    activate AccountModel
+    AccountModel -> DB : Find account by token hash
+    activate DB
+    DB --> AccountModel : accounts[]
+    deactivate DB
+    AccountModel --> AuthController : accounts[]
+    deactivate AccountModel
+    AuthController -> AuthController : session.resetEmail = account.email
+    AuthController --> AuthRoutes : render('pages/resetConfirm')
+    deactivate AuthController
+    AuthRoutes --> ResetConfirmView : HTML
+    deactivate AuthRoutes
+    activate ResetConfirmView
+    ResetConfirmView --> User : Show code + password form
+    deactivate ResetConfirmView
 end
 
-Controller ->> Routes : response.render('pages/recover-reset-password',\n{ recoveryEmail: email, passkey })
-activate Routes
-Routes ->> RecoverResetView : HTTP 200 HTML
-deactivate Routes
-RecoverResetView --> User : Show reset password page
-deactivate Controller
-deactivate RecoverTokenView
-
-activate User
-User -> RecoverResetView : Enter new password + confirmation\nSubmit form
-deactivate User
-activate RecoverResetView
-RecoverResetView -> RecoverResetView : Front-end password policy + confirmation check
-RecoverResetView -> Routes : POST /recover/reset\n{ email, passkey, password, confirmPassword, _csrf }
-activate Routes
-Routes -> Controller : postRecoverResetPassword(request, response)
-activate Controller
-deactivate Routes
-
-Controller -> Controller : validatePasswordPolicy(password)\nvalidatePasswordMatch(password, confirmPassword)
-
-alt Invalid password payload
-    Controller ->> Routes : response.status(400).render('pages/recover-reset-password',\n{ recoveryEmail: email, passkey,\n  formErrors:['Password policy or confirmation is invalid.'] })
-    activate Routes
-    Routes ->> RecoverResetView : HTTP 400 HTML
-    deactivate Routes
-    RecoverResetView --> User : Show password validation error
+alt No reset context
+    User -> AuthRoutes : GET /reset/confirm
+    activate AuthRoutes
+    AuthRoutes -> AuthController : getResetConfirm()
+    activate AuthController
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show "Request a reset code first."
+    deactivate ResetView
 end
 
-Controller -> AccountModel : fetchRecoveryByEmail(email)
-activate AccountModel
-AccountModel -> DB : execute(\n  'SELECT account_id, email, status,\n          recovery_token, recovery_token_expires_at\n   FROM account\n   WHERE email = ?\n   LIMIT 1',\n  [email]\n)
-activate DB
-DB --> AccountModel : recoveryRows[]
-deactivate DB
-AccountModel --> Controller : recoveryRows[]
-deactivate AccountModel
+== Alternatives: POST /reset/confirm ==
 
-Controller -> Controller : revalidatePasskey(passkey, recovery_token)\nrevalidatePasskeyExpiration(recovery_token_expires_at)
-
-alt Invalid or expired passkey during reset
-    Controller ->> Routes : response.status(400).render('pages/recover-token',\n{ recoveryEmail: email,\n  formErrors:['Passkey expired. Request a new one.'] })
-    activate Routes
-    Routes ->> RecoverTokenView : HTTP 400 HTML
-    deactivate Routes
-    RecoverTokenView --> User : Return to passkey page with error
+alt Missing reset session
+    User -> ResetConfirmView : Submit form without reset session
+    activate ResetConfirmView
+    ResetConfirmView -> AuthRoutes : POST /reset/confirm
+    deactivate ResetConfirmView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postResetConfirm()
+    activate AuthController
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show reset request error
+    deactivate ResetView
 end
 
-Controller -> Controller : passwordHash = bcrypt.hash(password, 12)
-Controller -> AccountModel : updatePasswordAndClearRecovery(account_id, passwordHash)
-activate AccountModel
-AccountModel -> DB : execute(\n  'UPDATE account\n   SET password_hash = ?,\n       recovery_token = NULL,\n       recovery_token_expires_at = NULL\n   WHERE account_id = ?',\n  [passwordHash, account_id]\n)
-activate DB
-DB --> AccountModel : update result
-deactivate DB
-AccountModel --> Controller : password updated
-deactivate AccountModel
+alt Missing fields
+    User -> ResetConfirmView : Submit incomplete form
+    activate ResetConfirmView
+    ResetConfirmView -> AuthRoutes : POST /reset/confirm
+    deactivate ResetConfirmView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postResetConfirm()
+    activate AuthController
+    AuthController --> AuthRoutes : redirect('/reset/confirm') + error
+    deactivate AuthController
+    AuthRoutes --> ResetConfirmView : GET /reset/confirm
+    deactivate AuthRoutes
+    activate ResetConfirmView
+    ResetConfirmView --> User : Show missing fields error
+    deactivate ResetConfirmView
+end
 
-Controller ->> Routes : response.redirect('/?passwordRecovered=1')
-activate Routes
-Routes ->> LoginView : HTTP 302 -> GET /
-deactivate Routes
-LoginView --> User : Show login page with success message
-deactivate Controller
-deactivate RecoverResetView
+alt Password mismatch or invalid policy
+    User -> ResetConfirmView : Submit invalid password
+    activate ResetConfirmView
+    ResetConfirmView -> AuthRoutes : POST /reset/confirm
+    deactivate ResetConfirmView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postResetConfirm()
+    activate AuthController
+    AuthController --> AuthRoutes : redirect('/reset/confirm') + error
+    deactivate AuthController
+    AuthRoutes --> ResetConfirmView : GET /reset/confirm
+    deactivate AuthRoutes
+    activate ResetConfirmView
+    ResetConfirmView --> User : Show password error
+    deactivate ResetConfirmView
+end
+
+alt Invalid token
+    User -> ResetConfirmView : Submit invalid token
+    activate ResetConfirmView
+    ResetConfirmView -> AuthRoutes : POST /reset/confirm
+    deactivate ResetConfirmView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postResetConfirm()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmailAndResetToken(email, tokenHash)
+    activate AccountModel
+    AccountModel -> DB : Find account by email + token hash
+    activate DB
+    DB --> AccountModel : no account
+    deactivate DB
+    AccountModel --> AuthController : []
+    deactivate AccountModel
+    AuthController --> AuthRoutes : redirect('/reset/confirm') + error
+    deactivate AuthController
+    AuthRoutes --> ResetConfirmView : GET /reset/confirm
+    deactivate AuthRoutes
+    activate ResetConfirmView
+    ResetConfirmView --> User : Show invalid token error
+    deactivate ResetConfirmView
+end
+
+alt Expired token
+    User -> ResetConfirmView : Submit expired token
+    activate ResetConfirmView
+    ResetConfirmView -> AuthRoutes : POST /reset/confirm
+    deactivate ResetConfirmView
+    activate AuthRoutes
+    AuthRoutes -> AuthController : postResetConfirm()
+    activate AuthController
+    AuthController -> AccountModel : fetchByEmailAndResetToken(email, tokenHash)
+    activate AccountModel
+    AccountModel -> DB : Find account by email + token hash
+    activate DB
+    DB --> AccountModel : expired account
+    deactivate DB
+    AccountModel --> AuthController : account
+    deactivate AccountModel
+    AuthController -> AccountModel : clearResetToken(account_id)
+    activate AccountModel
+    AccountModel -> DB : Clear token data
+    activate DB
+    DB --> AccountModel : update result
+    deactivate DB
+    AccountModel --> AuthController : token cleared
+    deactivate AccountModel
+    AuthController -> AuthController : session.resetEmail = null
+    AuthController --> AuthRoutes : redirect('/reset') + error
+    deactivate AuthController
+    AuthRoutes --> ResetView : GET /reset
+    deactivate AuthRoutes
+    activate ResetView
+    ResetView --> User : Show expired token error
+    deactivate ResetView
+end
 
 @enduml

@@ -11,12 +11,24 @@
 
 <article class="rounded-2xl bg-white p-4 shadow-panel <%= cardClasses %>">
     <div class="flex items-center gap-3">
-        <img
-            src="<%= employeeImage %>"
-            alt="<%= employeeName %>"
-            class="h-12 w-12 rounded-full border border-brand-secondary object-cover"
-            onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
-        />
+        <div class="relative h-12 w-12">
+            <% const initials = employeeName
+                ? employeeName.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
+                : '?'; %>
+
+            <!-- Fallback (same blue style as directory) -->
+            <div class="app-directory-avatar flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold">
+                <%= initials %>
+            </div>
+
+            <!-- Image -->
+            <img
+                src="<%= employeeImage %>"
+                alt="<%= employeeName %>"
+                class="absolute inset-0 h-12 w-12 rounded-full border border-brand-secondary object-cover"
+                onerror="this.style.display='none'"
+            />
+        </div>
         <div class="min-w-0">
             <h3 class="truncate font-heading text-lg font-bold text-brand-text">
                 <%= employeeName %>

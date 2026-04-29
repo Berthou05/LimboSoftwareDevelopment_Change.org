@@ -1,0 +1,18 @@
+<%# Template: partials/shared/backButton.ejs
+   Purpose: Reusable back button with page-specific fallback route.
+   Expected locals:
+   - fallbackUrl
+%>
+
+<button
+    type="button"
+    class="mb-4 inline-flex items-center gap-1 rounded-lg px-3 text-sm font-semibold text-brand-text/70 transition hover:bg-brand-secondary/30"
+    data-back-button
+    data-fallback-url="<%= typeof fallbackUrl !== 'undefined' ? fallbackUrl : '/home' %>"
+    aria-label="Go back"
+>
+    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+    <span>Back</span>
+</button>

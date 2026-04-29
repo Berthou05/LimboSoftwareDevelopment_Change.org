@@ -20,11 +20,13 @@ router.post('/:team_id/toggle-membership', isAuth, teamController.toggleTeamMemb
 // Substitute this for getting members through AJAX for controller getTeamMembers
 router.post('/:team_id/members', isAuth, isAuth.requirePermission('TEAM-06-02'), teamController.addTeamMember);
 router.post('/:team_id/members/:employee_id/role', isAuth, isAuth.requirePermission('TEAM-07-02'), teamController.updateTeamMemberRole);
+router.post('/:team_id/join', isAuth, isAuth.requirePermission('TEAM-06-01'), teamController.addTeamMember);
 
 // Add the following line for addTeamMember
 // router.post('/:team_id/join', isAuth, teamController.addTeamMember);
 
 router.post('/:team_id/members/:employee_id/remove', isAuth, isAuth.requirePermission('TEAM-07-02'), teamController.removeTeamMember);
+router.post('/:team_id/leave', isAuth, isAuth.requirePermission('TEAM-07-01'), teamController.leaveTeam);
 router.delete('/:team_id/delete', isAuth, teamController.deleteTeam);
 router.get('/:team_id', teamController.ensureTeamExists, isAuth, teamController.getTeamPage);
 

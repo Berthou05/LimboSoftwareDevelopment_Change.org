@@ -1,43 +1,71 @@
 # Manuals
 
-Manual content is split by ownership area so each module can update its own guides.
+Manual content is split by section so each guide can be edited independently.
 
-## Files
+## Active structure
 
-- `shared.js`: reusable flows used by many modules
-- `quickStart/`: first-use guides grouped as onboarding-style tasks
-- `projects.js`, `roles.js`, `dailyEntries.js`, `reports.js`: module-specific guides
-- `index.js`: registers sections and controls manual navigation grouping
+- `quick-start/`: first-use task guides
+- `concepts/`: conceptual explanations shared across modules
+- `projects/`: project workflows and references
+- `teams/`: team workflows and references
+- `employees/`: employee profile and activity guides
+- `reports/`: report generation and output guides
+- `admin/`: account, role, and privilege administration guides
+- `auth/`: sign in and password recovery guides
+- `index.js`: loads guide files from the section folders
 
-## Entry shape
+Each active guide file exports one CommonJS guide object. The loader only includes files with `key`, `title`, `type`, and `status`.
 
-Each entry should keep the same structure:
+## Tutorial guide
 
 ```js
-{
-    key: 'projects.manage',
-    title: 'Managing projects',
-    summary: 'Short overview shown before the guide steps.',
+module.exports = {
+    key: 'projects.create-project',
+    title: 'Create project',
+    type: 'tutorial',
+    status: 'complete',
+    summary: 'Create a new project and assign yourself as its responsible lead.',
     appliesTo: ['Projects'],
-    helpKey: 'projects.manage',
+    helpKey: 'projects.create-project',
     steps: [
         {
-            title: 'Open the project directory',
-            body: 'Explain the user action in plain language.',
+            title: 'Open Projects',
+            body: 'Open the Projects page.',
             image: {
-                src: '/images/manuals/projects/directory.png',
-                alt: 'Projects directory page',
-                caption: 'Optional caption shown below the image.',
+                src: '/images/manuals/projects/create-project-1.webp',
+                alt: 'Projects page',
             },
         },
     ],
-}
+};
+```
+
+## Concept, workflow, or reference guide
+
+```js
+module.exports = {
+    key: 'concepts.activity-tracking',
+    title: 'How activity tracking works',
+    type: 'concept',
+    status: 'complete',
+    summary: 'Understand how activity entries appear across the system.',
+    appliesTo: ['Home', 'Employees', 'Teams', 'Projects'],
+    helpKey: 'concepts.activity-tracking',
+    sections: [
+        {
+            title: 'Where activity appears',
+            body: 'Activity appears on employee, team, project, and home views.',
+            items: ['Employees', 'Teams', 'Projects'],
+        },
+    ],
+};
 ```
 
 ## Editing rules
 
-- Put shared behavior in `shared.js` instead of repeating it in every module guide.
-- Keep one file per module area when possible so ownership stays clear.
-- Every manual step must include an `image` object with a valid `src`.
-- Add screenshot paths directly inside the related step once the image exists in `src/public/images/manuals`.
-- Only update `index.js` when a new module file or section is added.
+- Keep one guide per file.
+- Use kebab-case filenames, such as `create-project.js`.
+- Use `status: 'draft'` for guides that depend on incomplete or uncertain product behavior.
+- Do not add screenshots until the actual image exists.
+- If a future screenshot is useful, add an `image` object with a predictable path inside the related step.
+- Add a folder to `SECTION_CONFIG` in `index.js` only when adding a new manual section.

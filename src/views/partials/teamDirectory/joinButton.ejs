@@ -1,12 +1,54 @@
-<%# Leave/Join Team %>
 <div class="rounded-2xl border border-brand-secondary bg-white p-4 shadow-panel">
-    <form action="/teams/<%= team.id %>/toggle-membership" method="POST">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button
-            type="submit"
-            class="app-cta-button w-full <%= isMember ? 'app-cta-button--neutral' : 'app-cta-button--highlight' %>"
-        >
-            <%= isMember ? 'Leave Team' : 'Join Team' %>
+
+    <% if (!isMember) { %>
+
+        <button 
+            type="button" 
+            data-popup-open="joinRolePopup-<%= team.id %>"
+            class="app-cta-button w-full app-cta-button--highlight">
+            Join Team
         </button>
-    </form>
+
+        <%- include('../shared/actionPopup', {
+            popupId: `joinRolePopup-${team.id}`,
+            popupTitle: 'Choose Role',
+            popupAction: `/teams/${team.id}/join`,
+            popupDescription: 'Choose your Role in the Team',
+            popupMethod: 'POST',
+            csrfToken,
+            popupFields: [
+                {
+                    name: 'role',
+                    type: 'select',
+                    options: [
+                        { value: 'EMPLOYEE', label: 'EMPLOYEE' },
+                        { value: 'LEAD', label: 'LEAD' }
+                    ]
+                }
+            ]
+        }) %>
+
+    <% } else { %>
+
+        <button 
+            type="button" 
+            data-popup-open="leavePopup-<%= team.id %>"
+            class="app-cta-button w-full app-cta-button--neutral">
+            Leave Team
+        </button>
+
+        <%- include('../shared/actionPopup', {
+            popupId: `leavePopup-${team.id}`,
+            popupTitle: 'Leave Team',
+            popupDescription: 'Are you sure you want to leave this team?',
+            popupAction: `/teams/${team.id}/leave`,
+            popupMethod: 'POST',
+            popupSubmitTone: 'danger',
+            popupSubmitLabel: 'Leave',
+            csrfToken,
+            popupFields: []
+        }) %>
+
+    <% } %>
+
 </div>

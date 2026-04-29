@@ -1,209 +1,245 @@
-<%# Template: pages/createAccount.ejs
-   Purpose: Admin create-account page.
-   Expected locals: roles, formData.
-%>
+<section class="w-full rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h2 class="font-heading text-xl font-bold">Create Account</h2>
 
-<%- include("../partials/pageHeader", { title: pageTitle, subtitle: pageSubtitle }) %>
+    <div class="flex flex-wrap gap-3">
+      <button
+        type="submit"
+        form="accountForm"
+        class="rounded-xl bg-brand-primary px-4 py-2 text-sm font-semibold text-black transition hover:bg-brand-accent"
+      >
+        Create Account
+      </button>
 
-<div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_320px]">
-  <section class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <form action="/admin/accounts/create" method="POST" class="grid gap-4 sm:grid-cols-2">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
-      <label class="block text-sm sm:col-span-1">
-        <span class="mb-1 block text-brand-text/70">Name(s)</span>
+      <a
+        href="/admin/accounts"
+        class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/30"
+      >
+        Cancel
+      </a>
+    </div>
+  </div>
+
+  <form
+    id="accountForm"
+    action="/admin/accounts/create"
+    method="POST"
+    enctype="multipart/form-data"
+    class="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_12rem]"
+  >
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+    <!-- LEFT SIDE -->
+    <div class="grid gap-4 sm:grid-cols-2">
+
+      <!-- Names -->
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text">Names</span>
         <input
           type="text"
           name="names"
           value="<%= formData.names %>"
           placeholder="Alexis"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm sm:col-span-1">
-        <span class="mb-1 block text-brand-text/70">Last names</span>
+      <!-- Last Names -->
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text">Last names</span>
         <input
           type="text"
           name="lastnames"
           value="<%= formData.lastnames %>"
           placeholder="Berthou"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm sm:col-span-2">
-        <span class="mb-1 block text-brand-text/70">Email</span>
+      <!-- Email -->
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text">Email</span>
         <input
           type="email"
           name="email"
           value="<%= formData.email %>"
           placeholder="new.account@unitas.dev"
           required
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
+      <!-- Slack -->
       <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Password</span>
-        <input
-          id="createAccountPassword"
-          type="password"
-          name="password"
-          required
-          minlength="6"
-          placeholder="At least 6 characters"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
-        <div class="mt-2 flex items-center gap-2">
-          <button
-            id="generateAccountPasswordBtn"
-            type="button"
-            class="rounded-lg border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
-          >
-            Auto-generate
-          </button>
-          <span id="generateAccountPasswordHint" class="text-xs font-medium text-brand-text/70"></span>
-        </div>
-      </label>
-
-      <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Confirm password</span>
-        <input
-          type="password"
-          name="confirmPassword"
-          required
-          minlength="6"
-          placeholder="Repeat password"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
-      </label>
-
-      <label class="block text-sm">
-        <span class="mb-1 block text-brand-text/70">Slack username</span>
+        <span class="mb-1 block font-semibold text-brand-text">Slack username</span>
         <input
           type="text"
           name="slackUsername"
           value="<%= formData.slackUsername %>"
           placeholder="@newmember"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
+          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
         />
       </label>
 
-      <label class="block text-sm sm:col-span-1">
-        <span class="mb-1 block text-brand-text/70">Role</span>
+      <!-- Password -->
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text">Password</span>
+
+        <div class="relative">
+          <input
+            id="createAccountPassword"
+            type="password"
+            name="password"
+            required
+            minlength="6"
+            placeholder="At least 6 characters"
+            class="w-full rounded-xl border border-brand-secondary px-3 py-2 pr-10 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
+          />
+
+          <button
+            type="button"
+            data-password-toggle="createAccountPassword"
+            aria-label="Show password"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text/55 hover:text-brand-text"
+          >
+            <!-- Eye open (password hidden) -->
+            <svg data-eye-open class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <!-- Eye closed (password visible) -->
+            <svg data-eye-closed class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="mt-2 flex items-center gap-2">
+          <button
+            id="generateAccountPasswordBtn"
+            type="button"
+            class="rounded-lg border border-brand-secondary px-3 py-1 text-xs font-semibold text-brand-text/80 hover:bg-brand-secondary/20"
+          >
+            Auto-generate
+          </button>
+
+          <span id="generateAccountPasswordHint" class="text-xs text-brand-text/70"></span>
+        </div>
+      </label>
+
+      <!-- Confirm Password -->
+      <label class="block text-sm">
+        <span class="mb-1 block font-semibold text-brand-text">Confirm password</span>
+
+        <div class="relative">
+          <input
+            id="createAccountConfirmPassword"
+            type="password"
+            name="confirmPassword"
+            required
+            minlength="6"
+            placeholder="Repeat password"
+            class="w-full rounded-xl border border-brand-secondary px-3 py-2 pr-10 outline-none placeholder:text-brand-text/30 ring-brand-primary/30 focus:ring"
+          />
+
+          <button
+            type="button"
+            data-password-toggle="createAccountConfirmPassword"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-brand-text/55 hover:text-brand-text"
+          >
+            <svg data-eye-open class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.964-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <svg data-eye-closed class="w-4 h-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          </button>
+        </div>
+      </label>
+
+
+      <!-- Role -->
+      <label class="block text-sm sm:col-span-2">
+        <span class="mb-1 block font-semibold text-brand-text">Role</span>
         <select
           name="roleId"
           required
           class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
         >
           <% roles.forEach((role) => { %>
-            <option value="<%= role.id %>" <%= formData.roleId === role.id ? "selected" : "" %>><%= role.name %></option>
+            <option value="<%= role.id %>" <%= formData.roleId === role.id ? "selected" : "" %>>
+              <%= role.name %>
+            </option>
           <% }) %>
         </select>
       </label>
 
-      <label class="block text-sm sm:col-span-2">
-        <span class="mb-1 block text-brand-text/70">Profile image (optional)</span>
-        <input
-          id="accountImageFile"
-          type="file"
-          accept="image/*"
-          class="w-full rounded-xl border border-brand-secondary px-3 py-2 outline-none ring-brand-primary/30 focus:ring"
-        />
-        <input id="accountImageValue" type="hidden" name="image" value="<%= formData.image %>" />
-        <p id="accountImageFilename" class="mt-1 text-xs text-brand-text/65">No file selected</p>
-      </label>
+    </div>
 
-      <div class="flex items-center justify-center rounded-xl border border-brand-secondary bg-brand-bg p-3 sm:col-span-2">
-        <img
-          id="accountImagePreview"
-          src="<%= formData.image || '/images/accounts/2026-04-13T18-43-46.235Z-avatar.png' %>"
-          alt="Account preview"
-          class="h-20 w-20 rounded-full border border-brand-secondary object-cover"
-          onerror="this.src='/images/accounts/2026-04-13T18-43-46.235Z-avatar.png'"
-        />
-      </div>
+    <!-- RIGHT SIDE -->
+    <div class="text-sm md:justify-self-center">
+      <span class="mb-3 block font-semibold text-brand-text">Profile picture</span>
 
-      <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
-        <button
-          type="submit"
-          class="rounded-xl bg-brand-primary px-5 py-2 text-sm font-semibold text-brand-text transition hover:bg-brand-accent"
+      <input id="accountImageFile" type="file" name="image" accept="image/*" class="sr-only" />
+      <input id="accountImageValue" type="hidden" name="currentImage" value="<%= formData.image %>" />
+
+      <div class="relative flex flex-col items-start">
+        <div class="relative h-36 w-36">
+          <!-- Fallback (initials) -->
+          <div
+            id="accountImageFallback"
+            class="app-directory-avatar flex h-36 w-36 items-center justify-center rounded-full border border-brand-secondary bg-blue-100 text-2xl font-bold"
+          >
+            <!-- JS fills this -->
+          </div>
+
+          <!-- Image -->
+          <img
+            id="accountImagePreview"
+            src="<%= formData.image || '' %>"
+            class="absolute inset-0 h-36 w-36 rounded-full object-cover <%= formData.image ? '' : 'hidden' %>"
+          />
+        </div>
+
+        <div class="-mt-8 ml-3 z-10">
+          <button
+            id="accountImageMenuButton"
+            type="button"
+            aria-expanded="false"
+            class="rounded-lg border border-brand-secondary bg-white px-3 py-2 text-sm font-semibold text-brand-text shadow-sm hover:bg-brand-secondary/20"
+          >
+            Edit
+          </button>
+        </div>
+
+        <!-- MENU -->
+        <div
+          id="accountImageMenu"
+          class="hidden absolute top-28 left-3 z-10 w-44 rounded-xl border border-brand-secondary bg-white shadow-lg"
         >
-          Create Account
-        </button>
-        <a
-          href="/admin/accounts"
-          class="rounded-xl border border-brand-secondary px-4 py-2 text-sm font-semibold text-brand-text/80 transition hover:bg-brand-secondary/20"
-        >
-          Cancel
-        </a>
+          <button
+            id="accountImageUploadButton"
+            type="button"
+            class="block w-full px-4 py-2 text-left text-sm hover:bg-brand-secondary/20"
+          >
+            Upload image
+          </button>
+
+          <button
+            id="accountImageRemoveButton"
+            type="button"
+            class="block w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+          >
+            Remove image
+          </button>
+        </div>
       </div>
-    </form>
-  </section>
+    </div>
 
-  <aside class="rounded-2xl border border-brand-secondary bg-white p-5 shadow-panel">
-    <h2 class="font-heading text-lg font-bold text-brand-text">Before You Create</h2>
-    <ul class="mt-3 space-y-2 text-sm text-brand-text/75">
-      <li>Use a unique email for each account.</li>
-      <li>New accounts are created with Active status by default.</li>
-      <li>If no image is uploaded, the default account avatar is used.</li>
-    </ul>
-  </aside>
-</div>
+  </form>
+</section>
 
-<script>
-  function generateSecurePassword() {
-    const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-    const specials = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
-    // Ensure at least one of each required character
-    let password = '';
-    password += uppercase[Math.floor(Math.random() * uppercase.length)];
-    password += lowercase[Math.floor(Math.random() * lowercase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-    password += specials[Math.floor(Math.random() * specials.length)];
-
-    // Fill the rest to make at least 8 characters
-    const allChars = lowercase + uppercase + numbers + specials;
-    while (password.length < 8) {
-      password += allChars[Math.floor(Math.random() * allChars.length)];
-    }
-
-    // Shuffle the password
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-
-    return password;
-  }
-
-  document.getElementById('generateAccountPasswordBtn').addEventListener('click', function() {
-    const password = generateSecurePassword();
-    const passwordInput = document.getElementById('createAccountPassword');
-    const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
-
-    passwordInput.value = password;
-    confirmPasswordInput.value = password;
-
-    // Add light background color to indicate auto-generated
-    passwordInput.classList.add('bg-yellow-50');
-    confirmPasswordInput.classList.add('bg-yellow-50');
-
-    // Update hint
-    const hint = document.getElementById('generateAccountPasswordHint');
-    if (hint) {
-      hint.textContent = 'Password generated and copied to both fields.';
-    }
-  });
-
-  // Remove background color when user types
-  document.getElementById('createAccountPassword').addEventListener('input', function() {
-    this.classList.remove('bg-yellow-50');
-  });
-
-  document.querySelector('input[name="confirmPassword"]').addEventListener('input', function() {
-    this.classList.remove('bg-yellow-50');
-  });
-</script>
+<script src="/js/createAccount.js"></script>

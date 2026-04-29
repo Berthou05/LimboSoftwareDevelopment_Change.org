@@ -24,7 +24,6 @@ const getUploadedAccountImage = function getUploadedAccountImage(request) {
     if (!request.file) {
         return '';
     }
-
     return `/${path.relative(PUBLIC_DIRECTORY, request.file.path).replace(/\\/g, '/')}`;
 };
 
