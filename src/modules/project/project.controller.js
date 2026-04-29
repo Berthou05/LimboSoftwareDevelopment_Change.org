@@ -933,9 +933,7 @@ exports.addProjectTeam = (request, response, next) => {
     }
 
     if (!teamDescription) {
-        return respondMembershipRequest(request, response, projectId, 400, {
-            error: `Add a team description of up to ${PROJECT_TEAM_DESCRIPTION_MAX_LENGTH} characters.`,
-        });
+        teamDescription = null;
     }
 
     return Project.findById(projectId)
