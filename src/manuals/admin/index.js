@@ -1,1 +1,1 @@
-module.exports = require('./roles');
+module.exports = require('./admin');

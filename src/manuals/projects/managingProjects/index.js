@@ -1,8 +1,8 @@
-const managingProjectsCreate = require('./managingProjectsCreate');
-const managingProjectsEdit = require('./managingProjectsEdit');
-const managingProjectsDelete = require('./managingProjectsDelete');
-const managingProjectsJoin = require('./managingProjectsJoin');
-const managingProjectsLeave = require('./managingProjectsLeave');
+const managingProjectsCreate = require('./create');
+const managingProjectsEdit = require('./edit');
+const managingProjectsDelete = require('./delete');
+const managingProjectsJoin = require('./join');
+const managingProjectsLeave = require('./leave');
 
 module.exports = {
     key: 'projects.managing-projects',

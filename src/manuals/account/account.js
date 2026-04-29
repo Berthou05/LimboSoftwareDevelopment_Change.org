@@ -1,6 +1,6 @@
 module.exports = {
     key: 'account',
-    title: 'Account',
+    title: 'Sign-in info',
     description: 'Guides for signing in, recovering access, and updating your personal account details.',
     entries: [
         {

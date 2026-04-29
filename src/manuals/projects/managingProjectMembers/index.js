@@ -1,6 +1,6 @@
-const managingProjectMembersAddMember = require('./managingProjectMembersAddMember');
-const managingProjectMembersEditMember = require('./managingProjectMembersEditMember');
-const managingProjectMembersDeleteMember = require('./managingProjectMembersDeleteMember');
+const managingProjectMembersAddMember = require('./addMember');
+const managingProjectMembersEditMember = require('./editMember');
+const managingProjectMembersDeleteMember = require('./deleteMember');
 
 module.exports = {
     key: 'projects.managing-project-members',

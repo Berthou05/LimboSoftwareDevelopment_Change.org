@@ -1,6 +1,6 @@
-const managingProjectTeamsAddTeam = require('./managingProjectTeamsAddTeam');
-const managingProjectTeamsEditTeam = require('./managingProjectTeamsEditTeam');
-const managingProjectTeamsDeleteTeam = require('./managingProjectTeamsDeleteTeam');
+const managingProjectTeamsAddTeam = require('./addTeam');
+const managingProjectTeamsEditTeam = require('./editTeam');
+const managingProjectTeamsDeleteTeam = require('./deleteTeam');
 
 module.exports = {
     key: 'projects.managing-project-teams',

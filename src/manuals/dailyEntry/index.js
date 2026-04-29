@@ -1,1 +1,1 @@
-module.exports = require('./dailyEntries');
+module.exports = require('./slackStandups');

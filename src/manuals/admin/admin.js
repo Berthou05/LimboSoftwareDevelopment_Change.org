@@ -1,3 +1,5 @@
+const roles = require('./roles');
+
 module.exports = {
     key: 'admin',
     title: 'Admin',
@@ -39,42 +41,7 @@ module.exports = {
                 },
             ],
         },
-        {
-            key: 'admin.managing-roles',
-            title: 'Managing roles',
-            summary: 'Create or review role definitions used by the system.',
-            appliesTo: ['Admin'],
-            helpKey: 'admin.managing-roles',
-            steps: [
-                {
-                    title: 'Open Roles Administration',
-                    body: 'Use the administration module when you need to create a role or update the privileges already assigned to one.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for roles administration screenshot',
-                        caption: 'Replace this placeholder with the roles administration screenshot.',
-                    },
-                },
-                {
-                    title: 'Review the role definition',
-                    body: 'Check the role name and the intended responsibility before changing any permissions.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for role definition screenshot',
-                        caption: 'Replace this placeholder with the role definition screenshot.',
-                    },
-                },
-                {
-                    title: 'Save the role change',
-                    body: 'Confirm the role update only after reviewing the impact on users who depend on it.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for save role change screenshot',
-                        caption: 'Replace this placeholder with the save role change screenshot.',
-                    },
-                },
-            ],
-        },
+        roles,
         {
             key: 'admin.managing-permissions',
             title: 'Managing permissions',
