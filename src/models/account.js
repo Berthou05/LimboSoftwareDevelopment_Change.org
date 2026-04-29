@@ -93,6 +93,16 @@ module.exports = class Account {
         );
     }
 
+    static findByEmployeeId(employee_id) {
+        return db.execute(
+            `SELECT account_id, employee_id, status
+            FROM account
+            WHERE employee_id = ?
+            LIMIT 1`,
+            [employee_id],
+        );
+    }
+
     /*getPrivilegesFromAccountId(account_id)
     Function responsible for obtaining an account privileges based on
     account_id*/

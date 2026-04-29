@@ -13,6 +13,7 @@ const Collaboration = require('../../models/collaboration');
 const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
+const Account = require('../../models/account');
 const Team = require('../../models/team');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
@@ -543,7 +544,7 @@ exports.getProjectPage = (request, response, next) => {
         ProjectTeam.fetchDetailedByProject(projectId),
         Collaboration.fetchDetailedByProject(projectId),
         Collaboration.findActiveByProjectAndEmployee(projectId, employeeId),
-        Employee.fetchAll(),
+        Employee.fetchAllActive(),
         Team.findAll(),
         getLatestReport(projectId, request.session.employeeId)
     ]).then(([
@@ -755,13 +756,24 @@ exports.addProjectMember = (request, response, next) => {
         });
     }
 
-    return Project.findById(projectId)
-        .then(([projectRows]) => {
+    return Promise.all([
+        Project.findById(projectId),
+        Account.findByEmployeeId(employeeId),
+    ])
+        .then(([[projectRows], [accountRows]]) => {
             const project = projectRows[0];
+            const account = accountRows[0];
 
             if (!project) {
                 return respondMembershipRequest(request, response, projectId, 404, {
                     error: 'The selected project was not found.',
+                });
+            }
+
+            // The picker hides disabled accounts, but the POST must reject crafted submissions too.
+            if (!account || account.status !== Account.AccountStatus.ACTIVE) {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'Only active employees can be added to a project.',
                 });
             }
 

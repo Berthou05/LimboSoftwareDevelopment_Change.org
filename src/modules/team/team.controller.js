@@ -6,6 +6,7 @@ Modified by: Alexis Berthou
 
 const Team = require('../../models/team');
 const Employee = require('../../models/employee');
+const Account = require('../../models/account');
 const EmployeeTeamMembership = require('../../models/employeeTeamMembership');
 const Activity = require('../../models/activity');
 const Blocker = require('../../models/blocker');
@@ -838,7 +839,7 @@ exports.getTeamPage = (request, response, next) => {
         activityPromise,
         blockerPromise,
         Project.getProjectsByTeamId(teamId),
-        Employee.fetchAll(),
+        Employee.fetchAllActive(),
         getLatestReport(teamId, request.session.employeeId)
     ])
         .then(async ([[teamInfo], [teamMembers], activityResponse, blockerResponse, [teamProjects], [allEmployees], latestReport]) => {
@@ -1097,8 +1098,19 @@ exports.addTeamMember = (request, response, next) => {
         });
     }
 
-    EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId).then(([memberships]) => {
+    Promise.all([
+        Account.findByEmployeeId(employeeId),
+        EmployeeTeamMembership.fetchByEmployeeAndTeam(employeeId, teamId),
+    ]).then(([[accountRows], [memberships]]) => {
+        const account = accountRows[0];
         const membership = memberships[0];
+
+        // The picker hides disabled accounts, but the POST must reject crafted submissions too.
+        if (!account || account.status !== Account.AccountStatus.ACTIVE) {
+            return respondMembershipRequest(request, response, teamId, 400, {
+                error: 'Only active employees can be added to a team.',
+            });
+        }
 
         if (!membership) {
             return EmployeeTeamMembership.join(employeeId, teamId, new Date(), role).then(() => {
