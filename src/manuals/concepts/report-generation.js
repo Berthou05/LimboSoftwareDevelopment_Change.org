@@ -1,24 +1,24 @@
 module.exports = {
     key: 'concepts.report-generation',
-    title: 'How reports are generated',
+    title: 'Prepare useful reports',
     type: 'concept',
     status: 'complete',
     order: 40,
-    summary: 'Understand what the report generator does and where reports can be created.',
+    summary: 'Choose the right subject and period before generating a report.',
     appliesTo: ['Home', 'Employees', 'Teams', 'Projects', 'Reports'],
     helpKey: 'concepts.report-generation',
     sections: [
         {
-            title: 'Report subjects',
-            body: 'Reports can be generated for employees, teams, and projects when those subjects are available to the current page.',
+            title: 'Main things you need before generating a report',
+            body: 'Pick the subject first, then choose a period that matches the decision you need to make. Use employee reports for individual contribution, team reports for group progress, and project reports for delivery status.',
         },
         {
-            title: 'Report period',
-            body: 'The date range controls which period the report covers.',
+            title: 'Use the shortest period that answers the question',
+            body: 'A shorter date range is easier to review and usually produces a clearer report. Use longer ranges only when you need trends, summaries, or quarter-level context.',
         },
         {
-            title: 'Generated output',
-            body: 'After generation, the report page displays formatted sections and includes a copy action for the visible report text.',
+            title: 'Review the source pages when a report feels incomplete',
+            body: 'If a report is missing important context, check the related activity, goals, achievements, highlights, and membership data before generating it again.',
         },
     ],
 };

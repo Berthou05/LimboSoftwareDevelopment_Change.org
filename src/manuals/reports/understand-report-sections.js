@@ -1,25 +1,25 @@
 module.exports = {
     key: 'reports.understand-report-sections',
-    title: 'Understand report sections',
+    title: 'Use report sections',
     type: 'reference',
     status: 'draft',
     order: 30,
-    summary: 'Understand the general structure used by generated report pages.',
+    summary: 'Read generated reports quickly and decide what needs follow-up.',
     appliesTo: ['Reports'],
     helpKey: 'reports.understand-report-sections',
     sections: [
         {
-            title: 'Report layout',
-            body: 'Generated reports are displayed as sections. A section can contain direct list items or grouped items.',
+            title: 'Start with the section that matches your decision',
+            body: 'If you need status, read the progress and summary sections first. If you need risks, look for blockers, missing activity, or overdue work before reading every detail.',
         },
         {
-            title: 'Supported report content',
-            body: 'The renderer supports section titles, groups, subgroups, and item lists.',
-            items: ['Section title', 'Group title', 'Subgroup title', 'List items'],
+            title: 'Use bullets as review prompts',
+            body: 'Treat report bullets as prompts for follow-up. A vague bullet usually means the related activity, goal, or achievement needs clearer source data before the next report.',
+            items: ['Check unclear bullets against the source page.', 'Update missing context before regenerating.', 'Copy the report only after reviewing the important sections.'],
         },
         {
-            title: 'Draft status',
-            body: 'This guide is draft because report content is generated dynamically and exact section names can change with the report prompt.',
+            title: 'Do not treat generated text as final without review',
+            body: 'Reports are useful drafts for communication and analysis. Review names, dates, project context, and conclusions before sharing the copied text.',
         },
     ],
 };

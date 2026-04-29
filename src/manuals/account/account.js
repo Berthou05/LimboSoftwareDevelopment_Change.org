@@ -1,3 +1,5 @@
+const recoverPassword = require('../auth/recover-password');
+
 module.exports = {
     key: 'account',
     title: 'Sign-in info',
@@ -39,42 +41,7 @@ module.exports = {
                 },
             ],
         },
-        {
-            key: 'account.recover-password',
-            title: 'Recover password',
-            summary: 'Request a password reset when you cannot access your account.',
-            appliesTo: ['Account'],
-            helpKey: 'account.recover-password',
-            steps: [
-                {
-                    title: 'Open the recovery option',
-                    body: 'Use the password recovery link from the sign-in page when you cannot remember your password.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for recovery link screenshot',
-                        caption: 'Replace this placeholder with the recovery link screenshot.',
-                    },
-                },
-                {
-                    title: 'Enter your account email',
-                    body: 'Provide the email address linked to your account so the recovery process can identify you.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for password recovery form screenshot',
-                        caption: 'Replace this placeholder with the password recovery form screenshot.',
-                    },
-                },
-                {
-                    title: 'Follow the reset instructions',
-                    body: 'Check the confirmation message or email and continue with the password reset steps provided by the system.',
-                    image: {
-                        src: '/images/manuals/manual-image-required.svg',
-                        alt: 'Placeholder for password reset confirmation screenshot',
-                        caption: 'Replace this placeholder with the password reset confirmation screenshot.',
-                    },
-                },
-            ],
-        },
+        recoverPassword,
         {
             key: 'account.edit-account',
             title: 'Edit account',
