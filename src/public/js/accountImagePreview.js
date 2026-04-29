@@ -40,6 +40,8 @@ if (fileInput && preview) {
         const previewUrl = URL.createObjectURL(file);
         preview.onload = () => URL.revokeObjectURL(previewUrl);
         preview.src = previewUrl;
+        preview.classList.remove('hidden');
+        preview.style.display = ''; 
         filenameLabel && (filenameLabel.textContent = file.name);
     });
 }
@@ -72,15 +74,15 @@ if (uploadButton && fileInput) {
 
 if (removeButton && preview) {
     removeButton.addEventListener('click', () => {
-        const defaultImage = preview.dataset.defaultImage || '';
-
         if (fileInput) {
             fileInput.value = '';
         }
 
         currentImageInput && (currentImageInput.value = '');
         filenameLabel && (filenameLabel.textContent = 'No file selected');
-        preview.src = defaultImage;
+        
+        preview.src = '';
+        preview.classList.add('hidden');
         closeImageMenu();
     });
 }

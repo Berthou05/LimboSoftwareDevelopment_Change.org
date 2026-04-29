@@ -441,6 +441,7 @@ Based on the employee's "What Went Well?" analysis, identify gaps, underdevelope
 - Each bullet must contain two elements:
     a) A specific, observable gap or underdeveloped area identified from the data.
     b) A realistic, concrete recommendation for how the employee can address it.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - This section is intentionally separate from the Company Values Alignment section. Do not frame improvements around company values — focus purely on performance, work habits, project contributions, and overall impact.
 - Tone: constructive, direct, and growth-oriented. Surface gaps clearly without being punitive.
@@ -462,11 +463,11 @@ Based on the team's "What Went Well?" analysis, identify collective gaps, underd
 - Each bullet must contain two elements:
     a) A specific, observable collective gap or underdeveloped area identified from the data.
     b) A realistic, concrete recommendation for how the team can address it together.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented team activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - This section is intentionally separate from the Company Values Alignment section. Do not frame improvements around company values — focus purely on team performance, collaborative dynamics, project contributions, and overall collective impact.
 - Tone: constructive, direct, and growth-oriented. Surface gaps clearly without being punitive toward the team or any individual within it.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change collectively and why.
-
 `;
 const TO_IMPROVE_PROJECT = `
 You are writing the "What Can Be Improved" section of a professional Project Performance Report.
@@ -487,6 +488,7 @@ Based on the project's "What Went Well?" analysis and the original project data,
 - Each bullet must contain two elements:
     a) A specific, observable gap or underdeveloped area identified from the project data or "What Went Well?" output.
     b) A realistic, concrete recommendation for how the project could address it going forward.
+- Every improvement point must be explicitly backed by evidence from the input — this evidence must be a specific goal, achievement, highlight, or documented project activity. If no direct evidence supports a point, do not include it.
 - Improvements must be distinct from each other — do not reframe the same gap across multiple bullets.
 - Tone: constructive, direct, and forward-looking. Surface gaps clearly without being punitive.
 - Do not use filler phrases like "could benefit from" or "might want to consider" — be specific and direct about what needs to change and why.
@@ -780,7 +782,7 @@ const generateReportSection = async function generateReportSection(body, prompt,
     output: Output.object({ schema: zodSchema(reportSchema) }),
     system: SYSTEM_MESSAGE,
     messages: buildMessages(body, prompt),
-    maxRetries: 2
+    maxRetries: 0
   });
   return output
 };
@@ -825,6 +827,31 @@ const ActivityExtractionSchema = z.object({
     .array(ActivityItemSchema)
     .max(40)
     .describe("Normalized activities extracted from the standup"),
+});
+
+const BlockerItemSchema = z.object({
+  category: z
+    .enum([
+      "TECHNICAL",
+      "DEPENDENCIES",
+      "COMMUNICATION",
+      "PROCESS",
+      "CAPACITY",
+      "PERSONAL",
+    ])
+    .describe("Exactly one blocker category chosen from the allowed list"),
+  content: z
+    .string()
+    .min(1)
+    .max(500)
+    .describe("Short blocker statement copied or lightly normalized from the standup"),
+});
+
+const BlockerExtractionSchema = z.object({
+  blockers: z
+    .array(BlockerItemSchema)
+    .max(10)
+    .describe("Blockers extracted from the standup, one item per concrete blocker"),
 });
 
 /*extractActivities(payload)
@@ -895,4 +922,71 @@ ${normalizedPayload.done}
 
   console.log("Extracted activities:", output.activities);
   return output.activities || [];
+};
+
+/*extractBlockers(payload)
+Function responsible for classifying daily standup blockers into one
+exclusive category per blocker item.*/
+
+export async function extractBlockers(payload = {}) {
+  const normalizedPayload = {
+    blockers: String(payload.blockers || '').trim(),
+  };
+
+  if (!normalizedPayload.blockers) {
+    return [];
+  }
+
+  const prompt = `
+Classify blockers reported in a daily engineering standup.
+
+Return one item per concrete blocker.
+Each blocker must belong to exactly one category:
+- TECHNICAL
+- DEPENDENCIES
+- COMMUNICATION
+- PROCESS
+- CAPACITY
+- PERSONAL
+
+Rules:
+- Use only the blocker text provided.
+- If the text says there are no blockers, return an empty array.
+- If one sentence contains two distinct blockers, split them into two items.
+- "content" should stay close to the original wording, but can be lightly normalized for clarity.
+- Choose the single best category for each blocker.
+- Do not infer blockers that are not explicitly described.
+- Do not return activities, plans, or completed work as blockers.
+
+Category guide:
+- TECHNICAL: code, bugs, failing systems, infrastructure issues, broken environments.
+- DEPENDENCIES: waiting on another team, vendor, approval, external input, or external deliverable.
+- COMMUNICATION: unclear responses, missing alignment, confusion between people or teams.
+- PROCESS: internal workflow, approvals, handoffs, or bureaucracy slowing work.
+- CAPACITY: limited bandwidth, time, focus, or competing priorities.
+- PERSONAL: personal circumstances affecting availability or focus.
+
+Blocker text:
+${normalizedPayload.blockers}
+`;
+
+  console.log("Extracting blockers with prompt");
+
+  const { output } = await generateText({
+    model: openai(MODEL),
+    output: Output.object({ schema: BlockerExtractionSchema }),
+    messages: [
+      {
+        role: "system",
+        content: "You classify standup blockers into a single category per blocker item.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  console.log("Extracted blockers:", output.blockers);
+  return output.blockers || [];
 };

@@ -15,7 +15,9 @@ module.exports = class Privilege {
     Function responsible for obtaining all available Privilege in the table*/
 
     static fetchAll() {
-        return db.execute('SELECT * FROM privilege');
+        return db.execute(`
+            SELECT * FROM privilege
+            WHERE privilege_id NOT LIKE '%ADMIN%';`);
     }
 
     

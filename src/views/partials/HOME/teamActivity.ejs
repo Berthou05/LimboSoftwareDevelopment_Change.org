@@ -26,7 +26,6 @@
                                 <p class="text-[11px] font-semibold text-brand-text/70"><%= item.authorName || 'Unknown' %></p>
                                 <p class="break-words text-xs text-brand-text"><%= item.title %></p>
                             </div>
-                            <span class="shrink-0 text-[10px] text-brand-text/40"><%= item.completedAt ? new Date(item.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : '' %></span>
                         </div>
                     <% }) %>
                 <% }) %>

@@ -158,13 +158,19 @@ const buildEmployeeActivityProjects = function buildEmployeeActivityProjects(act
         });
 };
 
+/*isValidDateInput
+Auxiliar function responsible for validating a date input or given value*/
+
 const isValidDateInput = function isValidDateInput(value) {
     if (!value) {
         return true;
     }
-
     return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
 };
+
+/*resolveActivityFilter
+Auxiliar function responsible for the activity collection of a given content 
+type based on its declared filters*/
 
 const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     const preset = typeof query.activityPreset === 'string' ? query.activityPreset.trim() : '';
@@ -270,6 +276,10 @@ const resolveActivityFilter = function resolveActivityFilter(query = {}) {
     };
 };
 
+/*normalizeDirectoryEmployee(employee, currentEmployeeId = '')
+Auxiiliar function responsible for the normalization of employees 
+for the employee directoty.*/
+
 const normalizeDirectoryEmployee = function normalizeDirectoryEmployee(employee, currentEmployeeId = '') {
     const employeeId = employee.employee_id || '';
     const fullName = employee.full_name || 'Unknown employee';
@@ -283,6 +293,11 @@ const normalizeDirectoryEmployee = function normalizeDirectoryEmployee(employee,
         isSelf: Boolean(currentEmployeeId) && employeeId === currentEmployeeId,
     };
 };
+
+/*sortDirectoryEmployees(employees)
+Auxiliar function for dividing the user own profile account
+from the rest in employee directory, if the user has access 
+to it.*/
 
 const sortDirectoryEmployees = function sortDirectoryEmployees(employees) {
     // Keep the logged-in employee first because their profile is visually highlighted in the directory.
@@ -305,6 +320,10 @@ const getOwnEmployeeUrl = function getOwnEmployeeUrl(employeeId) {
     return `/employees/${employeeId}`;
 };
 
+/*ensureEmployeeExists
+Auxiliar function responsible for the validation of the existance of an
+employee based on its ID.*/
+
 exports.ensureEmployeeExists = (request, response, next) => {
     return Employee.fetchById(request.params.employee_id)
         .then(([employeeRows]) => {
@@ -322,15 +341,6 @@ exports.ensureEmployeeExists = (request, response, next) => {
 /*getEmployee()
 Function responsible accesing the intermediate employee page
 only available for Lead and Admin.
-Rendering the following information:
-
-csrfToken: request.csrfToken(),
-isLoggedIn: request.session.isLoggedIn || '',
-username: request.session.username || '',
-pageTitle: `Employee`,
-pageSubtitle: 'Intermediate selection for self and other employees.',
-me:me,
-employees:near_employees,
 */
 
 exports.getEmployee = (request, response, next) => {
@@ -428,18 +438,7 @@ exports.searchEmployees = (request, response, next) => {
 };
 
 /*getEmployeePage
-Function responsible for rendering a concrete employee page
-Render of:
-
-csrfToken: request.csrfToken(),
-isLoggedIn: request.session.isLoggedIn || '',
-username: request.session.username || '',
-pageTitle: `Employee ${info[0].full_name}`,
-pageSubtitle: '',
-info:info,
-activities:activities,
-teams:teams,
-projects:projects,*/
+Function responsible for rendering a concrete employee page*/
 
 exports.getEmployeePage = async (request, response, next) => {
     const employeeId = request.params.employee_id;
@@ -567,6 +566,9 @@ exports.getEmployeePage = async (request, response, next) => {
             return response.redirect('/employees');
         });
 };
+
+/*Function responsible for the modification of the AJAX component of
+the employee activities divided by projects*/
 
 exports.updateActivityProject = (request, response, next) => {
     const employeeId = request.params.employee_id;

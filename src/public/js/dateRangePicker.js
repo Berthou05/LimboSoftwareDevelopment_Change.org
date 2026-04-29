@@ -1,6 +1,6 @@
 
 const initReportsDateRangePicker = function initReportsDateRangePicker() {
-    const forms = document.querySelectorAll('[data-report-generator="enhanced"]');
+    const forms = document.querySelectorAll('[data-report-generator="enhanced"], [data-report-history-filter]');
 
     if (!forms.length) {
         return;
@@ -35,6 +35,7 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
     const applyButton = form.querySelector('[data-date-apply]');
     const presetInput = form.querySelector('[data-preset-key]');
     const rangeBadge = document.querySelector('#reportsQuarterBadge');
+    const dateRangeOptional = form.hasAttribute('data-date-range-optional');
     const latestReportCreatedAt = generatorCard
         ? generatorCard.querySelector('[data-latest-report-created-at]')
         : null;
@@ -356,8 +357,23 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         startHidden.value = selectedStart ? toIsoDate(selectedStart) : '';
         endHidden.value = selectedEnd ? toIsoDate(selectedEnd) : '';
 
-        startDisplay.value = selectedStart ? formatDisplayDate(selectedStart) : '';
-        endDisplay.value = selectedEnd ? formatDisplayDate(selectedEnd) : '';
+        if (startDisplay.tagName === 'INPUT') {
+            startDisplay.value = selectedStart ? formatDisplayDate(selectedStart) : '';
+        } else if (!endDisplay) {
+            startDisplay.textContent = selectedStart && selectedEnd
+                ? `${formatDisplayDate(selectedStart)} - ${formatDisplayDate(selectedEnd)}`
+                : 'Select Date Range';
+        } else {
+            startDisplay.textContent = selectedStart ? formatDisplayDate(selectedStart) : 'Start';
+        }
+
+        if (endDisplay) {
+            if (endDisplay.tagName === 'INPUT') {
+                endDisplay.value = selectedEnd ? formatDisplayDate(selectedEnd) : '';
+            } else {
+                endDisplay.textContent = selectedEnd ? formatDisplayDate(selectedEnd) : 'End';
+            }
+        }
         updatePresetStyles();
     };
 
@@ -487,8 +503,11 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
 
     applyButton.addEventListener('click', () => {
         if (!selectedStart && !selectedEnd) {
-            startDisplay.setCustomValidity('Select a date range.');
-            startDisplay.reportValidity();
+            if (!dateRangeOptional && startDisplay.setCustomValidity) {
+                startDisplay.setCustomValidity('Select a date range.');
+                startDisplay.reportValidity();
+            }
+            closePopover();
             return;
         }
 
@@ -498,7 +517,9 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
             renderCalendars();
         }
 
-        startDisplay.setCustomValidity('');
+        if (startDisplay.setCustomValidity) {
+            startDisplay.setCustomValidity('');
+        }
         closePopover();
     });
 
@@ -511,21 +532,23 @@ const initSingleDateRangePicker = function initSingleDateRangePicker(form) {
         }
     });
 
-    if (typeField && typeField.tagName === 'SELECT') {
+    if (typeField && typeField.tagName === 'SELECT' && !dateRangeOptional) {
         typeField.addEventListener('change', () => {
             applyDefaultPresetForCurrentType();
         });
     }
 
     form.addEventListener('submit', (event) => {
-        if (!startHidden.value || !endHidden.value) {
+        if (!dateRangeOptional && (!startHidden.value || !endHidden.value)) {
             event.preventDefault();
             startDisplay.setCustomValidity('Select and apply a date range first.');
             startDisplay.reportValidity();
             return;
         }
 
-        startDisplay.setCustomValidity('');
+        if (startDisplay.setCustomValidity) {
+            startDisplay.setCustomValidity('');
+        }
         persistLatestReportPreview();
     });
 

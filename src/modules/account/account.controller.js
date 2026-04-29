@@ -9,16 +9,28 @@ const Employee = require('../../models/employee');
 const renderNotFound = require('../../utils/renderNotFound');
 const { DEFAULT_AVATAR, resolveAvatarImage } = require('../../utils/avatar.util');
 const path = require('path');
-
 const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
+
+//--------------------- Auxiliar Functions ------------------------
+
+/*getSessionAccountId(request)
+Function responsible for getting the actual user id*/
 
 const getSessionAccountId = function getSessionAccountId(request) {
     return request.session.user?.id || '';
 };
 
+/*buildFullName(names, lastnames)
+Function responsible for assembling the names and lastnames of
+the account*/
+
 const buildFullName = function buildFullName(names, lastnames) {
     return [names, lastnames].filter(Boolean).join(' ').trim();
 };
+
+/*getUploadedAccountImage(request)
+Function responsible for getting the file information and redeclaring
+the actual path of it to include it into the system or return ''*/
 
 const getUploadedAccountImage = function getUploadedAccountImage(request) {
     if (!request.file) {
@@ -41,6 +53,10 @@ const buildAccountViewModel = function buildAccountViewModel(account, employee =
     };
 };
 
+/*renderAccountForm(request, response, account, pageTitle = 'Account', isEditing = false)
+Function responsible for rendering the visualization and edition 
+page of the given account ans return it to the given response*/
+
 const renderAccountForm = function renderAccountForm(request, response, account, pageTitle = 'Account', isEditing = false) {
     if (request.session.user) {
         request.session.user.username = account.names || request.session.user.username;
@@ -62,17 +78,9 @@ const renderAccountForm = function renderAccountForm(request, response, account,
     });
 };
 
-exports.ensureAccountExists = (request, response, next) => {
-    return Account.fetchById(request.params.account_id)
-        .then(([accountRows]) => {
-            if (!accountRows.length) {
-                return renderNotFound(request, response);
-            }
-
-            return next();
-        })
-        .catch(next);
-};
+/*fetchAccountWithEmployee(accountId)
+Function responsible for obtaining the employee information from a given 
+account_id.*/
 
 const fetchAccountWithEmployee = function fetchAccountWithEmployee(accountId) {
     return Account.fetchById(accountId).then(([accountRows]) => {
@@ -88,9 +96,36 @@ const fetchAccountWithEmployee = function fetchAccountWithEmployee(accountId) {
     });
 };
 
+/*canEditAccount(request)
+Function responsible for returning a bool that confirms the actual system user
+is the owwer of the account, and therefore has edition privileges*/
+
 const canEditAccount = function canEditAccount(request) {
     return request.params.account_id === getSessionAccountId(request);
 };
+
+//--------------------- Main Functions ------------------------
+
+/*ensureAccountExists
+Function responsible for proving the existance of the account
+of the actual user.*/
+
+exports.ensureAccountExists = (request, response, next) => {
+    return Account.fetchById(request.params.account_id)
+        .then(([accountRows]) => {
+            if (!accountRows.length) {
+                return renderNotFound(request, response);
+            }
+
+            return next();
+        })
+        .catch(next);
+};
+
+/*getAccount
+Function responsible for rendering the page of the account
+of the actual user using the auxiliar function renderAccountForm
+and making validations and error handling.*/
 
 exports.getAccount = (request, response, next) => {
     const accountId = getSessionAccountId(request);
@@ -116,6 +151,10 @@ exports.getAccount = (request, response, next) => {
         });
 };
 
+/*getEditAccount
+Function responsible for getting the edition form for the account
+making a new render with renderAccountForm*/
+
 exports.getEditAccount = (request, response, next) => {
     if (!canEditAccount(request)) {
         return renderNotFound(request, response);
@@ -136,6 +175,11 @@ exports.getEditAccount = (request, response, next) => {
         });
 };
 
+/*postEditAccount
+Function responsible for handling the edition and modification of
+fields of an account, making fields validation, error handling and
+modifications to database.*/
+
 exports.postEditAccount = (request, response, next) => {
     if (!canEditAccount(request)) {
         return renderNotFound(request, response);
@@ -144,7 +188,7 @@ exports.postEditAccount = (request, response, next) => {
     const email = typeof request.body.email === 'string' ? request.body.email.trim() : '';
     const slackUsername = typeof request.body.slackUsername === 'string' ? request.body.slackUsername.trim() : '';
     const currentImage = typeof request.body.currentImage === 'string' ? request.body.currentImage.trim() : '';
-    const image = getUploadedAccountImage(request) || currentImage || DEFAULT_ACCOUNT_IMAGE;
+    const image = getUploadedAccountImage(request) || currentImage || '';
     const names = typeof request.body.names === 'string' ? request.body.names.trim() : '';
     const lastnames = typeof request.body.lastnames === 'string' ? request.body.lastnames.trim() : '';
     const fullName = buildFullName(names, lastnames);

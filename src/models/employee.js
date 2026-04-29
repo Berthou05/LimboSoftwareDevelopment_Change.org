@@ -228,6 +228,16 @@ module.exports = class Employee {
         return db.execute('SELECT employee_id, full_name FROM employee ORDER BY full_name ASC');
     }
 
+    static fetchAllActive() {
+        return db.execute(`
+            SELECT E.employee_id, E.full_name
+            FROM employee AS E
+            INNER JOIN account AS A ON A.employee_id = E.employee_id
+            WHERE A.status = 'ACTIVE'
+            ORDER BY E.full_name ASC
+        `);
+    }
+
     // Update employee
     static update(employee_id, updateData) {
         // TODO: Implement database update logic

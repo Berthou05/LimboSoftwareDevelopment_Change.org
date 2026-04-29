@@ -13,6 +13,7 @@ const Collaboration = require('../../models/collaboration');
 const ProjectTeam = require('../../models/projectTeamAssignment');
 const Report = require('../../models/report');
 const Employee = require('../../models/employee');
+const Account = require('../../models/account');
 const Team = require('../../models/team');
 const Search = require('../../models/search');
 const renderNotFound = require('../../utils/renderNotFound');
@@ -165,6 +166,19 @@ const isValidDateInput = function isValidDateInput(value) {
     }
 
     return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime());
+};
+
+const isValidEvidenceLink = function isValidEvidenceLink(value) {
+    if (!value) {
+        return true;
+    }
+
+    try {
+        const parsedUrl = new URL(value);
+        return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch (error) {
+        return false;
+    }
 };
 
 /*formatDateInput(value)
@@ -530,7 +544,7 @@ exports.getProjectPage = (request, response, next) => {
         ProjectTeam.fetchDetailedByProject(projectId),
         Collaboration.fetchDetailedByProject(projectId),
         Collaboration.findActiveByProjectAndEmployee(projectId, employeeId),
-        Employee.fetchAll(),
+        Employee.fetchAllActive(),
         Team.findAll(),
         getLatestReport(projectId, request.session.employeeId)
     ]).then(([
@@ -742,13 +756,24 @@ exports.addProjectMember = (request, response, next) => {
         });
     }
 
-    return Project.findById(projectId)
-        .then(([projectRows]) => {
+    return Promise.all([
+        Project.findById(projectId),
+        Account.findByEmployeeId(employeeId),
+    ])
+        .then(([[projectRows], [accountRows]]) => {
             const project = projectRows[0];
+            const account = accountRows[0];
 
             if (!project) {
                 return respondMembershipRequest(request, response, projectId, 404, {
                     error: 'The selected project was not found.',
+                });
+            }
+
+            // The picker hides disabled accounts, but the POST must reject crafted submissions too.
+            if (!account || account.status !== Account.AccountStatus.ACTIVE) {
+                return respondMembershipRequest(request, response, projectId, 400, {
+                    error: 'Only active employees can be added to a project.',
                 });
             }
 
@@ -1445,6 +1470,12 @@ exports.createAchievement = (request, response, next) => {
         });
     }
 
+    if (!isValidEvidenceLink(evidenceLink)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid evidence link starting with http:// or https://',
+        });
+    }
+
     return Achievement.create(
         projectId,
         employeeId,
@@ -1484,6 +1515,12 @@ exports.updateAchievement = (request, response, next) => {
     if (!achievementDate || !isValidDateInput(achievementDate)) {
         return respondProjectPopupRequest(request, response, projectId, 400, {
             error: 'Provide a valid achievement date.',
+        });
+    }
+
+    if (!isValidEvidenceLink(evidenceLink)) {
+        return respondProjectPopupRequest(request, response, projectId, 400, {
+            error: 'Provide a valid evidence link starting with http:// or https://',
         });
     }
 

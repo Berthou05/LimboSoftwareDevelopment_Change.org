@@ -29,20 +29,24 @@
   </section>
 
   <section class="space-y-4">
-    <%- include('../partials/teamDirectory/joinButton', {
-      team,
-      isMember: typeof isMember !== 'undefined' ? isMember : false,
-      csrfToken
-    }) %>
+    <% if(hasPermission('TEAM-06-01') || hasPermission('TEAM-07-01')) {%>
+      <%- include('../partials/teamDirectory/joinButton', {
+        team,
+        isMember: typeof isMember !== 'undefined' ? isMember : false,
+        csrfToken
+      }) %>
+    <% } %>
 
-    <%- include('../partials/reportGenerator/reportGenerator', {
-      redirectTo: '/teams/' + (team?.id || ''),
-      defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'TEAM',
-      defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (team?.id || ''),
-      reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
-      latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
-      quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
-    }) %>
+    <% if(hasPermission('REP-01')) {%>
+      <%- include('../partials/reportGenerator/reportGenerator', {
+        redirectTo: '/teams/' + (team?.id || ''),
+        defaultReportType: typeof defaultReportType !== 'undefined' ? defaultReportType : 'TEAM',
+        defaultSubjectId: typeof defaultSubjectId !== 'undefined' ? defaultSubjectId : (team?.id || ''),
+        reportSubjects: typeof reportSubjects !== 'undefined' ? reportSubjects : { employees: [], teams: [], projects: [] },
+        latestReports: typeof latestReports !== 'undefined' ? latestReports : {},
+        quickReport: typeof quickReport !== 'undefined' ? quickReport : '',
+      }) %>
+    <% } %>
 
     <%- include('../partials/teamDirectory/teamParticipants', {
       team,
@@ -51,6 +55,20 @@
       availableEmployees: typeof availableEmployees !== 'undefined' ? availableEmployees : [],
       canAddTeamMembers: typeof canAddTeamMembers !== 'undefined' ? canAddTeamMembers : false,
       canManageTeamMembers: typeof canManageTeamMembers !== 'undefined' ? canManageTeamMembers : false
+    }) %>
+
+    <%- include('../partials/teamDirectory/teamBlockers', {
+      team,
+      activityFilter: typeof activityFilter !== 'undefined'
+        ? activityFilter
+        : { preset: 'month', startDate: '', endDate: '', hasManualRange: false, isFiltered: true },
+      blockerFilter: typeof blockerFilter !== 'undefined'
+        ? blockerFilter
+        : { preset: 'month' },
+      blockerSummary: typeof blockerSummary !== 'undefined'
+        ? blockerSummary
+        : { totalCount: 0, hasData: false, items: [] },
+      blockerError: typeof blockerError !== 'undefined' ? blockerError : ''
     }) %>
     
   </section>
@@ -109,3 +127,4 @@
 <script src="/js/teamDetails.js"></script>
 <script src="/js/dateRangePicker.js"></script>
 <script src="/js/activityFilters.js"></script>
+<script src="/js/blockerFilters.js?v=7"></script>

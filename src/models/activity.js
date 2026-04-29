@@ -3,6 +3,95 @@
 
 const db = require('../utils/database.js');
 
+const DEFAULT_DIRECTORY_SUGGESTION_LIMIT = '5';
+const LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY = `SELECT DISTINCT visible.employee_id
+FROM (
+    SELECT ET.employee_id
+    FROM employeeteam AS ET
+    WHERE ET.left_at IS NULL
+        AND ET.team_id IN (
+            SELECT T.team_id
+            FROM team AS T
+            LEFT JOIN employeeteam AS MyET
+                ON MyET.team_id = T.team_id
+                AND MyET.employee_id = ?
+                AND MyET.left_at IS NULL
+            WHERE T.status = 'ACTIVE'
+                AND (
+                    T.employee_responsible_id = ?
+                    OR MyET.role = 'LEAD'
+                )
+        )
+    UNION
+    SELECT T.employee_responsible_id AS employee_id
+    FROM team AS T
+    LEFT JOIN employeeteam AS MyET
+        ON MyET.team_id = T.team_id
+        AND MyET.employee_id = ?
+        AND MyET.left_at IS NULL
+    WHERE T.status = 'ACTIVE'
+        AND (
+            T.employee_responsible_id = ?
+            OR MyET.role = 'LEAD'
+        )
+) AS visible`;
+
+const DIRECTORY_QUERY = `SELECT DISTINCT
+    A.activity_id,
+    A.project_id,
+    A.team_id,
+    A.employee_id,
+    A.title,
+    A.description,
+    A.completed_at,
+    E.full_name,
+    P.name AS project_name,
+    T.name AS team_name,
+    CASE
+        WHEN A.employee_id = ? THEN 1
+        ELSE 0
+    END AS is_owner
+FROM activity AS A
+INNER JOIN employee AS E
+    ON E.employee_id = A.employee_id
+LEFT JOIN project AS P
+    ON P.project_id = A.project_id
+LEFT JOIN team AS T
+    ON T.team_id = A.team_id
+WHERE A.employee_id IN (${LEAD_SCOPE_VISIBLE_EMPLOYEE_IDS_QUERY})
+    AND (
+        ? = ''
+        OR A.title LIKE ?
+        OR A.description LIKE ?
+        OR E.full_name LIKE ?
+        OR COALESCE(P.name, '') LIKE ?
+        OR COALESCE(T.name, '') LIKE ?
+    )
+ORDER BY is_owner DESC, A.completed_at DESC, A.title ASC`;
+
+const buildLeadScopeParameters = function buildLeadScopeParameters(employeeId) {
+    return [
+        employeeId || '',
+        employeeId || '',
+        employeeId || '',
+        employeeId || '',
+    ];
+};
+
+const buildDirectoryQueryParameters = function buildDirectoryQueryParameters(employeeId, searchTerm) {
+    const normalizedSearch = `%${searchTerm}%`;
+    return [
+        employeeId || '',
+        ...buildLeadScopeParameters(employeeId),
+        searchTerm,
+        normalizedSearch,
+        normalizedSearch,
+        normalizedSearch,
+        normalizedSearch,
+        normalizedSearch,
+    ];
+};
+
 module.exports = class Activity {
 
     constructor(activity_id, project_id, employee_id, entry_id, title, description, completed_at) {
@@ -181,6 +270,23 @@ module.exports = class Activity {
             WHERE ${conditions.join(' AND ')}
             ORDER BY A.completed_at DESC, A.title ASC`,
             parameters,
+        );
+    }
+
+    static searchDirectory(employee_id, searchTerm = '') {
+        return db.execute(
+            DIRECTORY_QUERY,
+            buildDirectoryQueryParameters(employee_id, searchTerm.trim()),
+        );
+    }
+
+    static getDirectorySuggestions(employee_id, searchTerm = '') {
+        return db.execute(
+            `${DIRECTORY_QUERY} LIMIT ?`,
+            [
+                ...buildDirectoryQueryParameters(employee_id, searchTerm.trim()),
+                DEFAULT_DIRECTORY_SUGGESTION_LIMIT,
+            ],
         );
     }
 

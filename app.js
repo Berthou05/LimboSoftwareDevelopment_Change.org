@@ -10,6 +10,7 @@ const expressLayouts = require('express-ejs-layouts');
 const multer = require('multer');
 const navigationMiddleware = require('./src/middleware/navigationMiddleware');
 const flashMessage = require('./src/middleware/flashMessage');
+const viewPermission = require('./src/middleware/viewPermission');
 const renderNotFound = require('./src/utils/renderNotFound');
 const compression = require("compression");
 const PORT = process.env.PORT || 3000;
@@ -122,6 +123,9 @@ app.use((request, response, next) => {
 
 //Flash Message declaration
 app.use(flashMessage);
+
+//Usage of viewPermission
+app.use(viewPermission);
 
 //Uso de Auth middleware
 const isAuth = require('./src/middleware/isAuthenticated');

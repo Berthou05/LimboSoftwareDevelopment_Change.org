@@ -16,8 +16,13 @@ const path = require('path');
 const { DEFAULT_AVATAR } = require('../../utils/avatar.util');
 
 const PUBLIC_DIRECTORY = path.join(__dirname, '..', '..', 'public');
+const RESET_TOKEN_EXPIRATION_MINUTES = 8;
 
 //------------ Auxiliar Functions -----------------
+
+/*formatDateLabel
+Function responsible for transforming a datetime in Date object
+format to a manageable month/day/year format*/
 
 const formatDateLabel = function (value, fallback = '') {
     if (!value) return fallback;
@@ -32,20 +37,8 @@ const formatDateLabel = function (value, fallback = '') {
     });
 };
 
-const RESET_TOKEN_EXPIRATION_MINUTES = 8;
-
-const createResetToken = () => String(crypto.randomInt(100000, 1000000));
-
-const hashResetToken = (token) =>
-    crypto.createHash('sha256').update(token).digest('hex');
-
-const getResetExpiration = () => {
-    const expirationDate = new Date();
-    expirationDate.setMinutes(
-        expirationDate.getMinutes() + RESET_TOKEN_EXPIRATION_MINUTES
-    );
-    return expirationDate;
-};
+/*getUploadedAccountImage
+Function responsible for the obtention of the account image.*/
 
 const getUploadedAccountImage = (request) => {
     if (!request.file) return '';
@@ -54,24 +47,74 @@ const getUploadedAccountImage = (request) => {
         .replace(/\\/g, '/')}`;
 };
 
+/*buildCreateAccountFormData
+Function responsible for keeping safe default values when the create
+account form is rendered after a failed submission.*/
+
+const buildCreateAccountFormData = (formData = {}) => ({
+    names: formData.names || '',
+    lastnames: formData.lastnames || '',
+    email: formData.email || '',
+    slackUsername: formData.slackUsername || '',
+    roleId: formData.roleId || '',
+    image: formData.image || DEFAULT_AVATAR,
+});
+
+/*parseEmployeeNameParts
+Function responsible for keeping employee names normalized before
+employee/account creation.*/
+
+const parseEmployeeNameParts = (names, lastnames) => {
+    const normalizedNames = names.trim().replace(/\s+/g, ' ');
+    const normalizedLastnames = lastnames.trim().replace(/\s+/g, ' ');
+
+    return {
+        names: normalizedNames,
+        lastnames: normalizedLastnames,
+        fullName: `${normalizedNames} ${normalizedLastnames}`.trim(),
+    };
+};
+
+/*getBaseUrl
+Function responsible for building links used in transactional emails.*/
+
+const getBaseUrl = (request) => `${request.protocol}://${request.get('host')}`;
+
+const ACCOUNTS_PER_PAGE = '8';
+
 //------------------- Main Functions --------------------
+
+/*getAccounts
+Function responsible for the render of the Accounts Administration
+page, making data obtention, normalization and render.*/
 
 exports.getAccounts = (request, response, next) => {
     const roleFilter = request.query.role || 'all';
     const statusFilter = request.query.status || 'active';
+    const requestedPage = parseInt(request.query.page, 10);
+    const currentPage = requestedPage > 0 ? requestedPage : 1;
+    const offset = (currentPage - 1) * ACCOUNTS_PER_PAGE;
 
     Promise.all([
-        Account.fetchAll(roleFilter, statusFilter),
-        Account.countAll(),
+        Account.fetchAll(roleFilter, statusFilter, ACCOUNTS_PER_PAGE, offset),
+        Account.countAll(roleFilter, statusFilter),
         Role.fetchAll(),
     ])
         .then(([[accounts], [totalAccounts], [roles]]) => {
+            const total = totalAccounts[0].count;
+            const totalPages = Math.max(Math.ceil(total / ACCOUNTS_PER_PAGE), 1);
+
+            // Keep manually entered page numbers inside the available result range.
+            if(currentPage > totalPages){
+                return response.redirect(`/admin/accounts?role=${encodeURIComponent(roleFilter)}&status=${encodeURIComponent(statusFilter)}&page=${totalPages}`);
+            }
+
             return response.render('pages/admin-accounts', {
                 csrfToken: request.csrfToken(),
                 pageTitle: 'Accounts Administration',
                 pageSubtitle:
                     'Page responsible for the visualization, edition and deletion of accounts of the Unitas System',
-                totalAccounts: totalAccounts[0].count,
+                totalAccounts: total,
                 accounts: accounts.map((account) => ({
                     id: account.account_id,
                     employee: {
@@ -87,8 +130,10 @@ exports.getAccounts = (request, response, next) => {
                     id: role.role_id,
                     name: role.name,
                 })),
-                statusFilter: 'active',
-                roleFilter: 'all',
+                statusFilter,
+                roleFilter,
+                currentPage,
+                totalPages,
             });
         })
         .catch((error) => {
@@ -98,7 +143,9 @@ exports.getAccounts = (request, response, next) => {
         });
 };
 
-//---------------- ROLE / STATUS ----------------
+/*assignRole
+Function responsible for handling the AJAX assignation of a
+role to an account.*/
 
 exports.assignRole = (request, response, next) => {
     const accountId = request.params.account_id;
@@ -132,6 +179,11 @@ exports.assignRole = (request, response, next) => {
                 .json({ error: 'Role could not be updated right now.' });
         });
 };
+
+/*assignStatus
+Function responsible for handling the AJAX assignation of a
+status to an account. Activation or deactivation of the
+account.*/
 
 exports.assignStatus = (request, response, next) => {
     const accountId = request.params.account_id;
@@ -332,10 +384,10 @@ exports.createRole = (request, response, next)=>{
     })
 };
 
-
-
 /*AssignPrivilege
-Function responsible for returning a status response that changes or maintains the intentioned toggle*/
+Function responsible for returning a status response that changes or 
+maintains the intentioned toggle*/
+
 exports.AssignPrivilege = (request,response,next)=>{
     const roleId = request.params.role_id; 
     const privilegeId = request.params.privilege_id;
@@ -366,35 +418,9 @@ exports.AssignPrivilege = (request,response,next)=>{
     })
 }
 
-
-
-
-//---------------- CREATE ACCOUNT ----------------
-
-const buildCreateAccountFormData = (formData = {}) => ({
-    names: formData.names || '',
-    lastnames: formData.lastnames || '',
-    email: formData.email || '',
-    password: formData.password || '',
-    confirmPassword: formData.confirmPassword || '',
-    slackUsername: formData.slackUsername || '',
-    roleId: formData.roleId || '',
-    image: formData.image || '',
-});
-
-const parseEmployeeNameParts = (names, lastnames) => {
-    const trimmedNames = String(names || '').trim();
-    const trimmedLastnames = String(lastnames || '').trim();
-
-    return {
-        fullName: [trimmedNames, trimmedLastnames].join(' ').trim(),
-        names: trimmedNames,
-        lastnames: trimmedLastnames,
-    };
-};
-
-const getBaseUrl = (request) =>
-    `${request.protocol}://${request.get('host')}`;
+/*getCreateAccount
+Function responsible for rendering the page of account creation
+in the Account Administration page.*/
 
 exports.getCreateAccount = (request, response, next) => {
     const storedFormData = buildCreateAccountFormData(
@@ -424,6 +450,10 @@ exports.getCreateAccount = (request, response, next) => {
         });
 };
 
+/*postCreateAccount
+Function responsible for handling the creation of a new account, including:
+data validation, normalization and storage management with error handling*/
+
 exports.postCreateAccount = async (request, response, next) => {
     if (request.fileValidationError) {
         request.session.error = request.fileValidationError;
@@ -450,7 +480,7 @@ exports.postCreateAccount = async (request, response, next) => {
     request.session.createAccountFormData =
         buildCreateAccountFormData(formData);
 
-    // -------- VALIDATIONS --------
+    // Data validation
 
     if (
         !formData.names ||
@@ -482,7 +512,7 @@ exports.postCreateAccount = async (request, response, next) => {
     }
 
     try {
-        // -------- DUPLICATES --------
+        // Handling duplications
 
         const [existingEmailRows] = await Account.fetchByEmail(
             formData.email
@@ -519,7 +549,7 @@ exports.postCreateAccount = async (request, response, next) => {
             }
         }
 
-        // -------- CREATION --------
+        // Creation of objects: Employee -> Account
 
         const employee = new Employee(
             employeeParts.fullName,
@@ -563,7 +593,7 @@ exports.postCreateAccount = async (request, response, next) => {
 
         await new AccountRole(accountId, formData.roleId).save();
 
-        // -------- EMAIL (NON-BLOCKING) --------
+        // Email validation and change password email sent
 
         const resetUrl = `${getBaseUrl(request)}/reset`;
 
@@ -580,7 +610,7 @@ exports.postCreateAccount = async (request, response, next) => {
             emailFailed = true;
         }
 
-        // -------- RESPONSE --------
+        // Management of the account creation response.
 
         delete request.session.createAccountFormData;
 
@@ -597,7 +627,8 @@ exports.postCreateAccount = async (request, response, next) => {
     }
 };
 
-//---------------- DELETE ----------------
+/*deleteAccount
+Function responsible for the deletion of an account*/
 
 exports.deleteAccount = (request, response, next) => {
     request.session.error =
