@@ -10,8 +10,8 @@ module.exports = {
             body: 'Go to the Project page where all available projects are present.',
             image: {
                 src: '/images/manuals/projects/create-project1.webp',
-                alt: 'Project page with all available projects',
-                caption: 'Start from the Project page before creating a new project.',
+                alt: 'Show of the Employee navigation option on the sidebar.',
+                caption: 'Access to the Employee page using the sidebar.',
             },
         },
         {
@@ -19,8 +19,8 @@ module.exports = {
             body: 'Click on the `Create project` button in the upper right corner.',
             image: {
                 src: '/images/manuals/projects/create-project2.webp',
-                alt: 'Create project button',
-                caption: 'Use the create action in the upper right corner.',
+                alt: 'Focus on the "Create Project" button at the right of the Projects Searchbar',
+                caption: 'Click the "Create Project" button.',
             },
         },
         {
@@ -28,8 +28,8 @@ module.exports = {
             body: 'Fill the `New Project` form. Only Name and Start Date are required fields.',
             image: {
                 src: '/images/manuals/projects/create-project3.webp',
-                alt: 'New Project form',
-                caption: 'Name and Start Date are the only required fields.',
+                alt: 'New Project form: ',
+                caption: 'Name and Start Date are the only required fields of the Project form.',
             },
         },
         {
@@ -37,7 +37,7 @@ module.exports = {
             body: 'You can edit the fields later. Click on the `Cancel` button anytime you want to cancel the process.',
             image: {
                 src: '/images/manuals/projects/create-project4.webp',
-                alt: 'New Project form with cancel button',
+                alt: 'New Project form with focus on the "Cancel" button',
                 caption: 'Cancel closes the process without creating the project.',
             },
         },
@@ -46,7 +46,7 @@ module.exports = {
             body: 'Click on the `Create Project` button. You will be sent to the Projects page and your new project will be available in `My Projects` section.',
             image: {
                 src: '/images/manuals/projects/create-project5.webp',
-                alt: 'Created project in My Projects section',
+                alt: 'To finish the process click the "Create Project" button. The new project will appear on the Project Directory',
                 caption: 'After saving, the project appears in My Projects.',
             },
         },

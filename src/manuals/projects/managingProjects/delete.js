@@ -10,8 +10,8 @@ module.exports = {
             body: 'Click on the `Delete` button available in the upper right corner of the project to delete.',
             image: {
                 src: '/images/manuals/projects/delete-project1.webp',
-                alt: 'Placeholder for project delete button screenshot',
-                caption: 'Replace this placeholder with the delete button screenshot.',
+                alt: 'Focus on the "Delete" button at the top right corner of the Project card in Project Directory',
+                caption: 'The "Delete" button is only available for those projects created by the user.',
             },
         },
         {
@@ -19,8 +19,8 @@ module.exports = {
             body: 'Confirm deletion by clicking the `Delete` button on the popup or cancel the process by clicking on the `Cancel` button.',
             image: {
                 src: '/images/manuals/projects/delete-project2.webp',
-                alt: 'Placeholder for delete confirmation popup screenshot',
-                caption: 'Replace this placeholder with the delete confirmation popup screenshot.',
+                alt: 'Emergent confirmation popup to confirm or cancel the deletion process.',
+                caption: 'Click on the "Delete" button tp complete the process, or "Cancel".',
             },
         },
     ],
