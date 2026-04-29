@@ -29,11 +29,6 @@ module.exports = {
         {
             title: 'Required privilege',
             body: 'Changing role privileges requires `ADMIN-04` which is only given to ADMIN users.',
-            image: {
-                src: '/images/manuals/admin/assign-privilege3.webp',
-                alt: 'Demostration that only Administrators can edit other roles privileges',
-                caption: 'Only ADMIN can perform this functionallity.',
-            },
         },
     ],
 };

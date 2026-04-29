@@ -31,18 +31,13 @@ module.exports = {
             body: 'Use the delete action on a role column and confirm the popup.',
             image: {
                 src: '/images/manuals/admin/manage-roles3.webp',
-                alt: 'Show of the Accounts Administration navigation option on the sidebar. A table whose columns are roles, rows are privileges and toggles are in each intersection.',
-                caption: 'Accounts Administration is available for ADMIN on the sidebar.',
+                alt: 'Focus on the Delete button behind any created role that appears when hover over the name.',
+                caption: 'You can find the Delete button behind every role if your pointer is over the name.',
             }, 
         },
         {
             title: 'Required privileges',
-            body: 'Creating roles requires `ADMIN-02`. Deleting roles requires `ADMIN-03`.',
-            image: {
-                src: '/images/manuals/admin/manage-roles4.webp',
-                alt: 'Show of the Accounts Administration navigation option on the sidebar. A table whose columns are roles, rows are privileges and toggles are in each intersection.',
-                caption: 'Accounts Administration is available for ADMIN on the sidebar.',
-            }, 
+            body: 'Creating roles requires `ADMIN-02`. Deleting roles requires `ADMIN-03`.'
         },
     ],
 };
