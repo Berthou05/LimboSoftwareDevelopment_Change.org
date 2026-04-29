@@ -9,7 +9,7 @@ module.exports = {
             title: 'Open the project and section',
             body: 'Click `Open project` in the desired project card and go to the Teams Involved section under the Report Generator in the left column.',
             image: {
-                src: '/images/manuals/manual-image-required.svg',
+                src: '/images/manuals/projects/delete-team1.webp',
                 alt: 'Placeholder for teams involved section screenshot',
                 caption: 'Replace this placeholder with the Teams Involved section screenshot.',
             },
@@ -18,7 +18,7 @@ module.exports = {
             title: 'Click Delete on the team',
             body: 'Click on the `Delete` button in the Team Involved to edit.',
             image: {
-                src: '/images/manuals/manual-image-required.svg',
+                src: '/images/manuals/projects/delete-team2.webp',
                 alt: 'Placeholder for delete team relationship screenshot',
                 caption: 'Replace this placeholder with the delete relationship screenshot.',
             },
@@ -27,7 +27,7 @@ module.exports = {
             title: 'Confirm or cancel deletion',
             body: 'Confirm deletion by clicking the `Delete` button on the popup or cancel the process by clicking on the `Cancel` button.',
             image: {
-                src: '/images/manuals/manual-image-required.svg',
+                src: '/images/manuals/projects/delete-team3.webp',
                 alt: 'Placeholder for delete team confirmation screenshot',
                 caption: 'Replace this placeholder with the delete confirmation screenshot.',
             },
