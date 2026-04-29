@@ -1,6 +1,6 @@
 const createProject = require('./projects/createProject');
-const submitDailyStandup = require('./dailyEntry/submitDailyStandup');
-const generateReport = require('./reports/generateReport');
+const submitDailyStandup = require('./dailyEntry/slackStandups');
+const generateReport = require('./reports/generate-report');
 const assignTeamMember = require('./teams/assignTeamMember');
 
 module.exports = {

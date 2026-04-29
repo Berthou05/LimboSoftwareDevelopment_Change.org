@@ -1,4 +1,4 @@
-const dailyEntries = require('./dailyEntries');
+const dailyEntries = require('./slackStandups');
 
 module.exports = {
     key: 'slack-standups',

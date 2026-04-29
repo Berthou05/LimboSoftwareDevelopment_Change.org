@@ -1,4 +1,4 @@
-const roles = require('./roles');
+const roles = require('./manage-roles');
 
 module.exports = {
     key: 'admin',
