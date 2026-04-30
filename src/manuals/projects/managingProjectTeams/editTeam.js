@@ -9,7 +9,7 @@ module.exports = {
             title: 'Open the project and section',
             body: 'Click `Open project` in the desired project card and go to the Teams Involved section under the Report Generator in the left column.',
             image: {
-                src: '/images/manuals/projects/edit.teamrelationship1.webpg',
+                src: '/images/manuals/projects/edit-teamrelationship1.webpg',
                 alt: 'Placeholder for teams involved section screenshot',
                 caption: 'Replace this placeholder with the Teams Involved section screenshot.',
             },
@@ -18,7 +18,7 @@ module.exports = {
             title: 'Click Edit on the team',
             body: 'Click on the `Edit` button in the Team Involved to edit.',
             image: {
-                src: '/images/manuals/projects/edit.teamrelationship2.webpg',
+                src: '/images/manuals/projects/edit-teamrelationship2.webpg',
                 alt: 'Placeholder for edit team relationship screenshot',
                 caption: 'Replace this placeholder with the edit relationship screenshot.',
             },
@@ -27,7 +27,7 @@ module.exports = {
             title: 'Update the description',
             body: 'Type a Description for the Team in the emergent popup. Click on the `Cancel` button anytime you want to cancel the process.',
             image: {
-                src: '/images/manuals/projects/edit.teamrelationship3.webpg',
+                src: '/images/manuals/projects/edit-teamrelationship3.webpg',
                 alt: 'Placeholder for team description popup screenshot',
                 caption: 'Replace this placeholder with the team description popup screenshot.',
             },
@@ -36,7 +36,7 @@ module.exports = {
             title: 'Save the description',
             body: 'Click the `Save Description` button.',
             image: {
-                src: '/images/manuals/projects/edit.teamrelationship4.webpg',
+                src: '/images/manuals/projects/edit-teamrelationship4.webpg',
                 alt: 'Placeholder for save description screenshot',
                 caption: 'Replace this placeholder with the save description screenshot.',
             },
