@@ -9,7 +9,7 @@ module.exports = {
             title: 'Open the team participants list',
             body: 'Open the team details page and go to the Team Participants panel.',
             image: {
-                src: '/images/manuals/Teams/teams-edit-member1.jpg',
+                src: '/images/manuals/teams/teams-edit-member1.jpg',
                 alt: 'Placeholder for team participants list screenshot',
                 caption: 'Replace this placeholder with the team participants list screenshot.',
             },
@@ -18,7 +18,7 @@ module.exports = {
             title: 'Use the member Edit action',
             body: 'Hover the member row and click Edit to open the popup for the current team role.',
             image: {
-                src: '/images/manuals/Teams/teams-edit-member2.jpg',
+                src: '/images/manuals/teams/teams-edit-member2.jpg',
                 alt: 'Placeholder for edit team member role screenshot',
                 caption: 'Replace this placeholder with the edit team member role screenshot.',
             },
@@ -27,7 +27,7 @@ module.exports = {
             title: 'Choose the new role and save',
             body: 'Select the correct role for that member and save the change so the participants list reflects the update.',
             image: {
-                src: '/images/manuals/Teams/teams-edit-member3.jpg',
+                src: '/images/manuals/teams/teams-edit-member3.jpg',
                 alt: 'Placeholder for save team member role screenshot',
                 caption: 'Replace this placeholder with the save team member role screenshot.',
             },

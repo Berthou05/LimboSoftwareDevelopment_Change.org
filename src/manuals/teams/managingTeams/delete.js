@@ -9,7 +9,7 @@ module.exports = {
             title: 'Locate the team delete action',
             body: 'From the Teams directory, find the team card where you have permission to delete the team.',
             image: {
-                src: '/images/manuals/Teams/delete-team1.webp',
+                src: '/images/manuals/teams/delete-team1.webp',
                 alt: 'Placeholder for delete team action screenshot',
                 caption: 'Replace this placeholder with the delete team action screenshot.',
             },
@@ -18,7 +18,7 @@ module.exports = {
             title: 'Open button and confirm or cancel the deletion',
             body: 'Click Delete to disable the team, or Cancel to keep it unchanged.',
             image: {
-                src: '/images/manuals/Teams/delete-team2.webp',
+                src: '/images/manuals/teams/delete-team2.webp',
                 alt: 'Placeholder for team delete confirmation screenshot',
                 caption: 'Replace this placeholder with the team delete confirmation screenshot.',
             },
