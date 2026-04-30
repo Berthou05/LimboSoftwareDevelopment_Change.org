@@ -393,11 +393,14 @@ const initializePopups = function initializePopups() {
         }
 
         popup.classList.remove('hidden');
+        // Body scroll is locked while a popup is open, so tall popup content must scroll inside the overlay.
+        popup.style.overflowY = 'auto';
         document.body.classList.add('overflow-hidden');
     };
 
     const closePopup = function closePopup(popup) {
         popup.classList.add('hidden');
+        popup.style.overflowY = '';
 
         if (!document.querySelector('[data-popup]:not(.hidden)')) {
             document.body.classList.remove('overflow-hidden');
