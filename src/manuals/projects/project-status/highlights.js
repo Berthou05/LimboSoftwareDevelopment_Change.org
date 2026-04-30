@@ -1,12 +1,12 @@
 module.exports = {
-    key: 'projects.manage-project-highlights',
+    key: 'projects.project-status.highlights',
     title: 'Manage project highlights',
     type: 'workflow',
     status: 'complete',
     order: 90,
     summary: 'Add, edit, and remove project highlights from the project side panel.',
     appliesTo: ['Projects'],
-    helpKey: 'projects.manage-project-highlights',
+    helpKey: 'projects.project-status.highlights',
     sections: [
         {
             title: 'What highlights contain',

@@ -1,12 +1,12 @@
 module.exports = {
-    key: 'projects.manage-project-achievements',
+    key: 'projects.project-status.achievements',
     title: 'Manage project achievements',
     type: 'workflow',
     status: 'complete',
     order: 80,
     summary: 'Record completed achievements and optional evidence links for a project.',
     appliesTo: ['Projects'],
-    helpKey: 'projects.manage-project-achievements',
+    helpKey: 'projects.project-status.achievements',
     sections: [
         {
             title: 'Achievement fields',

@@ -1,6 +1,7 @@
 const managingTeams = require('./managingProjectTeams');
 const managingTeamMembers = require('./managingProjectMembers');
 const managingProjects = require('./managingProjects');
+const projectStatus = require('./project-status');
 
 module.exports = {
     key: 'projects',
@@ -10,5 +11,6 @@ module.exports = {
         managingProjects,
         managingTeams,
         managingTeamMembers,
+        projectStatus,
     ],
 };
