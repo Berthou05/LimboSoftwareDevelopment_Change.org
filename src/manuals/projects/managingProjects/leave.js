@@ -18,7 +18,7 @@ module.exports = {
             title: 'Click Leave Project',
             body: 'Click the `Leave Project` button on the upper right corner of the page.',
             image: {
-                src: '/images/manuals/projects/leave-project2.webp',
+                src: '/images/manuals/Projects/leave-project2.webp',
                 alt: 'Placeholder for leave project screenshot',
                 caption: 'Replace this placeholder with the leave project screenshot.',
             },
@@ -27,7 +27,7 @@ module.exports = {
             title: 'Click Leave ',
             body: 'Click the `Leave` button to confirm. You can also click `Cancel` if you change your mind.',
             image: {
-                src: '/images/manuals/projects/leave-project3.webp',
+                src: '/images/manuals/Projects/leave-project3.webp',
                 alt: 'Placeholder for leave project screenshot',
                 caption: 'Replace this placeholder with the leave project screenshot.',
             },

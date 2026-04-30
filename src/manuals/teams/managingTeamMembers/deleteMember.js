@@ -9,7 +9,7 @@ module.exports = {
             title: 'Open the team participants list and select the remove button for the member',
             body: 'Open the team where the member currently belongs and locate them in the Team Participants panel.',
             image: {
-                src: '/images/manuals/Teams/teams-delete-member1.jpg',
+                src: '/images/manuals/teams/teams-delete-member1.jpg',
                 alt: 'Placeholder for team participants member list screenshot',
                 caption: 'Replace this placeholder with the team participants member list screenshot.',
             },
@@ -18,7 +18,7 @@ module.exports = {
             title: 'Click and confirm the removal',
             body: 'Confirm the action so the member is removed from the team participants list.',
             image: {
-                src: '/images/manuals/Teams/teams-delete-member2.jpg',
+                src: '/images/manuals/teams/teams-delete-member2.jpg',
                 alt: 'Placeholder for confirm remove team member screenshot',
                 caption: 'Replace this placeholder with the confirm remove team member screenshot.',
             },
