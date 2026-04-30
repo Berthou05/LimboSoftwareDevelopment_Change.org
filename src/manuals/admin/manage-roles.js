@@ -10,7 +10,7 @@ module.exports = {
     sections: [
         {
             title: 'Open Roles Administration',
-            body: 'Open de Roles Administration page.',
+            body: 'Open the Roles Administration page.',
             image: {
                 src: '/images/manuals/admin/manage-roles1.webp',
                 alt: 'Show of the Roles Administration navigation option on the sidebar.',

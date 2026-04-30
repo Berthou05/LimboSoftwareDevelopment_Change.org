@@ -4,36 +4,25 @@ module.exports = {
     type: 'concept',
     status: 'complete',
     order: 40,
-    summary: 'Choose the right subject and period before generating a report.',
+    summary: 'Prepare the source data each report type needs before generating it.',
     appliesTo: ['Home', 'Employees', 'Teams', 'Projects', 'Reports'],
     helpKey: 'concepts.report-generation',
     sections: [
         {
-            title: 'Main things you need before generating a report',
-            body: 'Pick the subject first, then choose a period that matches the decision you need to make. Use employee reports for individual contribution, team reports for group progress, and project reports for delivery status.',
-            image: {
-                src: '/images/manuals/concepts/report-generation1.webp',
-                alt: 'Showcase of the Report Generator. Chose the subject of the report. If in any Employee, Project or Team page, the report content will be fixed.',
-                caption: 'Choose your report subject.',
-            },
+            title: 'Employee reports depend on useful standups',
+            body: 'Employee reports are strongest when daily standups are clear, consistent, and connected to real work. A good employee report needs completed work, plans, blockers, and project context so the generated summary can explain contribution instead of only listing activity.',
         },
         {
-            title: 'Use the shortest period that answers the question',
-            body: 'A shorter date range is easier to review and usually produces a clearer report. Use longer ranges only when you need trends, summaries, or quarter-level context.',
-            image: {
-                src: '/images/manuals/concepts/report-generation2.webp',
-                alt: 'Focus on the start and end date of the data obtention for the report..',
-                caption: 'Select a proper start and end date for the data collection for the report.',
-            },
+            title: 'Project reports depend on project maintenance',
+            body: 'Project reports need more than activity. The project lead should keep goals, achievements, highlights, members, and involved teams updated so the report can explain delivery status, progress, and important outcomes correctly.',
         },
         {
-            title: 'Review the source pages when a report feels incomplete',
-            body: 'If a report is missing important context, check the related activity, goals, achievements, highlights, and membership data before generating it again.',
-            image: {
-                src: '/images/manuals/concepts/report-generation3.webp',
-                alt: 'Image of a Project page. Focus on information sections: Activities, Goals, Achievements, Highlights',
-                caption: 'Consult your information source.',
-            },
+            title: 'Team reports depend on both people and project context',
+            body: 'Team reports combine member activity with the projects where the team participates. They are more useful when team members write good standups and project leads keep project goals, achievements, and highlights current.',
+        },
+        {
+            title: 'Choose the shortest useful period',
+            body: 'Use the smallest date range that answers the question. Short ranges are better for check-ins and follow-up. Longer ranges are better for trends, retrospectives, and broader summaries.',
         },
     ],
 };

@@ -11,7 +11,7 @@ module.exports = {
         { title: 'Open Reset Password', 
             body: 'Click `Reset Password` from the sign in page.', 
             image: {
-                src: '/images/manuals/auth/recover-password1.webp',
+                src: '/images/manuals/auth/reset-password1.webp',
                 alt: 'Focus on the Resert Password button on the bottom right corner of the Sign in form.',
                 caption: '"Recover Password" is available under the password input in the Sign In page.',
             },
@@ -19,7 +19,7 @@ module.exports = {
         { title: 'Request a reset code', 
             body: 'Enter your email and submit the reset request.',
             image: {
-                src: '/images/manuals/auth/recover-password2.webp',
+                src: '/images/manuals/auth/reset-password2.webp',
                 alt: 'Enter available email under an account to get a reset code.',
                 caption: 'Enter the email associated to the account to receive an email with a reset code.',
             },
@@ -27,7 +27,7 @@ module.exports = {
         { title: 'Enter the code', 
             body: 'Open the reset confirmation page and enter the code sent to your email.', 
             image: {
-                src: '/images/manuals/auth/recover-password3.webp',
+                src: '/images/manuals/auth/reset-password3.webp',
                 alt: 'Enter the code in the upper input of the page.',
                 caption: 'Enter the code obtained through email in the "Reset code" input.',
             },
@@ -35,7 +35,7 @@ module.exports = {
         { title: 'Enter your new password', 
             body: 'Enter and confirm a new password that meets the visible password requirements.', 
             image: {
-                src: '/images/manuals/auth/recover-password4.webp',
+                src: '/images/manuals/auth/reset-password4.webp',
                 alt: 'Focus on the password generation section.',
                 caption: 'Follow the required specifications while creation your new password.',
             },

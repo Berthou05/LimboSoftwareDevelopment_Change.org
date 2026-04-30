@@ -9,7 +9,7 @@ module.exports = {
             title: 'Open the project',
             body: 'Click `Open project` in the desired project card.',
             image: {
-                src: '/images/manuals/projects/join-project1.webp',
+                src: '/images/manuals/Projects/leave-project1.webp',
                 alt: 'Placeholder for open project screenshot',
                 caption: 'Replace this placeholder with the project card screenshot.',
             },

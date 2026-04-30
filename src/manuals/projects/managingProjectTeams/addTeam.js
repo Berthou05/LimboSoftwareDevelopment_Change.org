@@ -15,21 +15,12 @@ module.exports = {
             },
         },
         {
-            title: 'Go to Teams Involved',
+            title: 'Go to Teams Involved and click add',
             body: 'Go to the Teams Involved section under the Report Generator in the left column.',
             image: {
                 src: '/images/manuals/projects/add-team2.webp',
                 alt: 'Placeholder for teams involved section screenshot',
                 caption: 'Replace this placeholder with the Teams Involved section screenshot.',
-            },
-        },
-        {
-            title: 'Click Add',
-            body: 'Click on the `Add` button in the upper right corner of the Teams Involved section.',
-            image: {
-                src: '/images/manuals/projects/add-team3.webp',
-                alt: 'Placeholder for add team button screenshot',
-                caption: 'Replace this placeholder with the add team button screenshot.',
             },
         },
         {
