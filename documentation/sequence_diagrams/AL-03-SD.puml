@@ -2,6 +2,8 @@
 skinparam style strictuml
 skinparam sequenceArrowThickness 1.2
 skinparam roundcorner 6
+skinparam sequenceArrowThickness 1.2
+skinparam roundcorner 6
 autonumber
 
 actor    "Employee"                  as User

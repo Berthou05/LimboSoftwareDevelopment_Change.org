@@ -24,6 +24,7 @@ activate Routes
 Routes -> Controller : submitFromSlack(req, res)
 deactivate Routes
 activate Controller
+deactivate Routes
 
 note right of Controller
     Slack signature validation
