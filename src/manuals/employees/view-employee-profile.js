@@ -25,15 +25,6 @@ module.exports = {
                 alt: 'Focus on the seach bar and obtained results of the Employee Directory page.',
                 caption: 'Searchbar and directory is only available for users above the Employee role.',
             },
-        },
-        { 
-            title: 'Open the profile', 
-            body: 'Select an employee to open the employee detail page.', 
-            image: {
-                src: '/images/manuals/employee/emp-profile3.webp',
-                alt: 'Focus on the "Open profile" button over an Employee Card.',
-                caption: 'Focus on the "Open profile" button over an Employee Card to access his/her page.',
-            },
-        },
+        }
     ],
 };

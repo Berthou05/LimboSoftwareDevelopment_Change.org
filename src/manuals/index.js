@@ -14,7 +14,6 @@ module.exports = [
     teams,
     employees,
     admin,
-    slackStandups,
     reports,
     account,
 ];
