@@ -1,12 +1,12 @@
 module.exports = {
-    key: 'projects.manage-project-goals',
+    key: 'projects.project-status.goals',
     title: 'Manage project goals',
     type: 'workflow',
     status: 'complete',
     order: 70,
     summary: 'Create, update, and remove goals on a project.',
     appliesTo: ['Projects'],
-    helpKey: 'projects.manage-project-goals',
+    helpKey: 'projects.project-status.goals',
     sections: [
         {
             title: 'Goal fields',
